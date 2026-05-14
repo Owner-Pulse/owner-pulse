@@ -207,5 +207,3 @@ hclc-dashboard/
 4. **Insurance shop-reminder window** — currently 60 days before renewal. Confirm this matches policy renewal cycle.
 5. **CSV format from QuickBooks** — confirm export format with accountant so categorization rules can be tuned.
 6. **App icon (192×192 and 512×512)** for the PWA manifest, when ready.
-# -OwnerPulse-by-HCLC
-# -OwnerPulse-by-HCLC
