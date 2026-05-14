@@ -1,0 +1,11 @@
+{
+  "name": "HCLC Dashboard",
+  "short_name": "HCLC",
+  "description": "Leadership dashboard for HCLC",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1729",
+  "theme_color": "#0F1729",
+  "orientation": "any",
+  "icons": []
+}
