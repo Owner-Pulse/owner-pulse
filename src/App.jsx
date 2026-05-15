@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Home,
   Baby,
@@ -54,6 +54,11 @@ import {
   RadialBarChart,
   RadialBar,
 } from "recharts";
+
+import { App as CapApp } from "@capacitor/app";
+import { SplashScreen as CapSplash } from "@capacitor/splash-screen";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import SplashScreen from "./SplashScreen";
 
 import DcfDailyCard from "./DcfDailyCard";
 import OwnerDailyBrief from "./OwnerDailyBrief";
@@ -1648,14 +1653,21 @@ const daysSince = (dateStr) => -daysUntil(dateStr);
 // ─── Primitives ──────────────────────────────────────────────────
 const Card = ({ children, className = "", accent, onClick, style = {} }) => (
   <div
-    onClick={onClick}
-    className={`rounded-2xl ${onClick ? "cursor-pointer" : ""} ${className}`}
+    onClick={() => {
+      if (onClick) {
+        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+        onClick();
+      }
+    }}
+    className={`rounded-3xl shadow-sm transition-all duration-300 ${
+      onClick
+        ? "cursor-pointer hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
+        : "hover:shadow-md"
+    } ${className}`}
     style={{
       background: C.card,
-      borderTop: accent ? `3px solid ${accent}` : "none",
-      border: accent ? `1px solid ${C.line}` : `1px solid ${C.line}`,
-      borderTopWidth: accent ? "3px" : "1px",
-      borderTopColor: accent || C.line,
+      border: `1px solid ${C.line}`,
+      borderTop: accent ? `4px solid ${accent}` : `1px solid ${C.line}`,
       ...style,
     }}
   >
@@ -1750,24 +1762,28 @@ const DonutKPI = ({
     >
       <span className="text-base">{emoji}</span> {label}
     </div>
-    <div className="flex flex-col items-center py-2">
-      <ResponsiveContainer width="100%" height={120}>
+    <div className="relative flex items-center justify-center py-4 h-[160px]">
+      <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
-          innerRadius="70%"
+          cx="50%"
+          cy="50%"
+          innerRadius="75%"
           outerRadius="100%"
+          barSize={16}
           data={[{ value: percent, fill: accentColor }]}
           startAngle={90}
           endAngle={-270}
+          domain={[0, 100]}
         >
           <RadialBar
-            background={{ fill: "#EEF1F6" }}
+            background={{ fill: "#F1F5F9" }}
             dataKey="value"
             cornerRadius={10}
           />
         </RadialBarChart>
       </ResponsiveContainer>
       <div
-        className="-mt-[88px] text-2xl font-extrabold"
+        className="absolute text-3xl font-black tracking-tighter"
         style={{ color: accentColor }}
       >
         {percent}%
@@ -1825,77 +1841,56 @@ const NumberKPI = ({ emoji, label, value, sub, accentColor, urgentText }) => (
 
 // ─── Header ──────────────────────────────────────────────────────
 const Header = ({ role, setRole, setTab }) => (
-  <header style={{ background: C.navyDeep, color: "#FFF" }}>
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3 min-w-0">
+  <header
+    className="relative overflow-hidden"
+    style={{ background: C.navyDeep, color: "#FFF" }}
+  >
+    {/* Subtle animated background glow */}
+    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
+
+    <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-5 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-4 min-w-0">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-          style={{ background: "#1F2A44" }}
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-transform hover:scale-105"
+          style={{
+            background: "linear-gradient(135deg, #1F2A44 0%, #111827 100%)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
         >
-          🌳
+          <img src="/pwa-192x192.png" alt="Logo" className="w-9 h-9" />
         </div>
         <div className="min-w-0">
-          <div className="text-lg md:text-xl font-extrabold leading-tight truncate">
-            HCLC
+          <div className="text-xl md:text-2xl font-black leading-tight tracking-tight">
+            Owner<span className="text-blue-400">Pulse</span>
           </div>
           <div
-            className="text-[10px] md:text-xs uppercase tracking-widest"
+            className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold opacity-80"
             style={{ color: "#94A0B5" }}
           >
             {role === "owner"
-              ? "Owner Dashboard"
-              : "Director · Asst. Principal"}
+              ? "Executive Overview"
+              : "Management Dashboard"}
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="hidden lg:flex items-center gap-2 mr-4">
-          <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-            style={{
-              background: "#1F2A44",
-              color: "#94A0B5",
-              border: "1px solid #2D3A54",
-            }}
-          >
-            <Smartphone size={14} /> Android
-          </button>
-          <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-            style={{
-              background: "#1F2A44",
-              color: "#94A0B5",
-              border: "1px solid #2D3A54",
-            }}
-          >
-            <Apple size={14} /> iOS
-          </button>
-        </div>
+      <div className="flex items-center gap-3">
         <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl flex-shrink-0"
-          style={{ background: "#1F2A44" }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl flex-shrink-0 transition-all hover:bg-[#2D3A54]"
+          style={{ background: "#1F2A44", border: "1px solid #2D3A54" }}
         >
-          <span
-            className="hidden sm:inline text-xs uppercase tracking-wider"
-            style={{ color: "#94A0B5" }}
-          >
-            Role:
-          </span>
+          <Users size={14} className="text-blue-400" />
           <select
             value={role}
             onChange={(e) => {
               setRole(e.target.value);
               setTab(e.target.value === "owner" ? "overview" : "log");
             }}
-            className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer"
-            style={{ color: "#FBBF24" }}
+            className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer pr-4"
+            style={{ color: "#FFF" }}
           >
-            <option value="owner" style={{ color: "#000" }}>
-              Owner
-            </option>
-            <option value="director" style={{ color: "#000" }}>
-              Director · AP
-            </option>
+            <option value="owner">Owner</option>
+            <option value="director">Director</option>
           </select>
         </div>
       </div>
@@ -1906,27 +1901,32 @@ const Header = ({ role, setRole, setTab }) => (
 // ─── Tab nav ─────────────────────────────────────────────────────
 const TabNav = ({ tabs, active, setActive }) => (
   <nav
-    className="sticky top-0 z-10 border-b"
-    style={{ background: C.card, borderColor: C.line }}
+    className="sticky top-0 z-10 border-b shadow-sm backdrop-blur-md bg-white/80"
+    style={{ borderColor: C.line }}
   >
     <div className="max-w-7xl mx-auto px-2 md:px-6">
-      <div className="flex overflow-x-auto gap-1 no-scrollbar">
+      <div className="flex overflow-x-auto gap-2 no-scrollbar py-2">
         {tabs.map((t) => {
           const on = active === t.id;
           return (
             <button
               key={t.id}
-              onClick={() => setActive(t.id)}
-              className="px-3 md:px-4 py-3.5 whitespace-nowrap flex items-center gap-1.5 text-sm transition-all"
+              onClick={() => {
+                Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+                setActive(t.id);
+              }}
+              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap flex items-center gap-2.5 text-sm transition-all duration-300 ${
+                on
+                  ? "shadow-md scale-105"
+                  : "hover:bg-slate-50 opacity-70 hover:opacity-100"
+              }`}
               style={{
-                color: on ? C.blue : C.ink3,
-                borderBottom: on
-                  ? `3px solid ${C.blue}`
-                  : "3px solid transparent",
+                background: on ? C.blue : "transparent",
+                color: on ? "#FFF" : C.ink3,
                 fontWeight: on ? 700 : 500,
               }}
             >
-              <span>{t.emoji}</span>
+              <span className="text-lg">{t.emoji}</span>
               <span>{t.label}</span>
             </button>
           );
@@ -4855,32 +4855,35 @@ const OwnerBudget = ({ directorExpenses }) => {
         <div className="text-xs text-center mb-4" style={{ color: C.ink3 }}>
           Tap to see categories
         </div>
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex items-center justify-center">
           <ResponsiveContainer width="100%" height={240}>
             <RadialBarChart
-              innerRadius="65%"
+              cx="50%"
+              cy="50%"
+              innerRadius="75%"
               outerRadius="100%"
               data={[{ value: pct, fill: gaugeColor }]}
               startAngle={90}
               endAngle={-270}
+              domain={[0, 100]}
             >
               <RadialBar
-                background={{ fill: "#EEF1F6" }}
+                background={{ fill: "#F1F5F9" }}
                 dataKey="value"
                 cornerRadius={20}
               />
             </RadialBarChart>
           </ResponsiveContainer>
-          <div className="-mt-[170px] text-center">
+          <div className="absolute text-center">
             <div
-              className="text-6xl font-extrabold leading-none"
+              className="text-6xl font-black leading-none tracking-tighter"
               style={{ color: gaugeColor }}
             >
               {pct}
               <span className="text-3xl">%</span>
             </div>
             <div
-              className="text-xs mt-2 font-semibold uppercase tracking-wider"
+              className="text-[10px] mt-1 font-bold uppercase tracking-widest opacity-60"
               style={{ color: C.ink3 }}
             >
               of annual budget
@@ -6056,32 +6059,35 @@ const DirectorBudget = ({ expenses }) => {
         >
           Consumption
         </div>
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex items-center justify-center">
           <ResponsiveContainer width="100%" height={220}>
             <RadialBarChart
-              innerRadius="65%"
+              cx="50%"
+              cy="50%"
+              innerRadius="75%"
               outerRadius="100%"
               data={[{ value: pct, fill: color }]}
               startAngle={90}
               endAngle={-270}
+              domain={[0, 100]}
             >
               <RadialBar
-                background={{ fill: "#EEF1F6" }}
+                background={{ fill: "#F1F5F9" }}
                 dataKey="value"
                 cornerRadius={20}
               />
             </RadialBarChart>
           </ResponsiveContainer>
-          <div className="-mt-[155px] text-center">
+          <div className="absolute text-center">
             <div
-              className="text-5xl font-extrabold leading-none"
+              className="text-5xl font-black leading-none tracking-tight"
               style={{ color }}
             >
               {pct}
               <span className="text-2xl">%</span>
             </div>
             <div
-              className="text-xs mt-2 font-semibold uppercase tracking-wider"
+              className="text-[10px] mt-1 font-bold uppercase tracking-widest opacity-60"
               style={{ color: C.ink3 }}
             >
               of my budget
@@ -7534,6 +7540,26 @@ export default function HCLCDashboard() {
   const [role, setRole] = useState("owner");
   const [tab, setTab] = useState("overview");
 
+  const [showSplash, setShowSplash] = useState(true);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  useEffect(() => {
+    // Hide native splash screen when our React app is ready
+    CapSplash.hide();
+  }, []);
+
+  useEffect(() => {
+    const backButtonHandler = CapApp.addListener("backButton", (data) => {
+      // If we are at the top level (no history to go back to), show exit confirm
+      // In a SPA, we might want to check the current tab/view too
+      setShowExitConfirm(true);
+    });
+
+    return () => {
+      backButtonHandler.then(h => h.remove());
+    };
+  }, []);
+
   const [classrooms] = useState(initialClassrooms);
   const [compliance] = useState(initialCompliance);
   const [tasks] = useState(initialTasks);
@@ -7579,6 +7605,10 @@ export default function HCLCDashboard() {
     { id: "waitlist", label: "Waitlist", emoji: "👨‍👩‍👧" },
   ];
 
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <div className="min-h-screen ff-body" style={{ background: C.bg }}>
       <style>{`
@@ -7588,6 +7618,38 @@ export default function HCLCDashboard() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 1.5rem; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%236B7385' fill='none' stroke-width='2' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 0.5rem center; }
       `}</style>
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-6 mx-auto">
+              <LogOut size={40} />
+            </div>
+            <h2 className="text-2xl font-bold text-center text-slate-900 mb-2">
+              Exit OwnerPulse?
+            </h2>
+            <p className="text-slate-500 text-center mb-8 px-2 leading-relaxed">
+              Are you sure you want to close the dashboard? You might have
+              unsaved changes.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => CapApp.exitApp()}
+                className="flex-1 py-4 rounded-2xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95"
+              >
+                Exit Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Header role={role} setRole={setRole} setTab={setTab} />
       <TabNav
