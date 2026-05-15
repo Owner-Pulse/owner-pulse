@@ -9,7 +9,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: [
+        "favicon.ico",
+        "apple-touch-icon.png",
+        "pwa-192x192.png",
+        "pwa-512x512.png",
+      ],
       manifest: {
         name: "OwnerPulse By HCLC",
         short_name: "OwnerPulse",
@@ -55,8 +60,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) =>
-              url.origin === "http://localhost:5173/",
+            urlPattern: ({ url }) => url.origin === "https://owner-pulse-by-hclc.vercel.app",
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
@@ -75,7 +79,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    host: true, // exposes dev server on local network — test from phone on same WiFi
+    host: true,
     port: 5173,
   },
 });
