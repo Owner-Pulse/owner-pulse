@@ -56,9 +56,10 @@ import {
 } from "recharts";
 
 import { App as CapApp } from "@capacitor/app";
-import { SplashScreen as CapSplash } from "@capacitor/splash-screen";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import SplashScreen from "./SplashScreen";
+import { Network } from "@capacitor/network";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Share } from "@capacitor/share";
 
 import DcfDailyCard from "./DcfDailyCard";
 import OwnerDailyBrief from "./OwnerDailyBrief";
@@ -1655,15 +1656,14 @@ const Card = ({ children, className = "", accent, onClick, style = {} }) => (
   <div
     onClick={() => {
       if (onClick) {
-        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+        Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
         onClick();
       }
     }}
-    className={`rounded-3xl shadow-sm transition-all duration-300 ${
-      onClick
-        ? "cursor-pointer hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
-        : "hover:shadow-md"
-    } ${className}`}
+    className={`rounded-3xl shadow-sm transition-all duration-300 ${onClick
+      ? "cursor-pointer hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
+      : "hover:shadow-md"
+      } ${className}`}
     style={{
       background: C.card,
       border: `1px solid ${C.line}`,
@@ -1783,7 +1783,7 @@ const DonutKPI = ({
         </RadialBarChart>
       </ResponsiveContainer>
       <div
-        className="absolute text-3xl font-black tracking-tighter"
+        className="absolute text-xl font-black tracking-tighter"
         style={{ color: accentColor }}
       >
         {percent}%
@@ -1840,7 +1840,7 @@ const NumberKPI = ({ emoji, label, value, sub, accentColor, urgentText }) => (
 );
 
 // ─── Header ──────────────────────────────────────────────────────
-const Header = ({ role, setRole, setTab }) => (
+const Header = ({ role, setRole, setTab, isOnline }) => (
   <header
     className="relative overflow-hidden"
     style={{ background: C.navyDeep, color: "#FFF" }}
@@ -1852,7 +1852,11 @@ const Header = ({ role, setRole, setTab }) => (
     <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-5 flex items-center justify-between gap-3">
       <div className="flex items-center gap-4 min-w-0">
         <div
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-transform hover:scale-105"
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-all active:scale-95 cursor-pointer"
+          onClick={() => {
+            Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+            setTab("overview");
+          }}
           style={{
             background: "linear-gradient(135deg, #1F2A44 0%, #111827 100%)",
             border: "1px solid rgba(255,255,255,0.1)",
@@ -1861,8 +1865,16 @@ const Header = ({ role, setRole, setTab }) => (
           <img src="/pwa-192x192.png" alt="Logo" className="w-9 h-9" />
         </div>
         <div className="min-w-0">
-          <div className="text-xl md:text-2xl font-black leading-tight tracking-tight">
-            Owner<span className="text-blue-400">Pulse</span>
+          <div className="flex items-center gap-2">
+            <div className="text-xl md:text-2xl font-black leading-tight tracking-tight">
+              Owner<span className="text-blue-400">Pulse</span>
+            </div>
+            {!isOnline && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full border border-red-500/30 animate-pulse">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="text-[9px] font-black uppercase tracking-tighter">Offline</span>
+              </div>
+            )}
           </div>
           <div
             className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold opacity-80"
@@ -1883,6 +1895,7 @@ const Header = ({ role, setRole, setTab }) => (
           <select
             value={role}
             onChange={(e) => {
+              Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
               setRole(e.target.value);
               setTab(e.target.value === "owner" ? "overview" : "log");
             }}
@@ -1912,14 +1925,13 @@ const TabNav = ({ tabs, active, setActive }) => (
             <button
               key={t.id}
               onClick={() => {
-                Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+                Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
                 setActive(t.id);
               }}
-              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap flex items-center gap-2.5 text-sm transition-all duration-300 ${
-                on
-                  ? "shadow-md scale-105"
-                  : "hover:bg-slate-50 opacity-70 hover:opacity-100"
-              }`}
+              className={`px-5 py-2.5 rounded-2xl whitespace-nowrap flex items-center gap-2.5 text-sm transition-all duration-300 ${on
+                ? "shadow-md scale-105"
+                : "hover:bg-slate-50 opacity-70 hover:opacity-100"
+                }`}
               style={{
                 background: on ? C.blue : "transparent",
                 color: on ? "#FFF" : C.ink3,
@@ -3638,25 +3650,25 @@ const OwnerClassrooms = ({ classrooms }) => {
           const performanceSignal =
             c.tier === "k8"
               ? {
-                  label: "Incidents YTD",
-                  value: c.incidents,
-                  tone:
-                    c.incidents === 0
-                      ? "green"
-                      : c.incidents <= 2
-                        ? "amber"
-                        : "red",
-                }
+                label: "Incidents YTD",
+                value: c.incidents,
+                tone:
+                  c.incidents === 0
+                    ? "green"
+                    : c.incidents <= 2
+                      ? "amber"
+                      : "red",
+              }
               : {
-                  label: "Withdrawals YTD",
-                  value: c.withdrawals,
-                  tone:
-                    c.withdrawals === 0
-                      ? "green"
-                      : c.withdrawals <= 1
-                        ? "amber"
-                        : "red",
-                };
+                label: "Withdrawals YTD",
+                value: c.withdrawals,
+                tone:
+                  c.withdrawals === 0
+                    ? "green"
+                    : c.withdrawals <= 1
+                      ? "amber"
+                      : "red",
+              };
 
           return (
             <Card
@@ -4961,8 +4973,8 @@ const OwnerScholarships = ({ stepUp }) => {
   );
   const avgTurnaround = turnaroundTimes.length
     ? Math.round(
-        turnaroundTimes.reduce((a, b) => a + b, 0) / turnaroundTimes.length,
-      )
+      turnaroundTimes.reduce((a, b) => a + b, 0) / turnaroundTimes.length,
+    )
     : 0;
   const fastApproval = turnaroundTimes.filter((t) => t <= 14).length;
   const turnaroundPct = turnaroundTimes.length
@@ -6176,10 +6188,10 @@ const DirectorWaitlist = ({ waitlist, setWaitlist }) => {
     filter === "all"
       ? waitlist
       : waitlist.filter((w) =>
-          filter === "preschool"
-            ? PRESCHOOL_PROGRAMS.includes(w.program)
-            : K8_PROGRAMS.includes(w.program),
-        );
+        filter === "preschool"
+          ? PRESCHOOL_PROGRAMS.includes(w.program)
+          : K8_PROGRAMS.includes(w.program),
+      );
 
   const updateStatus = (id, status) => {
     setWaitlist(waitlist.map((w) => (w.id === id ? { ...w, status } : w)));
@@ -7387,7 +7399,7 @@ const OwnerCashFlow = ({ data, years, insights }) => {
                   dataKey={cat}
                   fill={
                     palette[
-                      data.findIndex((d) => d.category === cat) % palette.length
+                    data.findIndex((d) => d.category === cat) % palette.length
                     ]
                   }
                   radius={[6, 6, 0, 0]}
@@ -7539,15 +7551,33 @@ const OwnerCashFlow = ({ data, years, insights }) => {
 export default function HCLCDashboard() {
   const [role, setRole] = useState("owner");
   const [tab, setTab] = useState("overview");
-
-  const [showSplash, setShowSplash] = useState(true);
+  const [isOnline, setIsOnline] = useState(true);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
-    // Hide native splash screen when our React app is ready
-    CapSplash.hide();
-  }, []);
+    // Initial status bar setup
+    StatusBar.setStyle({ style: Style.Light });
+    StatusBar.setBackgroundColor({ color: "#FFFFFF" });
 
+    // Network monitoring
+    const logNetworkStatus = async () => {
+      const status = await Network.getStatus();
+      setIsOnline(status.connected);
+    };
+
+    const handler = Network.addListener('networkStatusChange', status => {
+      setIsOnline(status.connected);
+      if (!status.connected) {
+        Haptics.notification({ type: 'error' }).catch(() => {});
+      }
+    });
+
+    logNetworkStatus();
+
+    return () => {
+      handler.then(h => h.remove());
+    };
+  }, []);
   useEffect(() => {
     const backButtonHandler = CapApp.addListener("backButton", (data) => {
       // If we are at the top level (no history to go back to), show exit confirm
@@ -7605,10 +7635,6 @@ export default function HCLCDashboard() {
     { id: "waitlist", label: "Waitlist", emoji: "👨‍👩‍👧" },
   ];
 
-  if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
-
   return (
     <div className="min-h-screen ff-body" style={{ background: C.bg }}>
       <style>{`
@@ -7651,7 +7677,7 @@ export default function HCLCDashboard() {
         </div>
       )}
 
-      <Header role={role} setRole={setRole} setTab={setTab} />
+      <Header role={role} setRole={setRole} setTab={setTab} isOnline={isOnline} />
       <TabNav
         tabs={role === "owner" ? ownerTabs : directorTabs}
         active={tab}

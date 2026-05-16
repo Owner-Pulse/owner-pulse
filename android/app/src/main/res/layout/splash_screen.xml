@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:id="@+id/logo_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/logo_card"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            app:cardCornerRadius="70dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:alpha="0">
+
+            <ImageView
+                android:id="@+id/splash_logo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/splash"
+                android:scaleType="centerCrop" />
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/splash_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="OwnerPulse"
+            android:textColor="#0F1729"
+            android:textSize="38sp"
+            android:fontFamily="sans-serif-black"
+            android:alpha="0" />
+            
+        <TextView
+            android:id="@+id/splash_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="LEADERSHIP INTELLIGENCE"
+            android:textColor="#64748B"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.4"
+            android:alpha="0" />
+
+    </LinearLayout>
+
+</RelativeLayout>

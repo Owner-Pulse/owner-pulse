@@ -4,9 +4,9 @@
   "webDir": "dist",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 3000,
+      "launchShowDuration": 0,
       "launchAutoHide": true,
-      "backgroundColor": "#0F1729",
+      "backgroundColor": "#FFFFFF",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,
