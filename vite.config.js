@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "tailwindcss";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -15,6 +16,7 @@ export default defineConfig({
         "pwa-192x192.png",
         "pwa-512x512.png",
       ],
+
       manifest: {
         name: "OwnerPulse By HCLC",
         short_name: "OwnerPulse",
@@ -49,35 +51,42 @@ export default defineConfig({
             type: "image/png",
             purpose: "maskable",
           },
-          {
-            src: "/apple-touch-icon.png",
-            sizes: "180x180",
-            type: "image/png",
-          },
+          { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
         ],
       },
+
+      // Simplified Workbox - Good balance for PWA + Capacitor
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.origin === "https://owner-pulse-by-hclc.vercel.app",
+            urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
-              cacheName: "api-cache",
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
+              cacheName: "app-html",
+            },
+          },
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "style" ||
+              request.destination === "script" ||
+              request.destination === "image",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "assets",
             },
           },
         ],
       },
     }),
   ],
+
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+
   server: {
     host: true,
     port: 5173,

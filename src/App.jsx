@@ -7547,10 +7547,32 @@ const OwnerCashFlow = ({ data, years, insights }) => {
   );
 };
 
+import { useNavigate, useParams, useLocation } from "react-router";
+
 // ─── Main app ────────────────────────────────────────────────────
 export default function HCLCDashboard() {
-  const [role, setRole] = useState("owner");
-  const [tab, setTab] = useState("overview");
+  const navigate = useNavigate();
+  const { tab: urlTab } = useParams();
+  
+  // Read role from localstorage
+  const user = JSON.parse(localStorage.getItem('user') || '{"role": "owner"}');
+  const [role, setRoleState] = useState(user.role);
+  
+  // Custom setRole to also update localStorage if needed
+  const setRole = (newRole) => {
+    const updatedUser = { ...user, role: newRole };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setRoleState(newRole);
+    // Redirect to their default tab
+    navigate(`/dashboard`);
+  };
+
+  // Sync tab with URL
+  const tab = urlTab || (role === 'owner' ? 'overview' : 'log');
+  const setTab = (newTab) => {
+    const isDefault = newTab === (role === 'owner' ? 'overview' : 'log');
+    navigate(isDefault ? `/dashboard` : `/dashboard/${newTab}`);
+  };
   const [isOnline, setIsOnline] = useState(true);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
@@ -7636,7 +7658,7 @@ export default function HCLCDashboard() {
   ];
 
   return (
-    <div className="min-h-screen ff-body" style={{ background: C.bg }}>
+    <div className="min-h-screen ff-body " style={{ background: C.bg }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         .ff-body { font-family: 'Inter', system-ui, sans-serif; }
@@ -7676,13 +7698,6 @@ export default function HCLCDashboard() {
           </div>
         </div>
       )}
-
-      <Header role={role} setRole={setRole} setTab={setTab} isOnline={isOnline} />
-      <TabNav
-        tabs={role === "owner" ? ownerTabs : directorTabs}
-        active={tab}
-        setActive={setTab}
-      />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-8">
         {role === "owner" && (
