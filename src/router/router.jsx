@@ -39,10 +39,10 @@ export const router = createBrowserRouter([
                         index: true,
                         element: <OverviewPage />
                     },
-                    {
-                        path: ':tab',
-                        element: <HCLCDashboard />
-                    }
+                    // {
+                    //     path: ':tab',
+                    //     element: <HCLCDashboard />
+                    // }
                 ]
             }
         ]
