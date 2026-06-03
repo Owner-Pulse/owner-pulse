@@ -340,22 +340,22 @@ const EnrollmentPage = () => {
       animate="show"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
             Enrollment
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {totalEnrolled} students across {PROGRAMS.length} programs ·{" "}
-            {enrollPercent}% capacity utilized
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            {totalEnrolled} students · {PROGRAMS.length} programs ·{" "}
+            {enrollPercent}% capacity
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-white">
-            <UserPlus size={16} className="mr-2" /> Add Student
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+            <UserPlus size={14} className="mr-1.5" /> <span className="hidden xs:inline">Add</span> Student
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <GraduationCap size={16} className="mr-2" /> Manage Waitlist
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+            <GraduationCap size={14} className="mr-1.5" /> Waitlist
           </Button>
         </div>
       </div>
@@ -496,7 +496,7 @@ const EnrollmentPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[280px] w-full">
+              <div className="h-[200px] md:h-[280px] w-full overflow-x-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={PROGRAMS}
@@ -611,26 +611,25 @@ const EnrollmentPage = () => {
 
       {/* ── At-Risk Students ─────────────────────────────────────── */}
       <motion.div variants={itemVariants}>
-        <Card className="bg-white border-none shadow-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border-none shadow-sm">              <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <UserMinus size={18} className="text-red-500" />
                   At-Risk Students
                 </CardTitle>
                 <CardDescription>
-                  Families signaling they may leave · intervene now
+                  Families signaling they may leave
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-semibold">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] md:text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-semibold">
                   {activeRisk.length} active
                 </span>
-                <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full font-semibold">
+                <span className="text-[10px] md:text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full font-semibold">
                   {retainedRisk.length} retained
                 </span>
-                <span className="text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded-full font-semibold">
+                <span className="text-[10px] md:text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded-full font-semibold">
                   {lostRisk.length} lost
                 </span>
               </div>

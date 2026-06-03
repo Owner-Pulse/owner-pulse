@@ -7,7 +7,6 @@ import {
   Clock,
   Calendar,
   Users,
-  UserCheck,
   Plus,
   Flag,
   X,
@@ -240,15 +239,15 @@ const TasksPage = () => {
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tasks</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats.myOpen} assigned to me · {stats.open} total open · {stats.overdue > 0 && <span className="text-red-500 font-medium">{stats.overdue} overdue</span>}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">Tasks</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            {stats.myOpen} assigned · {stats.open} open · {stats.overdue > 0 && <span className="text-red-500 font-medium">{stats.overdue} overdue</span>}
           </p>
         </div>
-        <Button className="bg-[#0A0F1E] hover:bg-black text-white" onClick={() => setShowAssignModal(true)}>
-          <Plus size={16} className="mr-2" /> Assign Task
+        <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-3 shrink-0" onClick={() => setShowAssignModal(true)}>
+          <Plus size={14} className="mr-1.5" /> Assign
         </Button>
       </div>
 
@@ -269,27 +268,27 @@ const TasksPage = () => {
       </div>
 
       {/* Tabs: My Tasks / All Tasks + Priority filter */}
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3">
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 md:gap-3">
         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
           <button onClick={() => setActiveTab("my")}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "my" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all ${activeTab === "my" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
             My Tasks
           </button>
           <button onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeTab === "all" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all ${activeTab === "all" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
             All Tasks
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Priority:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider">Priority:</span>
           {["all", "high", "medium", "low"].map((p) => (
             <button key={p} onClick={() => setFilterPriority(p)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${filterPriority === p ? "bg-gray-900 text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+              className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all ${filterPriority === p ? "bg-gray-900 text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
               {p === "all" ? "All" : p.charAt(0).toUpperCase() + p.slice(1)}
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-400">{sorted.length} tasks</span>
+        <span className="text-[10px] md:text-xs text-gray-400 ml-auto">{sorted.length} tasks</span>
       </motion.div>
 
       {/* Task Cards */}
@@ -314,14 +313,16 @@ const TasksPage = () => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-sm font-semibold ${isDone ? "text-gray-400 line-through" : "text-gray-900"}`}>{task.title}</span>
-                        <PriorityTag priority={task.priority} />
-                        <StatusTag status={status} />
-                        <AssigneeTag assignee={task.assignee} />
-                        {isForMe && <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">Mine</span>}
+                      <div className="flex items-start gap-1.5 flex-wrap">
+                        <span className={`text-xs md:text-sm font-semibold leading-snug ${isDone ? "text-gray-400 line-through" : "text-gray-900"}`}>{task.title}</span>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <PriorityTag priority={task.priority} />
+                          <StatusTag status={status} />
+                          <AssigneeTag assignee={task.assignee} />
+                          {isForMe && <span className="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">Mine</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
                         <span className={`text-xs flex items-center gap-1 ${isOverdue ? "text-red-500 font-semibold" : isDueSoon ? "text-amber-600 font-semibold" : "text-gray-400"}`}>
                           <Calendar size={10} /> Due {fmtDate(task.due)}
                           {isOverdue && ` · ${Math.abs(days)}d overdue`}
@@ -331,7 +332,7 @@ const TasksPage = () => {
                         <span className="text-xs text-gray-400">By {task.assignedBy}</span>
                       </div>
                     </div>
-                    <div className="text-[10px] text-gray-300 flex-shrink-0">{!isDone ? "Click to progress →" : "Click to reopen"}</div>
+                    <div className="text-[9px] md:text-[10px] text-gray-300 flex-shrink-0 hidden sm:block">{!isDone ? "Click to progress" : "↺"}</div>
                   </div>
                 </CardContent>
               </Card>

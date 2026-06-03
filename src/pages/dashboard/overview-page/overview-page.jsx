@@ -13,6 +13,11 @@ import {
   Wrench,
   UserCheck,
   DollarSign,
+  TrendingUp,
+  Users,
+  Clock,
+  Wallet,
+  Landmark,
 } from "lucide-react";
 import {
   AreaChart,
@@ -25,6 +30,10 @@ import {
   BarChart,
   Bar,
   Cell,
+  PieChart,
+  Pie,
+  RadialBarChart,
+  RadialBar,
 } from "recharts";
 import {
   Card,
@@ -34,6 +43,20 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
+// ─── Color palette ─────────────────────────────────────────────────
+const COLORS = {
+  blue: "#2563EB",
+  indigo: "#4F46E5",
+  emerald: "#10B981",
+  amber: "#F59E0B",
+  red: "#EF4444",
+  purple: "#8B5CF6",
+  teal: "#14B8A6",
+  orange: "#F97316",
+  pink: "#EC4899",
+  slate: "#64748B",
+};
 
 // ─── Data from App.jsx ──────────────────────────────────────────────
 
@@ -81,11 +104,24 @@ const budgetData = {
   total: 1850000,
   spent: 1240000,
   categories: [
-    { name: "Payroll & Benefits", spent: 920000, budget: 1200000, percent: 77 },
-    { name: "Facilities & Rent", spent: 142000, budget: 180000, percent: 79 },
-    { name: "Curriculum & Books", spent: 58000, budget: 75000, percent: 77 },
-    { name: "Insurance", spent: 38000, budget: 45000, percent: 84 },
-    { name: "Director Discretionary", spent: 7200, budget: 9000, percent: 80 },
+    { name: "Payroll & Benefits", spent: 920000, budget: 1200000, percent: 77, color: "#4F46E5" },
+    { name: "Facilities & Rent", spent: 142000, budget: 180000, percent: 79, color: "#2563EB" },
+    { name: "Curriculum & Books", spent: 58000, budget: 75000, percent: 77, color: "#10B981" },
+    { name: "Insurance", spent: 38000, budget: 45000, percent: 84, color: "#F59E0B" },
+    { name: "Director Discretionary", spent: 7200, budget: 9000, percent: 80, color: "#EC4899" },
+  ],
+};
+
+const directorPettyCash = {
+  totalBudget: 9000,
+  spent: 7200,
+  remaining: 1800,
+  percentUsed: 80,
+  recentExpenses: [
+    { description: "Pizza for parent meeting", amount: 47.50, date: "2026-04-12" },
+    { description: "Crayons and markers — PreK3", amount: 124.00, date: "2026-04-15" },
+    { description: "Coffee and donuts for staff PD", amount: 38.00, date: "2026-04-22" },
+    { description: "Cleaning wipes restock", amount: 89.00, date: "2026-04-28" },
   ],
 };
 
@@ -159,7 +195,7 @@ const OverviewPage = () => {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
-  const complianceStats = {
+    const complianceStats = {
     compliant: complianceItems.filter((c) => c.status === "compliant").length,
     expiring: complianceItems.filter((c) => c.status === "expiring").length,
     expired: complianceItems.filter((c) => c.status === "expired").length,
@@ -168,120 +204,176 @@ const OverviewPage = () => {
   const totalScholarshipStudents = scholarshipData.reduce((sum, s) => sum + s.students, 0);
   const stepUpRedFlags = stepUpApprovals.filter((s) => s.daysPending >= 20).length;
   const budgetPercent = Math.round((budgetData.spent / budgetData.total) * 100);
+  const pettyCashPercent = directorPettyCash.percentUsed;
+  const schoolBudgetRemaining = budgetData.total - budgetData.spent;
+  const totalBudgetUsed = budgetData.categories.reduce((a, c) => a + c.spent, 0);
   const totalEnrolled = 245;
+  const totalCapacity = 292;
+  const enrollPercent = Math.round((totalEnrolled / totalCapacity) * 100);
   const totalWaitlist = enrollmentData.reduce((sum, e) => sum + e.waitlist, 0);
   const openSeats = 47;
   const activeTasks = tasks.filter((t) => t.status !== "done").length;
+  const totalTasks = tasks.length;
+  const tasksDone = tasks.filter((t) => t.status === "done").length;
+  const tasksPct = Math.round((tasksDone / totalTasks) * 100);
   const highPriorityTasks = tasks.filter((t) => t.priority === "high" && t.status !== "done").length;
   const criticalMaintenance = maintenanceRequests.filter((m) => m.priority === "critical" && m.status !== "done").length;
   const openMaintenance = maintenanceRequests.filter((m) => m.status !== "done").length;
+  const maintenanceDone = maintenanceRequests.filter((m) => m.status === "done").length;
+  const maintenancePct = Math.round((maintenanceDone / maintenanceRequests.length) * 100);
   const totalDiscountValue = discounts.reduce((sum, d) => sum + d.monthlyValue, 0);
   const totalPTOUsed = staffPTO.reduce((sum, s) => sum + s.used, 0);
   const totalPTOAllowance = staffPTO.reduce((sum, s) => sum + s.allowance, 0);
+  const ptoPct = Math.round((totalPTOUsed / totalPTOAllowance) * 100);
+  const activeAtRisk = atRiskStudents.filter(r => r.status !== "lost").length;
+  const atRiskPct = Math.round((activeAtRisk / atRiskStudents.length) * 100);
+  const totalCheckins = procareData.dailyCheckIns + procareData.absentToday;
+  const checkinPct = Math.round((procareData.dailyCheckIns / totalCheckins) * 100);
+  const revenueTarget = 220000;
+  const revenuePct = Math.round((184200 / revenueTarget) * 100);
+  const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
             Dashboard Overview
             {criticalMaintenance > 0 && (
-              <span className="ml-3 inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
-                {criticalMaintenance} critical {criticalMaintenance === 1 ? "issue" : "issues"}
+              <span className="ml-2 md:ml-3 inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] md:text-xs font-bold rounded-full align-middle">
+                {criticalMaintenance} critical
               </span>
             )}
           </h1>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-sm text-gray-500">Integrated with:</span>
-            <div className="flex items-center gap-2">
-              <img src="/procare-logo.png" alt="Procare" className="h-5" />
-              <span className="text-xs font-medium text-gray-600">Procare</span>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="text-xs md:text-sm text-gray-500">Integrated:</span>
+            <div className="flex items-center gap-1.5">
+              <img src="/procare-logo.png" alt="Procare" className="h-4 md:h-5" />
+              <span className="text-[10px] md:text-xs font-medium text-gray-600">Procare</span>
             </div>
-            <div className="flex items-center gap-2">
-              <img src="/quickbooks-logo.png" alt="QuickBooks" className="h-5" />
-              <span className="text-xs font-medium text-gray-600">QuickBooks</span>
+            <div className="flex items-center gap-1.5">
+              <img src="/quickbooks-logo.png" alt="QuickBooks" className="h-4 md:h-5" />
+              <span className="text-[10px] md:text-xs font-medium text-gray-600">QuickBooks</span>
             </div>
             {quickbooksStatus.reconciled && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
-                <CheckCircle2 size={12} /> Synced {quickbooksStatus.lastSync}
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-green-100 text-green-700 text-[9px] md:text-xs rounded-full whitespace-nowrap">
+                <CheckCircle2 size={10} /> Synced
               </span>
             )}
             {criticalMaintenance > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">
-                <Wrench size={12} /> {criticalMaintenance} critical
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-red-100 text-red-700 text-[9px] md:text-xs rounded-full whitespace-nowrap">
+                <Wrench size={10} /> {criticalMaintenance} critical
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-white">
-            <FileText size={16} className="mr-2" /> Export
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+            <FileText size={14} className="mr-1.5" /> Export
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <Receipt size={16} className="mr-2" /> Run Payroll
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+            <Receipt size={14} className="mr-1.5" /> Run Payroll
           </Button>
         </div>
       </motion.div>
 
-      {/* KPI Row — more contextual KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">Enrolled</p>
-            <p className="text-xl font-bold text-gray-900">{totalEnrolled}</p>
-            <p className="text-[10px] text-emerald-600 flex items-center mt-0.5"><ArrowUpRight size={10} className="mr-0.5" />+12% y/y</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">Revenue</p>
-            <p className="text-xl font-bold text-gray-900">$184.2k</p>
-            <p className="text-[10px] text-emerald-600 flex items-center mt-0.5"><ArrowUpRight size={10} className="mr-0.5" />+8.4% MoM</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">Waitlist</p>
-            <p className="text-xl font-bold text-amber-600">{totalWaitlist}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{openSeats} open seats</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">Open Tasks</p>
-            <p className="text-xl font-bold text-blue-600">{activeTasks}</p>
-            <p className="text-[10px] text-red-500 mt-0.5">{highPriorityTasks} high priority</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">Maintenance</p>
-            <p className="text-xl font-bold text-red-600">{openMaintenance}</p>
-            <p className="text-[10px] text-red-500 mt-0.5">{criticalMaintenance} critical</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">At-Risk</p>
-            <p className="text-xl font-bold text-red-600">{atRiskStudents.filter(r => r.status !== "lost").length}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{atRiskStudents.filter(r => r.status === "lost").length} lost</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase">PTO Used</p>
-            <p className="text-xl font-bold text-gray-900">{totalPTOUsed}/{totalPTOAllowance}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{substitutes.length} subs this month</p>
-          </CardContent></Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-[#0A0F1E] border-none shadow-sm text-white"><CardContent className="p-3">
-            <p className="text-[10px] font-semibold text-white/50 uppercase">Check-ins</p>
-            <p className="text-xl font-bold text-white">{procareData.dailyCheckIns}</p>
-            <p className="text-[10px] text-amber-400 mt-0.5">{procareData.absentToday} absent</p>
-          </CardContent></Card>
-        </motion.div>
+      {/* KPI Row — Donut Chart Cards (4 per row) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Enrolled", value: totalEnrolled, pct: enrollPercent, color: "#2563EB", sub: "+12% y/y", subColor: "text-emerald-600", icon: "👶" },
+          { label: "Revenue", value: "$184.2k", pct: revenuePct, color: "#10B981", sub: "+8.4% MoM", subColor: "text-emerald-600", icon: "💰" },
+          { label: "Waitlist", value: totalWaitlist, pct: waitlistPct, color: "#F59E0B", sub: `${openSeats} open seats`, subColor: "text-gray-400", icon: "📋" },
+          { label: "Tasks Done", value: `${tasksDone}/${totalTasks}`, pct: tasksPct, color: "#4F46E5", sub: `${highPriorityTasks} high priority`, subColor: "text-red-500", icon: "✅" },
+        ].map((kpi, i) => (
+          <motion.div key={i} variants={itemVariants}>
+            <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-base">{kpi.icon}</span>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
+                </div>
+                <div className="relative flex items-center justify-center h-[130px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      barSize={16}
+                      data={[{ value: kpi.pct, fill: kpi.color }]}
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <RadialBar
+                        background={{ fill: "#F1F5F9" }}
+                        dataKey="value"
+                        cornerRadius={10}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                  <div
+                    className="absolute text-2xl font-black"
+                    style={{ color: kpi.color }}
+                  >
+                    {kpi.pct}%
+                  </div>
+                </div>
+                <p className="text-base font-bold text-gray-900 text-center mt-2">{kpi.value}</p>
+                <p className={`text-xs ${kpi.subColor} text-center mt-0.5`}>{kpi.sub}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Second KPI Row — Donut Chart Cards (remaining 4) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "🔧" },
+          { label: "At-Risk", value: `${activeAtRisk}/${atRiskStudents.length}`, pct: atRiskPct, color: "#8B5CF6", sub: "intervening", subColor: "text-gray-400", icon: "⚠️" },
+          { label: "PTO Used", value: `${totalPTOUsed}/${totalPTOAllowance}`, pct: ptoPct, color: "#14B8A6", sub: `${substitutes.length} subs this mo`, subColor: "text-gray-400", icon: "📅" },
+          { label: "Check-ins", value: procareData.dailyCheckIns, pct: checkinPct, color: "#F97316", sub: `${procareData.absentToday} absent`, subColor: "text-amber-600", icon: "🏫" },
+        ].map((kpi, i) => (
+          <motion.div key={i} variants={itemVariants}>
+            <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-base">{kpi.icon}</span>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
+                </div>
+                <div className="relative flex items-center justify-center h-[130px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      barSize={16}
+                      data={[{ value: kpi.pct, fill: kpi.color }]}
+                      startAngle={90}
+                      endAngle={-270}
+                    >
+                      <RadialBar
+                        background={{ fill: "#F1F5F9" }}
+                        dataKey="value"
+                        cornerRadius={10}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                  <div
+                    className="absolute text-2xl font-black"
+                    style={{ color: kpi.color }}
+                  >
+                    {kpi.pct}%
+                  </div>
+                </div>
+                <p className="text-base font-bold text-gray-900 text-center mt-2">{kpi.value}</p>
+                <p className={`text-xs ${kpi.subColor} text-center mt-0.5`}>{kpi.sub}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* First Row — Financial Chart + QuickBooks + Tasks */}
@@ -302,7 +394,7 @@ const OverviewPage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[240px] w-full">
+              <div className="h-[180px] md:h-[240px] w-full overflow-x-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -625,49 +717,90 @@ const OverviewPage = () => {
         </motion.div>
       </div>
 
-      {/* Fourth Row — Budget + Enrollment + Events */}
+      {/* Fourth Row — Budget Breakdown (School + Petty Cash) + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Budget */}
+        {/* Combined Budget: School Budget + Director Petty Cash */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
+          <Card className="bg-white border-none shadow-sm h-full overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <PiggyBank size={16} className="text-amber-500" />
-                Budget Consumption
+                <Landmark size={16} className="text-amber-500" />
+                Budget Overview
               </CardTitle>
-              <CardDescription className="text-[10px]">{budgetPercent}% used · ${(budgetData.total - budgetData.spent).toLocaleString()} remaining</CardDescription>
+              <CardDescription className="text-[10px]">School budget &amp; Director's discretionary</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-3">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${budgetPercent}%` }} />
+            <CardContent className="space-y-4">
+              {/* School Budget */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <Landmark size={14} className="text-blue-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-800">School Budget</span>
+                  </div>
+                  <span className="text-xs font-bold text-blue-600">${(budgetData.total / 1000000).toFixed(1)}M</span>
+                </div>
+                <div className="h-2 bg-blue-100 rounded-full overflow-hidden mb-1.5">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${budgetPercent}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">{budgetPercent}% used</span>
+                  <span className="text-emerald-600 font-medium">${schoolBudgetRemaining.toLocaleString()} left</span>
+                </div>
               </div>
-              <div className="space-y-2">
+
+              {/* Director's Petty Cash */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                      <Wallet size={14} className="text-pink-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-800">Director's Petty Cash</span>
+                  </div>
+                  <span className="text-xs font-bold text-pink-600">${directorPettyCash.totalBudget.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-pink-100 rounded-full overflow-hidden mb-1.5">
+                  <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pettyCashPercent}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">{pettyCashPercent}% used</span>
+                  <span className="text-pink-600 font-medium">${directorPettyCash.remaining.toLocaleString()} left</span>
+                </div>
+              </div>
+
+              {/* Budget categories mini-breakdown */}
+              <div className="space-y-1.5">
+                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Spend by Category</p>
                 {budgetData.categories.slice(0, 4).map((cat) => (
                   <div key={cat.name} className="flex items-center justify-between">
-                    <span className="text-[11px] text-gray-600">{cat.name}</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${cat.percent}%` }} />
-                      </div>
-                      <span className="text-[10px] text-gray-500 w-7 text-right">${(cat.spent / 1000).toFixed(0)}k</span>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                      <span className="text-[10px] text-gray-600">{cat.name}</span>
                     </div>
+                    <span className="text-[10px] font-medium text-gray-700">${(cat.spent / 1000).toFixed(0)}k</span>
                   </div>
                 ))}
               </div>
-              <Button variant="ghost" className="w-full mt-2 text-xs text-blue-600 h-7">View budget →</Button>
+
+              <Button variant="ghost" className="w-full mt-1 text-xs text-blue-600 h-7 hover:bg-blue-50">View full budget →</Button>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Enrollment */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
+          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow h-full overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Enrollment by Grade</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Users size={15} className="text-blue-500" />
+                Enrollment by Grade
+              </CardTitle>
               <CardDescription className="text-[10px]">Students vs Capacity with Waitlist demand</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[180px] w-full">
+              <div className="h-[150px] md:h-[180px] w-full overflow-x-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={enrollmentData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -677,14 +810,14 @@ const OverviewPage = () => {
                     <Bar dataKey="capacity" fill="#E5E7EB" radius={[4, 4, 0, 0]} barSize={14} name="Capacity" />
                     <Bar dataKey="students" radius={[4, 4, 0, 0]} barSize={14} name="Enrolled">
                       {enrollmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.students >= entry.capacity ? "#F59E0B" : "#0F172A"} />
+                        <Cell key={`cell-${index}`} fill={entry.students >= entry.capacity ? "#F59E0B" : "#4F46E5"} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex justify-around mt-2 pt-2 border-t border-gray-100">
-                <div className="text-center"><p className="text-lg font-bold text-gray-900">{totalEnrolled}</p><p className="text-[9px] text-gray-500">Total</p></div>
+                <div className="text-center"><p className="text-lg font-bold text-indigo-600">{totalEnrolled}</p><p className="text-[9px] text-gray-500">Total</p></div>
                 <div className="text-center"><p className="text-lg font-bold text-amber-600">{totalWaitlist}</p><p className="text-[9px] text-gray-500">Waitlist</p></div>
                 <div className="text-center"><p className="text-lg font-bold text-emerald-600">{openSeats}</p><p className="text-[9px] text-gray-500">Open</p></div>
               </div>
@@ -694,31 +827,35 @@ const OverviewPage = () => {
 
         {/* Upcoming Events & Payroll */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
+          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow h-full overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Calendar size={16} className="text-gray-500" />
-                Upcoming
+                <Calendar size={15} className="text-purple-500" />
+                Upcoming Events
               </CardTitle>
+              <CardDescription className="text-[10px]">Key dates &amp; deadlines</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="p-2.5 rounded-lg bg-amber-50">
+              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-100">
                 <p className="text-xs font-semibold text-gray-900">General Liability Insurance</p>
                 <p className="text-[10px] text-amber-600">Shop rates by May 2 (60 days before renewal)</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-red-50">
+              <div className="p-2.5 rounded-lg bg-red-50 border border-red-100">
                 <p className="text-xs font-semibold text-gray-900">CPR Certification Renewal</p>
                 <p className="text-[10px] text-red-600">Due May 20 · 4 staff affected</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-blue-50">
+              <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100">
                 <p className="text-xs font-semibold text-gray-900">Step Up Q4 Attestation</p>
                 <p className="text-[10px] text-blue-600">Due May 28 · Director's signature needed</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#0A0F1E] text-white">
-                <p className="text-xs font-semibold">Next Payroll: May 15</p>
-                <p className="text-[10px] text-white/70">7 days away · Director hasn't submitted yet</p>
+              <div className="p-2.5 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                <div className="flex items-center gap-2">
+                  <Clock size={12} className="text-amber-400" />
+                  <p className="text-xs font-semibold">Next Payroll: May 15</p>
+                </div>
+                <p className="text-[10px] text-gray-400 ml-5">7 days away · Director hasn't submitted yet</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-emerald-50">
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
                 <p className="text-xs font-semibold text-gray-900">End of Year Ceremony</p>
                 <p className="text-[10px] text-emerald-600">June 5 · 100+ attendees expected</p>
               </div>

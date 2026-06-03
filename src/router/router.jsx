@@ -36,6 +36,7 @@ import PayrollPage from "@/pages/dashboard/payroll/payroll-page";
 import DirectorStaffPage from "@/pages/dashboard/director-staff/director-staff-page";
 import DirectorStudentsPage from "@/pages/dashboard/director-students/director-students-page";
 import DirectorOverviewPage from "@/pages/dashboard/director-overview/director-overview-page";
+import ComingSoon from "@/components/ComingSoon";
 
 export const router = createBrowserRouter([
   {
@@ -92,15 +93,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'scholarships',
-                element: <ScholarshipsPage />
+                element: <ComingSoon />
               },
               {
                 path: 'staff',
-                element: <StaffPage />
+                element: <ComingSoon />
               },
               {
                 path: 'director-management',
-                element: <DirectorManagementPage />
+                element: <ComingSoon />
               },
             ]
           },
@@ -111,19 +112,19 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'director-overview',
-                element: <DirectorOverviewPage />
+                element: <ComingSoon />
               },
               {
                 path: 'director-staff',
-                element: <DirectorStaffPage />
+                element: <ComingSoon />
               },
               {
                 path: 'director-students',
-                element: <DirectorStudentsPage />
+                element: <ComingSoon />
               },
               {
                 path: 'payroll',
-                element: <PayrollPage />
+                element: <ComingSoon />
               },
             ]
           },
@@ -135,15 +136,15 @@ export const router = createBrowserRouter([
           },
           {
             path: 'maintenance',
-            element: <MaintenancePage />
+            element: <ComingSoon />
           },
           {
             path: 'budget',
-            element: <BudgetPage />
+            element: <ComingSoon />
           },
           {
             path: 'waitlist',
-            element: <WaitlistPage />
+            element: <ComingSoon />
           },
           {
             path: 'profile',

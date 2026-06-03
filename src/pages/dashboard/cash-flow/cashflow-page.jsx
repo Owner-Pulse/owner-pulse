@@ -292,30 +292,30 @@ const CashFlowPage = () => {
       animate="show"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
               Cash Flow
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-              QuickBooks synced
+              Synced
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
             YTD {fmtMoneyShort(EXPENSES_YTD)} expenses · {fmtMoneyShort(REVENUE_YTD)} revenue ·{" "}
             <span className={NET_CASHFLOW >= 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
               {fmtMoneyShort(NET_CASHFLOW)} net
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-white">
-            <RefreshCw size={16} className="mr-2" /> Sync with QuickBooks
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+            <RefreshCw size={14} className="mr-1.5" /> Sync
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <BarChart3 size={16} className="mr-2" /> Export Report
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+            <BarChart3 size={14} className="mr-1.5" /> Export
           </Button>
         </div>
       </div>
@@ -430,7 +430,7 @@ const CashFlowPage = () => {
             </div>
 
             {selectedCategories.length > 0 ? (
-              <div className="h-[280px] w-full">
+              <div className="h-[200px] md:h-[280px] w-full overflow-x-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   {viewMode === "individual" ? (
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>

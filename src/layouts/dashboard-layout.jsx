@@ -128,14 +128,14 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen text-white flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-50 w-72 h-screen bg-[#283353] border-r border-white/10 transition-transform duration-300`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-10">
-            <img src={logo} alt="Logo" className="h-12 scale-135 w-auto" />
+          <div className="flex items-center gap-3 mb-8">
+            <img src={logo} alt="Logo" className="h-14 w-auto scale-145" />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">OwnerPulse</h1>
-              <p className="text-xs text-white/50 capitalize">{role} Management</p>
+              <h1 className="text-lg font-bold tracking-tight text-gray-900">OwnerPulse</h1>
+              <p className="text-[10px] text-gray-400 capitalize">{role} Management</p>
             </div>
           </div>
 
@@ -155,8 +155,8 @@ const DashboardLayout = () => {
                   onClick={() => setSidebarOpen(false)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     isActive 
-                      ? 'bg-white/10 text-white' 
-                      : 'hover:bg-white/5 text-white/70 hover:text-white'
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold' 
+                      : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <item.icon size={20} />
@@ -178,8 +178,8 @@ const DashboardLayout = () => {
                   onClick={() => setSidebarOpen(false)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     isActive 
-                      ? 'bg-white/10 text-white' 
-                      : 'hover:bg-white/5 text-white/70 hover:text-white'
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold' 
+                      : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <item.icon size={20} />
@@ -190,8 +190,8 @@ const DashboardLayout = () => {
           </nav>
 
           {/* Bottom Section */}
-          <div className="pt-3 border-t border-white/10">
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-white/5 rounded-xl text-sm font-medium transition-all">
+          <div className="pt-3 border-t border-gray-200">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl text-sm font-medium transition-all">
               <LogOut size={20} />
               Logout
             </button>
@@ -202,19 +202,18 @@ const DashboardLayout = () => {
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col h-screen">
         {/* Top Header */}
-        <header className="h-16 bg-[#283353] border-b border-white/10 flex shrink-0 items-center px-4 md:px-6 sticky top-0 z-40">
+        <header className="h-16 bg-white border-b border-gray-200 flex shrink-0 items-center px-4 md:px-6 sticky top-0 z-40 shadow-sm">
           <div className="flex items-center justify-between w-full ">
-            {/* Mobile Menu Button */}
-            <button 
+            {/* Mobile Menu Button */}              <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 text-white"
+              className="md:hidden p-2 text-gray-600"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
             {/* Title / Page Name */}
             <div className="hidden md:block">
-              <h2 className="text-lg font-semibold">Dashboard</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Dashboard</h2>
             </div>
 
             {/* Right Side */}
@@ -223,11 +222,11 @@ const DashboardLayout = () => {
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setNotifOpen(!notifOpen)}
-                  className="p-3 hover:bg-white/10 rounded-xl transition-colors relative"
+                  className="p-3 hover:bg-gray-100 rounded-xl transition-colors relative text-gray-600"
                 >
                   <Bell size={22} />
                   {notifStats.unread > 0 && (
-                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 rounded-full ring-2 ring-[#283353] text-[9px] font-bold px-1">
+                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 rounded-full ring-2 ring-white text-[9px] font-bold px-1">
                       {notifStats.unread > 9 ? "9+" : notifStats.unread}
                     </span>
                   )}
@@ -335,14 +334,14 @@ const DashboardLayout = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-3 p-1.5 hover:bg-white/10 rounded-xl transition-colors"
+                  className="flex items-center gap-3 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold uppercase">
                     {user?.name?.slice(0, 2) || "JD"}
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium">{user?.name || "John Doe"}</p>
-                    <p className="text-xs text-white/50 -mt-0.5 capitalize">{role}</p>
+                  <p className="text-sm font-medium text-gray-800">{user?.name || "John Doe"}</p>
+                  <p className="text-xs text-gray-400 -mt-0.5 capitalize">{role}</p>
                   </div>
                 </button>
               </div>

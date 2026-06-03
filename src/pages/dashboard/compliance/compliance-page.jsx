@@ -180,24 +180,24 @@ const CompliancePage = () => {
       animate="show"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Compliance & Insurance
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
+              Compliance
             </h1>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-xs font-semibold border whitespace-nowrap ${
               complianceScore >= 80
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : complianceScore >= 50
                   ? "bg-amber-50 text-amber-700 border-amber-200"
                   : "bg-red-50 text-red-700 border-red-200"
             }`}>
-              {complianceScore}% compliant
+              {complianceScore}%
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats.compliant} of {stats.total} items in good standing ·{" "}
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            {stats.compliant}/{stats.total} compliant ·{" "}
             {stats.expiring + stats.expired > 0 ? (
               <span className="text-red-500 font-medium">
                 {stats.expiring + stats.expired} need attention
@@ -207,12 +207,12 @@ const CompliancePage = () => {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-white">
-            <FileText size={16} className="mr-2" /> View Reports
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+            <FileText size={14} className="mr-1.5" /> Reports
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <RefreshCw size={16} className="mr-2" /> Check Status
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+            <RefreshCw size={14} className="mr-1.5" /> Check
           </Button>
         </div>
       </div>
@@ -395,9 +395,9 @@ const CompliancePage = () => {
       </div>
 
       {/* ── Filters ──────────────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Category:</span>
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider">Category:</span>
           {[
             { id: "all", label: "All" },
             { id: "regulatory", label: "Regulatory" },
@@ -407,18 +407,19 @@ const CompliancePage = () => {
             <button
               key={f.id}
               onClick={() => setCategoryFilter(f.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-2.5 md:px-3 py-1.5 rounded-full text-[11px] md:text-xs font-semibold transition-all ${
                 categoryFilter === f.id
                   ? "bg-[#0A0F1E] text-white shadow-sm"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
               }`}
             >
-              {f.label}
+              <span className="sm:hidden">{f.label === "Regulatory" ? "Reg" : f.label === "Insurance" ? "Ins" : f.label === "Contracts" ? "Con" : f.label}</span>
+              <span className="hidden sm:inline">{f.label}</span>
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider">Status:</span>
           {[
             { id: "all", label: "All" },
             { id: "compliant", label: "Compliant" },
@@ -428,17 +429,18 @@ const CompliancePage = () => {
             <button
               key={f.id}
               onClick={() => setStatusFilter(f.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`px-2.5 md:px-3 py-1.5 rounded-full text-[11px] md:text-xs font-semibold transition-all ${
                 statusFilter === f.id
                   ? "bg-gray-900 text-white shadow-sm"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
               }`}
             >
-              {f.label}
+              <span className="sm:hidden">{f.label === "Compliant" ? "OK" : f.label === "Expiring" ? "⚠" : f.label === "Expired" ? "✕" : f.label}</span>
+              <span className="hidden sm:inline">{f.label}</span>
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-400">{sorted.length} items</span>
+        <span className="text-[10px] md:text-xs text-gray-400 ml-auto">{sorted.length} items</span>
       </motion.div>
 
       {/* ── Compliance Items Grid ────────────────────────────────── */}

@@ -350,21 +350,21 @@ const ClassroomsPage = () => {
       animate="show"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Classrooms — P&L + Performance
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
+            Classrooms <span className="text-sm md:text-base font-normal text-gray-500 hidden sm:inline">— P&amp;L + Performance</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {CLASSROOMS.length} classrooms · {totalEnrolled} students · {fmtMoneyShort(totalProfit)}/mo net
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            {CLASSROOMS.length} classrooms · {totalEnrolled} students · {fmtMoneyShort(totalProfit)}/mo
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="bg-white">
-            <BarChart3 size={16} className="mr-2" /> View Reports
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+            <BarChart3 size={14} className="mr-1.5" /> Reports
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <School size={16} className="mr-2" /> Manage Classrooms
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+            <School size={14} className="mr-1.5" /> Manage
           </Button>
         </div>
       </div>
@@ -491,7 +491,7 @@ const ClassroomsPage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px] w-full">
+              <div className="h-[160px] md:h-[200px] w-full overflow-x-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={profitChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -628,7 +628,7 @@ const ClassroomsPage = () => {
                   </div>
 
                   {/* Row 2: Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
                     {/* Enrolled / Capacity */}
                     <div className="p-2.5 rounded-lg bg-gray-50">
                       <div className="flex items-center justify-between mb-1">
