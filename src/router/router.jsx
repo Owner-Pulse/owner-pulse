@@ -93,15 +93,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'scholarships',
-                element: <ComingSoon />
+                element: <ScholarshipsPage />
               },
               {
                 path: 'staff',
-                element: <ComingSoon />
+                element: <StaffPage />
               },
               {
                 path: 'director-management',
-                element: <ComingSoon />
+                element: <DirectorManagementPage />
               },
             ]
           },
@@ -112,19 +112,19 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'director-overview',
-                element: <ComingSoon />
+                element: <ComingSoon/>
               },
               {
                 path: 'director-staff',
-                element: <ComingSoon />
+                element: <ComingSoon/>
               },
               {
                 path: 'director-students',
-                element: <ComingSoon />
+                element: <ComingSoon/>
               },
               {
                 path: 'payroll',
-                element: <ComingSoon />
+                element: <ComingSoon/>
               },
             ]
           },
@@ -136,15 +136,15 @@ export const router = createBrowserRouter([
           },
           {
             path: 'maintenance',
-            element: <ComingSoon />
+            element: <MaintenancePage />
           },
           {
             path: 'budget',
-            element: <ComingSoon />
+            element: <BudgetPage />
           },
           {
             path: 'waitlist',
-            element: <ComingSoon />
+            element: <WaitlistPage />
           },
           {
             path: 'profile',

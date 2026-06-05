@@ -32,8 +32,6 @@ import {
   Cell,
   PieChart,
   Pie,
-  RadialBarChart,
-  RadialBar,
 } from "recharts";
 import {
   Card,
@@ -233,6 +231,12 @@ const OverviewPage = () => {
   const revenuePct = Math.round((184200 / revenueTarget) * 100);
   const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
 
+  // ─── KPI icon map ────────────────────────────────────────────────
+  const kpiIcons = {
+    Users, DollarSign, ClipboardList, CheckCircle2,
+    Wrench, AlertTriangle, Calendar, UserCheck,
+  };
+
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
@@ -281,36 +285,34 @@ const OverviewPage = () => {
       {/* KPI Row — Donut Chart Cards (4 per row) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Enrolled", value: totalEnrolled, pct: enrollPercent, color: "#2563EB", sub: "+12% y/y", subColor: "text-emerald-600", icon: "👶" },
-          { label: "Revenue", value: "$184.2k", pct: revenuePct, color: "#10B981", sub: "+8.4% MoM", subColor: "text-emerald-600", icon: "💰" },
-          { label: "Waitlist", value: totalWaitlist, pct: waitlistPct, color: "#F59E0B", sub: `${openSeats} open seats`, subColor: "text-gray-400", icon: "📋" },
-          { label: "Tasks Done", value: `${tasksDone}/${totalTasks}`, pct: tasksPct, color: "#4F46E5", sub: `${highPriorityTasks} high priority`, subColor: "text-red-500", icon: "✅" },
+          { label: "Enrolled", value: totalEnrolled, pct: enrollPercent, color: "#2563EB", sub: "+12% y/y", subColor: "text-emerald-600", icon: "Users" },
+          { label: "Revenue", value: "$184.2k", pct: revenuePct, color: "#10B981", sub: "+8.4% MoM", subColor: "text-emerald-600", icon: "DollarSign" },
+          { label: "Waitlist", value: totalWaitlist, pct: waitlistPct, color: "#F59E0B", sub: `${openSeats} open seats`, subColor: "text-gray-400", icon: "ClipboardList" },
+          { label: "Tasks Done", value: `${tasksDone}/${totalTasks}`, pct: tasksPct, color: "#4F46E5", sub: `${highPriorityTasks} high priority`, subColor: "text-red-500", icon: "CheckCircle2" },
         ].map((kpi, i) => (
           <motion.div key={i} variants={itemVariants}>
             <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">{kpi.icon}</span>
+                  {React.createElement(kpiIcons[kpi.icon], { size: 15, className: "text-gray-500", strokeWidth: 2 })}
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
                 </div>
                 <div className="relative flex items-center justify-center h-[130px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadialBarChart
-                      cx="50%"
-                      cy="50%"
-                      innerRadius="70%"
-                      outerRadius="100%"
-                      barSize={16}
-                      data={[{ value: kpi.pct, fill: kpi.color }]}
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <RadialBar
-                        background={{ fill: "#F1F5F9" }}
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { value: kpi.pct, fill: kpi.color },
+                          { value: 100 - kpi.pct, fill: "#F1F5F9" },
+                        ]}
                         dataKey="value"
-                        cornerRadius={10}
+                        innerRadius="68%"
+                        outerRadius="100%"
+                        startAngle={90}
+                        endAngle={-270}
+                        strokeWidth={0}
                       />
-                    </RadialBarChart>
+                    </PieChart>
                   </ResponsiveContainer>
                   <div
                     className="absolute text-2xl font-black"
@@ -330,36 +332,34 @@ const OverviewPage = () => {
       {/* Second KPI Row — Donut Chart Cards (remaining 4) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "🔧" },
-          { label: "At-Risk", value: `${activeAtRisk}/${atRiskStudents.length}`, pct: atRiskPct, color: "#8B5CF6", sub: "intervening", subColor: "text-gray-400", icon: "⚠️" },
-          { label: "PTO Used", value: `${totalPTOUsed}/${totalPTOAllowance}`, pct: ptoPct, color: "#14B8A6", sub: `${substitutes.length} subs this mo`, subColor: "text-gray-400", icon: "📅" },
-          { label: "Check-ins", value: procareData.dailyCheckIns, pct: checkinPct, color: "#F97316", sub: `${procareData.absentToday} absent`, subColor: "text-amber-600", icon: "🏫" },
+          { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "Wrench" },
+          { label: "At-Risk", value: `${activeAtRisk}/${atRiskStudents.length}`, pct: atRiskPct, color: "#8B5CF6", sub: "intervening", subColor: "text-gray-400", icon: "AlertTriangle" },
+          { label: "PTO Used", value: `${totalPTOUsed}/${totalPTOAllowance}`, pct: ptoPct, color: "#14B8A6", sub: `${substitutes.length} subs this mo`, subColor: "text-gray-400", icon: "Calendar" },
+          { label: "Check-ins", value: procareData.dailyCheckIns, pct: checkinPct, color: "#F97316", sub: `${procareData.absentToday} absent`, subColor: "text-amber-600", icon: "UserCheck" },
         ].map((kpi, i) => (
           <motion.div key={i} variants={itemVariants}>
             <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-base">{kpi.icon}</span>
+                  {React.createElement(kpiIcons[kpi.icon], { size: 15, className: "text-gray-500", strokeWidth: 2 })}
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
                 </div>
                 <div className="relative flex items-center justify-center h-[130px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadialBarChart
-                      cx="50%"
-                      cy="50%"
-                      innerRadius="70%"
-                      outerRadius="100%"
-                      barSize={16}
-                      data={[{ value: kpi.pct, fill: kpi.color }]}
-                      startAngle={90}
-                      endAngle={-270}
-                    >
-                      <RadialBar
-                        background={{ fill: "#F1F5F9" }}
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { value: kpi.pct, fill: kpi.color },
+                          { value: 100 - kpi.pct, fill: "#F1F5F9" },
+                        ]}
                         dataKey="value"
-                        cornerRadius={10}
+                        innerRadius="68%"
+                        outerRadius="100%"
+                        startAngle={90}
+                        endAngle={-270}
+                        strokeWidth={0}
                       />
-                    </RadialBarChart>
+                    </PieChart>
                   </ResponsiveContainer>
                   <div
                     className="absolute text-2xl font-black"
