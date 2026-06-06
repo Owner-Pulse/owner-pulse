@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   ChevronRight,
   TrendingUp,
+  Wallet,
+  Receipt,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +35,36 @@ const fmtRelative = (d) => {
   return `${Math.abs(diff)} days ago`;
 };
 
+const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+
 const daysUntil = (d) => Math.ceil((new Date(d) - TODAY) / 86400000);
+
+// ─── Expense constants ──────────────────────────────────────────
+const DIRECTOR_BUDGET_TOTAL = 9000;
+
+const DEFAULT_EXPENSES = [
+  { id: 1, amount: 47.50, reason: "Events & Food", description: "Pizza for parent meeting", date: "2026-04-12" },
+  { id: 2, amount: 124.00, reason: "Classroom Supplies", description: "Crayons and markers — PreK3", date: "2026-04-15" },
+  { id: 3, amount: 38.00, reason: "Staff Appreciation", description: "Coffee and donuts for staff PD", date: "2026-04-22" },
+  { id: 4, amount: 89.00, reason: "Cleaning Supplies", description: "Cleaning wipes restock", date: "2026-04-28" },
+  { id: 5, amount: 215.00, reason: "Classroom Supplies", description: "Construction paper bulk order", date: "2026-05-01" },
+  { id: 6, amount: 65.00, reason: "Staff Appreciation", description: "Birthday cake for office party", date: "2026-05-04" },
+  { id: 7, amount: 180.00, reason: "Office Supplies", description: "Printer ink cartridges", date: "2026-05-06" },
+  { id: 8, amount: 42.00, reason: "Teacher Appreciation", description: "Gift cards for teacher appreciation", date: "2026-05-08" },
+];
+
+const EXPENSE_REASON_COLORS = {
+  "Classroom Supplies": "#2563EB",
+  "Events & Food": "#F97316",
+  "Staff Appreciation": "#EC4899",
+  "Cleaning Supplies": "#16A34A",
+  "Office Supplies": "#0EA5E9",
+  "Teacher Appreciation": "#8B5CF6",
+  "Professional Dev.": "#D97706",
+  "Tech & Software": "#7C3AED",
+  "Facilities": "#64748B",
+  "Other": "#94A0B5",
+};
 
 // ─── Data ───────────────────────────────────────────────────────
 
@@ -76,6 +107,28 @@ const CLASSROOMS = [
 const DirectorOverviewPage = () => {
   const navigate = useNavigate();
 
+  // ─── Load expenses from localStorage ───
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const saved = localStorage.getItem("directorExpenses");
+      return saved ? JSON.parse(saved) : DEFAULT_EXPENSES;
+    } catch {
+      return DEFAULT_EXPENSES;
+    }
+  });
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === "directorExpenses") {
+        try {
+          setExpenses(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   // KPIs
   const openTasks = SEEDED_TASKS.filter(t => t.status !== "done").length;
   const highPriorityTasks = SEEDED_TASKS.filter(t => t.priority === "high" && t.status !== "done").length;
@@ -86,6 +139,26 @@ const DirectorOverviewPage = () => {
   const majorIncidents = SEEDED_INCIDENTS.filter(i => i.severity === "major").length;
   const openMaintenance = SEEDED_MAINTENANCE.filter(m => m.status !== "done").length;
   const criticalMaintenance = SEEDED_MAINTENANCE.filter(m => m.priority === "critical" && m.status !== "done").length;
+
+  // Expense computations
+  const directorSpent = useMemo(() => expenses.reduce((a, e) => a + e.amount, 0), [expenses]);
+  const directorRemaining = DIRECTOR_BUDGET_TOTAL - directorSpent;
+  const pettyCashPercent = Math.round((directorSpent / DIRECTOR_BUDGET_TOTAL) * 100);
+
+  const expenseByReason = useMemo(() => {
+    const map = {};
+    expenses.forEach((e) => {
+      const reason = e.reason || "Other";
+      map[reason] = (map[reason] || 0) + e.amount;
+    });
+    return Object.entries(map)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [expenses]);
+
+  const recentExpenses = useMemo(() => {
+    return [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  }, [expenses]);
 
   // Incident stats by classroom
   const incidentByClassroom = useMemo(() => {
@@ -351,6 +424,88 @@ const DirectorOverviewPage = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Recent Expenses & Petty Cash */}
+      <motion.div variants={itemVariants}>
+        <Card className="bg-white border-none shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Receipt size={16} className="text-pink-500" />
+                Recent Expenses &amp; Petty Cash
+              </CardTitle>
+              <span className="text-xs text-blue-600 cursor-pointer hover:underline" onClick={() => navigate("/dashboard/budget")}>View all</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Petty Cash Status */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center">
+                      <Wallet size={16} className="text-pink-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-800">Petty Cash</span>
+                  </div>
+                  <span className="text-xs font-bold text-pink-600">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
+                </div>
+                <div className="h-2.5 bg-pink-100 rounded-full overflow-hidden mb-1.5">
+                  <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pettyCashPercent}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">{pettyCashPercent}% used</span>
+                  <span className={`font-medium ${directorRemaining > 0 ? "text-pink-600" : "text-red-500"}`}>
+                    {fmtMoney(directorRemaining)} left
+                  </span>
+                </div>
+                <p className="text-[9px] text-gray-400 mt-2">{expenses.length} total transactions</p>
+              </div>
+
+              {/* Recent Expenses */}
+              <div className="md:col-span-2">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Transactions</p>
+                <div className="space-y-1.5">
+                  {recentExpenses.length > 0 ? recentExpenses.map((exp) => (
+                    <div key={exp.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.reason] || "#94A0B5" }} />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-900 truncate">{exp.description}</p>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] text-gray-400">{exp.reason}</span>
+                            <span className="text-[9px] text-gray-300">·</span>
+                            <span className="text-[9px] text-gray-400">{fmtDate(exp.date)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
+                    </div>
+                  )) : (
+                    <div className="text-center py-4 text-sm text-gray-400">No expenses recorded yet</div>
+                  )}
+                </div>
+
+                {/* Spending by Reason */}
+                {expenseByReason.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Spending by Reason</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {expenseByReason.map((cat) => (
+                        <div key={cat.name} className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EXPENSE_REASON_COLORS[cat.name] || "#94A0B5" }} />
+                          <span className="text-[10px] text-gray-600">{cat.name}</span>
+                          <span className="text-[10px] font-semibold text-gray-700">{fmtMoney(Math.round(cat.total))}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Quick Actions */}
       <motion.div variants={itemVariants}>

@@ -43,6 +43,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 
 // ─── Color palette ─────────────────────────────────────────────────
 const COLORS = {
@@ -201,6 +202,8 @@ const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
 
 const OverviewPage = () => {
+  const navigate = useNavigate();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -541,7 +544,7 @@ const OverviewPage = () => {
                   )}
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all at-risk →</Button>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => navigate("/dashboard/enrollment")}>View all at-risk →</Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -583,7 +586,7 @@ const OverviewPage = () => {
                   </div>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all maintenance →</Button>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => navigate("/dashboard/maintenance")}>View all maintenance →</Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -625,7 +628,7 @@ const OverviewPage = () => {
                   </div>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all tasks →</Button>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => navigate("/dashboard/tasks")}>View all tasks →</Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -724,8 +727,8 @@ const OverviewPage = () => {
                 )}
               </div>
 
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-8 hover:bg-blue-50">
-                <a href="/dashboard/budget" className="w-full">View full budget →</a>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-8 hover:bg-blue-50" onClick={() => navigate("/dashboard/budget")}>
+                View full budget →
               </Button>
             </CardContent>
           </Card>
