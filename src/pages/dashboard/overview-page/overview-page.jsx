@@ -16,6 +16,10 @@ import {
   Clock,
   Wallet,
   Landmark,
+  ArrowUpRight,
+  Building2,
+  GraduationCap,
+  Download,
 } from "lucide-react";
 import {
   AreaChart,
@@ -206,7 +210,7 @@ const OverviewPage = () => {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
-  // ─── Load director expenses from localStorage (shared with budget page) ───
+  // ─── Load director expenses from localStorage ───
   const [expenses, setExpenses] = useState(() => {
     try {
       const saved = localStorage.getItem("directorExpenses");
@@ -216,7 +220,6 @@ const OverviewPage = () => {
     }
   });
 
-  // Listen for storage changes (in case user switches tabs or the budget page adds expenses)
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === "directorExpenses") {
@@ -233,7 +236,6 @@ const OverviewPage = () => {
   const directorRemaining = DIRECTOR_BUDGET_TOTAL - directorSpent;
   const pettyCashPercent = Math.round((directorSpent / DIRECTOR_BUDGET_TOTAL) * 100);
 
-  // Group expenses by reason for display
   const expenseByReason = useMemo(() => {
     const map = {};
     expenses.forEach((e) => {
@@ -259,7 +261,6 @@ const OverviewPage = () => {
   const stepUpRedFlags = stepUpApprovals.filter((s) => s.daysPending >= 20).length;
   const budgetPercent = Math.round((budgetData.spent / budgetData.total) * 100);
   const schoolBudgetRemaining = budgetData.total - budgetData.spent;
-  const totalBudgetUsed = budgetData.categories.reduce((a, c) => a + c.spent, 0);
   const totalEnrolled = 245;
   const totalCapacity = 292;
   const enrollPercent = Math.round((totalEnrolled / totalCapacity) * 100);
@@ -286,14 +287,13 @@ const OverviewPage = () => {
   const revenuePct = Math.round((184200 / revenueTarget) * 100);
   const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
 
-  // ─── KPI icon map ────────────────────────────────────────────────
   const kpiIcons = {
     Users, DollarSign, ClipboardList, CheckCircle2,
     Wrench, AlertTriangle, Calendar, UserCheck,
   };
 
   return (
-    <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
+    <motion.div className="space-y-6 pb-8 max-w-[1600px] mx-auto" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0">
@@ -307,12 +307,12 @@ const OverviewPage = () => {
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="text-xs md:text-sm text-gray-500">Integrated:</span>
-            <div className="flex items-center gap-1.5">
-              <img src="/procare-logo.png" alt="Procare" className="h-4 md:h-5" />
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 rounded-md">
+              <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center text-[8px] font-bold text-blue-600">P</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">Procare</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <img src="/quickbooks-logo.png" alt="QuickBooks" className="h-4 md:h-5" />
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 rounded-md">
+              <div className="w-4 h-4 bg-green-100 rounded flex items-center justify-center text-[8px] font-bold text-green-600">QB</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">QuickBooks</span>
             </div>
             {quickbooksStatus.reconciled && (
@@ -320,24 +320,19 @@ const OverviewPage = () => {
                 <CheckCircle2 size={10} /> Synced
               </span>
             )}
-            {criticalMaintenance > 0 && (
-              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-red-100 text-red-700 text-[9px] md:text-xs rounded-full whitespace-nowrap">
-                <Wrench size={10} /> {criticalMaintenance} critical
-              </span>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
+          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3 h-9">
             <FileText size={14} className="mr-1.5" /> Export
           </Button>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3">
+          <Button className="bg-[#0A0F1E] hover:bg-black text-white text-xs md:text-sm px-2.5 md:px-3 h-9">
             <Receipt size={14} className="mr-1.5" /> Run Payroll
           </Button>
         </div>
       </motion.div>
 
-      {/* KPI Row — Donut Chart Cards (4 per row) */}
+      {/* KPI Row 1 — Donut Chart Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Enrolled", value: totalEnrolled, pct: enrollPercent, color: "#2563EB", sub: "+12% y/y", subColor: "text-emerald-600", icon: "Users" },
@@ -352,7 +347,7 @@ const OverviewPage = () => {
                   {React.createElement(kpiIcons[kpi.icon], { size: 15, className: "text-gray-500", strokeWidth: 2 })}
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
                 </div>
-                <div className="relative flex items-center justify-center h-[130px]">
+                <div className="relative flex items-center justify-center h-[110px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -361,7 +356,7 @@ const OverviewPage = () => {
                           { value: 100 - kpi.pct, fill: "#F1F5F9" },
                         ]}
                         dataKey="value"
-                        innerRadius="68%"
+                        innerRadius="65%"
                         outerRadius="100%"
                         startAngle={90}
                         endAngle={-270}
@@ -369,10 +364,7 @@ const OverviewPage = () => {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div
-                    className="absolute text-2xl font-black"
-                    style={{ color: kpi.color }}
-                  >
+                  <div className="absolute text-2xl font-black" style={{ color: kpi.color }}>
                     {kpi.pct}%
                   </div>
                 </div>
@@ -384,7 +376,7 @@ const OverviewPage = () => {
         ))}
       </div>
 
-      {/* Second KPI Row — Donut Chart Cards (remaining 4) */}
+      {/* KPI Row 2 — Donut Chart Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "Wrench" },
@@ -399,7 +391,7 @@ const OverviewPage = () => {
                   {React.createElement(kpiIcons[kpi.icon], { size: 15, className: "text-gray-500", strokeWidth: 2 })}
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{kpi.label}</p>
                 </div>
-                <div className="relative flex items-center justify-center h-[130px]">
+                <div className="relative flex items-center justify-center h-[110px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -408,7 +400,7 @@ const OverviewPage = () => {
                           { value: 100 - kpi.pct, fill: "#F1F5F9" },
                         ]}
                         dataKey="value"
-                        innerRadius="68%"
+                        innerRadius="65%"
                         outerRadius="100%"
                         startAngle={90}
                         endAngle={-270}
@@ -416,10 +408,7 @@ const OverviewPage = () => {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div
-                    className="absolute text-2xl font-black"
-                    style={{ color: kpi.color }}
-                  >
+                  <div className="absolute text-2xl font-black" style={{ color: kpi.color }}>
                     {kpi.pct}%
                   </div>
                 </div>
@@ -431,17 +420,17 @@ const OverviewPage = () => {
         ))}
       </div>
 
-      {/* First Row — Financial Chart + QuickBooks + Tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Main Content Row — Financial Chart + Right Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <CardTitle>Financial Performance</CardTitle>
-                  <CardDescription>Revenue vs Expenses with Scholarship impact</CardDescription>
+                  <CardTitle className="text-base">Financial Performance</CardTitle>
+                  <CardDescription className="text-xs">Revenue vs Expenses with Scholarship impact</CardDescription>
                 </div>
-                <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-600" /><span className="text-gray-600">Tuition</span></div>
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-gray-600">Scholarships</span></div>
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-400" /><span className="text-gray-600">Expenses</span></div>
@@ -449,7 +438,7 @@ const OverviewPage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[180px] md:h-[240px] w-full overflow-x-auto">
+              <div className="h-[200px] md:h-[260px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -472,70 +461,78 @@ const OverviewPage = () => {
           </Card>
         </motion.div>
 
+        {/* Right Sidebar — QuickBooks + Procare */}
         <motion.div variants={itemVariants} className="flex flex-col gap-4">
-          {/* QuickBooks */}
           <Card className="bg-white border-none shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-sm">
-                <span>QuickBooks Sync</span>
-                <img src="/quickbooks-logo.png" alt="QuickBooks" className="h-5" />
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-green-100 rounded flex items-center justify-center text-[9px] font-bold text-green-700">QB</div>
+                  QuickBooks Sync
+                </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between items-center pb-1.5 border-b border-gray-100">
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                 <span className="text-xs text-gray-500">Bank Balance</span>
                 <span className="text-base font-bold text-gray-900">${quickbooksStatus.bankBalance.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center pb-1.5 border-b border-gray-100">
-                <span className="text-xs text-gray-500">Pending</span>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                <span className="text-xs text-gray-500">Pending Transactions</span>
                 <span className="text-amber-600 font-medium text-xs">{quickbooksStatus.pendingTransactions} to review</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500">Last Sync</span>
                 <span className="text-xs text-gray-400">{quickbooksStatus.lastSync}</span>
               </div>
-              <Button variant="outline" className="w-full mt-1 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8">Sync Now</Button>
+              <Button variant="outline" className="w-full mt-1 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8">
+                Sync Now
+              </Button>
             </CardContent>
           </Card>
 
-          {/* Procare Today */}
           <Card className="bg-white border-none shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <img src="/procare-logo.png" alt="Procare" className="h-4" />
+                <div className="w-5 h-5 bg-blue-100 rounded flex items-center justify-center text-[9px] font-bold text-blue-600">P</div>
                 Procare Today
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 gap-2 text-center">
-                <div><p className="text-lg font-bold text-gray-900">{procareData.parentMessages}</p><p className="text-[10px] text-gray-400">Messages</p></div>
-                <div><p className="text-lg font-bold text-gray-900">{procareData.medicationGiven}</p><p className="text-[10px] text-gray-400">Medications</p></div>
-                <div><p className="text-lg font-bold text-amber-600">{procareData.illnesses}</p><p className="text-[10px] text-gray-400">Illnesses</p></div>
-                <div><p className="text-lg font-bold text-emerald-600">{procareData.incidents}</p><p className="text-[10px] text-gray-400">Incidents</p></div>
+                <div className="p-2 bg-gray-50 rounded-lg"><p className="text-base font-bold text-gray-900">{procareData.parentMessages}</p><p className="text-[10px] text-gray-400">Messages</p></div>
+                <div className="p-2 bg-gray-50 rounded-lg"><p className="text-base font-bold text-gray-900">{procareData.medicationGiven}</p><p className="text-[10px] text-gray-400">Medications</p></div>
+                <div className="p-2 bg-amber-50 rounded-lg"><p className="text-base font-bold text-amber-600">{procareData.illnesses}</p><p className="text-[10px] text-gray-400">Illnesses</p></div>
+                <div className="p-2 bg-emerald-50 rounded-lg"><p className="text-base font-bold text-emerald-600">{procareData.incidents}</p><p className="text-[10px] text-gray-400">Incidents</p></div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      {/* Second Row — At-Risk + Staff Coverage + Discounts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Middle Row — At-Risk + Maintenance + Tasks */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* At-Risk Students */}
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <AlertTriangle size={16} className="text-red-500" />
-                At-Risk Students
-                <span className="ml-auto text-[10px] font-normal text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{atRiskStudents.filter(r => r.status !== "lost").length} active</span>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <AlertTriangle size={16} className="text-red-500" />
+                  At-Risk Students
+                </CardTitle>
+                <span className="text-[10px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{activeAtRisk} active</span>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5">
               {atRiskStudents.map((r, i) => (
                 <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${r.status === "lost" ? "bg-gray-50 opacity-60" : "bg-red-50"}`}>
-                  <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${r.status === "lost" ? "bg-gray-400" : "bg-red-500"}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${r.status === "lost" ? "bg-gray-400" : "bg-red-500"}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-gray-900">{r.name} · {r.grade} <span className={`ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.status === "lost" ? "bg-gray-200 text-gray-500" : "bg-red-100 text-red-700"}`}>{r.status}</span></p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs font-semibold text-gray-900">{r.name} · {r.grade}</p>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.status === "lost" ? "bg-gray-200 text-gray-500" : "bg-red-100 text-red-700"}`}>{r.status}</span>
+                    </div>
                     <p className="text-[10px] text-gray-500 mt-0.5">{r.detail}</p>
                     <p className="text-[9px] text-gray-400 mt-0.5">{r.reason} · Flagged {fmtDate(r.flagged)}</p>
                   </div>
@@ -544,127 +541,27 @@ const OverviewPage = () => {
                   )}
                 </div>
               ))}
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all at-risk →</Button>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Staff Coverage & PTO */}
+        {/* Open Maintenance */}
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <UserCheck size={16} className="text-blue-500" />
-                Staff Coverage
-                <span className="ml-auto text-[10px] font-normal text-blue-600">{substitutes.length} subs this month</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {/* PTO high usage alert */}
-              {staffPTO.filter(s => s.used >= 6).length > 0 && (
-                <div className="p-2 rounded-lg bg-amber-50 border border-amber-100 mb-1">
-                  <p className="text-[10px] font-semibold text-amber-700">{staffPTO.filter(s => s.used >= 6).length} staff at risk of PTO shortage</p>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Wrench size={16} className="text-amber-500" />
+                  Open Maintenance
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {criticalMaintenance > 0 && <span className="text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">{criticalMaintenance} critical</span>}
+                  <span className="text-[10px] text-gray-400">{openMaintenance} total</span>
                 </div>
-              )}
-              {staffPTO.slice(0, 4).map((s, i) => {
-                const pct = Math.round((s.used / s.allowance) * 100);
-                return (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0">
-                      {s.name.split(" ").slice(-1)[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium text-gray-900">{s.name}</p>
-                        <span className="text-[10px] font-semibold text-gray-500">{s.used}/{s.allowance}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-0.5">
-                        <div className={`h-full rounded-full ${pct >= 80 ? "bg-red-500" : pct >= 60 ? "bg-amber-500" : "bg-blue-500"}`} style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className="text-[9px] text-gray-400 mt-0.5 truncate">{s.recent}</p>
-                    </div>
-                  </div>
-                );
-              })}
-              {substitutes.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-100">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Recent Subs</p>
-                  {substitutes.slice(0, 2).map((s) => (
-                    <div key={s.id} className="flex items-center gap-2 text-xs text-gray-600">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                      <span>{s.subName} → {s.coveringFor} <span className="text-gray-400">({fmtDate(s.date)})</span></span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Discounts & Scholarships */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <DollarSign size={16} className="text-emerald-500" />
-                Discounts & Scholarships
-                <span className="ml-auto text-[10px] font-normal text-emerald-600">${(totalDiscountValue / 1000).toFixed(1)}K/mo</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {/* Scholarships summary */}
-              <div className="p-2.5 rounded-lg bg-purple-50">
-                <p className="text-[10px] font-semibold text-purple-600 uppercase">Scholarships YTD</p>
-                <p className="text-lg font-bold text-gray-900">${(totalScholarshipValue / 1000).toFixed(0)}K</p>
-                <p className="text-[10px] text-gray-500">{totalScholarshipStudents} students enrolled</p>
               </div>
-
-              {/* Discounts list */}
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">Active Discounts</p>
-                {discounts.slice(0, 4).map((d, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="text-xs text-gray-700">{d.student} · {d.grade}</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-900">${d.monthlyValue}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Step Up Alert */}
-              {stepUpRedFlags > 0 && (
-                <div className="p-2 rounded-lg bg-red-50 border border-red-100 mt-1">
-                  <div className="flex items-center gap-1.5">
-                    <AlertTriangle size={12} className="text-red-500" />
-                    <span className="text-[10px] font-semibold text-red-700">{stepUpRedFlags} stuck Step Up approvals</span>
-                  </div>
-                  {stepUpApprovals.filter(s => s.daysPending >= 20).map((s, i) => (
-                    <p key={i} className="text-[9px] text-red-600 ml-5">{s.parent} · {s.student} · ${s.amount} ({s.daysPending}d)</p>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Third Row — Maintenance + Tasks + Compliance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Maintenance Overview */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Wrench size={16} className="text-amber-500" />
-                Open Maintenance
-                <span className="ml-auto text-[10px] font-normal flex items-center gap-2">
-                  <span className="text-red-500">{criticalMaintenance} critical</span>
-                  <span className="text-gray-400">· {openMaintenance} total</span>
-                </span>
-              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2.5">
               {maintenanceRequests.filter(m => m.status !== "done").slice(0, 4).map((m) => (
                 <div key={m.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50">
                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -674,7 +571,7 @@ const OverviewPage = () => {
                   }`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-gray-900 truncate">{m.issue}</p>
-                    <div className="flex items-center gap-2 text-[9px] text-gray-400">
+                    <div className="flex items-center gap-1.5 text-[9px] text-gray-400 mt-0.5 flex-wrap">
                       <span>{m.location}</span>
                       <span>·</span>
                       <span className={`px-1 py-0.5 rounded-full font-medium ${
@@ -682,13 +579,11 @@ const OverviewPage = () => {
                         m.priority === "high" ? "bg-orange-100 text-orange-600" :
                         m.priority === "medium" ? "bg-amber-100 text-amber-600" : "bg-gray-100 text-gray-500"
                       }`}>{m.priority}</span>
-                      <span>·</span>
-                      <span>{m.submittedBy}</span>
                     </div>
                   </div>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7">View all maintenance →</Button>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all maintenance →</Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -697,28 +592,30 @@ const OverviewPage = () => {
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ClipboardList size={16} className="text-blue-500" />
-                Active Tasks
-                <span className="ml-auto text-[10px] font-normal text-blue-600">{highPriorityTasks} high priority</span>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <ClipboardList size={16} className="text-blue-500" />
+                  Active Tasks
+                </CardTitle>
+                <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{highPriorityTasks} high priority</span>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {tasks.filter(t => t.status !== "done").slice(0, 5).map((t) => (
+            <CardContent className="space-y-2.5">
+              {tasks.filter(t => t.status !== "done").slice(0, 4).map((t) => (
                 <div key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50">
                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     t.priority === "high" ? "bg-red-500" :
                     t.priority === "medium" ? "bg-amber-500" : "bg-gray-400"
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-1">
                       <p className="text-xs font-medium text-gray-900 truncate">{t.title}</p>
-                      <span className={`text-[9px] font-semibold ml-1 shrink-0 ${
+                      <span className={`text-[9px] font-semibold shrink-0 ml-1 ${
                         daysUntil(t.due) <= 3 ? "text-red-500" :
                         daysUntil(t.due) <= 7 ? "text-amber-500" : "text-gray-400"
                       }`}>{daysUntil(t.due) <= 0 ? "Overdue" : `${daysUntil(t.due)}d`}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[9px] text-gray-400">
+                    <div className="flex items-center gap-1.5 text-[9px] text-gray-400 mt-0.5">
                       <span className="capitalize">{t.assignee}</span>
                       <span>·</span>
                       <span className="capitalize">{t.status.replace("_", " ")}</span>
@@ -728,53 +625,15 @@ const OverviewPage = () => {
                   </div>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7">View all tasks →</Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Compliance */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ShieldCheck size={16} className="text-red-500" />
-                Compliance
-                <span className="ml-auto text-[10px] font-normal flex items-center gap-2">
-                  <span className="text-red-500">{complianceStats.expired} expired</span>
-                  <span className="text-amber-500">· {complianceStats.expiring} expiring</span>
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {complianceItems.filter(c => c.status !== "compliant").slice(0, 4).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
-                  <div>
-                    <p className="text-xs font-medium text-gray-900">{item.name}</p>
-                    <p className="text-[9px] text-gray-500">{item.authority}</p>
-                  </div>
-                  <span className={`text-[10px] font-semibold ml-2 shrink-0 ${
-                    item.status === "expired" ? "text-red-600" : "text-amber-600"
-                  }`}>
-                    {item.status === "expired" ? "Expired" : `${item.daysLeft}d left`}
-                  </span>
-                </div>
-              ))}
-              {complianceStats.compliant > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] text-green-600">
-                  <CheckCircle2 size={12} />
-                  <span>{complianceStats.compliant} items compliant</span>
-                </div>
-              )}
-              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7">View compliance →</Button>
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1">View all tasks →</Button>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      {/* Fourth Row — Budget Breakdown (School + Director Expenses) + Enrollment + Events */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Combined Budget: School Budget + Director Expenses */}
+      {/* Bottom Section — Budget + Enrollment + Events (3 columns with better balance) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Budget Overview — Combined School + Director */}
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full overflow-hidden">
             <CardHeader className="pb-2">
@@ -805,7 +664,7 @@ const OverviewPage = () => {
                 </div>
               </div>
 
-              {/* Director's Petty Cash — Dynamic from localStorage */}
+              {/* Director's Petty Cash */}
               <div className="p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -826,65 +685,55 @@ const OverviewPage = () => {
                   </span>
                 </div>
 
-                {/* Recent expenses mini-list */}
+                {/* Recent Expenses */}
                 {recentExpenses.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-pink-200/50">
+                  <div className="mt-3 pt-2 border-t border-pink-200/50">
                     <p className="text-[9px] font-semibold text-pink-700 uppercase tracking-wider mb-1.5">Recent Expenses</p>
-                    {recentExpenses.slice(0, 4).map((exp) => (
-                      <div key={exp.id} className="flex items-center justify-between py-1">
-                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                          <div
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.reason] || "#94A0B5" }}
-                          />
-                          <div className="min-w-0">
-                            <p className="text-[10px] text-gray-700 truncate">{exp.description}</p>
-                            <div className="flex items-center gap-1">
-                              {exp.reason && (
+                    <div className="space-y-1.5">
+                      {recentExpenses.slice(0, 3).map((exp) => (
+                        <div key={exp.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.reason] || "#94A0B5" }} />
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-gray-700 truncate">{exp.description}</p>
+                              <div className="flex items-center gap-1">
                                 <span className="text-[8px] font-medium text-gray-400">{exp.reason}</span>
-                              )}
-                              <span className="text-[8px] text-gray-400">· {fmtDate(exp.date)}</span>
+                                <span className="text-[8px] text-gray-400">· {fmtDate(exp.date)}</span>
+                              </div>
                             </div>
                           </div>
+                          <span className="text-[10px] font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
+                      ))}
+                    </div>
+                    {expenseByReason.length > 0 && (
+                      <div className="mt-2 pt-1">
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Spending by Reason</p>
+                        <div className="flex flex-wrap gap-2">
+                          {expenseByReason.slice(0, 3).map((cat) => (
+                            <div key={cat.name} className="flex items-center gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EXPENSE_REASON_COLORS[cat.name] || "#94A0B5" }} />
+                              <span className="text-[9px] text-gray-600">{cat.name}</span>
+                              <span className="text-[9px] font-medium text-gray-700">{fmtMoney(Math.round(cat.total))}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Spending by reason mini-breakdown */}
-              {expenseByReason.length > 0 && (
-                <div>
-                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Spending by Reason</p>
-                  <div className="space-y-1">
-                    {expenseByReason.slice(0, 4).map((cat) => (
-                      <div key={cat.name} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EXPENSE_REASON_COLORS[cat.name] || "#94A0B5" }} />
-                          <span className="text-[10px] text-gray-600">{cat.name}</span>
-                        </div>
-                        <span className="text-[10px] font-medium text-gray-700">{fmtMoney(Math.round(cat.total))}</span>
-                      </div>
-                    ))}
-                    {expenseByReason.length > 4 && (
-                      <p className="text-[9px] text-gray-400 mt-0.5">+{expenseByReason.length - 4} more categories</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <Button variant="ghost" className="w-full mt-1 text-xs text-blue-600 h-7 hover:bg-blue-50">
+              <Button variant="ghost" className="w-full text-xs text-blue-600 h-8 hover:bg-blue-50">
                 <a href="/dashboard/budget" className="w-full">View full budget →</a>
               </Button>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Enrollment */}
+        {/* Enrollment Chart */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow h-full overflow-hidden">
+          <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Users size={15} className="text-blue-500" />
@@ -893,15 +742,15 @@ const OverviewPage = () => {
               <CardDescription className="text-[10px]">Students vs Capacity with Waitlist demand</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[150px] md:h-[180px] w-full overflow-x-auto">
+              <div className="h-[160px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={enrollmentData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                  <BarChart data={enrollmentData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 9 }} dy={5} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 9 }} />
-                    <Tooltip contentStyle={{ borderRadius: "8px", border: "none", fontSize: "12px" }} />
-                    <Bar dataKey="capacity" fill="#E5E7EB" radius={[4, 4, 0, 0]} barSize={14} name="Capacity" />
-                    <Bar dataKey="students" radius={[4, 4, 0, 0]} barSize={14} name="Enrolled">
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} dy={5} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} />
+                    <Tooltip contentStyle={{ borderRadius: "8px", border: "none", fontSize: "11px" }} />
+                    <Bar dataKey="capacity" fill="#E5E7EB" radius={[4, 4, 0, 0]} barSize={16} name="Capacity" />
+                    <Bar dataKey="students" radius={[4, 4, 0, 0]} barSize={16} name="Enrolled">
                       {enrollmentData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.students >= entry.capacity ? "#F59E0B" : "#4F46E5"} />
                       ))}
@@ -909,18 +758,27 @@ const OverviewPage = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex justify-around mt-2 pt-2 border-t border-gray-100">
-                <div className="text-center"><p className="text-lg font-bold text-indigo-600">{totalEnrolled}</p><p className="text-[9px] text-gray-500">Total</p></div>
-                <div className="text-center"><p className="text-lg font-bold text-amber-600">{totalWaitlist}</p><p className="text-[9px] text-gray-500">Waitlist</p></div>
-                <div className="text-center"><p className="text-lg font-bold text-emerald-600">{openSeats}</p><p className="text-[9px] text-gray-500">Open</p></div>
+              <div className="grid grid-cols-3 gap-3 mt-3 pt-2 border-t border-gray-100">
+                <div className="text-center p-2 bg-indigo-50 rounded-lg">
+                  <p className="text-lg font-bold text-indigo-600">{totalEnrolled}</p>
+                  <p className="text-[10px] text-gray-500">Total</p>
+                </div>
+                <div className="text-center p-2 bg-amber-50 rounded-lg">
+                  <p className="text-lg font-bold text-amber-600">{totalWaitlist}</p>
+                  <p className="text-[10px] text-gray-500">Waitlist</p>
+                </div>
+                <div className="text-center p-2 bg-emerald-50 rounded-lg">
+                  <p className="text-lg font-bold text-emerald-600">{openSeats}</p>
+                  <p className="text-[10px] text-gray-500">Open</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Upcoming Events & Payroll */}
+        {/* Upcoming Events — Clean and organized */}
         <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow h-full overflow-hidden">
+          <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Calendar size={15} className="text-purple-500" />
@@ -928,29 +786,55 @@ const OverviewPage = () => {
               </CardTitle>
               <CardDescription className="text-[10px]">Key dates &amp; deadlines</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-100">
-                <p className="text-xs font-semibold text-gray-900">General Liability Insurance</p>
-                <p className="text-[10px] text-amber-600">Shop rates by May 2 (60 days before renewal)</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-red-50 border border-red-100">
-                <p className="text-xs font-semibold text-gray-900">CPR Certification Renewal</p>
-                <p className="text-[10px] text-red-600">Due May 20 · 4 staff affected</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100">
-                <p className="text-xs font-semibold text-gray-900">Step Up Q4 Attestation</p>
-                <p className="text-[10px] text-blue-600">Due May 28 · Director's signature needed</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white">
-                <div className="flex items-center gap-2">
-                  <Clock size={12} className="text-amber-400" />
-                  <p className="text-xs font-semibold">Next Payroll: May 15</p>
+            <CardContent className="space-y-2.5">
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={14} className="text-amber-600" />
                 </div>
-                <p className="text-[10px] text-gray-400 ml-5">7 days away · Director hasn't submitted yet</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">General Liability Insurance</p>
+                  <p className="text-[10px] text-amber-600 mt-0.5">Shop rates by May 2 (60 days before renewal)</p>
+                </div>
               </div>
-              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
-                <p className="text-xs font-semibold text-gray-900">End of Year Ceremony</p>
-                <p className="text-[10px] text-emerald-600">June 5 · 100+ attendees expected</p>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                  <GraduationCap size={14} className="text-red-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">CPR Certification Renewal</p>
+                  <p className="text-[10px] text-red-600 mt-0.5">Due May 20 · 4 staff affected</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-blue-50 border border-blue-100">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <FileText size={14} className="text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">Step Up Q4 Attestation</p>
+                  <p className="text-[10px] text-blue-600 mt-0.5">Due May 28 · Director's signature needed</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Clock size={14} className="text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold">Next Payroll: May 15</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">7 days away · Director hasn't submitted yet</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <Building2 size={14} className="text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">End of Year Ceremony</p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">June 5 · 100+ attendees expected</p>
+                </div>
               </div>
             </CardContent>
           </Card>
