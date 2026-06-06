@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign,
   PiggyBank,
@@ -10,6 +10,8 @@ import {
   Plus,
   PieChart,
   Wallet,
+  X,
+  Trash2,
 } from "lucide-react";
 import {
   Card,
@@ -36,15 +38,28 @@ const SCHOOL_BUDGET_CATEGORIES = [
 
 const DIRECTOR_BUDGET_TOTAL = 9000;
 
-const DIRECTOR_EXPENSES = [
-  { id: 1, amount: 47.50, description: "Pizza for parent meeting", date: "2026-04-12" },
-  { id: 2, amount: 124.00, description: "Crayons and markers — PreK3", date: "2026-04-15" },
-  { id: 3, amount: 38.00, description: "Coffee and donuts for staff PD", date: "2026-04-22" },
-  { id: 4, amount: 89.00, description: "Cleaning wipes restock", date: "2026-04-28" },
-  { id: 5, amount: 215.00, description: "Construction paper bulk order", date: "2026-05-01" },
-  { id: 6, amount: 65.00, description: "Birthday cake for office party", date: "2026-05-04" },
-  { id: 7, amount: 180.00, description: "Printer ink cartridges", date: "2026-05-06" },
-  { id: 8, amount: 42.00, description: "Gift cards for teacher appreciation", date: "2026-05-08" },
+const DEFAULT_EXPENSES = [
+  { id: 1, amount: 47.50, reason: "Parent Meeting", description: "Pizza for parent meeting", date: "2026-04-12" },
+  { id: 2, amount: 124.00, reason: "Classroom Supplies", description: "Crayons and markers — PreK3", date: "2026-04-15" },
+  { id: 3, amount: 38.00, reason: "Staff Appreciation", description: "Coffee and donuts for staff PD", date: "2026-04-22" },
+  { id: 4, amount: 89.00, reason: "Cleaning Supplies", description: "Cleaning wipes restock", date: "2026-04-28" },
+  { id: 5, amount: 215.00, reason: "Classroom Supplies", description: "Construction paper bulk order", date: "2026-05-01" },
+  { id: 6, amount: 65.00, reason: "Staff Appreciation", description: "Birthday cake for office party", date: "2026-05-04" },
+  { id: 7, amount: 180.00, reason: "Office Supplies", description: "Printer ink cartridges", date: "2026-05-06" },
+  { id: 8, amount: 42.00, reason: "Teacher Appreciation", description: "Gift cards for teacher appreciation", date: "2026-05-08" },
+];
+
+const EXPENSE_REASONS = [
+  "Classroom Supplies",
+  "Events & Food",
+  "Staff Appreciation",
+  "Cleaning Supplies",
+  "Office Supplies",
+  "Teacher Appreciation",
+  "Professional Dev.",
+  "Tech & Software",
+  "Facilities",
+  "Other",
 ];
 
 // Expense auto-categorization
@@ -76,7 +91,6 @@ const CATEGORY_COLORS = {
 
 const totalSchoolSpent = SCHOOL_BUDGET_CATEGORIES.reduce((a, c) => a + c.spent, 0);
 const budgetPct = Math.round((totalSchoolSpent / SCHOOL_BUDGET_TOTAL) * 100);
-const directorSpent = DIRECTOR_EXPENSES.reduce((a, e) => a + e.amount, 0);
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -113,55 +127,293 @@ const KpiCard = ({ icon: Icon, label, value, sub, iconBg }) => (
   </Card>
 );
 
+// ─── Add Expense Modal ────────────────────────────────────────────
+
+const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("Other");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    const numAmount = parseFloat(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      setError("Please enter a valid amount.");
+      return;
+    }
+    if (!description.trim()) {
+      setError("Please enter a description.");
+      return;
+    }
+    if (!date) {
+      setError("Please select a date.");
+      return;
+    }
+
+    onAdd({
+      amount: numAmount,
+      reason,
+      description: description.trim(),
+      date,
+    });
+
+    // Reset form
+    setAmount("");
+    setReason("Other");
+    setDescription("");
+    setDate(new Date().toISOString().split("T")[0]);
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Add Expense</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Director's discretionary fund</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Amount */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Amount ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reason</label>
+                <select
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white"
+                >
+                  {EXPENSE_REASONS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What was this for?"
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200">
+                  <p className="text-xs font-medium text-red-600">{error}</p>
+                </div>
+              )}
+
+              {/* Submit */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-10 rounded-xl bg-[#0A0F1E] text-white text-sm font-semibold hover:bg-black transition-colors"
+                >
+                  Add Expense
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────
 
 const BudgetPage = () => {
-  const [view, setView] = useState("school"); // school | director
+  const [view, setView] = useState("school");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Load expenses from localStorage or use defaults
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const saved = localStorage.getItem("directorExpenses");
+      return saved ? JSON.parse(saved) : DEFAULT_EXPENSES;
+    } catch {
+      return DEFAULT_EXPENSES;
+    }
+  });
+
+  // Persist expenses to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("directorExpenses", JSON.stringify(expenses));
+  }, [expenses]);
+
+  // Detect user role
+  const user = JSON.parse(localStorage.getItem("user") || '{"role":"owner"}');
+  const isDirector = user.role === "director";
+
+  // If director, force director view
+  useEffect(() => {
+    if (isDirector) setView("director");
+  }, [isDirector]);
+
+  const directorSpent = expenses.reduce((a, e) => a + e.amount, 0);
   const schoolRemaining = SCHOOL_BUDGET_TOTAL - totalSchoolSpent;
   const directorRemaining = DIRECTOR_BUDGET_TOTAL - directorSpent;
 
-  // Expense breakdown by category
+  // Expense breakdown by category (using reason as the grouping key)
   const expenseByCategory = useMemo(() => {
     const map = {};
-    DIRECTOR_EXPENSES.forEach((e) => {
-      const cat = categorize(e.description);
+    expenses.forEach((e) => {
+      const cat = e.reason || categorize(e.description);
       map[cat] = (map[cat] || 0) + e.amount;
     });
     return Object.entries(map).map(([name, total]) => ({ name, total }));
-  }, []);
+  }, [expenses]);
+
+  // Expense breakdown by reason for the owner view
+  const expenseByReason = useMemo(() => {
+    const map = {};
+    expenses.forEach((e) => {
+      const reason = e.reason || "Other";
+      map[reason] = (map[reason] || 0) + e.amount;
+    });
+    return Object.entries(map)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [expenses]);
+
+  const handleAddExpense = (newExpense) => {
+    const id = Date.now();
+    setExpenses((prev) => [...prev, { id, ...newExpense }]);
+  };
+
+  const handleDeleteExpense = (id) => {
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  // Update director's discretionary spent to reflect real expenses
+  const updatedSchoolCategories = SCHOOL_BUDGET_CATEGORIES.map((cat) =>
+    cat.name === "Director's Discretionary"
+      ? { ...cat, spent: directorSpent }
+      : cat
+  );
+  const updatedTotalSchoolSpent = updatedSchoolCategories.reduce((a, c) => a + c.spent, 0);
+  const updatedBudgetPct = Math.round((updatedTotalSchoolSpent / SCHOOL_BUDGET_TOTAL) * 100);
+  const updatedSchoolRemaining = SCHOOL_BUDGET_TOTAL - updatedTotalSchoolSpent;
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Budget</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {fmtMoneyShort(totalSchoolSpent)} of {fmtMoneyShort(SCHOOL_BUDGET_TOTAL)} spent ({budgetPct}%) ·{" "}
-            <span className={schoolRemaining > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
-              {fmtMoneyShort(schoolRemaining)} remaining
-            </span>
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            {isDirector ? "My Budget" : "Budget"}
+          </h1>
+          {isDirector ? (
+            <p className="text-sm text-gray-500 mt-1">
+              {fmtMoney(directorSpent)} of {fmtMoney(DIRECTOR_BUDGET_TOTAL)} spent ·{" "}
+              <span className={directorRemaining > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                {fmtMoney(directorRemaining)} remaining
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500 mt-1">
+              {fmtMoneyShort(updatedTotalSchoolSpent)} of {fmtMoneyShort(SCHOOL_BUDGET_TOTAL)} spent ({updatedBudgetPct}%) ·{" "}
+              <span className={updatedSchoolRemaining > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                {fmtMoneyShort(updatedSchoolRemaining)} remaining
+              </span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button onClick={() => setView("school")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === "school" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>
-              School Budget
-            </button>
-            <button onClick={() => setView("director")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === "director" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>
-              Director Budget
-            </button>
-          </div>
-          <Button className="bg-[#0A0F1E] hover:bg-black text-white">
-            <Plus size={16} className="mr-2" /> {view === "director" ? "Add Expense" : "Adjust Budget"}
-          </Button>
+          {/* View Toggle — only show for owner */}
+          {!isDirector && (
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button onClick={() => setView("school")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === "school" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>
+                School Budget
+              </button>
+              <button onClick={() => setView("director")}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === "director" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}>
+                Director Expenses
+              </button>
+            </div>
+          )}
+          {isDirector && (
+            <Button className="bg-[#0A0F1E] hover:bg-black text-white" onClick={() => setShowAddModal(true)}>
+              <Plus size={16} className="mr-2" /> Add Expense
+            </Button>
+          )}
+          {!isDirector && view === "director" && (
+            <Button className="bg-[#0A0F1E] hover:bg-black text-white" onClick={() => setShowAddModal(true)}>
+              <Plus size={16} className="mr-2" /> Add Expense
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* ── SCHOOL BUDGET VIEW ──────────────────────────────────── */}
-      {view === "school" && (
+      {/* ── SCHOOL BUDGET VIEW (Owner only) ────────────────────── */}
+      {!isDirector && view === "school" && (
         <>
           {/* KPI Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -169,13 +421,13 @@ const BudgetPage = () => {
               <KpiCard icon={DollarSign} label="Annual Budget" value={fmtMoneyShort(SCHOOL_BUDGET_TOTAL)} sub="Aug 2025 – May 2026" iconBg="bg-blue-50 text-blue-600" />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoneyShort(totalSchoolSpent)} sub={`${budgetPct}% consumed`} iconBg="bg-amber-50 text-amber-600" />
+              <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoneyShort(updatedTotalSchoolSpent)} sub={`${updatedBudgetPct}% consumed`} iconBg="bg-amber-50 text-amber-600" />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <KpiCard icon={Wallet} label="Remaining" value={fmtMoneyShort(schoolRemaining)} sub={schoolRemaining > 0 ? "Available to spend" : "Over budget"} iconBg={schoolRemaining > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"} />
+              <KpiCard icon={Wallet} label="Remaining" value={fmtMoneyShort(updatedSchoolRemaining)} sub={updatedSchoolRemaining > 0 ? "Available to spend" : "Over budget"} iconBg={updatedSchoolRemaining > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"} />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <KpiCard icon={TrendingUp} label="Avg Monthly" value={fmtMoneyShort(Math.round(totalSchoolSpent / 9))} sub="Spend rate · Sep–May" iconBg="bg-purple-50 text-purple-600" />
+              <KpiCard icon={TrendingUp} label="Avg Monthly" value={fmtMoneyShort(Math.round(updatedTotalSchoolSpent / 9))} sub="Spend rate · Sep–May" iconBg="bg-purple-50 text-purple-600" />
             </motion.div>
           </div>
 
@@ -185,17 +437,17 @@ const BudgetPage = () => {
               <CardContent className="p-5">
                 <div className="flex justify-between text-sm mb-1.5">
                   <span className="font-semibold text-gray-700">Overall Budget Consumption</span>
-                  <span className={`font-bold ${budgetPct > 85 ? "text-red-500" : budgetPct > 70 ? "text-amber-600" : "text-emerald-600"}`}>
-                    {budgetPct}%
+                  <span className={`font-bold ${updatedBudgetPct > 85 ? "text-red-500" : updatedBudgetPct > 70 ? "text-amber-600" : "text-emerald-600"}`}>
+                    {updatedBudgetPct}%
                   </span>
                 </div>
                 <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${budgetPct > 85 ? "bg-red-400" : budgetPct > 70 ? "bg-amber-400" : "bg-blue-500"}`}
-                    style={{ width: `${budgetPct}%` }} />
+                  <div className={`h-full rounded-full ${updatedBudgetPct > 85 ? "bg-red-400" : updatedBudgetPct > 70 ? "bg-amber-400" : "bg-blue-500"}`}
+                    style={{ width: `${updatedBudgetPct}%` }} />
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>$0</span>
-                  <span>{fmtMoneyShort(totalSchoolSpent)} spent</span>
+                  <span>{fmtMoneyShort(updatedTotalSchoolSpent)} spent</span>
                   <span>{fmtMoneyShort(SCHOOL_BUDGET_TOTAL)} total</span>
                 </div>
               </CardContent>
@@ -214,7 +466,7 @@ const BudgetPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {SCHOOL_BUDGET_CATEGORIES.map((cat) => {
+                  {updatedSchoolCategories.map((cat) => {
                     const pct = Math.round((cat.spent / cat.budget) * 100);
                     const overspent = cat.spent > cat.budget;
                     const barColor = overspent ? "bg-red-400" : pct > 85 ? "bg-amber-400" : "bg-blue-500";
@@ -249,52 +501,16 @@ const BudgetPage = () => {
               </CardContent>
             </Card>
           </motion.div>
-
-          {/* Insights */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp size={16} className="text-amber-500" />
-                  Budget Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
-                  <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800">
-                    <span className="font-bold">Payroll</span> is the largest category at 77% of total budget. 
-                    At {fmtMoneyShort(920000)} of {fmtMoneyShort(1200000)}, it's on track but leaves little room 
-                    for mid-year hires or bonuses.
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2">
-                  <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-emerald-800">
-                    <span className="font-bold">Tech & Equipment</span> at 62% spent — under budget due to deferred 
-                    Chromebook refresh. Plan remaining {fmtMoneyShort(19000)} for EOY tech upgrades.
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-2">
-                  <CheckCircle2 size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-800">
-                    <span className="font-bold">Utilities</span> at 68% — favorable rates locked in through November. 
-                    Seasonal HVAC usage expected to increase in summer months.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </>
       )}
 
-      {/* ── DIRECTOR BUDGET VIEW ────────────────────────────────── */}
-      {view === "director" && (
+      {/* ── DIRECTOR BUDGET / EXPENSES VIEW ────────────────────── */}
+      {(view === "director" || isDirector) && (
         <>
           {/* KPI Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <motion.div variants={itemVariants}>
-              <KpiCard icon={Wallet} label="Director Budget" value={fmtMoney(DIRECTOR_BUDGET_TOTAL)} sub="Discretionary fund" iconBg="bg-blue-50 text-blue-600" />
+              <KpiCard icon={Wallet} label={isDirector ? "My Budget" : "Director Budget"} value={fmtMoney(DIRECTOR_BUDGET_TOTAL)} sub="Discretionary fund" iconBg="bg-blue-50 text-blue-600" />
             </motion.div>
             <motion.div variants={itemVariants}>
               <KpiCard icon={Receipt} label="Spent YTD" value={fmtMoney(directorSpent)} sub={`${Math.round((directorSpent / DIRECTOR_BUDGET_TOTAL) * 100)}% used`} iconBg="bg-amber-50 text-amber-600" />
@@ -303,7 +519,7 @@ const BudgetPage = () => {
               <KpiCard icon={PiggyBank} label="Remaining" value={fmtMoney(directorRemaining)} sub={directorRemaining > 0 ? "Available" : "Exhausted"} iconBg={directorRemaining > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"} />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(Math.round(directorSpent / DIRECTOR_EXPENSES.length))} sub={`${DIRECTOR_EXPENSES.length} expenses`} iconBg="bg-purple-50 text-purple-600" />
+              <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(Math.round(directorSpent / (expenses.length || 1)))} sub={`${expenses.length} expenses`} iconBg="bg-purple-50 text-purple-600" />
             </motion.div>
           </div>
 
@@ -329,36 +545,41 @@ const BudgetPage = () => {
             </Card>
           </motion.div>
 
-          {/* Grid: Spending by category + Recent expenses */}
+          {/* Grid: Spending by reason + Recent expenses */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* By category */}
+            {/* By reason/category */}
             <motion.div variants={itemVariants}>
               <Card className="bg-white border-none shadow-sm h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart size={16} className="text-gray-500" />
-                    Spending by Category
+                    Spending by Reason
                   </CardTitle>
+                  <CardDescription>How the discretionary fund is being used</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {expenseByCategory.map((cat) => {
-                    const pct = Math.round((cat.total / directorSpent) * 100);
-                    const color = CATEGORY_COLORS[cat.name] || "#94A0B5";
-                    return (
-                      <div key={cat.name} className="p-2.5 rounded-lg bg-gray-50">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                            <span className="text-sm text-gray-700">{cat.name}</span>
+                  {expenseByReason.length > 0 ? (
+                    expenseByReason.map((cat) => {
+                      const pct = Math.round((cat.total / directorSpent) * 100);
+                      const color = CATEGORY_COLORS[cat.name] || "#94A0B5";
+                      return (
+                        <div key={cat.name} className="p-2.5 rounded-lg bg-gray-50">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                              <span className="text-sm text-gray-700">{cat.name}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">{fmtMoney(cat.total)}</span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{fmtMoney(cat.total)}</span>
+                          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+                          </div>
                         </div>
-                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <div className="py-6 text-center text-sm text-gray-400">No expenses yet.</div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -371,25 +592,60 @@ const BudgetPage = () => {
                     <Receipt size={16} className="text-gray-500" />
                     Recent Expenses
                   </CardTitle>
+                  {isDirector && (
+                    <CardDescription>Track what you've spent</CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1">
-                    {[...DIRECTOR_EXPENSES].reverse().map((exp) => {
-                      const cat = categorize(exp.description);
-                      const color = CATEGORY_COLORS[cat] || "#94A0B5";
-                      return (
-                        <div key={exp.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                            <div className="min-w-0">
-                              <p className="text-sm text-gray-900 truncate">{exp.description}</p>
-                              <p className="text-[10px] text-gray-400">{fmtDate(exp.date)} · {cat}</p>
+                    {expenses.length > 0 ? (
+                      [...expenses].reverse().map((exp) => {
+                        const reason = exp.reason || categorize(exp.description);
+                        const color = CATEGORY_COLORS[reason] || "#94A0B5";
+                        return (
+                          <div key={exp.id} className="group flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-gray-900 truncate font-medium">{exp.description}</p>
+                                  {exp.reason && (
+                                    <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">
+                                      {exp.reason}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-gray-400">{fmtDate(exp.date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <span className="text-sm font-semibold text-gray-900">{fmtMoney(exp.amount)}</span>
+                              {isDirector && (
+                                <button
+                                  onClick={() => handleDeleteExpense(exp.id)}
+                                  className="w-6 h-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all"
+                                >
+                                  <Trash2 size={13} className="text-red-400" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900 flex-shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="py-6 text-center">
+                        <Receipt size={24} className="mx-auto text-gray-300 mb-2" />
+                        <p className="text-sm text-gray-400">No expenses yet</p>
+                        {isDirector && (
+                          <button
+                            onClick={() => setShowAddModal(true)}
+                            className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                          >
+                            Add your first expense →
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -401,23 +657,75 @@ const BudgetPage = () => {
             <Card className="bg-white border-none shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <Wallet size={18} className="text-amber-600" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${directorRemaining > 0 ? "bg-amber-100" : "bg-red-100"}`}>
+                    <Wallet size={18} className={directorRemaining > 0 ? "text-amber-600" : "text-red-500"} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{directorRemaining > 0 ? `${fmtMoney(directorRemaining)} remaining` : "Budget exhausted"}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {directorRemaining > 0
+                        ? `${fmtMoney(directorRemaining)} remaining in discretionary fund`
+                        : "Budget exhausted"}
+                    </p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {directorRemaining > 0
                         ? `Director's discretionary budget runs Aug through end of May. ${fmtMoney(directorRemaining)} left for the rest of the school year.`
                         : `Director's discretionary budget of ${fmtMoney(DIRECTOR_BUDGET_TOTAL)} has been fully spent. No more discretionary funds available until next school year.`}
                     </p>
+                    {expenses.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {expenseByReason.slice(0, 4).map((cat) => (
+                          <span key={cat.name} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600">
+                            {cat.name}: {fmtMoney(Math.round(cat.total))}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Insights section for owners (showing summary) */}
+          {!isDirector && expenses.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <Card className="bg-white border-none shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp size={16} className="text-amber-500" />
+                    Director Expense Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-2">
+                    <CheckCircle2 size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-blue-800">
+                      <span className="font-bold">{expenses.length} expenses</span> recorded from director's discretionary fund totaling {fmtMoney(directorSpent)}. 
+                      Top reason: <span className="font-medium">{expenseByReason[0]?.name || "N/A"}</span> at {fmtMoney(Math.round(expenseByReason[0]?.total || 0))}.
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2">
+                    <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">
+                      <span className="font-bold">{directorRemaining > 0 ? `${fmtMoney(directorRemaining)} remaining` : "Budget exhausted"}</span> 
+                      {" "}of the ${DIRECTOR_BUDGET_TOTAL.toLocaleString()} discretionary fund.
+                      {directorRemaining < 2000 && directorRemaining > 0 ? " Consider discussing budget reallocation with director." : ""}
+                      {directorRemaining <= 0 ? " No more discretionary funds available this year." : ""}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </>
       )}
+
+      {/* Add Expense Modal */}
+      <AddExpenseModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={handleAddExpense}
+      />
     </motion.div>
   );
 };

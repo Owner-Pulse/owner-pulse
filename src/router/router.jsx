@@ -36,7 +36,6 @@ import PayrollPage from "@/pages/dashboard/payroll/payroll-page";
 import DirectorStaffPage from "@/pages/dashboard/director-staff/director-staff-page";
 import DirectorStudentsPage from "@/pages/dashboard/director-students/director-students-page";
 import DirectorOverviewPage from "@/pages/dashboard/director-overview/director-overview-page";
-import ComingSoon from "@/components/ComingSoon";
 
 export const router = createBrowserRouter([
   {
@@ -112,19 +111,19 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'director-overview',
-                element: <ComingSoon/>
+                element: <DirectorOverviewPage />
               },
               {
                 path: 'director-staff',
-                element: <ComingSoon/>
+                element: <DirectorStaffPage />
               },
               {
                 path: 'director-students',
-                element: <ComingSoon/>
+                element: <DirectorStudentsPage />
               },
               {
                 path: 'payroll',
-                element: <ComingSoon/>
+                element: <PayrollPage />
               },
             ]
           },

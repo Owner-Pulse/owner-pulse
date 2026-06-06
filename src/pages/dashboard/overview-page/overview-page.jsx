@@ -1,10 +1,8 @@
-import React from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
-  ArrowUpRight,
   ShieldCheck,
-  PiggyBank,
   AlertTriangle,
   CheckCircle2,
   Receipt,
@@ -54,6 +52,19 @@ const COLORS = {
   orange: "#F97316",
   pink: "#EC4899",
   slate: "#64748B",
+};
+
+const EXPENSE_REASON_COLORS = {
+  "Classroom Supplies": "#2563EB",
+  "Events & Food": "#F97316",
+  "Staff Appreciation": "#EC4899",
+  "Cleaning Supplies": "#16A34A",
+  "Office Supplies": "#0EA5E9",
+  "Teacher Appreciation": "#8B5CF6",
+  "Professional Dev.": "#D97706",
+  "Tech & Software": "#7C3AED",
+  "Facilities": "#64748B",
+  "Other": "#94A0B5",
 };
 
 // ─── Data from App.jsx ──────────────────────────────────────────────
@@ -110,18 +121,19 @@ const budgetData = {
   ],
 };
 
-const directorPettyCash = {
-  totalBudget: 9000,
-  spent: 7200,
-  remaining: 1800,
-  percentUsed: 80,
-  recentExpenses: [
-    { description: "Pizza for parent meeting", amount: 47.50, date: "2026-04-12" },
-    { description: "Crayons and markers — PreK3", amount: 124.00, date: "2026-04-15" },
-    { description: "Coffee and donuts for staff PD", amount: 38.00, date: "2026-04-22" },
-    { description: "Cleaning wipes restock", amount: 89.00, date: "2026-04-28" },
-  ],
-};
+// ─── Default director expenses (for fallback) ─────────────────────
+const DEFAULT_EXPENSES = [
+  { id: 1, amount: 47.50, reason: "Events & Food", description: "Pizza for parent meeting", date: "2026-04-12" },
+  { id: 2, amount: 124.00, reason: "Classroom Supplies", description: "Crayons and markers — PreK3", date: "2026-04-15" },
+  { id: 3, amount: 38.00, reason: "Staff Appreciation", description: "Coffee and donuts for staff PD", date: "2026-04-22" },
+  { id: 4, amount: 89.00, reason: "Cleaning Supplies", description: "Cleaning wipes restock", date: "2026-04-28" },
+  { id: 5, amount: 215.00, reason: "Classroom Supplies", description: "Construction paper bulk order", date: "2026-05-01" },
+  { id: 6, amount: 65.00, reason: "Staff Appreciation", description: "Birthday cake for office party", date: "2026-05-04" },
+  { id: 7, amount: 180.00, reason: "Office Supplies", description: "Printer ink cartridges", date: "2026-05-06" },
+  { id: 8, amount: 42.00, reason: "Teacher Appreciation", description: "Gift cards for teacher appreciation", date: "2026-05-08" },
+];
+
+const DIRECTOR_BUDGET_TOTAL = 9000;
 
 // ─── Richer data from App.jsx ────────────────────────────────────────
 
@@ -181,6 +193,7 @@ const quickbooksStatus = {
 };
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
 
 const OverviewPage = () => {
@@ -193,7 +206,50 @@ const OverviewPage = () => {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
   };
 
-    const complianceStats = {
+  // ─── Load director expenses from localStorage (shared with budget page) ───
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const saved = localStorage.getItem("directorExpenses");
+      return saved ? JSON.parse(saved) : DEFAULT_EXPENSES;
+    } catch {
+      return DEFAULT_EXPENSES;
+    }
+  });
+
+  // Listen for storage changes (in case user switches tabs or the budget page adds expenses)
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === "directorExpenses") {
+        try {
+          setExpenses(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  const directorSpent = useMemo(() => expenses.reduce((a, e) => a + e.amount, 0), [expenses]);
+  const directorRemaining = DIRECTOR_BUDGET_TOTAL - directorSpent;
+  const pettyCashPercent = Math.round((directorSpent / DIRECTOR_BUDGET_TOTAL) * 100);
+
+  // Group expenses by reason for display
+  const expenseByReason = useMemo(() => {
+    const map = {};
+    expenses.forEach((e) => {
+      const reason = e.reason || "Other";
+      map[reason] = (map[reason] || 0) + e.amount;
+    });
+    return Object.entries(map)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [expenses]);
+
+  const recentExpenses = useMemo(() => {
+    return [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  }, [expenses]);
+
+  const complianceStats = {
     compliant: complianceItems.filter((c) => c.status === "compliant").length,
     expiring: complianceItems.filter((c) => c.status === "expiring").length,
     expired: complianceItems.filter((c) => c.status === "expired").length,
@@ -202,7 +258,6 @@ const OverviewPage = () => {
   const totalScholarshipStudents = scholarshipData.reduce((sum, s) => sum + s.students, 0);
   const stepUpRedFlags = stepUpApprovals.filter((s) => s.daysPending >= 20).length;
   const budgetPercent = Math.round((budgetData.spent / budgetData.total) * 100);
-  const pettyCashPercent = directorPettyCash.percentUsed;
   const schoolBudgetRemaining = budgetData.total - budgetData.spent;
   const totalBudgetUsed = budgetData.categories.reduce((a, c) => a + c.spent, 0);
   const totalEnrolled = 245;
@@ -717,9 +772,9 @@ const OverviewPage = () => {
         </motion.div>
       </div>
 
-      {/* Fourth Row — Budget Breakdown (School + Petty Cash) + Enrollment + Events */}
+      {/* Fourth Row — Budget Breakdown (School + Director Expenses) + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Combined Budget: School Budget + Director Petty Cash */}
+        {/* Combined Budget: School Budget + Director Expenses */}
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full overflow-hidden">
             <CardHeader className="pb-2">
@@ -750,7 +805,7 @@ const OverviewPage = () => {
                 </div>
               </div>
 
-              {/* Director's Petty Cash */}
+              {/* Director's Petty Cash — Dynamic from localStorage */}
               <div className="p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -759,32 +814,70 @@ const OverviewPage = () => {
                     </div>
                     <span className="text-xs font-bold text-gray-800">Director's Petty Cash</span>
                   </div>
-                  <span className="text-xs font-bold text-pink-600">${directorPettyCash.totalBudget.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-pink-600">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
                 </div>
                 <div className="h-2 bg-pink-100 rounded-full overflow-hidden mb-1.5">
                   <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pettyCashPercent}%` }} />
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-gray-500">{pettyCashPercent}% used</span>
-                  <span className="text-pink-600 font-medium">${directorPettyCash.remaining.toLocaleString()} left</span>
+                  <span className={`font-medium ${directorRemaining > 0 ? "text-pink-600" : "text-red-500"}`}>
+                    {fmtMoney(directorRemaining)} left
+                  </span>
                 </div>
-              </div>
 
-              {/* Budget categories mini-breakdown */}
-              <div className="space-y-1.5">
-                <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">Spend by Category</p>
-                {budgetData.categories.slice(0, 4).map((cat) => (
-                  <div key={cat.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                      <span className="text-[10px] text-gray-600">{cat.name}</span>
-                    </div>
-                    <span className="text-[10px] font-medium text-gray-700">${(cat.spent / 1000).toFixed(0)}k</span>
+                {/* Recent expenses mini-list */}
+                {recentExpenses.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-pink-200/50">
+                    <p className="text-[9px] font-semibold text-pink-700 uppercase tracking-wider mb-1.5">Recent Expenses</p>
+                    {recentExpenses.slice(0, 4).map((exp) => (
+                      <div key={exp.id} className="flex items-center justify-between py-1">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <div
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.reason] || "#94A0B5" }}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-gray-700 truncate">{exp.description}</p>
+                            <div className="flex items-center gap-1">
+                              {exp.reason && (
+                                <span className="text-[8px] font-medium text-gray-400">{exp.reason}</span>
+                              )}
+                              <span className="text-[8px] text-gray-400">· {fmtDate(exp.date)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
 
-              <Button variant="ghost" className="w-full mt-1 text-xs text-blue-600 h-7 hover:bg-blue-50">View full budget →</Button>
+              {/* Spending by reason mini-breakdown */}
+              {expenseByReason.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Spending by Reason</p>
+                  <div className="space-y-1">
+                    {expenseByReason.slice(0, 4).map((cat) => (
+                      <div key={cat.name} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EXPENSE_REASON_COLORS[cat.name] || "#94A0B5" }} />
+                          <span className="text-[10px] text-gray-600">{cat.name}</span>
+                        </div>
+                        <span className="text-[10px] font-medium text-gray-700">{fmtMoney(Math.round(cat.total))}</span>
+                      </div>
+                    ))}
+                    {expenseByReason.length > 4 && (
+                      <p className="text-[9px] text-gray-400 mt-0.5">+{expenseByReason.length - 4} more categories</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Button variant="ghost" className="w-full mt-1 text-xs text-blue-600 h-7 hover:bg-blue-50">
+                <a href="/dashboard/budget" className="w-full">View full budget →</a>
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
