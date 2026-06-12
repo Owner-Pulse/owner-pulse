@@ -11,15 +11,12 @@ import {
   Wrench,
   UserCheck,
   DollarSign,
-  TrendingUp,
   Users,
   Clock,
   Wallet,
   Landmark,
-  ArrowUpRight,
   Building2,
   GraduationCap,
-  Download,
 } from "lucide-react";
 import {
   AreaChart,
@@ -44,6 +41,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import PulseDisplay from "@/components/PulseDisplay";
+import {
+  calculatePulse,
+  generateRecommendations,
+  getSnapshotHistory,
+  saveSnapshot,
+  getExpectedBudgetBurn,
+} from "@/lib/pulse-engine";
 
 // ─── Color palette ─────────────────────────────────────────────────
 const COLORS = {
@@ -278,21 +283,149 @@ const OverviewPage = () => {
   const openMaintenance = maintenanceRequests.filter((m) => m.status !== "done").length;
   const maintenanceDone = maintenanceRequests.filter((m) => m.status === "done").length;
   const maintenancePct = Math.round((maintenanceDone / maintenanceRequests.length) * 100);
-  const totalDiscountValue = discounts.reduce((sum, d) => sum + d.monthlyValue, 0);
+  const DISCOUNTED_COUNT = 64;
+  const discountedPct = Math.round((DISCOUNTED_COUNT / totalEnrolled) * 100);
+  // Estimated annual waived value at ~$612/mo avg per discounted student
+  const annualWaivedEstimate = DISCOUNTED_COUNT * 612 * 10;
+  const activeAtRisk = atRiskStudents.filter(r => r.status !== "lost").length;
+  const atRiskPct = Math.round((activeAtRisk / atRiskStudents.length) * 100);
+  const revenuePct = Math.round((184200 / 220000) * 100);
+  const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
   const totalPTOUsed = staffPTO.reduce((sum, s) => sum + s.used, 0);
   const totalPTOAllowance = staffPTO.reduce((sum, s) => sum + s.allowance, 0);
   const ptoPct = Math.round((totalPTOUsed / totalPTOAllowance) * 100);
-  const activeAtRisk = atRiskStudents.filter(r => r.status !== "lost").length;
-  const atRiskPct = Math.round((activeAtRisk / atRiskStudents.length) * 100);
   const totalCheckins = procareData.dailyCheckIns + procareData.absentToday;
   const checkinPct = Math.round((procareData.dailyCheckIns / totalCheckins) * 100);
-  const revenueTarget = 220000;
-  const revenuePct = Math.round((184200 / revenueTarget) * 100);
-  const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
 
   const kpiIcons = {
     Users, DollarSign, ClipboardList, CheckCircle2,
-    Wrench, AlertTriangle, Calendar, UserCheck,
+    Wrench, AlertTriangle, Calendar, UserCheck, Wallet,
+  };
+
+  // ── Pulse Engine Integration ──────────────────────────────────
+  const pulseInputs = useMemo(() => {
+    // Calculate capacity % across all classrooms
+    // Note: overview-page has hardcoded totalEnrolled=245, totalCapacity=292
+    const capacityPct = Math.round((245 / 292) * 100);
+    const totalWaitlistCount = enrollmentData.reduce((sum, e) => sum + e.waitlist, 0);
+    
+    // Count critical and old-high maintenance
+    const criticalMaint = maintenanceRequests.filter(
+      m => m.priority === 'critical' && m.status !== 'done'
+    ).length;
+    const oldHighMaint = maintenanceRequests.filter(
+      m => m.priority === 'high' && m.status !== 'done'
+    ).length;
+    
+    // Count incidents in last 30 days vs trailing avg
+    const now = new Date();
+    const last30Incidents = maintenanceRequests.filter(m => {
+      // Use the items themselves as rough incident proxies
+      return m.priority === 'critical' || m.priority === 'high';
+    }).length;
+    
+    return {
+      enrollment: {
+        capacityPct,
+        yoyGrowth: 12, // +12% y/y from the KPI sub text
+        waitlistConversionPct: 25,
+        waitlistCount: totalWaitlistCount,
+      },
+      discretionary: {
+        actualBurnPct: pettyCashPercent,
+        expectedBurnPct: getExpectedBudgetBurn(),
+      },
+      callouts: {
+        calloutRatePct: 6, // Sample: slightly below threshold
+      },
+      latePayments: {
+        pastDuePct: 3.5, // Sample: slightly elevated
+        source: 'manual',
+      },
+      compliance: {
+        items: complianceItems.map(c => ({
+          status: c.status,
+          expires: c.expires,
+          item: c.name,
+        })),
+      },
+      maintenance: {
+        criticalCount: criticalMaint,
+        oldHighCount: oldHighMaint,
+      },
+      incidents: {
+        last30Count: last30Incidents,
+        trailing90Avg: Math.max(1, last30Incidents - 1),
+      },
+      classScore: {
+        currentScore: 5.8, // Sample: decent but room to improve
+      },
+      bigFinancial: {
+        actualBurnPct: budgetPercent,
+        expectedBurnPct: getExpectedBudgetBurn(),
+        marginTrend: 2.5,
+      },
+    };
+  }, [pettyCashPercent, budgetPercent]);
+
+  const ownerPulse = useMemo(
+    () => calculatePulse(pulseInputs, 'owner'),
+    [pulseInputs]
+  );
+  const directorPulse = useMemo(
+    () => calculatePulse(pulseInputs, 'director'),
+    [pulseInputs]
+  );
+
+  const ownerRecommendations = useMemo(
+    () => generateRecommendations(pulseInputs, ownerPulse, 'owner'),
+    [pulseInputs, ownerPulse]
+  );
+
+  const pulseHistory = useMemo(() => getSnapshotHistory(90), []);
+
+  // Save snapshot when pulse values change (stable key comparison)
+  const snapshotKey = useMemo(
+    () => `${ownerPulse?.bpm ?? ''}-${directorPulse?.bpm ?? ''}`,
+    [ownerPulse?.bpm, directorPulse?.bpm]
+  );
+
+  useEffect(() => {
+    if (ownerPulse && directorPulse) {
+      saveSnapshot({
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString(),
+        owner: {
+          composite: ownerPulse.composite,
+          bpm: ownerPulse.bpm,
+          state: ownerPulse.state,
+          subScores: ownerPulse.subScores,
+        },
+        director: {
+          composite: directorPulse.composite,
+          bpm: directorPulse.bpm,
+          state: directorPulse.state,
+          subScores: directorPulse.subScores,
+        },
+      });
+    }
+  }, [snapshotKey]);
+
+  const handleSubScoreClick = (subKey) => {
+    // Navigate to relevant tab based on sub-score key
+    const tabMap = {
+      enrollmentHealth: '/dashboard/enrollment',
+      discretionaryBudget: '/dashboard/budget',
+      staffCallouts: '/dashboard/staff',
+      latePayments: '/dashboard/staff',
+      compliance: '/dashboard/compliance',
+      maintenance: '/dashboard/maintenance',
+      incidentTrend: '/dashboard/classrooms',
+      classScore: '/dashboard/enrollment',
+      bigFinancialHealth: '/dashboard/budget',
+    };
+    const path = tabMap[subKey] || '/dashboard';
+    navigate(path);
   };
 
   return (
@@ -335,13 +468,25 @@ const OverviewPage = () => {
         </div>
       </motion.div>
 
+      {/* Owner Pulse Display */}
+      <motion.div variants={itemVariants}>
+        <PulseDisplay
+          pulse={ownerPulse}
+          recommendations={ownerRecommendations}
+          pulseHistory={pulseHistory}
+          role="owner"
+          onSubScoreClick={handleSubScoreClick}
+        />
+      </motion.div>
+
       {/* KPI Row 1 — Donut Chart Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           { label: "Enrolled", value: totalEnrolled, pct: enrollPercent, color: "#2563EB", sub: "+12% y/y", subColor: "text-emerald-600", icon: "Users" },
           { label: "Revenue", value: "$184.2k", pct: revenuePct, color: "#10B981", sub: "+8.4% MoM", subColor: "text-emerald-600", icon: "DollarSign" },
           { label: "Waitlist", value: totalWaitlist, pct: waitlistPct, color: "#F59E0B", sub: `${openSeats} open seats`, subColor: "text-gray-400", icon: "ClipboardList" },
           { label: "Tasks Done", value: `${tasksDone}/${totalTasks}`, pct: tasksPct, color: "#4F46E5", sub: `${highPriorityTasks} high priority`, subColor: "text-red-500", icon: "CheckCircle2" },
+          { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "Wrench" },
         ].map((kpi, i) => (
           <motion.div key={i} variants={itemVariants}>
             <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
@@ -380,10 +525,11 @@ const OverviewPage = () => {
       </div>
 
       {/* KPI Row 2 — Donut Chart Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: "Maintenance", value: `${maintenanceDone}/${maintenanceRequests.length}`, pct: maintenancePct, color: "#EF4444", sub: `${criticalMaintenance} critical`, subColor: "text-red-500", icon: "Wrench" },
           { label: "At-Risk", value: `${activeAtRisk}/${atRiskStudents.length}`, pct: atRiskPct, color: "#8B5CF6", sub: "intervening", subColor: "text-gray-400", icon: "AlertTriangle" },
+          { label: "Discounted", value: `${DISCOUNTED_COUNT}/${totalEnrolled}`, pct: discountedPct, color: "#EC4899", sub: `$${annualWaivedEstimate.toLocaleString()}/yr waived`, subColor: "text-pink-600", icon: "Wallet" },
+          { label: "Petty Cash", value: `${directorSpent}/${DIRECTOR_BUDGET_TOTAL}`, pct: pettyCashPercent, color: "#F97316", sub: `${fmtMoney(directorRemaining)} remaining`, subColor: directorRemaining > 0 ? "text-emerald-600" : "text-red-500", icon: "DollarSign" },
           { label: "PTO Used", value: `${totalPTOUsed}/${totalPTOAllowance}`, pct: ptoPct, color: "#14B8A6", sub: `${substitutes.length} subs this mo`, subColor: "text-gray-400", icon: "Calendar" },
           { label: "Check-ins", value: procareData.dailyCheckIns, pct: checkinPct, color: "#F97316", sub: `${procareData.absentToday} absent`, subColor: "text-amber-600", icon: "UserCheck" },
         ].map((kpi, i) => (

@@ -15,6 +15,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import PulseDisplay from "@/components/PulseDisplay";
+import {
+  calculatePulse,
+  generateRecommendations,
+  getSnapshotHistory,
+  saveSnapshot,
+  getExpectedBudgetBurn,
+} from "@/lib/pulse-engine";
 
 const TODAY = new Date("2026-05-11");
 
@@ -174,6 +182,131 @@ const DirectorOverviewPage = () => {
     .filter(t => t.status !== "done" && daysUntil(t.due) <= 7)
     .sort((a, b) => daysUntil(a.due) - daysUntil(b.due));
 
+  // ── Pulse Engine Integration ──────────────────────────────────
+  const capacityPctTotal = Math.round((245 / 292) * 100); // Using same totals as Owner view
+  const criticalMaint = SEEDED_MAINTENANCE.filter(
+    m => m.priority === 'critical' && m.status !== 'done'
+  ).length;
+  const oldHighMaint = SEEDED_MAINTENANCE.filter(
+    m => m.priority === 'high' && m.status !== 'done'
+  ).length;
+
+  const pulseInputs = useMemo(() => ({
+    enrollment: {
+      capacityPct: capacityPctTotal,
+      yoyGrowth: 12,
+      waitlistConversionPct: 25,
+      waitlistCount: 47, // openSeats equivalent
+    },
+    discretionary: {
+      actualBurnPct: pettyCashPercent,
+      expectedBurnPct: getExpectedBudgetBurn(),
+    },
+    callouts: {
+      calloutRatePct: 6,
+    },
+    latePayments: {
+      pastDuePct: 3.5,
+      source: 'manual',
+    },
+    compliance: {
+      items: [
+        {
+          item: 'CPR / First Aid',
+          status: 'expired',
+          expires: '2026-04-12',
+          authority: 'Red Cross',
+        },
+        {
+          item: 'Background Checks (Staff)',
+          status: 'expiring',
+          expires: '2026-06-15',
+          authority: 'FL DCF',
+        },
+        {
+          item: 'Fire Inspection',
+          status: 'compliant',
+          expires: '2026-11-04',
+          authority: 'County Fire',
+        },
+        {
+          item: 'Health Dept. Inspection',
+          status: 'compliant',
+          expires: '2026-08-22',
+          authority: 'FL DOH',
+        },
+      ],
+    },
+    maintenance: {
+      criticalCount: criticalMaint,
+      oldHighCount: oldHighMaint,
+    },
+    incidents: {
+      last30Count: SEEDED_INCIDENTS.length,
+      trailing90Avg: Math.max(1, SEEDED_INCIDENTS.length - 1),
+    },
+    classScore: {
+      currentScore: 5.8,
+    },
+  }), [pettyCashPercent]);
+
+  const directorPulse = useMemo(
+    () => calculatePulse(pulseInputs, 'director'),
+    [pulseInputs]
+  );
+  const directorRecommendations = useMemo(
+    () => generateRecommendations(pulseInputs, directorPulse, 'director'),
+    [pulseInputs, directorPulse]
+  );
+  const pulseHistory = useMemo(() => getSnapshotHistory(90), []);
+
+  // Owner pulse — read from localStorage or calculate a static version
+  const [ownerPulseBpm, setOwnerPulseBpm] = useState(() => {
+    try {
+      const snapshots = JSON.parse(localStorage.getItem('pulseSnapshots') || '[]');
+      const latest = snapshots[snapshots.length - 1];
+      return latest?.owner?.bpm ?? null;
+    } catch {
+      return null;
+    }
+  });
+
+  const snapshotKey = useMemo(
+    () => `dir-${directorPulse?.bpm ?? ''}`,
+    [directorPulse?.bpm]
+  );
+
+  useEffect(() => {
+    if (directorPulse) {
+      saveSnapshot({
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString(),
+        owner: null,
+        director: {
+          composite: directorPulse.composite,
+          bpm: directorPulse.bpm,
+          state: directorPulse.state,
+          subScores: directorPulse.subScores,
+        },
+      });
+    }
+  }, [snapshotKey]);
+
+  const handleSubScoreClick = (subKey) => {
+    // Director's available tabs: Daily Log, Payroll, Budget, Waitlist
+    const tabMap = {
+      enrollmentHealth: '/dashboard/waitlist',
+      discretionaryBudget: '/dashboard/budget',
+      staffCallouts: '/dashboard/director-staff',
+      latePayments: '/dashboard/director-staff',
+      maintenance: '/dashboard/maintenance',
+      incidentTrend: '/dashboard/director-students',
+      classScore: '/dashboard/director-students',
+    };
+    const path = tabMap[subKey] || '/dashboard/daily-log';
+    navigate(path);
+  };
+
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
@@ -191,6 +324,18 @@ const DirectorOverviewPage = () => {
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
           </p>
         </div>
+      </motion.div>
+
+      {/* Director Pulse Display */}
+      <motion.div variants={itemVariants}>
+        <PulseDisplay
+          pulse={directorPulse}
+          recommendations={directorRecommendations}
+          pulseHistory={pulseHistory}
+          role="director"
+          ownerPulseBpm={ownerPulseBpm}
+          onSubScoreClick={handleSubScoreClick}
+        />
       </motion.div>
 
       {/* KPI Row */}
