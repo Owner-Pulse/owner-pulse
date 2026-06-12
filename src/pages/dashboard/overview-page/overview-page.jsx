@@ -300,6 +300,7 @@ const OverviewPage = () => {
   const kpiIcons = {
     Users, DollarSign, ClipboardList, CheckCircle2,
     Wrench, AlertTriangle, Calendar, UserCheck, Wallet,
+    ShieldCheck,
   };
 
   // ── Pulse Engine Integration ──────────────────────────────────
@@ -525,8 +526,9 @@ const OverviewPage = () => {
       </div>
 
       {/* KPI Row 2 — Donut Chart Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
+          { label: "Compliance", value: `${complianceStats.compliant}/${complianceItems.length}`, pct: Math.round((complianceStats.compliant / complianceItems.length) * 100), color: "#10B981", sub: `${complianceStats.expiring} expiring · ${complianceStats.expired} expired`, subColor: complianceStats.expired > 0 ? "text-red-500" : "text-amber-500", icon: "ShieldCheck" },
           { label: "At-Risk", value: `${activeAtRisk}/${atRiskStudents.length}`, pct: atRiskPct, color: "#8B5CF6", sub: "intervening", subColor: "text-gray-400", icon: "AlertTriangle" },
           { label: "Discounted", value: `${DISCOUNTED_COUNT}/${totalEnrolled}`, pct: discountedPct, color: "#EC4899", sub: `$${annualWaivedEstimate.toLocaleString()}/yr waived`, subColor: "text-pink-600", icon: "Wallet" },
           { label: "Petty Cash", value: `${directorSpent}/${DIRECTOR_BUDGET_TOTAL}`, pct: pettyCashPercent, color: "#F97316", sub: `${fmtMoney(directorRemaining)} remaining`, subColor: directorRemaining > 0 ? "text-emerald-600" : "text-red-500", icon: "DollarSign" },
@@ -610,49 +612,65 @@ const OverviewPage = () => {
           </Card>
         </motion.div>
 
-        {/* Right Sidebar — QuickBooks + Procare */}
-        <motion.div variants={itemVariants} className="flex flex-col gap-4">
-          <Card className="bg-white border-none shadow-sm">
+        {/* Right Sidebar — Upcoming Events */}
+        <motion.div variants={itemVariants}>
+          <Card className="bg-white border-none shadow-sm h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-green-100 rounded flex items-center justify-center text-[9px] font-bold text-green-700">QB</div>
-                  QuickBooks Sync
-                </span>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Calendar size={15} className="text-purple-500" />
+                Upcoming Events
               </CardTitle>
+              <CardDescription className="text-[10px]">Key dates &amp; deadlines</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <span className="text-xs text-gray-500">Bank Balance</span>
-                <span className="text-base font-bold text-gray-900">${quickbooksStatus.bankBalance.toLocaleString()}</span>
+            <CardContent className="space-y-2.5">
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={14} className="text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">General Liability Insurance</p>
+                  <p className="text-[10px] text-amber-600 mt-0.5">Shop rates by May 2 (60 days before renewal)</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                <span className="text-xs text-gray-500">Pending Transactions</span>
-                <span className="text-amber-600 font-medium text-xs">{quickbooksStatus.pendingTransactions} to review</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">Last Sync</span>
-                <span className="text-xs text-gray-400">{quickbooksStatus.lastSync}</span>
-              </div>
-              <Button variant="outline" className="w-full mt-1 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8">
-                Sync Now
-              </Button>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-white border-none shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <div className="w-5 h-5 bg-blue-100 rounded flex items-center justify-center text-[9px] font-bold text-blue-600">P</div>
-                Procare Today
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="p-2 bg-gray-50 rounded-lg"><p className="text-base font-bold text-gray-900">{procareData.parentMessages}</p><p className="text-[10px] text-gray-400">Messages</p></div>
-                <div className="p-2 bg-gray-50 rounded-lg"><p className="text-base font-bold text-gray-900">{procareData.medicationGiven}</p><p className="text-[10px] text-gray-400">Medications</p></div>
-                <div className="p-2 bg-amber-50 rounded-lg"><p className="text-base font-bold text-amber-600">{procareData.illnesses}</p><p className="text-[10px] text-gray-400">Illnesses</p></div>
-                <div className="p-2 bg-emerald-50 rounded-lg"><p className="text-base font-bold text-emerald-600">{procareData.incidents}</p><p className="text-[10px] text-gray-400">Incidents</p></div>
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                  <GraduationCap size={14} className="text-red-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">CPR Certification Renewal</p>
+                  <p className="text-[10px] text-red-600 mt-0.5">Due May 20 · 4 staff affected</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-blue-50 border border-blue-100">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <FileText size={14} className="text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">Step Up Q4 Attestation</p>
+                  <p className="text-[10px] text-blue-600 mt-0.5">Due May 28 · Director's signature needed</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Clock size={14} className="text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold">Next Payroll: May 15</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">7 days away · Director hasn't submitted yet</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <Building2 size={14} className="text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-900">End of Year Ceremony</p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">June 5 · 100+ attendees expected</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -780,8 +798,8 @@ const OverviewPage = () => {
         </motion.div>
       </div>
 
-      {/* Bottom Section — Budget + Enrollment + Events (3 columns with better balance) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Bottom Section — Budget + Enrollment */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Budget Overview — Combined School + Director */}
         <motion.div variants={itemVariants}>
           <Card className="bg-white border-none shadow-sm h-full overflow-hidden">
@@ -925,70 +943,82 @@ const OverviewPage = () => {
           </Card>
         </motion.div>
 
-        {/* Upcoming Events — Clean and organized */}
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Calendar size={15} className="text-purple-500" />
-                Upcoming Events
-              </CardTitle>
-              <CardDescription className="text-[10px]">Key dates &amp; deadlines</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2.5">
-              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                  <ShieldCheck size={14} className="text-amber-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-900">General Liability Insurance</p>
-                  <p className="text-[10px] text-amber-600 mt-0.5">Shop rates by May 2 (60 days before renewal)</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                  <GraduationCap size={14} className="text-red-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-900">CPR Certification Renewal</p>
-                  <p className="text-[10px] text-red-600 mt-0.5">Due May 20 · 4 staff affected</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-blue-50 border border-blue-100">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                  <FileText size={14} className="text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-900">Step Up Q4 Attestation</p>
-                  <p className="text-[10px] text-blue-600 mt-0.5">Due May 28 · Director's signature needed</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                  <Clock size={14} className="text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold">Next Payroll: May 15</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">7 days away · Director hasn't submitted yet</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                  <Building2 size={14} className="text-emerald-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-900">End of Year Ceremony</p>
-                  <p className="text-[10px] text-emerald-600 mt-0.5">June 5 · 100+ attendees expected</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
+
+      {/* Urgent Compliance Timeline */}
+      <motion.div variants={itemVariants}>
+        <Card className="bg-white border-none shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertTriangle size={16} className="text-amber-500" />
+              Urgent Compliance Timeline
+            </CardTitle>
+            <CardDescription className="text-[10px]">
+              Items that need attention, sorted by deadline
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {complianceItems.filter((c) => c.status !== "compliant").length > 0 ? (
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+                <div className="space-y-0">
+                  {[...complianceItems]
+                    .filter((c) => c.status !== "compliant")
+                    .sort((a, b) => {
+                      const aDays = a.status === "expired" ? -999 : a.daysLeft;
+                      const bDays = b.status === "expired" ? -999 : b.daysLeft;
+                      return aDays - bDays;
+                    })
+                    .map((item) => {
+                      const d = item.status === "expired" ? Math.abs(item.daysLeft) : item.daysLeft;
+                      const isExpired = item.status === "expired";
+                      const isUrgent = !isExpired && d <= 30;
+                      const dotColor = isExpired ? "bg-red-500" : isUrgent ? "bg-amber-500" : "bg-blue-500";
+                      const borderColor = isExpired ? "border-red-200" : isUrgent ? "border-amber-200" : "border-gray-100";
+
+                      return (
+                        <div key={item.id} className="relative flex items-start gap-4 pb-4 last:pb-0">
+                          {/* Timeline dot */}
+                          <div className="relative z-10 flex-shrink-0 mt-1">
+                            <div className={`w-3 h-3 rounded-full ${dotColor} ring-2 ring-white`} />
+                          </div>
+
+                          {/* Card */}
+                          <div className={`flex-1 p-3 rounded-xl border ${borderColor} ${
+                            isExpired ? "bg-red-50" : isUrgent ? "bg-amber-50" : "bg-gray-50"
+                          }`}>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-gray-900">{item.name}</span>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5">{item.authority}</p>
+                              </div>
+                              <div className="flex-shrink-0 text-right">
+                                <span className={`text-xs font-bold whitespace-nowrap ${
+                                  isExpired ? "text-red-600" : isUrgent ? "text-amber-600" : "text-gray-500"
+                                }`}>
+                                  {isExpired ? `${d}d overdue` : `${d}d left`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <CheckCircle2 size={28} className="mx-auto text-emerald-400 mb-2" />
+                <p className="text-sm text-gray-500">All compliance items are up to date.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 };

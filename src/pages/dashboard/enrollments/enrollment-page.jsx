@@ -424,7 +424,7 @@ const EnrollmentPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4">
               {Object.values(ENROLLMENT_TARGETS).map((target) => {
                 const pct = Math.round((target.actual / target.target) * 100);
                 const met = pct >= 100;
