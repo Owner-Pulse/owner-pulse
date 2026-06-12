@@ -203,19 +203,6 @@ const discounts = [
   { type: "Hardship Waiver", count: 1, monthlyValue: 500 },
 ];
 
-const enrollmentTrend = [
-  { month: "Aug", students: 220 },
-  { month: "Sep", students: 228 },
-  { month: "Oct", students: 232 },
-  { month: "Nov", students: 234 },
-  { month: "Dec", students: 235 },
-  { month: "Jan", students: 237 },
-  { month: "Feb", students: 238 },
-  { month: "Mar", students: 239 },
-  { month: "Apr", students: 240 },
-  { month: "May", students: 240 },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────
 
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
@@ -485,129 +472,77 @@ const EnrollmentPage = () => {
         </Card>
       </motion.div>
 
-      {/* ── Enrollment by Program + Trend ────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <motion.div variants={itemVariants} className="lg:col-span-2">
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader>
-              <CardTitle>Enrollment by Program</CardTitle>
-              <CardDescription>
-                Current enrollment vs capacity across all programs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px] md:h-[280px] w-full overflow-x-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={PROGRAMS}
-                    margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+      {/* ── Enrollment by Program ──────────────────────────────── */}
+      <motion.div variants={itemVariants}>
+        <Card className="bg-white border-none shadow-sm">
+          <CardHeader>
+            <CardTitle>Enrollment by Program</CardTitle>
+            <CardDescription>
+              Current enrollment vs capacity across all programs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px] md:h-[280px] w-full overflow-x-auto">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={PROGRAMS}
+                  margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#E5E7EB"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 10 }}
+                    dy={6}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 10 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar
+                    dataKey="capacity"
+                    fill="#E5E8F0"
+                    radius={[4, 4, 0, 0]}
+                    barSize={18}
+                    name="Capacity"
+                  />
+                  <Bar
+                    dataKey="enrolled"
+                    radius={[4, 4, 0, 0]}
+                    barSize={18}
+                    name="Enrolled"
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#E5E7EB"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 10 }}
-                      dy={6}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 10 }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "none",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                        fontSize: 12,
-                      }}
-                    />
-                    <Bar
-                      dataKey="capacity"
-                      fill="#E5E8F0"
-                      radius={[4, 4, 0, 0]}
-                      barSize={18}
-                      name="Capacity"
-                    />
-                    <Bar
-                      dataKey="enrolled"
-                      radius={[4, 4, 0, 0]}
-                      barSize={18}
-                      name="Enrolled"
-                    >
-                      {PROGRAMS.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.enrolled >= entry.capacity
-                              ? "#F59E0B"
-                              : "#2563EB"
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm h-full">
-            <CardHeader>
-              <CardTitle>Enrollment Trend</CardTitle>
-              <CardDescription>Monthly growth this school year</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                {enrollmentTrend.map((entry) => {
-                  const maxVal = Math.max(
-                    ...enrollmentTrend.map((e) => e.students)
-                  );
-                  const widthPct = Math.round(
-                    (entry.students / maxVal) * 100
-                  );
-                  const isUp =
-                    entry.students >
-                    (enrollmentTrend.find(
-                      (e) =>
-                        enrollmentTrend.indexOf(e) ===
-                        enrollmentTrend.indexOf(entry) - 1
-                    )?.students || 0);
-
-                  return (
-                    <div
-                      key={entry.month}
-                      className="flex items-center gap-3 py-1"
-                    >
-                      <span className="text-xs font-medium text-gray-500 w-8">
-                        {entry.month}
-                      </span>
-                      <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            isUp ? "bg-emerald-400" : "bg-blue-400"
-                          }`}
-                          style={{ width: `${widthPct}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-semibold text-gray-700 w-10 text-right">
-                        {entry.students}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                    {PROGRAMS.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.enrolled >= entry.capacity
+                            ? "#F59E0B"
+                            : "#2563EB"
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* ── At-Risk Students ─────────────────────────────────────── */}
       <motion.div variants={itemVariants}>
