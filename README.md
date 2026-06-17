@@ -1,4 +1,4 @@
-# HCLC Leadership Dashboard
+# OwnerPulse by HCLC
 
 A single-page React dashboard for school leadership at **HCLC (Head of the Class Learning Center)**. Two role views: **Owner** (executive view, 11 tabs) and **Director · Asst. Principal** (combined operational view, 4 tabs). Fully responsive — works on desktop browsers, iPhone Safari, and Android Chrome.
 

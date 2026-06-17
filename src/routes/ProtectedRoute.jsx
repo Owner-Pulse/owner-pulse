@@ -8,9 +8,10 @@ export const ProtectedRoute = ({ allowedRoles }) => {
         return <Navigate to="/" replace />;
     }
 
+    const basePath = user.role === 'owner' ? '/owner' : '/director';
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // If not allowed, redirect to their default dashboard
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to={basePath} replace />;
     }
 
     return <Outlet />;

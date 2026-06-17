@@ -35,13 +35,13 @@ const LoginPage = () => {
       console.log('Login attempt with:', userData);
       
       setIsLoading(false);
-      navigate('/dashboard');
+      navigate(role === 'owner' ? '/owner/overview' : '/director/overview');
     }, 1000);
   };
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-[#0A0F1E]"
+      className="min-h-screen flex items-center justify-center p-4 bg-[#1E3A5F]"
       style={{ background: 'rgb(10, 15, 30)' }}
     >
       <motion.div
@@ -128,7 +128,7 @@ const LoginPage = () => {
               {/* Login Button */}
               <Button 
                 type="submit" 
-                className="w-full h-14 text-base font-semibold bg-[#0A0F1E] hover:bg-black transition-all"
+                className="w-full h-14 text-base font-semibold bg-[#1E3A5F] hover:bg-[#15294A] transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? (
