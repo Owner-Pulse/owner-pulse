@@ -9,8 +9,6 @@ import logo from '../../../assets/Logo.png';
 import { Link, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { useSignin } from '@/hooks/auth/signin.hook';
-import { setToken } from '@/lib/setToken';
-import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);

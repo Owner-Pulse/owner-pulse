@@ -142,7 +142,7 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen text-white flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
         <div className="p-6 h-full flex flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
@@ -218,13 +218,13 @@ const DashboardLayout = () => {
           <div className="flex items-center justify-between w-full ">
             {/* Mobile Menu Button */}              <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 text-gray-600"
+              className="lg:hidden p-2 text-gray-600"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
             {/* Title / Page Name */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <h2 className="text-lg font-semibold text-gray-800">Dashboard</h2>
             </div>
 
@@ -246,9 +246,9 @@ const DashboardLayout = () => {
 
                 {/* Dropdown Panel */}
                 {notifOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-[400px] max-h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-[100]" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}>
+                  <div className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-[400px] md:max-h-[520px] bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-[100] flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                       <div>
                         <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
                         <p className="text-[10px] text-gray-400 mt-0.5">
@@ -257,18 +257,23 @@ const DashboardLayout = () => {
                             : "All caught up!"}
                         </p>
                       </div>
-                      {notifStats.unread > 0 && (
-                        <button
-                          onClick={markAllRead}
-                          className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
-                        >
-                          Mark all read
+                      <div className="flex items-center gap-2">
+                        {notifStats.unread > 0 && (
+                          <button
+                            onClick={markAllRead}
+                            className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-gray-500">
+                          <X size={20} />
                         </button>
-                      )}
+                      </div>
                     </div>
 
                     {/* Filter Chips */}
-                    <div className="flex items-center gap-1.5 px-5 py-3 border-b border-gray-50">
+                    <div className="flex items-center gap-1.5 px-5 py-3 border-b border-gray-50 shrink-0">
                       {[
                         { key: "all", label: "All" },
                         { key: "unread", label: "Unread" },
@@ -289,7 +294,7 @@ const DashboardLayout = () => {
                     </div>
 
                     {/* Notifications List (scrollable) */}
-                    <div className="overflow-y-auto max-h-[340px]">
+                    <div className="overflow-y-auto flex-1">
                       {filteredNotifs.length === 0 ? (
                         <div className="p-6 text-center">
                           <div className="mx-auto w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
@@ -372,7 +377,7 @@ const DashboardLayout = () => {
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div 
-          className="md:hidden fixed inset-0 bg-black/60 z-40"
+          className="lg:hidden fixed inset-0 bg-black/60 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
