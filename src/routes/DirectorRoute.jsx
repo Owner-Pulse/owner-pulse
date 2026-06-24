@@ -9,7 +9,7 @@ const DirectorRoute = () => {
   }
   
   if (user.role !== 'director') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/owner/overview" replace />;
   }
   
   return <Outlet />;

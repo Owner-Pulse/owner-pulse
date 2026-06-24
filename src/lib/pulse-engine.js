@@ -1251,3 +1251,238 @@ export function clearSnapshots() {
 function clamp(value, min = 0, max = 100) {
   return Math.round(Math.max(min, Math.min(max, value)));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  Legacy API Wrappers — computeOwnerPulse / computeDirectorPulse
+// ═══════════════════════════════════════════════════════════════════
+// These wrap calculatePulse() for backward compatibility with
+// pages that use the flat-data API shape.
+
+const SUB_LABELS = {
+  bigFinancialHealth: 'Big Financial Health',
+  compliance: 'Compliance',
+  latePayments: 'Late Payments / AR',
+  enrollmentHealth: 'Enrollment Health',
+  classScore: 'CLASS Score',
+  maintenance: 'Maintenance',
+  staffCallouts: 'Staff Callouts',
+  discretionaryBudget: 'Director Pace',
+  incidentTrend: 'Incidents',
+};
+
+const SUB_ICONS = {
+  bigFinancialHealth: 'DollarSign',
+  compliance: 'ShieldCheck',
+  latePayments: 'FileText',
+  enrollmentHealth: 'Users',
+  classScore: 'Star',
+  maintenance: 'Wrench',
+  staffCallouts: 'Phone',
+  discretionaryBudget: 'Timer',
+  incidentTrend: 'Activity',
+};
+
+function recIconFromType(type) {
+  if (!type) return 'Lightbulb';
+  if (type.startsWith('compliance')) return 'ShieldCheck';
+  if (type.startsWith('ar')) return 'FileText';
+  if (type.startsWith('class')) return 'Star';
+  if (type.startsWith('enrollment')) return 'Users';
+  if (type.startsWith('maintenance')) return 'Wrench';
+  if (type.startsWith('callout')) return 'Phone';
+  return 'Lightbulb';
+}
+
+function severityToPriority(severity) {
+  if (severity === 'critical' || severity === 'high') return 'high';
+  if (severity === 'medium') return 'medium';
+  return 'low';
+}
+
+/**
+ * Compute Owner Pulse — legacy flat-data API.
+ *
+ * Wraps calculatePulse() for backward compatibility with
+ * overview pages that pass flat data objects.
+ *
+ * @param {object} data - Flat data object with fields like
+ *   complianceItems, totalEnrolled, totalCapacity, classAverage,
+ *   maintenanceItems, calloutCount, totalStaff, directorSpent,
+ *   directorBudget, budgetSpent, budgetTotal, operatingMargin,
+ *   pastDuePct, monthsElapsed
+ * @returns {object|null} Pulse result with
+ *   { composite, bpm, state, subscores, recommendations }
+ */
+export function computeOwnerPulse(data = {}) {
+  const {
+    complianceItems = [],
+    totalEnrolled = 0,
+    totalCapacity = 1,
+    classAverage = null,
+    maintenanceItems = [],
+    calloutCount = 0,
+    totalStaff = 15,
+    directorSpent = 0,
+    directorBudget = 9000,
+    budgetSpent = 0,
+    budgetTotal = 1,
+    operatingMargin = 0,
+    pastDuePct = 0,
+  } = data;
+
+  const capacityPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+  const calloutRatePct = totalStaff > 0 ? Math.round((calloutCount / totalStaff) * 100) : 0;
+  const criticalCount = maintenanceItems.filter(
+    (m) => m.priority === 'critical' && m.status !== 'done'
+  ).length;
+  const oldHighCount = maintenanceItems.filter(
+    (m) => m.priority === 'high' && m.status !== 'done'
+  ).length;
+
+  const inputs = {
+    enrollment: { capacityPct, yoyGrowth: 0, waitlistConversionPct: 0, waitlistCount: 0 },
+    discretionary: {
+      actualBurnPct: directorBudget > 0 ? Math.round((directorSpent / directorBudget) * 100) : 0,
+      expectedBurnPct: getExpectedBudgetBurn(),
+    },
+    callouts: { calloutRatePct },
+    latePayments: { pastDuePct, source: 'manual' },
+    compliance: {
+      items: complianceItems.map((c) => ({
+        status: c.status || 'compliant',
+        expires: c.expires,
+        item: c.name || c.item || '',
+      })),
+    },
+    maintenance: { criticalCount, oldHighCount },
+    bigFinancial: {
+      actualBurnPct: budgetTotal > 0 ? Math.round((budgetSpent / budgetTotal) * 100) : 0,
+      expectedBurnPct: getExpectedBudgetBurn(),
+      marginTrend: operatingMargin !== 0 ? (operatingMargin > 0 ? 1 : -1) : 0,
+    },
+    incidents: { last30Count: 0, trailing90Avg: 0 },
+    classScore: { currentScore: classAverage },
+  };
+
+  const pulse = calculatePulse(inputs, 'owner');
+  if (!pulse) return null;
+
+  // Build subscores array with metadata
+  const weights = DEFAULT_CONFIG.ownerWeights;
+  const totalWeightValue = Object.values(weights).reduce((s, w) => s + w, 0);
+
+  const subscores = Object.entries(pulse.subScores)
+    .filter(([, score]) => score !== null && score !== undefined)
+    .map(([key, score]) => ({
+      key,
+      score,
+      weight: totalWeightValue > 0 ? (weights[key] || 0) / totalWeightValue : 0,
+      label: SUB_LABELS[key] || key,
+      icon: SUB_ICONS[key] || 'Activity',
+    }));
+
+  // Generate recommendations
+  const rawRecs = generateRecommendations(inputs, pulse, 'owner');
+  const recommendations = rawRecs.map((r) => ({
+    key: r.type || r.title,
+    title: r.title,
+    action: r.action || r.description || '',
+    icon: recIconFromType(r.type),
+    delta: r.impactBpm || 0,
+    fromBPM: pulse.bpm,
+    toBPM: pulse.bpm - (r.impactBpm || 0),
+    priority: severityToPriority(r.severity),
+  }));
+
+  return {
+    composite: pulse.composite,
+    bpm: pulse.bpm,
+    state: pulse.state,
+    recommendations,
+    subscores,
+  };
+}
+
+/**
+ * Compute Director Pulse — legacy flat-data API.
+ *
+ * Wraps calculatePulse() for backward compatibility with
+ * director overview pages that pass flat data objects.
+ *
+ * @param {object} data - Flat data object with fields like
+ *   complianceItems, totalEnrolled, totalCapacity, classAverage,
+ *   directorSpent, directorBudget, pastDuePct, monthsElapsed
+ * @returns {object|null} Pulse result with
+ *   { composite, bpm, state, subscores, recommendations }
+ */
+export function computeDirectorPulse(data = {}) {
+  const {
+    complianceItems = [],
+    totalEnrolled = 0,
+    totalCapacity = 1,
+    classAverage = null,
+    directorSpent = 0,
+    directorBudget = 9000,
+    pastDuePct = 0,
+  } = data;
+
+  const capacityPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+
+  const inputs = {
+    enrollment: { capacityPct, yoyGrowth: 0, waitlistConversionPct: 0, waitlistCount: 0 },
+    discretionary: {
+      actualBurnPct: directorBudget > 0 ? Math.round((directorSpent / directorBudget) * 100) : 0,
+      expectedBurnPct: getExpectedBudgetBurn(),
+    },
+    callouts: { calloutRatePct: 0 },
+    latePayments: { pastDuePct, source: 'manual' },
+    compliance: {
+      items: complianceItems.map((c) => ({
+        status: c.status || 'compliant',
+        expires: c.expires,
+        item: c.name || c.item || '',
+      })),
+    },
+    maintenance: { criticalCount: 0, oldHighCount: 0 },
+    incidents: { last30Count: 0, trailing90Avg: 0 },
+    classScore: { currentScore: classAverage },
+  };
+
+  const pulse = calculatePulse(inputs, 'director');
+  if (!pulse) return null;
+
+  // Build subscores array with metadata
+  const weights = DEFAULT_CONFIG.directorWeights;
+  const totalWeightValue = Object.values(weights).reduce((s, w) => s + w, 0);
+
+  const subscores = Object.entries(pulse.subScores)
+    .filter(([, score]) => score !== null && score !== undefined)
+    .map(([key, score]) => ({
+      key,
+      score,
+      weight: totalWeightValue > 0 ? (weights[key] || 0) / totalWeightValue : 0,
+      label: SUB_LABELS[key] || key,
+      icon: SUB_ICONS[key] || 'Activity',
+    }));
+
+  // Generate recommendations
+  const rawRecs = generateRecommendations(inputs, pulse, 'director');
+  const recommendations = rawRecs.map((r) => ({
+    key: r.type || r.title,
+    title: r.title,
+    action: r.action || r.description || '',
+    icon: recIconFromType(r.type),
+    delta: r.impactBpm || 0,
+    fromBPM: pulse.bpm,
+    toBPM: pulse.bpm - (r.impactBpm || 0),
+    priority: severityToPriority(r.severity),
+  }));
+
+  return {
+    composite: pulse.composite,
+    bpm: pulse.bpm,
+    state: pulse.state,
+    recommendations,
+    subscores,
+  };
+}

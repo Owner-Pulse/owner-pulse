@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
 import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield } from 'lucide-react';
-import logo from '../assets/Logo.png'
+import logo from '../assets/Logo.png';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -9,6 +10,9 @@ const ownerTabs = [
   { id: "classrooms", label: "Classrooms", icon: BookOpen },
   { id: "cashflow", label: "Cash Flow", icon: DollarSign },
   { id: "compliance", label: "Compliance", icon: AlertTriangle },
+  // { id: "billing", label: "Billing / AR", icon: DollarSign },
+  // { id: "class-scores", label: "CLASS Scores", icon: BookOpen },
+  // { id: "internal-reminders", label: "Reminders", icon: Calendar },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
   { id: "budget", label: "Budget", icon: DollarSign },
@@ -16,12 +20,15 @@ const ownerTabs = [
   { id: "staff", label: "Staff", icon: Users },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
   { id: "director-management", label: "Director Mgmt", icon: Shield },
+  // { id: "pending-decisions", label: "Decisions", icon: AlertTriangle },
 ];
 
 const directorTabs = [
-  { id: "director-overview", label: "Overview", icon: Home },
-  { id: "director-staff", label: "Staff", icon: Users },
-  { id: "director-students", label: "Students", icon: GraduationCap },
+  { id: "overview", label: "Overview", icon: Home },
+  { id: "daily-log", label: "Daily Log", icon: ClipboardList },
+  { id: "staff", label: "Staff", icon: Users },
+  { id: "students", label: "Students", icon: GraduationCap },
+  // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },
   { id: "budget", label: "My Budget", icon: DollarSign },
@@ -49,17 +56,22 @@ const NOTIF_ICONS = {
   general:          { icon: Bell,          bg: "bg-gray-50",     text: "text-gray-600" },
 };
 
+const getBasePath = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{"role":"owner"}');
+  return user.role === 'owner' ? '/owner' : '/director';
+};
+
 const INITIAL_NOTIFS = [
-  { id: 1,  type: "maintenance",  title: "Critical: AC unit not cooling",           description: "PreK-3 classroom temp reached 87°F.",                time: Date.now() - 1800000,   read: false, critical: true,  link: "/dashboard/maintenance" },
-  { id: 2,  type: "incident",     title: "Major incident — Sequoia classroom",      description: "Physical altercation between two 5th graders.",       time: Date.now() - 3600000,   read: false, critical: true,  link: "/dashboard/director-students" },
-  { id: 3,  type: "compliance",   title: "CPR certifications expired",             description: "3 staff need recertification by May 20.",             time: Date.now() - 7200000,   read: false, critical: true,  link: "/dashboard/compliance" },
-  { id: 4,  type: "payroll",      title: "Payroll submitted for approval",         description: "Period ending May 15 — owner review needed.",          time: Date.now() - 14400000,  read: false, critical: false, link: "/dashboard/payroll" },
-  { id: 5,  type: "staff",        title: "Mr. Nguyen called out sick",             description: "6th call-out. Ms. Hart arranged as sub.",             time: Date.now() - 28800000,  read: false, critical: false, link: "/dashboard/staff" },
-  { id: 6,  type: "scholarship",  title: "Step Up approval stuck — 22 days",       description: "D. Kim's $3,100 application flagged.",                time: Date.now() - 86400000,  read: false, critical: true,  link: "/dashboard/scholarships" },
-  { id: 7,  type: "student",      title: "J. Martinez at-risk — financial",        description: "Family lost job, asked about payment plan.",           time: Date.now() - 172800000, read: false, critical: true,  link: "/dashboard/director-students" },
-  { id: 8,  type: "task",         title: "Faculty CPR certification overdue",      description: "Was due May 1 — 4 staff still need it.",               time: Date.now() - 259200000, read: true,  critical: true,  link: "/dashboard/tasks" },
-  { id: 9,  type: "maintenance",  title: "Playground gate latch repaired",         description: "Completed for Kindergarten safety issue.",             time: Date.now() - 345600000, read: true,  critical: false, link: "/dashboard/maintenance" },
-  { id: 10, type: "financial",    title: "QuickBooks sync completed",              description: "Bank balance $487,200. 3 pending transactions.",       time: Date.now() - 432000000, read: true,  critical: false, link: "/dashboard/cashflow" },
+  { id: 1,  type: "maintenance",  title: "Critical: AC unit not cooling",           description: "PreK-3 classroom temp reached 87°F.",                time: Date.now() - 1800000,   read: false, critical: true,  link: null, path: "/maintenance" },
+  { id: 2,  type: "incident",     title: "Major incident — Sequoia classroom",      description: "Physical altercation between two 5th graders.",       time: Date.now() - 3600000,   read: false, critical: true,  link: null, path: "/students" },
+  { id: 3,  type: "compliance",   title: "CPR certifications expired",             description: "3 staff need recertification by May 20.",             time: Date.now() - 7200000,   read: false, critical: true,  link: null, path: "/compliance" },
+  { id: 4,  type: "payroll",      title: "Payroll submitted for approval",         description: "Period ending May 15 — owner review needed.",          time: Date.now() - 14400000,  read: false, critical: false, link: null, path: "/payroll" },
+  { id: 5,  type: "staff",        title: "Mr. Nguyen called out sick",             description: "6th call-out. Ms. Hart arranged as sub.",             time: Date.now() - 28800000,  read: false, critical: false, link: null, path: "/staff" },
+  { id: 6,  type: "scholarship",  title: "Step Up approval stuck — 22 days",       description: "D. Kim's $3,100 application flagged.",                time: Date.now() - 86400000,  read: false, critical: true,  link: null, path: "/scholarships" },
+  { id: 7,  type: "student",      title: "J. Martinez at-risk — financial",        description: "Family lost job, asked about payment plan.",           time: Date.now() - 172800000, read: false, critical: true,  link: null, path: "/students" },
+  { id: 8,  type: "task",         title: "Faculty CPR certification overdue",      description: "Was due May 1 — 4 staff still need it.",               time: Date.now() - 259200000, read: true,  critical: true,  link: null, path: "/tasks" },
+  { id: 9,  type: "maintenance",  title: "Playground gate latch repaired",         description: "Completed for Kindergarten safety issue.",             time: Date.now() - 345600000, read: true,  critical: false, link: null, path: "/maintenance" },
+  { id: 10, type: "financial",    title: "QuickBooks sync completed",              description: "Bank balance $487,200. 3 pending transactions.",       time: Date.now() - 432000000, read: true,  critical: false, link: null, path: "/cashflow" },
 ];
 
 const timeAgo = (ts) => {
@@ -125,6 +137,8 @@ const DashboardLayout = () => {
     navigate('/');
   };
 
+  const basePath = `/${role}`;
+
   return (
     <div className="min-h-screen text-white flex">
       {/* Sidebar */}
@@ -142,10 +156,8 @@ const DashboardLayout = () => {
           {/* Navigation */}
           <nav className="space-y-1 flex-1 overflow-y-auto no-scrollbar">
             {menuItems.map((item) => {
-              // Owner: overview is the default tab → '/dashboard'
-              // Director: no default tab, each tab goes to its specific route
-              const isDefaultTab = role === 'owner' && item.id === 'overview';
-              const destination = isDefaultTab ? '/dashboard' : `/dashboard/${item.id}`;
+              const basePath = `/${role}`;
+              const destination = `${basePath}/${item.id}`;
               const isActive = currentPath === destination;
               
               return (
@@ -153,10 +165,10 @@ const DashboardLayout = () => {
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive 
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold' 
-                      : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
+                      ? 'bg-[#1E3A5F] text-white font-semibold' 
+                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <item.icon size={20} />
@@ -169,17 +181,17 @@ const DashboardLayout = () => {
           {/* Profile & Settings */}
           <nav className="space-y-1 mb-2">
             {bottomTabs.map((item) => {
-              const destination = `/dashboard/${item.id}`;
+              const destination = `/${role}/${item.id}`;
               const isActive = currentPath === destination;
               return (
                 <NavLink
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive 
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold' 
-                      : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'
+                      ? 'bg-[#1E3A5F] text-white font-semibold' 
+                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <item.icon size={20} />
@@ -300,7 +312,7 @@ const DashboardLayout = () => {
                               key={notif.id}
                               onClick={() => {
                                 toggleNotifRead(notif.id);
-                                if (notif.link) navigate(notif.link);
+                                if (notif.path) navigate(getBasePath() + notif.path);
                                 setNotifOpen(false);
                               }}
                               className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${
@@ -356,7 +368,9 @@ const DashboardLayout = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto bg-gray-50 text-gray-900 relative p-5">
-          <Outlet />
+          <ErrorBoundary fallbackTitle="Dashboard Error" fallbackMessage="A section of the dashboard encountered an error. The rest of the page should still work.">
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

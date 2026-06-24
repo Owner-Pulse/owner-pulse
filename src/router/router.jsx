@@ -7,35 +7,34 @@ import DashboardLayout from "../layouts/dashboard-layout";
 import { ProtectedRoute } from "../routes/ProtectedRoute";
 import OwnerRoute from "../routes/OwnerRoute";
 import DirectorRoute from "../routes/DirectorRoute";
-import HCLCDashboard from "../App";
-import OverviewPage from "@/pages/dashboard/overview-page/overview-page";
 
-// Redirect directors to /dashboard/director-overview on index, show OverviewPage for owners
-const DashboardRedirect = () => {
-  const user = JSON.parse(localStorage.getItem("user") || '{"role":"owner"}');
-  if (user.role === "director") {
-    return <Navigate to="/dashboard/director-overview" replace />;
-  }
-  return <OverviewPage />;
-};
+// ─── Owner Pages ───
+import OverviewPage from "@/pages/owner-dashboard/overview/overview-page";
+import EnrollmentPage from "@/pages/owner-dashboard/enrollment/enrollment-page";
+import ClassroomsPage from "@/pages/owner-dashboard/classrooms/classrooms-page";
+import CashFlowPage from "@/pages/owner-dashboard/cash-flow/cashflow-page";
+import CompliancePage from "@/pages/owner-dashboard/compliance/compliance-page";
+import ScholarshipsPage from "@/pages/owner-dashboard/scholarships/scholarships-page";
+import StaffPage from "@/pages/owner-dashboard/staff/staff-page";
+import DirectorManagementPage from "@/pages/owner-dashboard/director-management/director-management-page";
 
-import EnrollmentPage from "@/pages/dashboard/enrollments/enrollment-page";
-import ClassroomsPage from "@/pages/dashboard/classrooms/classrooms-page";
-import CashFlowPage from "@/pages/dashboard/cash-flow/cashflow-page";
-import CompliancePage from "@/pages/dashboard/compliance/compliance-page";
-import TasksPage from "@/pages/dashboard/tasks/tasks-page";
-import MaintenancePage from "@/pages/dashboard/maintainance/maintenance-page";
-import BudgetPage from "@/pages/dashboard/budget/budget-page";
-import ProfilePage from "@/pages/dashboard/profile/profile-page";
-import SettingsPage from "@/pages/dashboard/settings/settings-page";
-import ScholarshipsPage from "@/pages/dashboard/scholarships/scholarships-page";
-import StaffPage from "@/pages/dashboard/staff/staff-page";
-import WaitlistPage from "@/pages/dashboard/waitlist/waitlist-page";
-import DirectorManagementPage from "@/pages/dashboard/director-management/director-management-page";
-import PayrollPage from "@/pages/dashboard/payroll/payroll-page";
-import DirectorStaffPage from "@/pages/dashboard/director-staff/director-staff-page";
-import DirectorStudentsPage from "@/pages/dashboard/director-students/director-students-page";
-import DirectorOverviewPage from "@/pages/dashboard/director-overview/director-overview-page";
+// ─── Director Pages ───
+import DirectorOverviewPage from "@/pages/director-dashboard/overview/director-overview-page";
+import DirectorStaffPage from "@/pages/director-dashboard/staff/director-staff-page";
+import DirectorStudentsPage from "@/pages/director-dashboard/students/director-students-page";
+import DailyLogPage from "@/pages/director-dashboard/daily-log/daily-log-page";
+import PayrollPage from "@/pages/director-dashboard/payroll/payroll-page";
+
+// ─── Shared Pages ───
+import NotFoundPage from "@/pages/not-found/not-found-page";
+import TasksPage from "@/pages/shared/tasks/tasks-page";
+import MaintenancePage from "@/pages/shared/maintenance/maintenance-page";
+import BudgetPage from "@/pages/shared/budget/budget-page";
+import WaitlistPage from "@/pages/shared/waitlist/waitlist-page";
+import ProfilePage from "@/pages/shared/profile/profile-page";
+import SettingsPage from "@/pages/shared/settings/settings-page";
+import BillingPage from "@/pages/shared/billing/billing-page";
+
 
 export const router = createBrowserRouter([
   {
@@ -57,23 +56,24 @@ export const router = createBrowserRouter([
     ]
   },
   {
-    path: '/dashboard',
+    path: '/owner',
     element: <ProtectedRoute />,
     children: [
       {
         path: '',
         element: <DashboardLayout />,
         children: [
-          // Index: redirect based on role
           {
             index: true,
-            element: <DashboardRedirect />
+            element: <Navigate to="/owner/overview" replace />
           },
-
-          // ─── Owner-Only Routes ───
           {
             element: <OwnerRoute />,
             children: [
+              {
+                path: 'overview',
+                element: <OverviewPage />
+              },
               {
                 path: 'enrollment',
                 element: <EnrollmentPage />
@@ -102,33 +102,13 @@ export const router = createBrowserRouter([
                 path: 'director-management',
                 element: <DirectorManagementPage />
               },
-            ]
-          },
-
-          // ─── Director-Only Routes ───
-          {
-            element: <DirectorRoute />,
-            children: [
               {
-                path: 'director-overview',
-                element: <DirectorOverviewPage />
-              },
-              {
-                path: 'director-staff',
-                element: <DirectorStaffPage />
-              },
-              {
-                path: 'director-students',
-                element: <DirectorStudentsPage />
-              },
-              {
-                path: 'payroll',
-                element: <PayrollPage />
+                path: 'billing',
+                element: <BillingPage />
               },
             ]
           },
-
-          // ─── Shared Routes (accessible by both roles) ───
+          // Shared pages under owner
           {
             path: 'tasks',
             element: <TasksPage />
@@ -156,5 +136,79 @@ export const router = createBrowserRouter([
         ]
       }
     ]
+  },
+  {
+    path: '/director',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '',
+        element: <DashboardLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/director/overview" replace />
+          },
+          {
+            element: <DirectorRoute />,
+            children: [
+              {
+                path: 'overview',
+                element: <DirectorOverviewPage />
+              },
+              {
+                path: 'staff',
+                element: <DirectorStaffPage />
+              },
+              {
+                path: 'students',
+                element: <DirectorStudentsPage />
+              },
+              {
+                path: 'daily-log',
+                element: <DailyLogPage />
+              },
+              {
+                path: 'payroll',
+                element: <PayrollPage />
+              },
+              {
+                path: 'billing',
+                element: <BillingPage />
+              },
+            ]
+          },
+          // Shared pages under director
+          {
+            path: 'tasks',
+            element: <TasksPage />
+          },
+          {
+            path: 'maintenance',
+            element: <MaintenancePage />
+          },
+          {
+            path: 'budget',
+            element: <BudgetPage />
+          },
+          {
+            path: 'waitlist',
+            element: <WaitlistPage />
+          },
+          {
+            path: 'profile',
+            element: <ProfilePage />
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />
+          },
+        ]
+      }
+    ]
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />
   }
 ]);

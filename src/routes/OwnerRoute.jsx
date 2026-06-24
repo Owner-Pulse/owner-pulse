@@ -9,7 +9,7 @@ const OwnerRoute = () => {
   }
   
   if (user.role !== 'owner') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/director/overview" replace />;
   }
   
   return <Outlet />;
