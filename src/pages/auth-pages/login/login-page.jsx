@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,40 +7,30 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import logo from '../../../assets/Logo.png';
 import { Link, useNavigate } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { useSignin } from '@/hooks/auth/signin.hook';
+import { setToken } from '@/lib/setToken';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { signin, isPending } = useSignin();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    setTimeout(() => {
-      let role = 'owner';
-      if (email.toLowerCase().includes('director')) {
-        role = 'director';
+  const handleLogin = (data) => {
+    signin(data, {
+      onSuccess: (response) => {
+        
+      },
+      onError: (error) => {
+        
       }
-      
-      const userData = {
-        email,
-        role,
-        name: role === 'owner' ? 'School Owner' : 'School Director'
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      console.log('Login attempt with:', userData);
-      
-      setIsLoading(false);
-      navigate(role === 'owner' ? '/owner/overview' : '/director/overview');
-    }, 1000);
+    });
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 bg-[#1E3A5F]"
       style={{ background: 'rgb(10, 15, 30)' }}
     >
@@ -52,16 +42,15 @@ const LoginPage = () => {
       >
         <Card className="bg-white/95 backdrop-blur-xl border border-white/10 shadow-2xl">
           <CardHeader className="space-y-6 text-center pb-8">
-            {/* Logo */}
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="flex justify-center"
             >
-              <img 
-                src={logo} 
-                alt="OwnerPulse Logo" 
+              <img
+                src={logo}
+                alt="OwnerPulse Logo"
                 className="h-20 w-auto drop-shadow-lg"
               />
             </motion.div>
@@ -77,22 +66,19 @@ const LoginPage = () => {
           </CardHeader>
 
           <CardContent className="px-8 pb-8">
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email */}
+            <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="owner@school.com or director@school.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  {...register("email", { required: "Email is required" })}
                   className="h-12"
                 />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
               </div>
 
-              {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-700">Password</Label>
                 <div className="relative">
@@ -100,9 +86,7 @@ const LoginPage = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    {...register("password", { required: "Password is required" })}
                     className="h-12 pr-12"
                   />
                   <button
@@ -113,6 +97,7 @@ const LoginPage = () => {
                     {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                   </button>
                 </div>
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -125,13 +110,12 @@ const LoginPage = () => {
                 </Link>
               </div>
 
-              {/* Login Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full h-14 text-base font-semibold bg-[#1E3A5F] hover:bg-[#15294A] transition-all"
-                disabled={isLoading}
+                disabled={isPending}
               >
-                {isLoading ? (
+                {isPending ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Signing in...
@@ -141,17 +125,9 @@ const LoginPage = () => {
                 )}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            {/* <div className="mt-8 text-center text-xs text-gray-500 bg-gray-50 py-3 rounded-xl border">
-              <p className="font-medium text-gray-700 mb-1">Demo Credentials</p>
-              <p>Owner: <span className="font-mono">owner@school.com</span></p>
-              <p>Director: <span className="font-mono">director@school.com</span></p>
-            </div> */}
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <p className="text-center text-xs text-white/60 mt-8">
           © 2026 OwnerPulse • HCLC
         </p>

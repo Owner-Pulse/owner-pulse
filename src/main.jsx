@@ -4,6 +4,7 @@ import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 import { RouterProvider } from "react-router";
 import { router } from "./router/router.jsx";
+import { Providers } from "./providers";
 
 registerSW({
   immediate: true,
@@ -11,7 +12,8 @@ registerSW({
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {/* <App /> */}
-    <RouterProvider router={router} />
+    <Providers>
+      <RouterProvider router={router} />
+    </Providers>
   </React.StrictMode>,
 );
