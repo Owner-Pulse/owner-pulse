@@ -27,9 +27,9 @@ jobs:
       - name: Deploy to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          server: 159.198.77.123
+          username: "ownerpulse-frontend"
+          password: "Zb9zced0303ouKNQ8zV0"
           local-dir: ./dist/
           server-dir: /
           delete-removed-files: true
