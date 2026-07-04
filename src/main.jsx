@@ -13,6 +13,7 @@ registerSW({
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Providers>
+      {/*      <App /> */}
       <RouterProvider router={router} />
     </Providers>
   </React.StrictMode>,
