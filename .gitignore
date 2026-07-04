@@ -17,6 +17,8 @@ dist-ssr
 *.sln
 *.sw?
 
+.credentials.txt
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
