@@ -8,24 +8,48 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import logo from '../../../assets/Logo.png';
 import { Link, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { useSignin } from '@/hooks/auth/signin.hook';
+import { useSignin } from '@/hooks';
+import { setToken } from '@/lib/setToken';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
   const { signin, isPending } = useSignin();
 
-  const handleLogin = (data) => {
+  // React hook form
+  const {
+    register,
+    formState: { errors },
+    handleSubmit
+
+  } = useForm();
+
+
+  const onSubmit = (data) => {
     signin(data, {
-      onSuccess: (response) => {
-        
+      onSuccess: (data) => {
+        toast.success(data?.message || "Login Successful");
+        setToken(data?.token);
+
+        const role = data?.data?.role;
+        if (role === 'owner') {
+          navigate("/owner/overview");
+        } else if (role === 'director') {
+          navigate("/director/overview");
+        } else {
+          navigate("/");
+        }
       },
+
       onError: (error) => {
-        
+        toast.error(error?.response?.data?.message || error?.message || "Login Failed");
       }
     });
   };
+
+
+
 
   return (
     <div
@@ -64,12 +88,16 @@ const LoginPage = () => {
           </CardHeader>
 
           <CardContent className="px-8 pb-8">
-            <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   placeholder="owner@school.com or director@school.com"
                   {...register("email", { required: "Email is required" })}
                   className="h-12"
@@ -82,6 +110,7 @@ const LoginPage = () => {
                 <div className="relative">
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     {...register("password", { required: "Password is required" })}
@@ -112,6 +141,7 @@ const LoginPage = () => {
                 type="submit"
                 className="w-full h-14 text-base font-semibold bg-[#1E3A5F] hover:bg-[#15294A] transition-all"
                 disabled={isPending}
+
               >
                 {isPending ? (
                   <span className="flex items-center gap-2">

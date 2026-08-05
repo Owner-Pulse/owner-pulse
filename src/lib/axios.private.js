@@ -14,7 +14,8 @@ export const axiosPrivate = () => {
     // request interceptor
     instance.interceptors.request.use(
         (config) => {
-            const token = localStorage.getItem("access_token");
+            const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
+            const token = localStorage.getItem(tokenName);
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }

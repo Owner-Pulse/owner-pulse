@@ -3,6 +3,8 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
 import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { useGetUser, useSignout } from '@/hooks';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -41,19 +43,19 @@ const bottomTabs = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-// ─── Notification data & helpers ────────────────────────────────────────
+// Notification data & helpers
 const NOTIF_ICONS = {
-  maintenance:      { icon: Wrench,        bg: "bg-orange-50",   text: "text-orange-600" },
-  incident:         { icon: Shield,        bg: "bg-red-50",      text: "text-red-600" },
-  compliance:       { icon: AlertTriangle, bg: "bg-amber-50",    text: "text-amber-600" },
-  staff:            { icon: Users,         bg: "bg-purple-50",   text: "text-purple-600" },
-  substitute:       { icon: Users,         bg: "bg-blue-50",     text: "text-blue-600" },
-  payroll:          { icon: DollarSign,    bg: "bg-emerald-50",  text: "text-emerald-600" },
-  scholarship:      { icon: GraduationCap, bg: "bg-violet-50",   text: "text-violet-600" },
-  student:          { icon: Users,         bg: "bg-rose-50",     text: "text-rose-600" },
-  task:             { icon: ClipboardList, bg: "bg-sky-50",      text: "text-sky-600" },
-  financial:        { icon: DollarSign,    bg: "bg-teal-50",     text: "text-teal-600" },
-  general:          { icon: Bell,          bg: "bg-gray-50",     text: "text-gray-600" },
+  maintenance: { icon: Wrench, bg: "bg-orange-50", text: "text-orange-600" },
+  incident: { icon: Shield, bg: "bg-red-50", text: "text-red-600" },
+  compliance: { icon: AlertTriangle, bg: "bg-amber-50", text: "text-amber-600" },
+  staff: { icon: Users, bg: "bg-purple-50", text: "text-purple-600" },
+  substitute: { icon: Users, bg: "bg-blue-50", text: "text-blue-600" },
+  payroll: { icon: DollarSign, bg: "bg-emerald-50", text: "text-emerald-600" },
+  scholarship: { icon: GraduationCap, bg: "bg-violet-50", text: "text-violet-600" },
+  student: { icon: Users, bg: "bg-rose-50", text: "text-rose-600" },
+  task: { icon: ClipboardList, bg: "bg-sky-50", text: "text-sky-600" },
+  financial: { icon: DollarSign, bg: "bg-teal-50", text: "text-teal-600" },
+  general: { icon: Bell, bg: "bg-gray-50", text: "text-gray-600" },
 };
 
 const getBasePath = () => {
@@ -62,16 +64,16 @@ const getBasePath = () => {
 };
 
 const INITIAL_NOTIFS = [
-  { id: 1,  type: "maintenance",  title: "Critical: AC unit not cooling",           description: "PreK-3 classroom temp reached 87°F.",                time: Date.now() - 1800000,   read: false, critical: true,  link: null, path: "/maintenance" },
-  { id: 2,  type: "incident",     title: "Major incident — Sequoia classroom",      description: "Physical altercation between two 5th graders.",       time: Date.now() - 3600000,   read: false, critical: true,  link: null, path: "/students" },
-  { id: 3,  type: "compliance",   title: "CPR certifications expired",             description: "3 staff need recertification by May 20.",             time: Date.now() - 7200000,   read: false, critical: true,  link: null, path: "/compliance" },
-  { id: 4,  type: "payroll",      title: "Payroll submitted for approval",         description: "Period ending May 15 — owner review needed.",          time: Date.now() - 14400000,  read: false, critical: false, link: null, path: "/payroll" },
-  { id: 5,  type: "staff",        title: "Mr. Nguyen called out sick",             description: "6th call-out. Ms. Hart arranged as sub.",             time: Date.now() - 28800000,  read: false, critical: false, link: null, path: "/staff" },
-  { id: 6,  type: "scholarship",  title: "Step Up approval stuck — 22 days",       description: "D. Kim's $3,100 application flagged.",                time: Date.now() - 86400000,  read: false, critical: true,  link: null, path: "/scholarships" },
-  { id: 7,  type: "student",      title: "J. Martinez at-risk — financial",        description: "Family lost job, asked about payment plan.",           time: Date.now() - 172800000, read: false, critical: true,  link: null, path: "/students" },
-  { id: 8,  type: "task",         title: "Faculty CPR certification overdue",      description: "Was due May 1 — 4 staff still need it.",               time: Date.now() - 259200000, read: true,  critical: true,  link: null, path: "/tasks" },
-  { id: 9,  type: "maintenance",  title: "Playground gate latch repaired",         description: "Completed for Kindergarten safety issue.",             time: Date.now() - 345600000, read: true,  critical: false, link: null, path: "/maintenance" },
-  { id: 10, type: "financial",    title: "QuickBooks sync completed",              description: "Bank balance $487,200. 3 pending transactions.",       time: Date.now() - 432000000, read: true,  critical: false, link: null, path: "/cashflow" },
+  { id: 1, type: "maintenance", title: "Critical: AC unit not cooling", description: "PreK-3 classroom temp reached 87°F.", time: Date.now() - 1800000, read: false, critical: true, link: null, path: "/maintenance" },
+  { id: 2, type: "incident", title: "Major incident — Sequoia classroom", description: "Physical altercation between two 5th graders.", time: Date.now() - 3600000, read: false, critical: true, link: null, path: "/students" },
+  { id: 3, type: "compliance", title: "CPR certifications expired", description: "3 staff need recertification by May 20.", time: Date.now() - 7200000, read: false, critical: true, link: null, path: "/compliance" },
+  { id: 4, type: "payroll", title: "Payroll submitted for approval", description: "Period ending May 15 — owner review needed.", time: Date.now() - 14400000, read: false, critical: false, link: null, path: "/payroll" },
+  { id: 5, type: "staff", title: "Mr. Nguyen called out sick", description: "6th call-out. Ms. Hart arranged as sub.", time: Date.now() - 28800000, read: false, critical: false, link: null, path: "/staff" },
+  { id: 6, type: "scholarship", title: "Step Up approval stuck — 22 days", description: "D. Kim's $3,100 application flagged.", time: Date.now() - 86400000, read: false, critical: true, link: null, path: "/scholarships" },
+  { id: 7, type: "student", title: "J. Martinez at-risk — financial", description: "Family lost job, asked about payment plan.", time: Date.now() - 172800000, read: false, critical: true, link: null, path: "/students" },
+  { id: 8, type: "task", title: "Faculty CPR certification overdue", description: "Was due May 1 — 4 staff still need it.", time: Date.now() - 259200000, read: true, critical: true, link: null, path: "/tasks" },
+  { id: 9, type: "maintenance", title: "Playground gate latch repaired", description: "Completed for Kindergarten safety issue.", time: Date.now() - 345600000, read: true, critical: false, link: null, path: "/maintenance" },
+  { id: 10, type: "financial", title: "QuickBooks sync completed", description: "Bank balance $487,200. 3 pending transactions.", time: Date.now() - 432000000, read: true, critical: false, link: null, path: "/cashflow" },
 ];
 
 const timeAgo = (ts) => {
@@ -84,18 +86,23 @@ const timeAgo = (ts) => {
 };
 
 const DashboardLayout = () => {
+  const { user } = useGetUser();
+  const { signout, isPending: isPendingSignout } = useSignout();
+  console.log("User data", user);
+
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifFilter, setNotifFilter] = useState("all");
   const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const notifRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const user = JSON.parse(localStorage.getItem('user') || '{"role": "owner"}');
-  const role = user.role;
+  const role = user?.role;
   const menuItems = role === "owner" ? ownerTabs : directorTabs;
 
   // Click-outside handler for notification dropdown
@@ -133,8 +140,19 @@ const DashboardLayout = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/');
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      await signout();
+    } catch (e) {
+      console.error("Logout API failed", e);
+    } finally {
+      const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
+      localStorage.removeItem(tokenName);
+      navigate('/');
+    }
   };
 
   const basePath = `/${role}`;
@@ -159,17 +177,16 @@ const DashboardLayout = () => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
               const isActive = currentPath === destination;
-              
+
               return (
                 <NavLink
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
-                    isActive 
-                      ? 'bg-[#1E3A5F] text-white font-semibold' 
-                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                    ? 'bg-[#1E3A5F] text-white font-semibold'
+                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   <item.icon size={20} />
                   {item.label}
@@ -177,7 +194,7 @@ const DashboardLayout = () => {
               );
             })}
           </nav>
-          
+
           {/* Profile & Settings */}
           <nav className="space-y-1 mb-2">
             {bottomTabs.map((item) => {
@@ -188,11 +205,10 @@ const DashboardLayout = () => {
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
-                    isActive 
-                      ? 'bg-[#1E3A5F] text-white font-semibold' 
-                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                    ? 'bg-[#1E3A5F] text-white font-semibold'
+                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   <item.icon size={20} />
                   {item.label}
@@ -216,7 +232,8 @@ const DashboardLayout = () => {
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex shrink-0 items-center px-4 md:px-6 sticky top-0 z-40 shadow-sm">
           <div className="flex items-center justify-between w-full ">
-            {/* Mobile Menu Button */}              <button 
+            {/* Mobile Menu Button */}
+            <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 text-gray-600"
             >
@@ -238,7 +255,7 @@ const DashboardLayout = () => {
                 >
                   <Bell size={22} />
                   {notifStats.unread > 0 && (
-                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 rounded-full ring-2 ring-white text-[9px] font-bold px-1">
+                    <span className="absolute top-2 right-2 min-w-4.5 h-4.5 flex items-center justify-center bg-red-500 rounded-full ring-2 ring-white text-[9px] font-bold px-1">
                       {notifStats.unread > 9 ? "9+" : notifStats.unread}
                     </span>
                   )}
@@ -282,11 +299,10 @@ const DashboardLayout = () => {
                         <button
                           key={f.key}
                           onClick={() => setNotifFilter(f.key)}
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
-                            notifFilter === f.key
-                              ? "bg-gray-900 text-white"
-                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${notifFilter === f.key
+                            ? "bg-gray-900 text-white"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                            }`}
                         >
                           {f.label}
                         </button>
@@ -315,9 +331,8 @@ const DashboardLayout = () => {
                                 if (notif.path) navigate(getBasePath() + notif.path);
                                 setNotifOpen(false);
                               }}
-                              className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${
-                                !notif.read ? "bg-blue-50/40" : ""
-                              } border-b border-gray-50 last:border-b-0`}
+                              className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${!notif.read ? "bg-blue-50/40" : ""
+                                } border-b border-gray-50 last:border-b-0`}
                             >
                               {/* Icon */}
                               <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
@@ -357,8 +372,8 @@ const DashboardLayout = () => {
                     {user?.name?.slice(0, 2) || "JD"}
                   </div>
                   <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-800">{user?.name || "John Doe"}</p>
-                  <p className="text-xs text-gray-400 -mt-0.5 capitalize">{role}</p>
+                    <p className="text-sm font-medium text-gray-800">{user?.name || "John Doe"}</p>
+                    <p className="text-xs text-gray-400 -mt-0.5 capitalize">{role}</p>
                   </div>
                 </button>
               </div>
@@ -376,11 +391,60 @@ const DashboardLayout = () => {
 
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/60 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
+
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl relative"
+            >
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Logout</h3>
+                <p className="text-sm text-gray-500">Are you sure you want to log out of your account?</p>
+              </div>
+              
+              <div className="flex items-center gap-3 w-full">
+                <button 
+                  onClick={() => setShowLogoutModal(false)}
+                  className="cursor-pointer flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+                  disabled={isPendingSignout}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmLogout}
+                  className="cursor-pointer flex-1 flex justify-center items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                  disabled={isPendingSignout}
+                >
+                  {isPendingSignout ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Logging out...
+                    </>
+                  ) : (
+                    "Log Out"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
