@@ -8,20 +8,36 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const ProfileHeader = ({ profile, form, editing, onFormChange }) => {
+const ProfileHeader = ({ user: profile, form, editing, onFormChange }) => {
   return (
     <motion.div variants={itemVariants}>
       <Card className="bg-white border-none shadow-sm overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500 relative">
+        <div className="h-32 bg-linear-to-r from-blue-600 via-blue-500 to-purple-500 relative">
           <div className="absolute -bottom-12 left-8">
             <div className="relative group">
-              <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl font-bold text-blue-600 border-2 border-white">
-                {profile.initials}
+              <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl font-bold text-blue-600 border-2 border-white overflow-hidden">
+                {form?.avatar ? (
+                  <img src={URL.createObjectURL(form.avatar)} className="w-full h-full object-cover" alt="Avatar" />
+                ) : profile?.avatar ? (
+                  <img src={profile.avatar} className="w-full h-full object-cover" alt="Avatar" />
+                ) : (
+                  profile?.initials
+                )}
               </div>
               {editing && (
-                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <Camera size={20} className="text-white" />
-                </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        onFormChange((prev) => ({ ...prev, avatar: e.target.files[0] }));
+                      }
+                    }}
+                  />
+                </label>
               )}
             </div>
           </div>
@@ -49,19 +65,10 @@ const ProfileHeader = ({ profile, form, editing, onFormChange }) => {
                 </span>
               </div>
             </div>
-            <div className="flex gap-4">
-              {profile.achievements.map((ach, i) => (
-                <div key={i} className="text-center bg-gray-50 rounded-xl px-4 py-3 min-w-[80px]">
-                  <p className="text-lg font-bold text-gray-900">{ach.value}</p>
-                  <p className="text-[10px] text-gray-500">{ach.label}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
     </motion.div>
   );
 };
-
 export default ProfileHeader;

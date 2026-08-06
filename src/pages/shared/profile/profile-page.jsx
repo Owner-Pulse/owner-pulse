@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+"use client"
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Edit3, Save, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,78 +7,86 @@ import ProfileHeader from "./components/ProfileHeader";
 import ProfileBioCard from "./components/ProfileBioCard";
 import ContactInfoCard from "./components/ContactInfoCard";
 import AccountDetailsCard from "./components/AccountDetailsCard";
+import { useGetUser, useUpdateOwnerUserDetails, useUpdateDirectorUserDetails } from "@/hooks";
+import toast from "react-hot-toast";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
-const getCurrentUser = () =>
-  JSON.parse(localStorage.getItem("user") || '{"role":"owner","name":"John Doe","email":"john@hclc.com"}');
-
-const PROFILE_DATA = {
-  owner: {
-    initials: "JD",
-    memberSince: "2019-08-01",
-    lastLogin: "2026-05-11 08:23 AM",
-    phone: "(555) 123-4567",
-    location: "Orlando, FL",
-    title: "School Owner & Director",
-    bio: "Leading HCLC with a passion for early childhood education and operational excellence.",
-    achievements: [
-      { label: "Years of Service", value: "7" },
-      { label: "Licenses Held", value: "3" },
-      { label: "Workshops Completed", value: "12" },
-    ],
-  },
-  director: {
-    initials: "SK",
-    memberSince: "2023-01-15",
-    lastLogin: "2026-05-11 07:54 AM",
-    phone: "(555) 987-6543",
-    location: "Orlando, FL",
-    title: "School Director",
-    bio: "Dedicated to fostering a positive learning environment for students and staff.",
-    achievements: [
-      { label: "Years of Service", value: "3" },
-      { label: "Licenses Held", value: "2" },
-      { label: "Workshops Completed", value: "8" },
-    ],
-  },
-};
-
 const ProfilePage = () => {
-  const currentUser = getCurrentUser();
-  const role = currentUser.role;
-  const profile = { ...PROFILE_DATA[role] || PROFILE_DATA.owner, role };
+  const { user, refetch } = useGetUser();
+  const {
+    updateOwnerUserDetails,
+    isPending: updateOwnerIsPending,
+  } = useUpdateOwnerUserDetails();
+
+  const {
+    updateDirectorUserDetails,
+    isPending: updateDirectorIsPending,
+  } = useUpdateDirectorUserDetails();
+
+  const role = user?.role || "owner";
+  const updateIsPending = role === "director" ? updateDirectorIsPending : updateOwnerIsPending;
+  const submitUpdate = role === "director" ? updateDirectorUserDetails : updateOwnerUserDetails;
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
-    name: currentUser.name || "John Doe",
-    email: currentUser.email || "john@hclc.com",
-    phone: profile.phone,
-    bio: profile.bio,
+    name: user?.name || "John Doe",
+    email: user?.email || "john@hclc.com",
+    phone: user?.phone || "",
+    bio: user?.about || "",
+    location: user?.location || "",
+    avatar: null,
   });
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    user.name = form.name;
-    user.email = form.email;
-    user.phone = form.phone;
-    user.bio = form.bio;
-    localStorage.setItem("user", JSON.stringify(user));
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    if (user && !editing) {
+      setForm(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        bio: user.about || prev.bio,
+        location: user.location || prev.location,
+        avatar: null,
+      }));
+    }
+  }, [user, editing]);
+
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("phone", form.phone);
+    formData.append("about", form.bio);
+    formData.append("location", form.location);
+    if (form.avatar) {
+      formData.append("avatar", form.avatar);
+    }
+    submitUpdate(formData, {
+      onSuccess: (data) => {
+        setEditing(false);
+        refetch();
+        toast.success(data?.message || "Profile updated successfully");
+      },
+      onError: (error) => {
+        setEditing(false);
+        refetch();
+        toast.error(error?.response?.data?.message || "Failed to update profile");
+      }
+    });
   };
 
   const handleCancel = () => {
     setForm({
-      name: currentUser.name || "John Doe",
-      email: currentUser.email || "john@hclc.com",
-      phone: profile.phone,
-      bio: profile.bio,
+      name: user?.name || "John Doe",
+      email: user?.email || "john@hclc.com",
+      phone: user?.phone || "",
+      bio: user?.about || "",
+      location: user?.location || "",
+      avatar: null,
     });
     setEditing(false);
   };
@@ -99,8 +108,12 @@ const ProfilePage = () => {
             <Button variant="outline" className="border-gray-200" onClick={handleCancel}>
               <X size={14} className="mr-2" /> Cancel
             </Button>
-            <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white" onClick={handleSave}>
-              <Save size={14} className="mr-2" /> Save Changes
+            <Button 
+              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white" 
+              onClick={handleSave}
+              disabled={updateIsPending}
+            >
+              <Save size={14} className="mr-2" /> {updateIsPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         )}
@@ -119,7 +132,7 @@ const ProfilePage = () => {
 
       {/* Profile Card with Avatar */}
       <ProfileHeader
-        profile={profile}
+        user={user}
         form={form}
         editing={editing}
         onFormChange={setForm}
@@ -138,12 +151,11 @@ const ProfilePage = () => {
           form={form}
           editing={editing}
           onFormChange={setForm}
-          location={profile.location}
+          location={user.location}
         />
-        <AccountDetailsCard profile={profile} />
+        <AccountDetailsCard user={user} />
       </div>
     </motion.div>
   );
 };
-
 export default ProfilePage;

@@ -1,22 +1,19 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
-import ProfileNameCard from "./components/ProfileNameCard";
 import PasswordCard from "./components/PasswordCard";
 import DirectorAccountCard from "./components/DirectorAccountCard";
+import { useGetUser } from "@/hooks";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
-const getCurrentUser = () =>
-  JSON.parse(localStorage.getItem("user") || '{"role":"owner","name":"John Doe","email":"john@hclc.com"}');
-
 const SettingsPage = () => {
+  const { user, refetch } = useGetUser();
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
-  const role = currentUser.role;
+  const role = user?.role || "owner";
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -27,9 +24,6 @@ const SettingsPage = () => {
           Manage your account settings and security
         </p>
       </div>
-
-      {/* Profile Name */}
-      <ProfileNameCard currentName={currentUser.name} />
 
       {/* Change Password */}
       <PasswordCard />

@@ -1,8 +1,11 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router';
+import { useGetUser } from '@/hooks';
 
 const DirectorRoute = () => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const { user, isLoading } = useGetUser();
+
+  if (isLoading) return null;
   
   if (!user) {
     return <Navigate to="/" replace />;

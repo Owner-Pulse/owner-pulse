@@ -9,6 +9,7 @@ export const axiosPublic = () => {
         timeout: TIME_OUT,
         headers: {
             "Content-type": "application/json",
+            "Accept": "application/json"
         }
     });
 
