@@ -11,9 +11,10 @@ import { useForm } from 'react-hook-form';
 import { useSignin } from '@/hooks';
 import { setToken } from '@/lib/setToken';
 import toast from 'react-hot-toast';
-
+import { useQueryClient } from '@tanstack/react-query';
 const LoginPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const { signin, isPending } = useSignin();
 
@@ -30,6 +31,7 @@ const LoginPage = () => {
     signin(data, {
       onSuccess: (data) => {
         toast.success(data?.message || "Login Successful");
+        queryClient.clear();
         setToken(data?.token);
 
         const role = data?.data?.role;

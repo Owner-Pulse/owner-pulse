@@ -5,6 +5,7 @@ import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser, useSignout } from '@/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -58,10 +59,10 @@ const NOTIF_ICONS = {
   general: { icon: Bell, bg: "bg-gray-50", text: "text-gray-600" },
 };
 
-const getBasePath = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{"role":"owner"}');
-  return user.role === 'owner' ? '/owner' : '/director';
-};
+// const getBasePath = () => {
+//   const user = JSON.parse(localStorage.getItem('user') || '{"role":"owner"}');
+//   return user.role === 'owner' ? '/owner' : '/director';
+// };
 
 const INITIAL_NOTIFS = [
   { id: 1, type: "maintenance", title: "Critical: AC unit not cooling", description: "PreK-3 classroom temp reached 87°F.", time: Date.now() - 1800000, read: false, critical: true, link: null, path: "/maintenance" },
@@ -139,6 +140,8 @@ const DashboardLayout = () => {
     );
   };
 
+  const queryClient = useQueryClient();
+
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
@@ -151,6 +154,7 @@ const DashboardLayout = () => {
     } finally {
       const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
       localStorage.removeItem(tokenName);
+      queryClient.clear();
       navigate('/');
     }
   };
@@ -263,7 +267,7 @@ const DashboardLayout = () => {
 
                 {/* Dropdown Panel */}
                 {notifOpen && (
-                  <div className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-[400px] md:max-h-[520px] bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-[100] flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}>
+                  <div className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-100 md:max-h-130 bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-100 flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                       <div>
@@ -368,9 +372,8 @@ const DashboardLayout = () => {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-3 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
                 >
-                  <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold uppercase">
-                    {user?.name?.slice(0, 2) || "JD"}
-                  </div>
+                  
+                  <img src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name}&background=random`} alt="Logo" className="h-9 w-9 rounded-full" />
                   <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-gray-800">{user?.name || "John Doe"}</p>
                     <p className="text-xs text-gray-400 -mt-0.5 capitalize">{role}</p>

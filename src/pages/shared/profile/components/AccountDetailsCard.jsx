@@ -20,7 +20,7 @@ const DetailField = ({ icon: Icon, label, value, iconBg = "bg-purple-50", iconCo
   </div>
 );
 
-const AccountDetailsCard = ({ profile }) => {
+const AccountDetailsCard = ({ user:profile }) => {
   return (
     <motion.div variants={itemVariants}>
       <Card className="bg-white border-none shadow-sm">
@@ -33,7 +33,7 @@ const AccountDetailsCard = ({ profile }) => {
           <DetailField
             icon={Calendar}
             label="Member Since"
-            value={new Date(profile.memberSince).toLocaleDateString("en-US", {
+            value={new Date(profile?.member_since).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -42,14 +42,14 @@ const AccountDetailsCard = ({ profile }) => {
           <DetailField
             icon={Clock}
             label="Last Login"
-            value={profile.lastLogin}
+            value={profile?.last_login || "-"}
           />
           <DetailField
             icon={Award}
             label="Licenses & Certifications"
-            value={`${profile.achievements[1]?.value || "0"} active`}
+            value={`${profile?.licenses_certifications|| "0"} active`}
           />
-        </CardContent>
+        </CardContent> 
       </Card>
     </motion.div>
   );

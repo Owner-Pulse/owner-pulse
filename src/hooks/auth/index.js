@@ -1,2 +1,2 @@
-export * from "./get-user.hook";
+export * from "./user-details.hook";
 export * from "./auth.hook";

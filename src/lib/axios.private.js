@@ -8,6 +8,7 @@ export const axiosPrivate = () => {
         baseURL: `${BASE_URL}/api`,
         headers: {
             "Content-type": "application/json",
+            "Accept": "application/json"
         }
     });
 

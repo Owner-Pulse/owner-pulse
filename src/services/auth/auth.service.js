@@ -9,10 +9,7 @@ export const AuthService = {
 
   // sign out service for owner and director
   signOutService: async (axiosInstance) => {
-    const response = await axiosInstance.get(`/logout`);
+    const response = await axiosInstance.post(`/logout`);
     return response?.data;
   }
-
-
-
-}
+};

@@ -60,8 +60,10 @@ const ContactInfoCard = ({ form, editing, onFormChange, location }) => {
           <ContactField
             icon={MapPin}
             label="Location"
-            value={location}
-            editing={false}
+            value={form.location}
+            editing={editing}
+            field="location"
+            onFormChange={onFormChange}
             iconBg="bg-blue-50"
             iconColor="text-blue-600"
           />
