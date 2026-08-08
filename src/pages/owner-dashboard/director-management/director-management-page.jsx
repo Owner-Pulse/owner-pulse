@@ -7,6 +7,7 @@ import DirectorCard from "./components/DirectorCard";
 import DirectorDetailModal from "./components/DirectorDetailModal";
 import CreateDirectorForm from "./components/CreateDirectorForm";
 import FilterBar from "./components/FilterBar";
+import { useGetAllDirector, useGetSingleDirector } from "@/hooks/create-director/create-director.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -17,91 +18,44 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_DIRECTORS = [
-  {
-    id: 1,
-    name: "Sarah Kim",
-    email: "sarah@hclc.com",
-    phone: "(813) 555-0100",
-    status: "active",
-    created: "2025-08-15",
-    lastLogin: "2026-05-10 08:32 AM",
-    role: "Director of Operations",
-    department: "Administration",
-    bio: "Oversees daily school operations, staff scheduling, and facility management.",
-    tasksCompleted: 47,
-    logEntries: 182,
-    avatar: null,
-  },
-  {
-    id: 2,
-    name: "Marcus Webb",
-    email: "marcus@hclc.com",
-    phone: "(813) 555-0200",
-    status: "active",
-    created: "2026-01-10",
-    lastLogin: "2026-05-09 07:15 AM",
-    role: "Assistant Director",
-    department: "Administration",
-    bio: "Supports the Director with enrollment, parent communications, and curriculum coordination.",
-    tasksCompleted: 23,
-    logEntries: 94,
-    avatar: null,
-  },
-  {
-    id: 3,
-    name: "Lisa Park",
-    email: "lisa@hclc.com",
-    phone: "(813) 555-0300",
-    status: "pending",
-    created: "2026-04-28",
-    lastLogin: null,
-    role: "Director",
-    department: "Administration",
-    bio: "",
-    tasksCompleted: 0,
-    logEntries: 0,
-    avatar: null,
-  },
-];
 
 const DirectorManagementPage = () => {
-  const [directors, setDirectors] = useState(INITIAL_DIRECTORS);
+  const { allDirector, isLoading } = useGetAllDirector();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedDirector, setSelectedDirector] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const handleAddDirector = (director) => {
-    setDirectors((prev) => [...prev, director]);
-  };
-
-  const handleUpdateStatus = (id, status) => {
-    setDirectors((prev) => prev.map((d) => (d.id === id ? { ...d, status } : d)));
-    setSelectedDirector((prev) => prev && prev.id === id ? { ...prev, status } : prev);
-  };
+  const { singleDirector, isLoading: isSingleLoading } = useGetSingleDirector(selectedDirector?.id);
 
   const filtered = useMemo(() => {
-    let result = directors;
+    let result = allDirector || [];
     if (statusFilter !== "all") result = result.filter((d) => d.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((d) =>
-        d.name.toLowerCase().includes(q) ||
-        d.email.toLowerCase().includes(q) ||
-        d.role.toLowerCase().includes(q)
+        d?.name?.toLowerCase().includes(q) ||
+        d?.email?.toLowerCase().includes(q) ||
+        d?.role?.toLowerCase().includes(q)
       );
     }
     return result;
-  }, [directors, statusFilter, searchQuery]);
+  }, [allDirector, statusFilter, searchQuery]);
 
-  const stats = useMemo(() => ({
-    total: directors.length,
-    active: directors.filter((d) => d.status === "active").length,
-    pending: directors.filter((d) => d.status === "pending").length,
-    totalTasks: directors.reduce((a, d) => a + d.tasksCompleted, 0),
-    totalLogs: directors.reduce((a, d) => a + d.logEntries, 0),
-  }), [directors]);
+  const stats = useMemo(() => {
+    const dirs = allDirector || [];
+    return {
+      total: dirs.length,
+      active: dirs.filter((d) => d.status === "active").length,
+      pending: dirs.filter((d) => d.status !== "active").length, // Assuming non-active means pending or something similar
+      totalTasks: 0, // Not provided in current API
+      totalLogs: 0,  // Not provided in current API
+    };
+  }, [allDirector]);
+
+  const handleUpdateStatus = (directorId, status) => {
+    console.log("Update status:", directorId, status);
+  };
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -110,7 +64,7 @@ const DirectorManagementPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Director Management</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {stats.active} active · {stats.pending} pending · {stats.totalTasks} tasks completed
+            {stats.active} active · {stats.pending} pending
           </p>
         </div>
         <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm" onClick={() => setShowCreateForm(true)}>
@@ -124,7 +78,7 @@ const DirectorManagementPage = () => {
           <KpiCard icon={Users} label="Total Directors" value={stats.total} sub="Managing school operations" color="bg-blue-50 text-blue-600" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={CheckCircle2} label="Active" value={stats.active} sub={`${stats.active > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% of total`} color="bg-emerald-50 text-emerald-600" />
+          <KpiCard icon={CheckCircle2} label="Active" value={stats.active} sub={`${stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% of total`} color="bg-emerald-50 text-emerald-600" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={Clock} label="Pending Invites" value={stats.pending} sub={stats.pending > 0 ? "Awaiting first login" : "All accounts activated"} color={stats.pending > 0 ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400"} />
@@ -146,7 +100,32 @@ const DirectorManagementPage = () => {
 
       {/* Director Grid */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.length > 0 ? (
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between animate-pulse min-h-[49">
+              <div className="flex gap-5 items-start">
+                <div className="w-16 h-16 rounded-full bg-slate-200 shrink-0" />
+                <div className="flex-1 space-y-3 py-1 w-full">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 w-1/2">
+                      <div className="h-5 bg-slate-200 rounded w-full" />
+                      <div className="h-3 bg-slate-200 rounded w-3/4" />
+                    </div>
+                    <div className="h-6 w-16 bg-slate-200 rounded-md" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="h-4 bg-slate-200 rounded w-full" />
+                    <div className="h-4 bg-slate-200 rounded w-3/4" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+                <div className="h-4 bg-slate-200 rounded w-1/3" />
+                <div className="w-8 h-8 rounded-full bg-slate-200" />
+              </div>
+            </div>
+          ))
+        ) : filtered?.length > 0 ? (
           filtered.map((director) => (
             <DirectorCard key={director.id} director={director} onClick={setSelectedDirector} />
           ))
@@ -166,7 +145,8 @@ const DirectorManagementPage = () => {
       {/* Director Detail Modal */}
       {selectedDirector && (
         <DirectorDetailModal
-          director={selectedDirector}
+          director={singleDirector || selectedDirector}
+          isLoading={isSingleLoading}
           onClose={() => setSelectedDirector(null)}
           onUpdateStatus={handleUpdateStatus}
         />
@@ -174,7 +154,7 @@ const DirectorManagementPage = () => {
 
       {/* Create Director Form */}
       {showCreateForm && (
-        <CreateDirectorForm onAdd={handleAddDirector} onClose={() => setShowCreateForm(false)} />
+        <CreateDirectorForm onClose={() => setShowCreateForm(false)} />
       )}
     </motion.div>
   );

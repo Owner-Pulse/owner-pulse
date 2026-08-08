@@ -30,7 +30,7 @@ const SettingsPage = () => {
 
       {/* Director Account Management — owners only */}
       {role === "owner" && (
-        <DirectorAccountCard onNavigate={() => navigate("/dashboard/director-management")} />
+        <DirectorAccountCard onNavigate={() => navigate("/owner/director-management")} />
       )}
     </motion.div>
   );
