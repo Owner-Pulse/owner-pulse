@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import AssigneeTag from "./AssigneeTag";
-import { useInProgressTask, useCompleteTask, useDeleteTask } from "@/hooks/owner-task-assign";
+import { useOwnerTaskActions, useDirectorTaskActions } from "@/hooks/useTaskActions";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -15,10 +15,26 @@ const itemVariants = {
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-const TaskCard = ({ task, status, currentRole, daysUntil, onUpdateStatus }) => {
-  const { inProgressTask, isPending: isInProgressPending } = useInProgressTask();
-  const { completeTask, isPending: isCompleting } = useCompleteTask();
-  const { deleteTask, isPending: isDeleting } = useDeleteTask();
+// Wrapper that calls owner hooks
+const OwnerTaskCard = (props) => {
+  const actions = useOwnerTaskActions();
+  return <TaskCardInner {...props} {...actions} />;
+};
+
+// Wrapper that calls director hooks
+const DirectorTaskCard = (props) => {
+  const actions = useDirectorTaskActions();
+  return <TaskCardInner {...props} {...actions} />;
+};
+
+// Main export: picks the right wrapper based on role
+const TaskCard = (props) => {
+  if (props.currentRole === "director") return <DirectorTaskCard {...props} />;
+  return <OwnerTaskCard {...props} />;
+};
+
+const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, inProgressTask, isInProgressPending, completeTask, isCompleting, deleteTask, isDeleting }) => {
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteInput, setDeleteInput] = useState("");
   const days = daysUntil(task.due);

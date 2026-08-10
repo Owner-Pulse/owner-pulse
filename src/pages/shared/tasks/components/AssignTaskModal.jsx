@@ -3,11 +3,16 @@ import { X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllDirector } from "@/hooks/create-director/create-director.hook";
 import { useCreateTask } from "@/hooks/owner-task-assign";
+import { useCreateDirectorTask } from "@/hooks/director-task-assign";
 
 const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
+  const isDirector = currentRole === "director";
   const { allDirector } = useGetAllDirector();
-  console.log("allDirector", allDirector);
-  const { createTask, isPending } = useCreateTask();
+  const { createTask: ownerCreateTask, isPending: ownerPending } = useCreateTask();
+  const { createTask: directorCreateTask, isPending: directorPending } = useCreateDirectorTask();
+
+  const createTask = isDirector ? directorCreateTask : ownerCreateTask;
+  const isPending = isDirector ? directorPending : ownerPending;
   
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState(currentRole === "owner" ? "" : "owner");

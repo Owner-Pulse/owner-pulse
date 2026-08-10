@@ -13,6 +13,7 @@ import TaskCard from "./components/TaskCard";
 import TaskFilters from "./components/TaskFilters";
 import AssignTaskModal from "./components/AssignTaskModal";
 import { useGetTaskList } from "@/hooks/owner-task-assign";
+import { useGetDirectorTaskList } from "@/hooks/director-task-assign";
 import { useGetUser } from "@/hooks";
 
 const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
@@ -22,10 +23,27 @@ const containerVariants = {
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
 
+// Wrapper: loads owner tasks
+const OwnerTasksLoader = (props) => {
+  const { taskList, isTaskListLoading } = useGetTaskList();
+  return <TasksPageInner {...props} taskList={taskList} isTaskListLoading={isTaskListLoading} />;
+};
+
+// Wrapper: loads director tasks
+const DirectorTasksLoader = (props) => {
+  const { taskList, isTaskListLoading } = useGetDirectorTaskList();
+  return <TasksPageInner {...props} taskList={taskList} isTaskListLoading={isTaskListLoading} />;
+};
+
 const TasksPage = () => {
-  const { user, refetch } = useGetUser();
-  const { taskList, isTaskListLoading, refetchTaskList } = useGetTaskList();
-  console.log("Task list", taskList);
+  const { user } = useGetUser();
+  const currentRole = user?.role;
+
+  if (currentRole === "director") return <DirectorTasksLoader currentRole={currentRole} />;
+  return <OwnerTasksLoader currentRole={currentRole} />;
+};
+
+const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
 
 
   const [tasks, setTasks] = useState([]);
@@ -51,7 +69,6 @@ const TasksPage = () => {
     }
   }, [taskList]);
 
-  const currentRole = user?.role;
 
   const updateStatus = (id, newStatus) => {
     setTaskStatuses((prev) => ({ ...prev, [id]: newStatus }));
