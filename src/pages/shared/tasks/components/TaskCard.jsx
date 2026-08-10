@@ -29,7 +29,7 @@ const TaskCard = ({ task, status, currentRole, daysUntil, onToggle }) => {
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             {/* Status checkbox */}
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isDone ? "bg-emerald-500 border-emerald-500" : isOverdue ? "border-red-400" : isDueSoon ? "border-amber-400" : "border-gray-300"}`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isDone ? "bg-emerald-500 border-emerald-500" : isOverdue ? "border-red-400" : isDueSoon ? "border-amber-400" : "border-gray-300"}`}>
               {isDone && <CheckCircle2 size={14} className="text-white" />}
             </div>
 
@@ -54,7 +54,7 @@ const TaskCard = ({ task, status, currentRole, daysUntil, onToggle }) => {
                 <span className="text-xs text-gray-400">By {task.assignedBy}</span>
               </div>
             </div>
-            <div className="text-[9px] md:text-[10px] text-gray-300 flex-shrink-0 hidden sm:block">
+            <div className="text-[9px] md:text-[10px] text-gray-300 shrink-0 hidden sm:block">
               {!isDone ? "Click to progress" : "↺"}
             </div>
           </div>

@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, AlertTriangle, CheckCircle2, Eye, EyeOff, X } from "lucide-react";
@@ -5,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useCreateDirector } from "@/hooks/create-director/create-director.hook";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CreateDirectorForm = ({ onClose }) => {
+  const queryClient = useQueryClient();
   const {
     createDirector,
     isLoading,
@@ -37,8 +40,9 @@ const CreateDirectorForm = ({ onClose }) => {
     }
 
     createDirector(payload, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success(data?.message || "Director created successfully!");
+        queryClient.invalidateQueries({ queryKey: ["get-all-director"] });
         onClose();
       },
       onError: (error) => {
@@ -90,12 +94,12 @@ const CreateDirectorForm = ({ onClose }) => {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email Address</label>
                   <input type="email"
-                    {...register("email", { 
-                        required: "Email is required",
-                        pattern: {
-                            value: /\S+@\S+\.\S+/,
-                            message: "Please enter a valid email address"
-                        }
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /\S+@\S+\.\S+/,
+                        message: "Please enter a valid email address"
+                      }
                     })}
                     placeholder="director@hclc.com"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -113,9 +117,9 @@ const CreateDirectorForm = ({ onClose }) => {
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Password</label>
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"}
-                      {...register("password", { 
-                          required: "Password is required",
-                          minLength: { value: 6, message: "Password must be at least 6 characters" }
+                      {...register("password", {
+                        required: "Password is required",
+                        minLength: { value: 6, message: "Password must be at least 6 characters" }
                       })}
                       placeholder="Min. 6 characters"
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12" />
@@ -140,7 +144,7 @@ const CreateDirectorForm = ({ onClose }) => {
                   {isPending ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block align-middle" />
                   ) : (
-                    <UserPlus size={16} className="mr-2 inline-block align-middle" /> 
+                    <UserPlus size={16} className="mr-2 inline-block align-middle" />
                   )}
                   {isPending ? "Creating..." : "Create Account"}
                 </Button>
