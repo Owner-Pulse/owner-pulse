@@ -1,27 +1,50 @@
 import React, { useState } from "react";
 import { X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGetAllDirector } from "@/hooks/create-director/create-director.hook";
+import { useCreateTask } from "@/hooks/owner-task-assign";
 
 const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
+  const { allDirector } = useGetAllDirector();
+  console.log("allDirector", allDirector);
+  const { createTask, isPending } = useCreateTask();
+  
   const [title, setTitle] = useState("");
-  const [assignee, setAssignee] = useState(currentRole === "owner" ? "director" : "owner");
+  const [assignee, setAssignee] = useState(currentRole === "owner" ? "" : "owner");
   const [priority, setPriority] = useState("medium");
   const [due, setDue] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !due) return;
-    onAssign({
-      id: Date.now(),
-      title: title.trim(),
-      assignee,
-      assignedBy: currentRole,
-      priority,
-      status: "open",
-      due,
-      createdAt: new Date().toISOString().split("T")[0],
+    if (!title.trim() || !due || !assignee || !description.trim()) return;
+    
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("priority", priority);
+    formData.append("due_date", due);
+    formData.append("assigned_to", assignee);
+    formData.append("description", description.trim());
+
+    createTask(formData, {
+      onSuccess: () => {
+        if (onAssign) {
+          // Keep optimistic update for instant UI feedback if needed, but the refetch will replace it anyway
+          onAssign({
+            id: Date.now(),
+            title: title.trim(),
+            description: description.trim(),
+            assignee: assignee,
+            assignedBy: currentRole,
+            priority,
+            status: "open",
+            due,
+            createdAt: new Date().toISOString().split("T")[0],
+          });
+        }
+        onClose();
+      }
     });
-    onClose();
   };
 
   return (
@@ -55,7 +78,14 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white">
                   {currentRole === "owner" ? (
-                    <option value="director">Director</option>
+                    <>
+                      <option value="" disabled>Select a director</option>
+                      {allDirector?.map((director) => (
+                        <option key={director?.id} value={director?.id} className="capitalize">
+                          {director?.name}
+                        </option>
+                      ))}
+                    </>
                   ) : (
                     <option value="owner">Owner</option>
                   )}
@@ -81,10 +111,26 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+              <textarea
+                value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Please ensure all forms are signed..."
+                required
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
-              <Button type="submit" className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
-                <Send size={16} className="mr-2" /> Assign Task
+              <Button type="submit" disabled={isPending} className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+                {isPending ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                ) : (
+                  <Send size={16} className="mr-2" />
+                )}
+                {isPending ? "Assigning..." : "Assign Task"}
               </Button>
             </div>
           </form>
