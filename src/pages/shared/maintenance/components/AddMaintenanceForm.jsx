@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCreateDirectorMaintenance, useGetUser } from "@/hooks";
 
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },
@@ -20,15 +21,14 @@ const STAFF_ROSTER = [
   "Ms. Hassan", "Mr. Levine", "Ms. Foster", "Mr. Tate", "Ms. Crane",
 ];
 
-const getCurrentUser = () =>
-  JSON.parse(localStorage.getItem("user") || '{"role":"owner","name":"School Owner"}');
-
 const AddMaintenanceForm = ({ onAdd, onClose }) => {
+  const { user } = useGetUser();
+  const { createMaintenance, isPending } = useCreateDirectorMaintenance();
   const [form, setForm] = useState({ location: "", issue: "", priority: "medium", estCost: "", assignedTo: "", assignedStaff: "", assignedOther: "" });
   const [error, setError] = useState("");
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!form.location.trim()) { setError("Location is required."); return; }
@@ -37,24 +37,38 @@ const AddMaintenanceForm = ({ onAdd, onClose }) => {
     if (form.assignedTo === "staff" && !form.assignedStaff) { setError("Please select a staff member."); return; }
     if (form.assignedTo === "other" && !form.assignedOther.trim()) { setError("Please describe who this is assigned to."); return; }
 
-    const user = getCurrentUser();
     let assignedLabel = ASSIGNED_TO_OPTIONS.find((o) => o.value === form.assignedTo)?.label || form.assignedTo;
     if (form.assignedTo === "staff") assignedLabel += `: ${form.assignedStaff}`;
     if (form.assignedTo === "other") assignedLabel += `: ${form.assignedOther}`;
 
-    onAdd({
-      id: Date.now(),
-      location: form.location.trim(),
-      issue: form.issue.trim(),
-      priority: form.priority,
-      status: "open",
-      logged: new Date().toISOString().split("T")[0],
-      estCost: Number(form.estCost) || 0,
-      submittedBy: user.name || "Director",
-      assignedTo: form.assignedTo,
-      assignedLabel,
-    });
-    onClose();
+    const payload = {
+        priority: form.priority,
+        location: form.location.trim(),
+        description: form.issue.trim(),
+        cost: Number(form.estCost) || 0,
+        assign_to: assignedLabel,
+    };
+
+    try {
+        await createMaintenance(payload);
+        
+        onAdd({
+          id: Date.now(),
+          location: form.location.trim(),
+          issue: form.issue.trim(),
+          priority: form.priority,
+          status: "open",
+          logged: new Date().toISOString().split("T")[0],
+          estCost: Number(form.estCost) || 0,
+          submittedBy: user?.name || "Director",
+          assignedTo: form.assignedTo,
+          assignedLabel,
+        });
+        
+        onClose();
+    } catch (err) {
+        console.error("Maintenance creation failed:", err);
+    }
   };
 
   return (
@@ -142,9 +156,14 @@ const AddMaintenanceForm = ({ onAdd, onClose }) => {
             )}
 
             <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
-              <Button type="submit" className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
-                <Send size={16} className="mr-2" /> Submit Request
+              <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
+              <Button type="submit" disabled={isPending} className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+                {isPending ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                ) : (
+                  <Send size={16} className="mr-2" />
+                )}
+                {isPending ? "Submitting..." : "Submit Request"}
               </Button>
             </div>
           </form>

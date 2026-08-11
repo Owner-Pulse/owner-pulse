@@ -1,13 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, User, CheckCircle2, Clock } from "lucide-react";
+import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 
-const TODAY = new Date("2026-05-11");
 const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const daysSince = (dateStr) => Math.floor((TODAY - new Date(dateStr)) / 86400000);
+const daysSince = (dateStr) => {
+  const diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+  return diff < 0 ? 0 : diff;
+};
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 
 const itemVariants = {
@@ -15,7 +17,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const RequestCard = ({ req, status, onUpdateStatus, isOwner }) => {
+const RequestCard = ({ req, status, onUpdateStatus, onDelete, isOwner }) => {
   const days = daysSince(req.logged);
   const isDone = status === "done";
   const borderColor = isDone ? "border-l-emerald-500"
@@ -48,12 +50,24 @@ const RequestCard = ({ req, status, onUpdateStatus, isOwner }) => {
                 </div>
               )}
             </div>
-            <div className="text-right flex-shrink-0">
+            <div className="text-right shrink-0 flex flex-col items-end gap-1">
               {req.estCost > 0 && (
-                <>
+                <div>
                   <span className="text-sm font-bold text-gray-900">{fmtMoney(req.estCost)}</span>
                   <p className="text-[10px] text-gray-400">estimated</p>
-                </>
+                </div>
+              )}
+              {onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(req);
+                  }}
+                  className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+                  title="Delete Request"
+                >
+                  <Trash2 size={14} />
+                </button>
               )}
             </div>
           </div>
