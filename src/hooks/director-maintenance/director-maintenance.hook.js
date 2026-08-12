@@ -1,23 +1,46 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { directorMaintenanceService } from "@/services";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-// get all director maintenance list (using)
+// get all director maintenance list (using) — infinite scroll
 export const useGetDirectorMaintenanceList = (params) => {
     const axiosInstance = axiosPrivate();
 
     const {
-        data, isLoading: isMaintenanceListLoading, refetch: refetchMaintenanceList
-    } = useQuery({
+        data,
+        isLoading: isMaintenanceListLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteQuery({
         queryKey: ["director-maintenance-list", params],
-        queryFn: () => directorMaintenanceService.get_maintenance_list(axiosInstance, params),
+        queryFn: ({ pageParam }) =>
+            directorMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 10 }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.pagination || lastPage?.data?.pagination;
+            if (!pagination) return undefined;
+            const current = Number(pagination.current_page);
+            const last = Number(pagination.last_page);
+            return current < last ? current + 1 : undefined;
+        },
+        enabled: params !== undefined,
     });
 
+    // Flatten pages into unified shape consumed by the page component
+    const firstPage = data?.pages?.[0]?.data;
+    const allRequests = data?.pages?.flatMap((page) => page?.data?.requests || []) || [];
+    const maintenanceData = firstPage
+        ? { summary: firstPage.summary, requests: allRequests }
+        : undefined;
+
     return {
-        maintenanceData: data?.data,
+        maintenanceData,
         isMaintenanceListLoading,
-        refetchMaintenanceList
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
     };
 }
 

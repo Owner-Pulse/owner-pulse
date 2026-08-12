@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2 } from "lucide-react";
+import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
@@ -17,14 +17,14 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const RequestCard = ({ req, status, onUpdateStatus, onDelete, isOwner }) => {
+const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner }) => {
   const days = daysSince(req.logged);
   const isDone = status === "done";
   const borderColor = isDone ? "border-l-emerald-500"
     : req.priority === "critical" ? "border-l-red-500"
-    : req.priority === "high" ? "border-l-orange-500"
-    : req.priority === "medium" ? "border-l-amber-500"
-    : "border-l-gray-400";
+      : req.priority === "high" ? "border-l-orange-500"
+        : req.priority === "medium" ? "border-l-amber-500"
+          : "border-l-gray-400";
 
   return (
     <motion.div variants={itemVariants}>
@@ -57,18 +57,32 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, isOwner }) => {
                   <p className="text-[10px] text-gray-400">estimated</p>
                 </div>
               )}
-              {onDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(req);
-                  }}
-                  className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
-                  title="Delete Request"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
+              <div className="flex items-center gap-1">
+                {onEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(req);
+                    }}
+                    className="text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-lg hover:bg-blue-50"
+                    title="Edit Request"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(req);
+                    }}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+                    title="Delete Request"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -88,15 +102,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, isOwner }) => {
               ))}
             </div>
           )}
-          {isDone && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600">
-              <CheckCircle2 size={12} />
-              <span className="font-medium">Completed</span>
-              {isOwner && (
-                <button onClick={() => onUpdateStatus(req.id, "open")} className="text-gray-400 hover:text-gray-600 ml-auto">Reopen</button>
-              )}
-            </div>
-          )}
+          
           {!isOwner && status === "open" && (
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-gray-400">
               <Clock size={10} /> Awaiting owner review

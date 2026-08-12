@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Wrench, AlertTriangle, Clock, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetUser, useGetDirectorMaintenanceList, useUpdateDirectorMaintenance, useDeleteDirectorMaintenance } from "@/hooks";
+import { useGetUser, useGetDirectorMaintenanceList, useGetOwnerMaintenanceList, useUpdateOwnerMaintenanceStatus, useDeleteDirectorMaintenance } from "@/hooks";
 import KpiCard from "./components/KpiCard";
 import RequestCard from "./components/RequestCard";
 import AddMaintenanceForm from "./components/AddMaintenanceForm";
@@ -30,6 +30,7 @@ const MaintenancePage = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [deleteItem, setDeleteItem] = useState(null);
+  const [editItem, setEditItem] = useState(null);
 
   const params = useMemo(() => {
     const p = {};
@@ -38,13 +39,18 @@ const MaintenancePage = () => {
     return p;
   }, [filterPriority, filterStatus]);
 
-  const { maintenanceData, isMaintenanceListLoading, refetchMaintenanceList } = useGetDirectorMaintenanceList(params);
-  const { updateMaintenance } = useUpdateDirectorMaintenance();
+  // Role-based data fetching — only the relevant hook fires
+  const directorQuery = useGetDirectorMaintenanceList(isOwner ? undefined : params);
+  const ownerQuery = useGetOwnerMaintenanceList(isOwner ? params : undefined);
+
+  const activeQuery = isOwner ? ownerQuery : directorQuery;
+  const { maintenanceData, isMaintenanceListLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = activeQuery;
   const { deleteMaintenance, isPending: isDeleting } = useDeleteDirectorMaintenance();
+  const { updateOwnerMaintenanceStatus } = useUpdateOwnerMaintenanceStatus();
 
   const updateStatus = async (id, status) => {
     try {
-      await updateMaintenance({ id, payload: { status } });
+      await updateOwnerMaintenanceStatus({ maintenance_id: id, data: { status } });
     } catch (err) {
       console.error("Failed to update maintenance status:", err);
     }
@@ -59,6 +65,25 @@ const MaintenancePage = () => {
       console.error("Failed to delete maintenance request:", err);
     }
   };
+
+  // Infinite-scroll observer
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "100px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const mappedRequests = useMemo(() => {
     if (!maintenanceData?.requests) return [];
@@ -172,7 +197,17 @@ const MaintenancePage = () => {
         ) : sorted.length > 0 ? (
           sorted.map((req) => {
             const status = req.status;
-            return <RequestCard key={req.id} req={req} status={status} onUpdateStatus={updateStatus} onDelete={setDeleteItem} isOwner={isOwner} />;
+            return (
+              <RequestCard
+                key={req.id}
+                req={req}
+                status={status}
+                onUpdateStatus={updateStatus}
+                onDelete={!isOwner ? setDeleteItem : undefined}
+                onEdit={!isOwner ? setEditItem : undefined}
+                isOwner={isOwner}
+              />
+            );
           })
         ) : (
           <div className="col-span-2 py-16 text-center">
@@ -187,6 +222,16 @@ const MaintenancePage = () => {
         )}
       </div>
 
+      {/* Infinite-scroll sentinel */}
+      <div ref={sentinelRef} className="flex justify-center py-4">
+        {isFetchingNextPage && (
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+            Loading more…
+          </div>
+        )}
+      </div>
+
       {/* Cost Summary */}
       {stats.totalEstCost > 0 && (
         <motion.div variants={itemVariants}>
@@ -194,8 +239,16 @@ const MaintenancePage = () => {
         </motion.div>
       )}
 
-      {/* Add Form Modal */}
-      {showForm && <AddMaintenanceForm onAdd={refetchMaintenanceList} onClose={() => setShowForm(false)} />}
+      {/* Add/Edit Form Modal */}
+      {(showForm || editItem) && (
+        <AddMaintenanceForm
+          editItem={editItem}
+          onClose={() => {
+            setShowForm(false);
+            setEditItem(null);
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

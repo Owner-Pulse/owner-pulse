@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreateDirectorMaintenance, useGetUser } from "@/hooks";
+import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance, useGetUser } from "@/hooks";
 
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },
@@ -21,10 +21,51 @@ const STAFF_ROSTER = [
   "Ms. Hassan", "Mr. Levine", "Ms. Foster", "Mr. Tate", "Ms. Crane",
 ];
 
-const AddMaintenanceForm = ({ onAdd, onClose }) => {
+const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
   const { user } = useGetUser();
-  const { createMaintenance, isPending } = useCreateDirectorMaintenance();
-  const [form, setForm] = useState({ location: "", issue: "", priority: "medium", estCost: "", assignedTo: "", assignedStaff: "", assignedOther: "" });
+  const { createMaintenance, isPending: isCreating } = useCreateDirectorMaintenance();
+  const { updateMaintenance, isPending: isUpdating } = useUpdateDirectorMaintenance();
+  const isPending = isCreating || isUpdating;
+
+  const [form, setForm] = useState(() => {
+    if (editItem) {
+      let initialAssignedTo = "";
+      let initialAssignedStaff = "";
+      let initialAssignedOther = "";
+
+      const label = editItem.assignedTo || "";
+      if (label.startsWith("Staff Member:")) {
+        initialAssignedTo = "staff";
+        initialAssignedStaff = label.replace("Staff Member:", "").trim();
+      } else if (label.startsWith("Other:")) {
+        initialAssignedTo = "other";
+        initialAssignedOther = label.replace("Other:", "").trim();
+      } else {
+        const found = ASSIGNED_TO_OPTIONS.find((o) => o.label === label || o.value === label);
+        initialAssignedTo = found ? found.value : "";
+      }
+
+      return {
+        location: editItem.location || "",
+        issue: editItem.issue || "",
+        priority: editItem.priority || "medium",
+        estCost: editItem.estCost || "",
+        assignedTo: initialAssignedTo,
+        assignedStaff: initialAssignedStaff,
+        assignedOther: initialAssignedOther,
+      };
+    }
+    return {
+      location: "",
+      issue: "",
+      priority: "medium",
+      estCost: "",
+      assignedTo: "",
+      assignedStaff: "",
+      assignedOther: "",
+    };
+  });
+
   const [error, setError] = useState("");
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -50,24 +91,30 @@ const AddMaintenanceForm = ({ onAdd, onClose }) => {
     };
 
     try {
-        await createMaintenance(payload);
+        if (editItem) {
+            await updateMaintenance({ id: editItem.id, payload });
+        } else {
+            await createMaintenance(payload);
+        }
         
-        onAdd({
-          id: Date.now(),
-          location: form.location.trim(),
-          issue: form.issue.trim(),
-          priority: form.priority,
-          status: "open",
-          logged: new Date().toISOString().split("T")[0],
-          estCost: Number(form.estCost) || 0,
-          submittedBy: user?.name || "Director",
-          assignedTo: form.assignedTo,
-          assignedLabel,
-        });
+        if (onAdd) {
+          onAdd({
+            id: editItem ? editItem.id : Date.now(),
+            location: form.location.trim(),
+            issue: form.issue.trim(),
+            priority: form.priority,
+            status: editItem ? editItem.status : "open",
+            logged: editItem ? editItem.logged : new Date().toISOString().split("T")[0],
+            estCost: Number(form.estCost) || 0,
+            submittedBy: editItem ? editItem.submittedBy : (user?.name || "Director"),
+            assignedTo: form.assignedTo,
+            assignedLabel,
+          });
+        }
         
         onClose();
     } catch (err) {
-        console.error("Maintenance creation failed:", err);
+        console.error("Maintenance request processing failed:", err);
     }
   };
 
@@ -78,8 +125,12 @@ const AddMaintenanceForm = ({ onAdd, onClose }) => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">New Maintenance Request</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Report a facility issue</p>
+              <h2 className="text-xl font-bold text-gray-900">
+                {editItem ? "Edit Maintenance Request" : "New Maintenance Request"}
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {editItem ? "Update the facility issue details" : "Report a facility issue"}
+              </p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
               <X size={20} className="text-gray-400" />
@@ -163,7 +214,7 @@ const AddMaintenanceForm = ({ onAdd, onClose }) => {
                 ) : (
                   <Send size={16} className="mr-2" />
                 )}
-                {isPending ? "Submitting..." : "Submit Request"}
+                {isPending ? "Submitting..." : editItem ? "Update Request" : "Submit Request"}
               </Button>
             </div>
           </form>
