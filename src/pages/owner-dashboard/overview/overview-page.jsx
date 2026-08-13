@@ -169,7 +169,7 @@ const OverviewPage = () => {
 
   useEffect(() => {
     const handleStorage = (e) => {
-      if (e.key === "directorExpenses") { try { setExpenses(JSON.parse(e.newValue)); } catch {} }
+      if (e.key === "directorExpenses") { try { setExpenses(JSON.parse(e.newValue)); } catch { } }
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
@@ -254,7 +254,7 @@ const OverviewPage = () => {
   const kpiIcon = { Users, DollarSign, ClipboardList, CheckCircle2, Wrench, AlertTriangle, Calendar, UserCheck, ShieldCheck, Wallet, Tag };
 
   return (
-    <motion.div className="space-y-6 pb-8 max-w-[1600px] mx-auto" variants={containerVariants} initial="hidden" animate="show">
+    <motion.div className="space-y-6 pb-8 max-w-400 mx-auto" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0">
