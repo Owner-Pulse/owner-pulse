@@ -1,37 +1,398 @@
-name: Deploy via FTP
+name: Build, Push to ECR, and Deploy to EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - staging
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: uat-owner-pulse-frontend-uat
+  CONTAINER_NAME: frontend
 
 jobs:
   build-and-deploy:
+    name: Build Image & Deploy via SSM
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6.0.3
+      # ==========================================================
+      # 1. CHECKOUT
+      # ==========================================================
+      - name: Checkout Code
+        uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6.4.0
+      # ==========================================================
+      # 2. CONFIGURE AWS
+      # ==========================================================
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
         with:
-          node-version-file: .node-version
-          cache: npm
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install dependencies
-        run: npm ci
+      # ==========================================================
+      # 3. VERIFY AWS ACCOUNT
+      # ==========================================================
+      - name: Verify AWS Identity
+        run: |
+          set -euo pipefail
 
-      - name: Build project
-        run: npm run build
+          echo "=========================================="
+          echo "AWS IDENTITY"
+          echo "=========================================="
 
-      - name: Deploy to FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: /
-          delete-removed-files: true
-          port: 21
-          protocol: ftp
+          aws sts get-caller-identity
+
+      # ==========================================================
+      # 4. LOGIN TO ECR
+      # ==========================================================
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ==========================================================
+      # 5. BUILD + PUSH IMAGE
+      # ==========================================================
+      - name: Build, Tag, and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "BUILDING DOCKER IMAGE"
+          echo "=========================================="
+
+          echo "Registry:   $ECR_REGISTRY"
+          echo "Repository: $ECR_REPOSITORY"
+          echo "Tag:        $IMAGE_TAG"
+
+          docker build \
+            --build-arg VITE_BASE_URL="${{ secrets.STAGING_VITE_BASE_URL }}" \
+            --build-arg VITE_AUTH_TOKEN_NAME="${{ secrets.STAGING_VITE_AUTH_TOKEN_NAME }}" \
+            --build-arg VITE_TIME_OUT="${{ secrets.VITE_TIME_OUT }}" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
+            .
+
+          echo "=========================================="
+          echo "PUSHING DOCKER IMAGE"
+          echo "=========================================="
+
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+          echo "Docker image pushed successfully."
+
+      # ==========================================================
+      # 6. VERIFY EC2 INSTANCE
+      # ==========================================================
+      - name: Verify EC2 Instance
+        env:
+          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "VERIFYING EC2 INSTANCE"
+          echo "=========================================="
+
+          if [ -z "$INSTANCE_ID" ]; then
+            echo "ERROR: STAGING_EC2_INSTANCE_ID secret is empty."
+            exit 1
+          fi
+
+          echo "Instance ID: $INSTANCE_ID"
+          echo "Region:      $AWS_REGION"
+
+          aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'Reservations[0].Instances[0].{
+              InstanceId:InstanceId,
+              State:State.Name,
+              PrivateIP:PrivateIpAddress,
+              AvailabilityZone:Placement.AvailabilityZone
+            }' \
+            --output table
+
+          EC2_STATE=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text)
+
+          if [ "$EC2_STATE" != "running" ]; then
+            echo "ERROR: EC2 instance is not running."
+            echo "Current state: $EC2_STATE"
+            exit 1
+          fi
+
+          echo "EC2 instance is running."
+
+      # ==========================================================
+      # 7. VERIFY SSM
+      # ==========================================================
+      - name: Verify SSM Connection
+        env:
+          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "VERIFYING SSM MANAGED NODE"
+          echo "=========================================="
+
+          SSM_INSTANCE_ID=$(aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'InstanceInformationList[0].InstanceId' \
+            --output text)
+
+          if [ -z "$SSM_INSTANCE_ID" ] || [ "$SSM_INSTANCE_ID" = "None" ]; then
+            echo "ERROR: Instance $INSTANCE_ID is not registered with SSM."
+            exit 1
+          fi
+
+          PING_STATUS=$(aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'InstanceInformationList[0].PingStatus' \
+            --output text)
+
+          aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'InstanceInformationList[0].{
+              InstanceId:InstanceId,
+              PingStatus:PingStatus,
+              Platform:PlatformName,
+              AgentVersion:AgentVersion,
+              LastPing:LastPingDateTime
+            }' \
+            --output table
+
+          if [ "$PING_STATUS" != "Online" ]; then
+            echo "ERROR: SSM managed node is not Online."
+            echo "Current status: $PING_STATUS"
+            exit 1
+          fi
+
+          echo "=========================================="
+          echo "SSM VERIFIED SUCCESSFULLY"
+          echo "=========================================="
+
+          echo "Instance: $INSTANCE_ID"
+          echo "Status:   $PING_STATUS"
+
+      # ==========================================================
+      # 8. DEPLOY THROUGH SSM
+      # ==========================================================
+      - name: Deploy Application to Private EC2 via SSM
+        env:
+          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          echo "=========================================="
+          echo "PREPARING SSM DEPLOYMENT"
+          echo "=========================================="
+
+          echo "Instance:  $INSTANCE_ID"
+          echo "Registry:  $ECR_REGISTRY"
+          echo "Repository: $ECR_REPOSITORY"
+          echo "Container: $CONTAINER_NAME"
+          echo "Image Tag: $IMAGE_TAG"
+
+          # ------------------------------------------------------
+          # Generate safe SendCommand JSON
+          # ------------------------------------------------------
+          jq -n \
+            --arg instance_id "$INSTANCE_ID" \
+            --arg region "$AWS_REGION" \
+            --arg registry "$ECR_REGISTRY" \
+            --arg repository "$ECR_REPOSITORY" \
+            --arg container "$CONTAINER_NAME" \
+            --arg image_tag "$IMAGE_TAG" \
+            '{
+              InstanceIds: [$instance_id],
+              DocumentName: "AWS-RunShellScript",
+              Comment: "Deploy staging frontend from GitHub Actions",
+              TimeoutSeconds: 900,
+              Parameters: {
+                commands: [
+                  "set -e",
+
+                  ("AWS_REGION=" + $region),
+                  ("ECR_REGISTRY=" + $registry),
+                  ("ECR_REPOSITORY=" + $repository),
+                  ("CONTAINER_NAME=" + $container),
+                  ("IMAGE_TAG=" + $image_tag),
+
+                  "APP_IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG",
+
+                  "echo \"==========================================\"",
+                  "echo \"STARTING FRONTEND DEPLOYMENT\"",
+                  "echo \"==========================================\"",
+
+                  "echo \"Image: $APP_IMAGE\"",
+                  "echo \"Container: $CONTAINER_NAME\"",
+
+                  "echo \"1. Checking Docker...\"",
+
+                  "if ! command -v docker > /dev/null 2>&1; then echo \"ERROR: Docker is not installed.\"; exit 1; fi",
+
+                  "echo \"Docker is installed.\"",
+
+                  "echo \"2. Logging into Amazon ECR...\"",
+
+                  "aws ecr get-login-password --region \"$AWS_REGION\" | docker login --username AWS --password-stdin \"$ECR_REGISTRY\"",
+
+                  "echo \"3. Pulling application image...\"",
+
+                  "docker pull \"$APP_IMAGE\"",
+
+                  "echo \"4. Checking existing container...\"",
+
+                  "docker stop \"$CONTAINER_NAME\" 2>/dev/null || true",
+
+                  "docker rm \"$CONTAINER_NAME\" 2>/dev/null || true",
+
+                  "echo \"5. Starting new frontend container on port 3000...\"",
+
+                  "docker run -d --name \"$CONTAINER_NAME\" --restart unless-stopped -p 3000:3000 \"$APP_IMAGE\"",
+
+                  "echo \"6. Waiting for container startup...\"",
+
+                  "sleep 5",
+
+                  "echo \"7. Checking container status...\"",
+
+                  "docker ps --filter \"name=$CONTAINER_NAME\"",
+
+                  "RUNNING=$(docker inspect -f \"{{.State.Running}}\" \"$CONTAINER_NAME\" 2>/dev/null || echo false)",
+
+                  "if [ \"$RUNNING\" != \"true\" ]; then echo \"ERROR: Container is not running.\"; docker logs \"$CONTAINER_NAME\" --tail 100 || true; exit 1; fi",
+
+                  "echo \"8. Cleaning dangling Docker images...\"",
+
+                  "docker image prune -f",
+
+                  "echo \"==========================================\"",
+                  "echo \"FRONTEND DEPLOYMENT COMPLETED\"",
+                  "echo \"==========================================\""
+                ]
+              }
+            }' > ssm-deploy.json
+
+          # ------------------------------------------------------
+          # Send command
+          # ------------------------------------------------------
+          echo ""
+          echo "Sending SSM Run Command..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --cli-input-json file://ssm-deploy.json \
+            --region "$AWS_REGION" \
+            --query 'Command.CommandId' \
+            --output text)
+
+          if [ -z "$COMMAND_ID" ] || [ "$COMMAND_ID" = "None" ]; then
+            echo "ERROR: Failed to obtain SSM Command ID."
+            exit 1
+          fi
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          # ------------------------------------------------------
+          # Wait for command
+          # ------------------------------------------------------
+          echo ""
+          echo "=========================================="
+          echo "WAITING FOR SSM COMMAND"
+          echo "=========================================="
+
+          STATUS="Pending"
+
+          for ATTEMPT in $(seq 1 120); do
+
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --region "$AWS_REGION" \
+              --query 'Status' \
+              --output text 2>/dev/null || echo "Pending")
+
+            echo "Attempt $ATTEMPT - Status: $STATUS"
+
+            case "$STATUS" in
+              Success)
+                break
+                ;;
+
+              Failed|Cancelled|TimedOut|Cancelling)
+                break
+                ;;
+
+              Pending|InProgress|Delayed)
+                sleep 5
+                ;;
+
+              *)
+                sleep 5
+                ;;
+            esac
+          done
+
+          # ------------------------------------------------------
+          # Fetch server logs
+          # ------------------------------------------------------
+          echo ""
+          echo "=========================================="
+          echo "SSM SERVER EXECUTION LOGS"
+          echo "=========================================="
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query '{
+              Status:Status,
+              ResponseCode:ResponseCode,
+              StandardOutput:StandardOutputContent,
+              StandardError:StandardErrorContent
+            }' \
+            --output json || true
+
+          # ------------------------------------------------------
+          # Final status
+          # ------------------------------------------------------
+          FINAL_STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --region "$AWS_REGION" \
+            --query 'Status' \
+            --output text)
+
+          echo ""
+          echo "Final SSM Status: $FINAL_STATUS"
+
+          if [ "$FINAL_STATUS" != "Success" ]; then
+            echo "ERROR: Deployment through SSM failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "=========================================="
+          echo "DEPLOYMENT SUCCESSFUL"
+          echo "=========================================="
+
+          echo "Container: $CONTAINER_NAME"
+          echo "Port:      3000"
+          echo "Image:     $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
