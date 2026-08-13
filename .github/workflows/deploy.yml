@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: uat-owner-pulse-frontend-uat
+  ECR_REPOSITORY: owner-pulse-prod-frontend
   CONTAINER_NAME: frontend
 
 jobs:
@@ -29,8 +29,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       # ==========================================================
@@ -72,8 +72,8 @@ jobs:
           echo "Tag:        $IMAGE_TAG"
 
           docker build \
-            --build-arg VITE_BASE_URL="${{ secrets.STAGING_VITE_BASE_URL }}" \
-            --build-arg VITE_AUTH_TOKEN_NAME="${{ secrets.STAGING_VITE_AUTH_TOKEN_NAME }}" \
+            --build-arg VITE_BASE_URL="${{ secrets.PROD_VITE_BASE_URL }}" \
+            --build-arg VITE_AUTH_TOKEN_NAME="${{ secrets.PROD_VITE_AUTH_TOKEN_NAME }}" \
             --build-arg VITE_TIME_OUT="${{ secrets.VITE_TIME_OUT }}" \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
@@ -93,7 +93,7 @@ jobs:
       # ==========================================================
       - name: Verify EC2 Instance
         env:
-          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ secrets.PROD_EC2_INSTANCE_ID }}
         run: |
           set -euo pipefail
 
@@ -139,7 +139,7 @@ jobs:
       # ==========================================================
       - name: Verify SSM Connection
         env:
-          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ secrets.PROD_EC2_INSTANCE_ID }}
         run: |
           set -euo pipefail
 
@@ -194,7 +194,7 @@ jobs:
       # ==========================================================
       - name: Deploy Application to Private EC2 via SSM
         env:
-          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ secrets.PROD_EC2_INSTANCE_ID }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
