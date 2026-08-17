@@ -126,7 +126,7 @@ const DirectorStaffManagement = () => {
         <PTOForm onClose={() => setShowForm(false)} staff={STAFF_LIST} />
       )}
       {showForm && activeTab === "substitute" && (
-        <SubstituteForm onAdd={handleAddSub} onClose={() => setShowForm(false)} staff={STAFF_LIST} />
+        <SubstituteForm onClose={() => setShowForm(false)} staff={STAFF_LIST} />
       )}
     </motion.div>
   );

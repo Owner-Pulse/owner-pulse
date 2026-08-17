@@ -1,5 +1,5 @@
 export const staffService = {
-    // ─── Staff Dashboard 
+    // ─── Owner Staff Dashboard 
     getStaff: async (axiosInstance, params) => {
         try {
             const response = await axiosInstance.get("/procare/dashboard/staff", { params });
@@ -33,7 +33,7 @@ export const staffService = {
         }
     },
 
-    // ─── Substitutes
+    // Note: Director Substitutes get list
     getSubstitutes: async (axiosInstance, params) => {
         try {
             const response = await axiosInstance.get("/director/substitution", { params });
@@ -43,9 +43,10 @@ export const staffService = {
         }
     },
 
+    // Note: Director add substitute entry request
     addSubstitution: async (axiosInstance, body) => {
         try {
-            const response = await axiosInstance.post("/director/substitution", body);
+            const response = await axiosInstance.post("/procare/staff/substitute/log", body);
             return response.data;
         } catch (error) {
             throw error;

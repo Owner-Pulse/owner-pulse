@@ -15,7 +15,7 @@ export const useGetStaff = () => {
     return { data, isLoading, isError, error };
 };
 
-// ─── PTO 
+// ─── PTO staff list
 export const useGetPtoStaff = (params) => {
     const { data, isError, isLoading, isFetching, error } = useQuery({
         queryKey: ["pto-staff", params],
@@ -30,6 +30,7 @@ export const useGetPtoStaff = (params) => {
     return { data, isLoading, isFetching, isError, error };
 };
 
+// Note: Director add PTO request
 export const useAddPto = () => {
     const queryClient = useQueryClient();
     const axiosInstance = axiosPrivate();
@@ -46,7 +47,7 @@ export const useAddPto = () => {
             toast.success(data.message ?? "PTO added successfully")
         },
         onError: (err) => {
-            toast.error(err.message ?? "Failed to add PTO")
+            toast.error(err?.response?.data?.message ?? "Failed to add PTO")
         },
     });
 
@@ -58,7 +59,7 @@ export const useAddPto = () => {
     };
 };
 
-// ─── Substitutes
+// Note: Director Substitutes get list
 export const useGetSubstitutes = (params) => {
     const { data, isError, isLoading, isFetching, error } = useQuery({
         queryKey: ["substitutes", params],
@@ -73,22 +74,32 @@ export const useGetSubstitutes = (params) => {
     return { data, isLoading, isFetching, isError, error };
 };
 
+// Note: Director add substitute entry request
 export const useAddSubstitution = () => {
     const queryClient = useQueryClient();
+    const axiosInstance = axiosPrivate();
 
-    const { mutate, mutateAsync, isPending, isError, error } = useMutation({
-        mutationFn: (body) => {
-            const axiosInstance = axiosPrivate();
-            return staffService.addSubstitution(axiosInstance, body);
-        },
-        onSuccess: () => {
-            // Invalidate substitutes list so it refetches with the new entry
+    const {
+        mutateAsync: addSubstitution,
+        isPending,
+        isError,
+        error
+    } = useMutation({
+        mutationKey: ["add-substitution"],
+        mutationFn: (body) => staffService.addSubstitution(axiosInstance, body),
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["substitutes"] });
+            toast.success(data.message ?? "Substitution added successfully")
         },
         onError: (err) => {
-            console.error("Failed to add substitution:", err);
+            toast.error(err?.response?.data?.message ?? "Failed to add substitution")
         },
     });
 
-    return { mutate, mutateAsync, isPending, isError, error };
+    return {
+        addSubstitution,
+        isPending,
+        isError,
+        error
+    };
 };
