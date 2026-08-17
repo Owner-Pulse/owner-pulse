@@ -9,10 +9,10 @@ export const staffService = {
         }
     },
 
-    // PTO staff get list
-    getPtoStaff: async (axiosInstance, params) => {
+    // PTO staff list
+    getPtoStaff: async (axiosInstance, params = { per_page: 1000 }) => {
         try {
-            const response = await axiosInstance.get("/director/pto", { params });
+            const response = await axiosInstance.get("/procare/staff/pto-balances", { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -46,7 +46,11 @@ export const staffService = {
     // Note: Director add substitute entry request
     addSubstitution: async (axiosInstance, body) => {
         try {
-            const response = await axiosInstance.post("/procare/staff/substitute/log", body);
+            const response = await axiosInstance.post("/procare/staff/substitute/log", body, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             return response.data;
         } catch (error) {
             throw error;

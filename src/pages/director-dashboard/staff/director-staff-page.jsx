@@ -11,6 +11,8 @@ import SubstituteForm from "./components/SubstituteForm";
 
 const TODAY = new Date("2026-05-11");
 
+const STAFF_LIST = []
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -20,19 +22,6 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const STAFF_LIST = [
-  { id: 1, name: "Ms. Alvarez", role: "Teacher", ptoAllowance: 10, ptoUsed: 3 },
-  { id: 2, name: "Ms. Soto", role: "Teacher", ptoAllowance: 10, ptoUsed: 2 },
-  { id: 3, name: "Ms. Patel", role: "Teacher", ptoAllowance: 10, ptoUsed: 5 },
-  { id: 4, name: "Ms. Rivera", role: "Teacher", ptoAllowance: 10, ptoUsed: 1 },
-  { id: 5, name: "Ms. Brooks", role: "Teacher", ptoAllowance: 10, ptoUsed: 4 },
-  { id: 6, name: "Mr. Nguyen", role: "Teacher", ptoAllowance: 10, ptoUsed: 6 },
-  { id: 7, name: "Ms. Cohen", role: "Teacher", ptoAllowance: 10, ptoUsed: 7 },
-  { id: 8, name: "Ms. Diaz", role: "Teacher", ptoAllowance: 10, ptoUsed: 0 },
-  { id: 9, name: "Mr. Park", role: "Teacher", ptoAllowance: 10, ptoUsed: 3 },
-  { id: 10, name: "Mr. O'Brien", role: "Teacher", ptoAllowance: 10, ptoUsed: 2 },
-  { id: 11, name: "Ms. Hassan", role: "Teacher", ptoAllowance: 10, ptoUsed: 8 },
-];
 
 const INITIAL_PTO_LOG = [
   { id: 1, staffId: 1, dayType: "sick", days: 1, date: "2026-05-08" },
@@ -123,10 +112,10 @@ const DirectorStaffManagement = () => {
 
       {/* Add Form Modal */}
       {showForm && activeTab === "pto" && (
-        <PTOForm onClose={() => setShowForm(false)} staff={STAFF_LIST} />
+        <PTOForm onClose={() => setShowForm(false)} />
       )}
       {showForm && activeTab === "substitute" && (
-        <SubstituteForm onClose={() => setShowForm(false)} staff={STAFF_LIST} />
+        <SubstituteForm onClose={() => setShowForm(false)} />
       )}
     </motion.div>
   );

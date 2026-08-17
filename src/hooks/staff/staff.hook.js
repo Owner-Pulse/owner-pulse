@@ -1,6 +1,6 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { staffService } from "@/services/staff";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 // ─── Staff Dashboard 
@@ -16,18 +16,18 @@ export const useGetStaff = () => {
 };
 
 // ─── PTO staff list
-export const useGetPtoStaff = (params) => {
+export const useGetPtoStaff = (params = { per_page: 1000 }) => {
+    const axiosInstance = axiosPrivate();
+
     const { data, isError, isLoading, isFetching, error } = useQuery({
         queryKey: ["pto-staff", params],
-        queryFn: ({ queryKey }) => {
-            const [, qParams] = queryKey;
-            const axiosInstance = axiosPrivate();
-            return staffService.getPtoStaff(axiosInstance, qParams);
-        },
+        queryFn: () => staffService.getPtoStaff(axiosInstance, params),
         staleTime: 5 * 60 * 1000,
     });
 
-    return { data, isLoading, isFetching, isError, error };
+    const staffList = data?.staff_list?.data ?? [];
+
+    return { data, staffList, isLoading, isFetching, isError, error };
 };
 
 // Note: Director add PTO request

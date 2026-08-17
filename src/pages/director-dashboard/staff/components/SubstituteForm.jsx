@@ -1,22 +1,62 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Send, X, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, X, Loader2, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAddSubstitution } from "@/hooks";
+import { useAddSubstitution, useGetPtoStaff } from "@/hooks";
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
 
-const SubstituteForm = ({ onClose, staff }) => {
+const SubstituteForm = ({ onClose }) => {
   const [form, setForm] = useState({
     absentEmployeeId: "",
+    absentEmployeeName: "",
     subEmployeeId: "",
+    subEmployeeName: "",
     date: TODAY_STR,
   });
+  const [absentDropdownOpen, setAbsentDropdownOpen] = useState(false);
+  const [subDropdownOpen, setSubDropdownOpen] = useState(false);
   const [error, setError] = useState("");
 
+  const absentDropdownRef = useRef(null);
+  const subDropdownRef = useRef(null);
+
   const { addSubstitution, isPending } = useAddSubstitution();
+  const { staffList, isLoading: staffLoading } = useGetPtoStaff();
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (
+        absentDropdownRef.current &&
+        !absentDropdownRef.current.closest(".absent-staff-picker")?.contains(e.target)
+      ) {
+        setAbsentDropdownOpen(false);
+      }
+      if (
+        subDropdownRef.current &&
+        !subDropdownRef.current.closest(".sub-staff-picker")?.contains(e.target)
+      ) {
+        setSubDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
 
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const selectAbsentStaff = (staff) => {
+    update("absentEmployeeId", staff.id);
+    update("absentEmployeeName", staff.name);
+    setAbsentDropdownOpen(false);
+  };
+
+  const selectSubStaff = (staff) => {
+    update("subEmployeeId", staff.id);
+    update("subEmployeeName", staff.name);
+    setSubDropdownOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,44 +120,128 @@ const SubstituteForm = ({ onClose, staff }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Absent Staff */}
-            <div>
+            {/* ── Custom Absent Staff Picker ── */}
+            <div className="absent-staff-picker relative">
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                 Absent Staff Member
               </label>
-              <select
-                value={form.absentEmployeeId}
-                onChange={(e) => update("absentEmployeeId", e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+
+              {/* Trigger button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setAbsentDropdownOpen((v) => !v);
+                  setSubDropdownOpen(false);
+                }}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex items-center justify-between"
               >
-                <option value="">Select absent staff...</option>
-                {staff?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                <span className={form.absentEmployeeName ? "text-gray-900" : "text-gray-400"}>
+                  {form.absentEmployeeName || "Select absent staff..."}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`text-gray-400 transition-transform ${absentDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Dropdown list */}
+              <AnimatePresence>
+                {absentDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                  >
+                    <div ref={absentDropdownRef} className="max-h-56 overflow-y-auto">
+                      {staffLoading ? (
+                        <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
+                          <Loader2 size={14} className="animate-spin" /> Loading staff...
+                        </div>
+                      ) : staffList?.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-400">No staff found.</div>
+                      ) : (
+                        staffList?.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => selectAbsentStaff(s)}
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 flex items-center justify-between group"
+                          >
+                            <span className="text-gray-800">{s?.name}</span>
+                            {form.absentEmployeeId === s?.id && (
+                              <Check size={14} className="text-blue-600" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Substitute Staff */}
-            <div>
+            {/* ── Custom Substitute Staff Picker ── */}
+            <div className="sub-staff-picker relative">
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                 Substitute Staff Member
               </label>
-              <select
-                value={form.subEmployeeId}
-                onChange={(e) => update("subEmployeeId", e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+
+              {/* Trigger button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSubDropdownOpen((v) => !v);
+                  setAbsentDropdownOpen(false);
+                }}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex items-center justify-between"
               >
-                <option value="">Select substitute...</option>
-                {staff?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                <span className={form.subEmployeeName ? "text-gray-900" : "text-gray-400"}>
+                  {form.subEmployeeName || "Select substitute..."}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`text-gray-400 transition-transform ${subDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Dropdown list */}
+              <AnimatePresence>
+                {subDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                  >
+                    <div ref={subDropdownRef} className="max-h-48 overflow-y-auto">
+                      {staffLoading ? (
+                        <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
+                          <Loader2 size={14} className="animate-spin" /> Loading staff...
+                        </div>
+                      ) : staffList?.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-400">No staff found.</div>
+                      ) : (
+                        staffList?.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => selectSubStaff(s)}
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 flex items-center justify-between group"
+                          >
+                            <span className="text-gray-800">{s?.name}</span>
+                            {form.subEmployeeId === s?.id && (
+                              <Check size={14} className="text-blue-600" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Date */}
