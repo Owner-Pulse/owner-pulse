@@ -123,7 +123,7 @@ const DirectorStaffManagement = () => {
 
       {/* Add Form Modal */}
       {showForm && activeTab === "pto" && (
-        <PTOForm onAdd={handleAddPTO} onClose={() => setShowForm(false)} staff={STAFF_LIST} />
+        <PTOForm onClose={() => setShowForm(false)} staff={STAFF_LIST} />
       )}
       {showForm && activeTab === "substitute" && (
         <SubstituteForm onAdd={handleAddSub} onClose={() => setShowForm(false)} staff={STAFF_LIST} />
