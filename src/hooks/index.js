@@ -7,4 +7,6 @@ export * from "./owner-maintenance";
 export * from "./director-waitlist";
 export * from "./owner-waitlist";
 export * from "./budget";
-export * from "./cashflow"
+export * from "./cashflow";
+export * from "./staff";
+export * from "./classroom";
