@@ -22,6 +22,7 @@ const StaffPage = () => {
   const [ptoPage, setPtoPage] = useState(1);
   const [sortBy, setSortBy] = useState("name");
   const [allPtoStaff, setAllPtoStaff] = useState([]);
+  const [allStaffRoster, setAllStaffRoster] = useState([]);
 
   const { data, isLoading, isFetching } = useGetStaff({
     roster_page: rosterPage,
@@ -53,9 +54,30 @@ const StaffPage = () => {
     }
   }, [data, ptoPage]);
 
+  useEffect(() => {
+    const rosterItems = data?.staff_dashboard?.staff_roster;
+    if (rosterItems && Array.isArray(rosterItems)) {
+      if (rosterPage === 1) {
+        setAllStaffRoster(rosterItems);
+      } else {
+        setAllStaffRoster((prev) => {
+          const existingIds = new Set(prev.map((item) => item.employee_id || item.id || item.name));
+          const newUnique = rosterItems.filter((item) => !existingIds.has(item.employee_id || item.id || item.name));
+          return [...prev, ...newUnique];
+        });
+      }
+    }
+  }, [data, rosterPage]);
+
   const handleLoadMorePto = () => {
     if (ptoPagination && ptoPage < Number(ptoPagination.last_page)) {
       setPtoPage((prev) => prev + 1);
+    }
+  };
+
+  const handleLoadMoreRoster = () => {
+    if (rosterPagination && rosterPage < Number(rosterPagination.last_page)) {
+      setRosterPage((prev) => prev + 1);
     }
   };
 
@@ -149,11 +171,12 @@ const StaffPage = () => {
       {/* Staff Roster */}
       <motion.div variants={itemVariants}>
         <StaffRosterTable
-          staffRoster={staffRoster}
+          staffRoster={allStaffRoster.length > 0 ? allStaffRoster : staffRoster}
           sortBy={sortBy}
           onSortChange={setSortBy}
           pagination={rosterPagination}
-          onPageChange={setRosterPage}
+          onLoadMore={handleLoadMoreRoster}
+          isLoadingMore={isFetching && rosterPage > 1}
         />
       </motion.div>
     </motion.div>
