@@ -140,7 +140,7 @@ const MaintenancePage = () => {
           </Button>
         ) : stats.critical > 0 ? (
           <>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-50 text-red-600">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#8A362C]">
               <AlertTriangle size={12} /> {stats.critical} critical need attention
             </span>
           </>
@@ -150,20 +150,20 @@ const MaintenancePage = () => {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Wrench} label="Total Requests" value={stats.total} sub={`${stats.open} open`} iconBg="bg-blue-50 text-blue-600" />
+          <KpiCard icon={Wrench} label="Total Requests" value={stats.total} sub={`${stats.open} open`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={AlertTriangle} label="Critical" value={stats.critical}
             sub={stats.critical > 0 ? "Needs attention" : "All clear"}
-            iconBg={stats.critical > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}
-            valueColor={stats.critical > 0 ? "text-red-600" : "text-gray-900"} />
+            iconBg={stats.critical > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"}
+            valueColor={stats.critical > 0 ? "text-[#8A362C]" : "text-gray-900"} />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Clock} label="In Progress" value={stats.inProgress} sub="Being worked on" iconBg="bg-amber-50 text-amber-600" />
+          <KpiCard icon={Clock} label="In Progress" value={stats.inProgress} sub="Being worked on" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={CheckCircle2} label="Completed" value={stats.done}
-            sub={`${stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0}% resolved`} iconBg="bg-emerald-50 text-emerald-600" />
+            sub={`${stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0}% resolved`} iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
       </div>
 

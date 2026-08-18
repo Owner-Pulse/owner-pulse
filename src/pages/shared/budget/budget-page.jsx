@@ -91,14 +91,14 @@ const BudgetPage = () => {
           {isDirector ? (
             <p className="text-sm text-gray-500 mt-1">
               {fmtMoney(directorSpent)} of {fmtMoney(directorBudgetTotal)} spent ·{" "}
-              <span className={directorRemaining > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+              <span className={directorRemaining > 0 ? "text-[#2F6042] font-medium" : "text-[#8A362C] font-medium"}>
                 {fmtMoney(directorRemaining)} remaining
               </span>
             </p>
           ) : (
             <p className="text-sm text-gray-500 mt-1">
               {fmtMoneyShort(schoolSpent)} of {fmtMoneyShort(schoolBudgetTotal)} spent ({schoolBudgetPct}%) ·{" "}
-              <span className={schoolRemaining > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+              <span className={schoolRemaining > 0 ? "text-[#2F6042] font-medium" : "text-[#8A362C] font-medium"}>
                 {fmtMoneyShort(schoolRemaining)} remaining
               </span>
             </p>
@@ -170,7 +170,7 @@ const BudgetPage = () => {
           </div>
         </div>
       ) : isError ? (
-        <div className="py-20 text-center text-red-500">Error loading budget data.</div>
+        <div className="py-20 text-center text-[#8A362C]">Error loading budget data.</div>
       ) : (
         <>
           {/* SCHOOL BUDGET VIEW  */}
@@ -178,21 +178,21 @@ const BudgetPage = () => {
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={DollarSign} label="Annual Budget" value={fmtMoneyShort(schoolBudgetTotal)} sub="Aug 2025 – May 2026" iconBg="bg-blue-50 text-blue-600" />
+                  <KpiCard icon={DollarSign} label="Annual Budget" value={fmtMoneyShort(schoolBudgetTotal)} sub="Aug 2025 – May 2026" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoneyShort(schoolSpent)} sub={`${schoolBudgetPct}% consumed`} iconBg="bg-amber-50 text-amber-600" />
+                  <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoneyShort(schoolSpent)} sub={`${schoolBudgetPct}% consumed`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={Wallet} label="Remaining" value={fmtMoneyShort(schoolRemaining)} sub={schoolRemaining > 0 ? "Available to spend" : "Over budget"} iconBg={schoolRemaining > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"} />
+                  <KpiCard icon={Wallet} label="Remaining" value={fmtMoneyShort(schoolRemaining)} sub={schoolRemaining > 0 ? "Available to spend" : "Over budget"} iconBg={schoolRemaining > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"} />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={TrendingUp} label="Avg Monthly" value={fmtMoneyShort(schoolAvgMonthly)} sub="Spend rate · Sep–May" iconBg="bg-purple-50 text-purple-600" />
+                  <KpiCard icon={TrendingUp} label="Avg Monthly" value={fmtMoneyShort(schoolAvgMonthly)} sub="Spend rate · Sep–May" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
                 </motion.div>
               </div>
 
               <motion.div variants={itemVariants}>
-                <BudgetProgressBar spent={schoolSpent} total={schoolBudgetTotal} label="Overall Budget Consumption" color={schoolBudgetPct > 85 ? "bg-red-400" : schoolBudgetPct > 70 ? "bg-amber-400" : "bg-blue-500"} />
+                <BudgetProgressBar spent={schoolSpent} total={schoolBudgetTotal} label="Overall Budget Consumption" color={schoolBudgetPct > 85 ? "bg-[#AE4A3E]" : schoolBudgetPct > 70 ? "bg-[#B78A2F]" : "bg-[#1E3A5F]"} />
               </motion.div>
 
               <motion.div variants={itemVariants}>
@@ -206,21 +206,21 @@ const BudgetPage = () => {
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={Wallet} label={isDirector ? "My Budget" : "Director Budget"} value={fmtMoney(directorBudgetTotal)} sub="Discretionary fund" iconBg="bg-blue-50 text-blue-600" />
+                  <KpiCard icon={Wallet} label={isDirector ? "My Budget" : "Director Budget"} value={fmtMoney(directorBudgetTotal)} sub="Discretionary fund" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoney(directorSpent)} sub={`${Math.round((directorSpent / (directorBudgetTotal || 1)) * 100)}% used`} iconBg="bg-amber-50 text-amber-600" />
+                  <KpiCard icon={PiggyBank} label="Spent YTD" value={fmtMoney(directorSpent)} sub={`${Math.round((directorSpent / (directorBudgetTotal || 1)) * 100)}% used`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={Wallet} label="Remaining" value={fmtMoney(directorRemaining)} sub={directorRemaining > 0 ? "Available" : "Exhausted"} iconBg={directorRemaining > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"} />
+                  <KpiCard icon={Wallet} label="Remaining" value={fmtMoney(directorRemaining)} sub={directorRemaining > 0 ? "Available" : "Exhausted"} iconBg={directorRemaining > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"} />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(directorAvgPerExpense)} sub={`${directorExpenses.length} expenses`} iconBg="bg-purple-50 text-purple-600" />
+                  <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(directorAvgPerExpense)} sub={`${directorExpenses.length} expenses`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
                 </motion.div>
               </div>
 
               <motion.div variants={itemVariants}>
-                <BudgetProgressBar spent={directorSpent} total={directorBudgetTotal} color="bg-amber-400" />
+                <BudgetProgressBar spent={directorSpent} total={directorBudgetTotal} color="bg-[#B78A2F]" />
               </motion.div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

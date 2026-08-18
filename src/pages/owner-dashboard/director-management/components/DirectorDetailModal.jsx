@@ -41,7 +41,7 @@ const DirectorDetailModal = ({ director, isLoading, onClose, onUpdateStatus }) =
                   </div>
                 )}
                 {/* Online indicator */}
-                <div className={`absolute -bottom-1.5 -right-1.5 w-4 h-4 border-2 border-white/50 rounded-full ${director?.is_online ? 'bg-emerald-400' : 'bg-gray-400'}`} title={director?.is_online ? "Online" : "Offline"} />
+                <div className={`absolute -bottom-1.5 -right-1.5 w-4 h-4 border-2 border-white/50 rounded-full ${director?.is_online ? 'bg-[#3E7A54]' : 'bg-gray-400'}`} title={director?.is_online ? "Online" : "Offline"} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ const DirectorDetailModal = ({ director, isLoading, onClose, onUpdateStatus }) =
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Status</span>
-                <span className={`font-medium ${isActive ? "text-emerald-600" : "text-amber-600"}`}>
+                <span className={`font-medium ${isActive ? "text-[#2F6042]" : "text-[#8F6A1F]"}`}>
                   {isActive ? "Active" : "Pending"}
                 </span>
               </div>
@@ -144,7 +144,7 @@ const DirectorDetailModal = ({ director, isLoading, onClose, onUpdateStatus }) =
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={onClose} className="flex-1">Close</Button>
             {director.status === "pending" && (
-              <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => onUpdateStatus(director.id, "active")}>
+              <Button className="flex-1 bg-[#3E7A54] hover:bg-[#2F6042] text-white" onClick={() => onUpdateStatus(director.id, "active")}>
                 <CheckCircle2 size={14} className="mr-2" /> Activate Account
               </Button>
             )}

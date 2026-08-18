@@ -10,7 +10,7 @@ const AiInsightsCard = ({ title, subtitle, insights = [] }) => (
     <Card className="bg-white border-none shadow-sm h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Lightbulb size={18} className="text-amber-500" />
+          <Lightbulb size={18} className="text-[#1E3A5F]" />
           {title || "AI-Generated Observations"}
         </CardTitle>
         <CardDescription>{subtitle || `Auto-detected · ${insights.length} insights`}</CardDescription>

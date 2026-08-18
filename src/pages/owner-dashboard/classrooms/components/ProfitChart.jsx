@@ -39,7 +39,7 @@ const ProfitChart = ({ data = [] }) => (
                 />
                 <Bar dataKey="profit" radius={[4, 4, 0, 0]} barSize={22} name="Monthly Profit">
                   {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? "#16A34A" : "#DC2626"} />
+                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? "#3E7A54" : "#AE4A3E"} />
                   ))}
                 </Bar>
               </BarChart>

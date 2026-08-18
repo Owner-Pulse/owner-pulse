@@ -2,12 +2,13 @@ import React from "react";
 import { PieChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
+// Navy-family categorical shades — monochromatic, still distinguishable
 const CATEGORY_COLORS = {
-  "Classroom Supplies": "#2563EB",
-  "Events & Food": "#F97316",
-  "Cleaning & Sanitation": "#16A34A",
-  "Office Supplies": "#0EA5E9",
-  "Faculty Appreciation": "#EC4899",
+  "Classroom Supplies": "#1E3A5F",
+  "Events & Food": "#2A4C7E",
+  "Cleaning & Sanitation": "#4A6B96",
+  "Office Supplies": "#5B7FA6",
+  "Faculty Appreciation": "#9DB8D9",
   "Uncategorized": "#94A0B5",
 };
 
@@ -17,7 +18,7 @@ const SpendingByReasonCard = ({ expenses, total }) => (
   <Card className="bg-white border-none shadow-sm h-full">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <PieChart size={16} className="text-gray-500" />
+        <PieChart size={16} className="text-[#1E3A5F]" />
         Spending by Reason
       </CardTitle>
       <CardDescription>How the discretionary fund is being used</CardDescription>

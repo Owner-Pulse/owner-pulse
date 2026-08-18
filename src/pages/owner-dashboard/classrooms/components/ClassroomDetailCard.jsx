@@ -55,14 +55,14 @@ const ClassroomDetailCard = ({ classroom }) => {
     : "Critical"
   );
   const marginColor =
-    marginStatus === "Healthy" ? "text-emerald-600"
-    : marginStatus === "Monitoring" ? "text-amber-600"
-    : "text-red-500";
+    marginStatus === "Healthy" ? "text-[#2F6042]"
+    : marginStatus === "Monitoring" ? "text-[#8F6A1F]"
+    : "text-[#8A362C]";
 
   const nweaVsBenchmark = nweaMap
     ? (nweaMap.score ?? 0) >= (nweaMap.benchmark ?? 0)
-      ? "text-emerald-600"
-      : "text-amber-600"
+      ? "text-[#2F6042]"
+      : "text-[#8F6A1F]"
     : "text-gray-900";
 
   return (
@@ -72,17 +72,17 @@ const ClassroomDetailCard = ({ classroom }) => {
           {/* Row 1: Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isProfit ? "bg-emerald-50" : "bg-red-50"}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isProfit ? "bg-[#3E7A54]/10" : "bg-[#AE4A3E]/10"}`}>
                 {isPreschool
-                  ? <Baby size={18} className={isProfit ? "text-emerald-600" : "text-red-500"} />
-                  : <GraduationCap size={18} className={isProfit ? "text-emerald-600" : "text-red-500"} />
+                  ? <Baby size={18} className={isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
+                  : <GraduationCap size={18} className={isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
                 }
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-gray-900 text-sm md:text-base">{classroom.name}</h3>
                   {classroom.category_group && (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${isPreschool ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${isPreschool ? "bg-[#1E3A5F]/10 text-[#1E3A5F]" : "bg-[#2A4C7E]/10 text-[#2A4C7E]"}`}>
                       {classroom.category_group}
                     </span>
                   )}
@@ -93,11 +93,11 @@ const ClassroomDetailCard = ({ classroom }) => {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-lg font-extrabold ${isProfit ? "text-emerald-600" : "text-red-500"}`}>
+              <span className={`text-lg font-extrabold ${isProfit ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
                 {fmtMoneyShort(profit)}/mo
               </span>
               {(classroom.profit_change ?? 0) !== 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
                   {classroom.profit_change > 0 ? "▲" : "▼"} {fmtMoneyShort(Math.abs(classroom.profit_change))}
                 </span>
               )}
@@ -111,7 +111,7 @@ const ClassroomDetailCard = ({ classroom }) => {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Enrollment</span>
                 {(enrollment.change ?? 0) !== 0 && (
-                  <span className={`text-[9px] font-bold ${enrollment.change > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                  <span className={`text-[9px] font-bold ${enrollment.change > 0 ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
                     {enrollment.change > 0 ? "▲" : "▼"}{Math.abs(enrollment.change)}
                   </span>
                 )}
@@ -122,7 +122,7 @@ const ClassroomDetailCard = ({ classroom }) => {
               </div>
               <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${isFull ? "bg-amber-500" : isLowFill ? "bg-red-400" : "bg-emerald-400"}`}
+                  className={`h-full rounded-full ${isFull ? "bg-[#B78A2F]" : isLowFill ? "bg-[#AE4A3E]" : "bg-[#3E7A54]"}`}
                   style={{ width: `${Math.min(fillRate, 100)}%` }}
                 />
               </div>
@@ -166,7 +166,7 @@ const ClassroomDetailCard = ({ classroom }) => {
             {incidents.count !== undefined && (
               <div className="p-2.5 rounded-lg bg-gray-50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Incidents</span>
-                <span className={`text-base font-extrabold ${(incidents.count ?? 0) > 3 ? "text-red-500" : (incidents.count ?? 0) > 1 ? "text-amber-600" : "text-gray-900"}`}>
+                <span className={`text-base font-extrabold ${(incidents.count ?? 0) > 3 ? "text-[#8A362C]" : (incidents.count ?? 0) > 1 ? "text-[#8F6A1F]" : "text-gray-900"}`}>
                   {incidents.count ?? 0}
                 </span>
                 <p className="text-[10px] text-gray-400 mt-0.5">YTD</p>
@@ -177,7 +177,7 @@ const ClassroomDetailCard = ({ classroom }) => {
             {isPreschool && (
               <div className="p-2.5 rounded-lg bg-gray-50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Fill Rate</span>
-                <span className={`text-base font-extrabold ${isFull ? "text-amber-600" : isLowFill ? "text-red-500" : "text-emerald-600"}`}>
+                <span className={`text-base font-extrabold ${isFull ? "text-[#8F6A1F]" : isLowFill ? "text-[#8A362C]" : "text-[#2F6042]"}`}>
                   {fillRate}%
                 </span>
                 <p className="text-[10px] text-gray-400 mt-0.5">
@@ -189,18 +189,18 @@ const ClassroomDetailCard = ({ classroom }) => {
 
           {/* Row 3: Warnings */}
           {!isProfit && (
-            <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-              <AlertTriangle size={14} className="text-red-500 shrink-0" />
-              <p className="text-xs text-red-700">
+            <div className="mt-3 p-2.5 rounded-lg bg-[#AE4A3E]/10 border border-[#AE4A3E]/25 flex items-center gap-2">
+              <AlertTriangle size={14} className="text-[#8A362C] shrink-0" />
+              <p className="text-xs text-[#8A362C]">
                 <span className="font-bold">Loss-making classroom.</span>{" "}
                 Operating costs of {fmtMoneyShort(cost.total ?? 0)} exceed revenue of {fmtMoneyShort(revenue.total ?? 0)}. Review pricing or enrollment strategy.
               </p>
             </div>
           )}
           {isLowFill && isProfit && (
-            <div className="mt-3 p-2.5 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
-              <TrendingDown size={14} className="text-amber-500 shrink-0" />
-              <p className="text-xs text-amber-700">
+            <div className="mt-3 p-2.5 rounded-lg bg-[#B78A2F]/10 border border-[#B78A2F]/25 flex items-center gap-2">
+              <TrendingDown size={14} className="text-[#8F6A1F] shrink-0" />
+              <p className="text-xs text-[#8F6A1F]">
                 <span className="font-bold">Low enrollment.</span>{" "}
                 {enrollment.current}/{enrollment.capacity} enrolled ({fillRate}% fill rate). {enrollment.empty_seats ?? 0} empty seat{(enrollment.empty_seats ?? 0) !== 1 ? "s" : ""}.
               </p>

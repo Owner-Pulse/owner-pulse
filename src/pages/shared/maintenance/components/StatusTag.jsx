@@ -4,8 +4,8 @@ import { CheckCircle2, Clock, Wrench } from "lucide-react";
 const StatusTag = ({ status }) => {
   const config = {
     open: { bg: "bg-gray-100", text: "text-gray-600", label: "Open" },
-    in_progress: { bg: "bg-blue-50", text: "text-blue-700", label: "In Progress" },
-    done: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Done" },
+    in_progress: { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]", label: "In Progress" },
+    done: { bg: "bg-[#3E7A54]/10", text: "text-[#2F6042]", label: "Done" },
   };
   const c = config[status] || config.open;
   return (

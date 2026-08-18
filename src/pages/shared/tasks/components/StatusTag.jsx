@@ -3,8 +3,8 @@ import { ClipboardList, Clock, CheckCircle2 } from "lucide-react";
 
 const STATUS_CONFIG = {
   open: { bg: "bg-gray-100", text: "text-gray-600", icon: ClipboardList },
-  in_progress: { bg: "bg-blue-50", text: "text-blue-700", icon: Clock },
-  done: { bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle2 },
+  in_progress: { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]", icon: Clock },
+  done: { bg: "bg-[#3E7A54]/10", text: "text-[#2F6042]", icon: CheckCircle2 },
 };
 
 const StatusTag = ({ status }) => {

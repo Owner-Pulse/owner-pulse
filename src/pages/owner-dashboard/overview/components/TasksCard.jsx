@@ -15,10 +15,10 @@ const TasksCard = ({ tasks, highPriorityCount, fmtDate, daysUntil, onNavigate })
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <ClipboardList size={16} className="text-blue-500" />
+            <ClipboardList size={16} className="text-[#1E3A5F]" />
             Active Tasks
           </CardTitle>
-          <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{highPriorityCount} high priority</span>
+          <span className="text-[10px] font-medium text-[#8F6A1F] bg-[#B78A2F]/10 px-2 py-0.5 rounded-full">{highPriorityCount} high priority</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-2.5">
@@ -26,11 +26,11 @@ const TasksCard = ({ tasks, highPriorityCount, fmtDate, daysUntil, onNavigate })
           const d = daysUntil(t.due);
           return (
             <div key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50">
-              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.priority === "high" ? "bg-red-500" : t.priority === "medium" ? "bg-amber-500" : "bg-gray-400"}`} />
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.priority === "high" ? "bg-[#B78A2F]" : t.priority === "medium" ? "bg-[#1E3A5F]" : "bg-gray-400"}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-xs font-medium text-gray-900 truncate">{t.title}</p>
-                  <span className={`text-[9px] font-semibold shrink-0 ml-1 ${d <= 3 ? "text-red-500" : d <= 7 ? "text-amber-500" : "text-gray-400"}`}>
+                  <span className={`text-[9px] font-semibold shrink-0 ml-1 ${d <= 3 ? "text-[#8A362C]" : d <= 7 ? "text-[#8F6A1F]" : "text-gray-400"}`}>
                     {d <= 0 ? "Overdue" : `${d}d`}
                   </span>
                 </div>
@@ -45,7 +45,7 @@ const TasksCard = ({ tasks, highPriorityCount, fmtDate, daysUntil, onNavigate })
             </div>
           );
         })}
-        <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => onNavigate("/owner/tasks")}>View all tasks →</Button>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-7 mt-1" onClick={() => onNavigate("/owner/tasks")}>View all tasks →</Button>
       </CardContent>
     </Card>
   </motion.div>

@@ -18,6 +18,7 @@ dist-ssr
 *.sw?
 
 .credentials.txt
+.agents
 
 # Logs
 npm-debug.log*

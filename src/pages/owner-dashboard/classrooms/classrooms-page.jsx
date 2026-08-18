@@ -7,6 +7,7 @@ import PnLSummaryCard from "./components/PnLSummaryCard";
 import ProfitChart from "./components/ProfitChart";
 import TierFilter from "./components/TierFilter";
 import ClassroomDetailCard from "./components/ClassroomDetailCard";
+import AddClassroomModal from "./components/AddClassroomModal";
 import Pagination from "./components/Pagination";
 import { ClassroomCardSkeleton, PnLChartSkeleton } from "./components/Skeleton";
 import { useGetClassroom } from "@/hooks";
@@ -18,9 +19,21 @@ const containerVariants = {
 };
 
 // ─── Page ─────────────────────────────────────────────────────────
+const EMPTY_CLASSROOM_FORM = {
+  name: "",
+  program: "",
+  tier: "preschool",
+  capacity: "",
+  teacher: "",
+  tuitionPerSeat: "",
+  monthlyCost: "",
+};
+
 const ClassroomsPage = () => {
   const [activeFilter, setActiveFilter] = useState("All Classrooms");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [classroomForm, setClassroomForm] = useState(EMPTY_CLASSROOM_FORM);
   const PER_PAGE = 10;
 
   const { data, isLoading, isFetching } = useGetClassroom({
@@ -62,9 +75,23 @@ const ClassroomsPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleFormChange = (key, value) => {
+    setClassroomForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+    setClassroomForm(EMPTY_CLASSROOM_FORM);
+  };
+
+  // TODO: wire onSave to a create-classroom API call when the backend endpoint is available.
+  const handleSaveClassroom = () => {
+    closeAddModal();
+  };
+
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
-      <ClassroomsHeader isLoading={isLoading} metrics={metrics} />
+      <ClassroomsHeader isLoading={isLoading} metrics={metrics} onAddClick={() => setIsAddModalOpen(true)} />
 
       <ClassroomKpis isLoading={isLoading} metrics={metrics} />
 
@@ -120,6 +147,15 @@ const ClassroomsPage = () => {
         total={pagination?.total}
         isFetching={isFetching}
         onPageChange={handlePageChange}
+      />
+
+      {/* Add Classroom Modal */}
+      <AddClassroomModal
+        isOpen={isAddModalOpen}
+        form={classroomForm}
+        onFormChange={handleFormChange}
+        onSave={handleSaveClassroom}
+        onClose={closeAddModal}
       />
     </motion.div>
   );

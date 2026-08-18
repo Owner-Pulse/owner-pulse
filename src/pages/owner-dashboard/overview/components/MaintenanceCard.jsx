@@ -10,16 +10,16 @@ const itemVariants = {
 };
 
 const dotColor = (priority) => {
-  if (priority === "critical") return "bg-red-500";
-  if (priority === "high") return "bg-orange-500";
-  if (priority === "medium") return "bg-amber-500";
+  if (priority === "critical") return "bg-[#AE4A3E]";
+  if (priority === "high") return "bg-[#B78A2F]";
+  if (priority === "medium") return "bg-[#1E3A5F]";
   return "bg-gray-400";
 };
 
 const badgeColor = (priority) => {
-  if (priority === "critical") return "bg-red-100 text-red-600";
-  if (priority === "high") return "bg-orange-100 text-orange-600";
-  if (priority === "medium") return "bg-amber-100 text-amber-600";
+  if (priority === "critical") return "bg-[#AE4A3E]/10 text-[#8A362C]";
+  if (priority === "high") return "bg-[#B78A2F]/10 text-[#8F6A1F]";
+  if (priority === "medium") return "bg-[#1E3A5F]/5 text-[#1E3A5F]";
   return "bg-gray-100 text-gray-500";
 };
 
@@ -29,11 +29,11 @@ const MaintenanceCard = ({ requests, openCount, criticalCount, onNavigate }) => 
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <Wrench size={16} className="text-amber-500" />
+            <Wrench size={16} className="text-[#1E3A5F]" />
             Open Maintenance
           </CardTitle>
           <div className="flex items-center gap-2">
-            {criticalCount > 0 && <span className="text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">{criticalCount} critical</span>}
+            {criticalCount > 0 && <span className="text-[10px] font-medium text-[#8A362C] bg-[#AE4A3E]/10 px-1.5 py-0.5 rounded-full">{criticalCount} critical</span>}
             <span className="text-[10px] text-gray-400">{openCount} total</span>
           </div>
         </div>
@@ -52,7 +52,7 @@ const MaintenanceCard = ({ requests, openCount, criticalCount, onNavigate }) => 
             </div>
           </div>
         ))}
-        <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => onNavigate("/owner/maintenance")}>View all maintenance →</Button>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-7 mt-1" onClick={() => onNavigate("/owner/maintenance")}>View all maintenance →</Button>
       </CardContent>
     </Card>
   </motion.div>

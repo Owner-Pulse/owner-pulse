@@ -29,7 +29,7 @@ const FilterBar = ({ filterPriority, filterStatus, onPriorityChange, onStatusCha
       <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status:</span>
       {STATUS_FILTERS.map((f) => (
         <button key={f.id} onClick={() => onStatusChange(f.id)}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${filterStatus === f.id ? "bg-gray-900 text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${filterStatus === f.id ? "bg-[#1E3A5F] text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
           {f.label}
         </button>
       ))}

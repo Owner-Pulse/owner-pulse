@@ -6,7 +6,7 @@ const EnrollmentTargetsCard = ({ targets }) => (
   <Card className="bg-white border-none shadow-sm">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <TrendingUp size={18} className="text-blue-500" />
+        <TrendingUp size={18} className="text-[#1E3A5F]" />
         Annual Enrollment Targets
       </CardTitle>
       <CardDescription>
@@ -19,14 +19,14 @@ const EnrollmentTargetsCard = ({ targets }) => (
           const pct = Math.round((target.actual / target.target) * 100);
           const met = pct >= 100;
           const close = pct >= 90 && pct < 100;
-          const barColor = met ? "bg-emerald-500" : close ? "bg-amber-500" : "bg-blue-500";
+          const barColor = met ? "bg-[#3E7A54]" : close ? "bg-[#B78A2F]" : "bg-[#1E3A5F]";
 
           return (
             <div key={target.label} className="p-5 rounded-xl bg-gray-50 border border-gray-100">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold text-gray-700">{target.label}</span>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  met ? "bg-emerald-100 text-emerald-700" : close ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                  met ? "bg-[#3E7A54]/10 text-[#2F6042]" : close ? "bg-[#B78A2F]/10 text-[#8F6A1F]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"
                 }`}>
                   {met ? "✓ Met" : `${100 - pct}% to go`}
                 </span>

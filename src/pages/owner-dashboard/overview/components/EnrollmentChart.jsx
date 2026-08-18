@@ -14,7 +14,7 @@ const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
     <Card className="bg-white border-none shadow-sm h-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Users size={15} className="text-blue-500" />
+          <Users size={15} className="text-[#1E3A5F]" />
           Enrollment by Grade
         </CardTitle>
         <CardDescription className="text-[10px]">Students vs Capacity with Waitlist demand</CardDescription>
@@ -30,7 +30,7 @@ const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
               <Bar dataKey="capacity" fill="#E5E7EB" radius={[4, 4, 0, 0]} barSize={16} name="Capacity" />
               <Bar dataKey="students" radius={[4, 4, 0, 0]} barSize={16} name="Enrolled">
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.students >= entry.capacity ? "#F59E0B" : "#0A0F1E"} />
+                  <Cell key={`cell-${index}`} fill={entry.students >= entry.capacity ? "#B78A2F" : "#1E3A5F"} />
                 ))}
               </Bar>
             </BarChart>
@@ -38,15 +38,15 @@ const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
         </div>
         <div className="grid grid-cols-3 gap-3 mt-3 pt-2 border-t border-gray-100">
           <div className="text-center p-2 bg-[#1E3A5F]/5 rounded-lg">
-            <p className="text-lg font-bold text-[#0A0F1E]">{totalEnrolled}</p>
+            <p className="text-lg font-bold text-[#1E3A5F]">{totalEnrolled}</p>
             <p className="text-[10px] text-gray-500">Total</p>
           </div>
-          <div className="text-center p-2 bg-amber-50 rounded-lg">
-            <p className="text-lg font-bold text-amber-600">{totalWaitlist}</p>
+          <div className="text-center p-2 bg-[#B78A2F]/10 rounded-lg">
+            <p className="text-lg font-bold text-[#8F6A1F]">{totalWaitlist}</p>
             <p className="text-[10px] text-gray-500">Waitlist</p>
           </div>
-          <div className="text-center p-2 bg-emerald-50 rounded-lg">
-            <p className="text-lg font-bold text-emerald-600">{openSeats}</p>
+          <div className="text-center p-2 bg-[#3E7A54]/10 rounded-lg">
+            <p className="text-lg font-bold text-[#2F6042]">{openSeats}</p>
             <p className="text-[10px] text-gray-500">Open</p>
           </div>
         </div>

@@ -75,16 +75,16 @@ const DirectorManagementPage = () => {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Users} label="Total Directors" value={stats.total} sub="Managing school operations" color="bg-blue-50 text-blue-600" />
+          <KpiCard icon={Users} label="Total Directors" value={stats.total} sub="Managing school operations" color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={CheckCircle2} label="Active" value={stats.active} sub={`${stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% of total`} color="bg-emerald-50 text-emerald-600" />
+          <KpiCard icon={CheckCircle2} label="Active" value={stats.active} sub={`${stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% of total`} color="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Clock} label="Pending Invites" value={stats.pending} sub={stats.pending > 0 ? "Awaiting first login" : "All accounts activated"} color={stats.pending > 0 ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400"} />
+          <KpiCard icon={Clock} label="Pending Invites" value={stats.pending} sub={stats.pending > 0 ? "Awaiting first login" : "All accounts activated"} color={stats.pending > 0 ? "bg-[#B78A2F]/10 text-[#8F6A1F]" : "bg-gray-50 text-gray-400"} />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Award} label="Total Activity" value={stats.totalTasks + stats.totalLogs} sub={`${stats.totalTasks} tasks · ${stats.totalLogs} logs`} color="bg-purple-50 text-purple-600" />
+          <KpiCard icon={Award} label="Total Activity" value={stats.totalTasks + stats.totalLogs} sub={`${stats.totalTasks} tasks · ${stats.totalLogs} logs`} color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
       </div>
 

@@ -39,9 +39,9 @@ const CashFlowPage = () => {
       label: "Revenue (YTD)",
       value: metrics.revenue_ytd?.amount || "—",
       sub: metrics.revenue_ytd?.subtitle || "",
-      iconBg: "bg-emerald-50 text-emerald-600",
+      iconBg: "bg-[#3E7A54]/10 text-[#2F6042]",
       trend: (
-        <span className="flex items-center text-emerald-600 font-medium">
+        <span className="flex items-center text-[#2F6042] font-medium">
           <ArrowUpRight size={12} className="mr-1" />
           {metrics.revenue_ytd?.yoy_change}
         </span>
@@ -52,9 +52,9 @@ const CashFlowPage = () => {
       label: "Expenses (YTD)",
       value: metrics.expenses_ytd?.amount || "—",
       sub: metrics.expenses_ytd?.subtitle || "",
-      iconBg: "bg-red-50 text-red-500",
+      iconBg: "bg-[#AE4A3E]/10 text-[#8A362C]",
       trend: (
-        <span className="flex items-center text-amber-600 font-medium">
+        <span className="flex items-center text-[#8F6A1F] font-medium">
           <ArrowUpRight size={12} className="mr-1" />
           {metrics.expenses_ytd?.yoy_change}
         </span>
@@ -65,21 +65,21 @@ const CashFlowPage = () => {
       label: "Net Cash Flow",
       value: metrics.net_cash_flow?.amount || "—",
       sub: metrics.net_cash_flow?.status || "",
-      iconBg: netCashFlow >= 0 ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-500",
+      iconBg: netCashFlow >= 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]",
     },
     {
       icon: Percent,
       label: "Operating Margin",
       value: `${metrics.operating_margin?.percentage ?? "—"}%`,
       sub: metrics.operating_margin?.status || "",
-      iconBg: (metrics.operating_margin?.percentage || 0) >= 30 ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600",
+      iconBg: (metrics.operating_margin?.percentage || 0) >= 30 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#B78A2F]/10 text-[#8F6A1F]",
     },
     {
       icon: Building2,
       label: "Bank Balance",
       value: metrics.bank_balance?.amount || "—",
       sub: metrics.bank_balance?.account_name || "",
-      iconBg: "bg-purple-50 text-purple-600",
+      iconBg: "bg-[#1E3A5F]/10 text-[#1E3A5F]",
     },
   ];
 
@@ -130,7 +130,7 @@ const CashFlowPage = () => {
 
   if (isError) {
     return (
-      <div className="py-20 text-center text-red-500">Failed to load Cash Flow data.</div>
+      <div className="py-20 text-center text-[#8A362C]">Failed to load Cash Flow data.</div>
     );
   }
 

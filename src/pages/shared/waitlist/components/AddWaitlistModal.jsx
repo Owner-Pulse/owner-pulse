@@ -101,12 +101,12 @@ const AddWaitlistModal = ({ isOpen = true, onClose, editItem = null }) => {
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Child's Name</label>
                     <input type="text" value={form.child} onChange={(e) => setForm({ ...form, child: e.target.value })}
                       placeholder="e.g. Emma R." required
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Program</label>
                     <select value={form.program} onChange={(e) => setForm({ ...form, program: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white">
                       {PRESCHOOL_PROGRAMS.map((p) => <option key={p} value={p}>{p}</option>)}
                       <option disabled>──────────</option>
                       {K8_PROGRAMS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -118,7 +118,7 @@ const AddWaitlistModal = ({ isOpen = true, onClose, editItem = null }) => {
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Parent/Guardian</label>
                   <input type="text" value={form.parent} onChange={(e) => setForm({ ...form, parent: e.target.value })}
                     placeholder="e.g. Sara R." required
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -126,20 +126,20 @@ const AddWaitlistModal = ({ isOpen = true, onClose, editItem = null }) => {
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Phone</label>
                     <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="813-555-0000"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
                     <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="parent@email.com"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Source</label>
                   <select value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white">
                     <option value="referral">Referral</option>
                     <option value="website">Website</option>
                     <option value="walkin">Walk-in</option>

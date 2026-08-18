@@ -27,8 +27,8 @@ const PayrollHistoryCard = ({ history }) => {
                 <div key={ph.id} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                        <DollarSign size={18} className="text-blue-600" />
+                      <div className="w-10 h-10 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center">
+                        <DollarSign size={18} className="text-[#1E3A5F]" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">Period ending {fmtDate(ph.periodEnding)}</p>
@@ -37,16 +37,16 @@ const PayrollHistoryCard = ({ history }) => {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       {ph.childCare?.length > 0 && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-600">{ph.childCare.length} CC</span>
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F]">{ph.childCare.length} CC</span>
                       )}
                       {ph.otherDeductions?.length > 0 && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">{ph.otherDeductions.length} Ded</span>
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#B78A2F]/10 text-[#B78A2F]">{ph.otherDeductions.length} Ded</span>
                       )}
                       {ph.pto?.length > 0 && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">{ph.pto.length} PTO</span>
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#B78A2F]/10 text-[#B78A2F]">{ph.pto.length} PTO</span>
                       )}
                       {ph.hoursToAdd?.length > 0 && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">{ph.hoursToAdd.length} Hrs</span>
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#3E7A54]/10 text-[#3E7A54]">{ph.hoursToAdd.length} Hrs</span>
                       )}
                     </div>
                   </div>

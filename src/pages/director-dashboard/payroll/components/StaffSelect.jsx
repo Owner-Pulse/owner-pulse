@@ -11,7 +11,7 @@ const StaffSelect = ({ value, onChange, exclude = [] }) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white"
   >
     <option value="">Pick staff…</option>
     {TEACHER_LIST.filter((s) => !exclude.includes(s.id)).map((s) => (

@@ -22,7 +22,7 @@ const ClassroomKpis = ({ isLoading, metrics }) => (
             label="Net Monthly Profit"
             value={fmtMoneyShort(metrics?.net_monthly_profit ?? 0)}
             sub={`${metrics?.overall_margin_percentage ?? 0}% margin overall`}
-            iconBg={(metrics?.net_monthly_profit ?? 0) >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}
+            iconBg={(metrics?.net_monthly_profit ?? 0) >= 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -31,7 +31,7 @@ const ClassroomKpis = ({ isLoading, metrics }) => (
             label="Classrooms"
             value={`${metrics?.profitable_classrooms ?? 0}/${metrics?.total_classrooms ?? 0}`}
             sub={`${metrics?.profitable_classrooms ?? 0} profitable · ${metrics?.losing_classrooms ?? 0} losing`}
-            iconBg="bg-blue-50 text-blue-600"
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -40,7 +40,7 @@ const ClassroomKpis = ({ isLoading, metrics }) => (
             label="Total Students"
             value={metrics?.total_students ?? 0}
             sub={`out of ${metrics?.total_capacity ?? 0} capacity`}
-            iconBg="bg-purple-50 text-purple-600"
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -49,7 +49,7 @@ const ClassroomKpis = ({ isLoading, metrics }) => (
             label="Avg Fill Rate"
             value={`${metrics?.avg_fill_rate_percentage ?? 0}%`}
             sub={`${metrics?.open_seats ?? 0} open seats`}
-            iconBg="bg-amber-50 text-amber-600"
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -58,7 +58,7 @@ const ClassroomKpis = ({ isLoading, metrics }) => (
             label="Monthly Revenue"
             value={fmtMoneyShort(metrics?.total_monthly_revenue ?? 0)}
             sub={`vs ${fmtMoneyShort(metrics?.total_monthly_costs ?? 0)} costs`}
-            iconBg="bg-emerald-50 text-emerald-600"
+            iconBg="bg-[#3E7A54]/10 text-[#2F6042]"
           />
         </motion.div>
       </>

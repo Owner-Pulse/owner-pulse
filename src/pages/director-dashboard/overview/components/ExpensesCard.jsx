@@ -2,16 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Receipt, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EXPENSE_REASON_COLORS } from "@/lib/theme-tokens";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const EXPENSE_REASON_COLORS = {
-  "Classroom Supplies": "#2563EB", "Events & Food": "#F97316", "Staff Appreciation": "#EC4899",
-  "Cleaning Supplies": "#16A34A", "Office Supplies": "#0EA5E9", "Teacher Appreciation": "#8B5CF6",
-  "Professional Dev.": "#D97706", "Tech & Software": "#7C3AED", "Facilities": "#64748B", "Other": "#94A0B5",
 };
 
 const ExpensesCard = ({ directorSpent, directorRemaining, pettyCashPercent, recentExpenses, expenseByReason,
@@ -21,30 +16,30 @@ const ExpensesCard = ({ directorSpent, directorRemaining, pettyCashPercent, rece
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Receipt size={16} className="text-pink-500" />
+            <Receipt size={16} className="text-[#1E3A5F]" />
             Recent Expenses &amp; Petty Cash
           </CardTitle>
-          <span className="text-xs text-blue-600 cursor-pointer hover:underline" onClick={() => onNavigate("/director/budget")}>View all</span>
+          <span className="text-xs text-[#1E3A5F] cursor-pointer hover:underline" onClick={() => onNavigate("/director/budget")}>View all</span>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
+          <div className="p-4 rounded-xl bg-[#B78A2F]/[0.06] border border-[#B78A2F]/15">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                  <Wallet size={16} className="text-pink-600" />
+                <div className="w-8 h-8 rounded-lg bg-[#B78A2F]/10 flex items-center justify-center">
+                  <Wallet size={16} className="text-[#8F6A1F]" />
                 </div>
                 <span className="text-xs font-bold text-gray-800">Petty Cash</span>
               </div>
-              <span className="text-xs font-bold text-pink-600">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
+              <span className="text-xs font-bold text-[#8F6A1F]">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
             </div>
-            <div className="h-2.5 bg-pink-100 rounded-full overflow-hidden mb-1.5">
-              <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pettyCashPercent}%` }} />
+            <div className="h-2.5 bg-[#B78A2F]/15 rounded-full overflow-hidden mb-1.5">
+              <div className="h-full bg-[#B78A2F] rounded-full" style={{ width: `${pettyCashPercent}%` }} />
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-gray-500">{pettyCashPercent}% used</span>
-              <span className={`font-medium ${directorRemaining > 0 ? "text-pink-600" : "text-red-500"}`}>
+              <span className={`font-medium ${directorRemaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
                 {fmtMoney(directorRemaining)} left
               </span>
             </div>

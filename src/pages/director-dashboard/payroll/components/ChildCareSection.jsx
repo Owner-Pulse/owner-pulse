@@ -28,9 +28,9 @@ const ChildCareSection = ({ rows, onAdd, onUpdate, onRemove }) => {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <input type="number" value={row.amount} onChange={(e) => onUpdate(i, "amount", e.target.value)}
                     placeholder="0.00"
-                    className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                 </div>
-                <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
+                <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors">
                   <X size={14} />
                 </button>
               </div>

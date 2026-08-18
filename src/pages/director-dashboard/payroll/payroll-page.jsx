@@ -186,7 +186,7 @@ const PayrollPage = () => {
         </div>
         <div className="flex items-center gap-2">
           {payrollDays <= 3 && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-50 text-red-600">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#AE4A3E]">
               <AlertTriangle size={12} /> {payrollDays}d until due
             </span>
           )}
@@ -199,8 +199,8 @@ const PayrollPage = () => {
 
       {/* ─── Success Banner ──────────────────────────────────────── */}
       {showSuccess && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-          <CheckCircle2 size={20} className="text-emerald-500" />
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-4 rounded-xl bg-[#3E7A54]/10 border border-[#3E7A54]/25">
+          <CheckCircle2 size={20} className="text-[#3E7A54]" />
           <div>
             <p className="text-sm font-semibold text-gray-900">Payroll Submitted!</p>
             <p className="text-xs text-gray-600">The owner has been notified. Pay period ending {fmtDate(PERIOD_END)}.</p>
@@ -211,13 +211,13 @@ const PayrollPage = () => {
       {/* ─── KPI Row ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={UserCheck} label="Staff Count" value={stats.totalStaff} sub={`${stats.ptoPct}% PTO used YTD`} color="bg-blue-50 text-blue-600" />
+          <KpiCard icon={UserCheck} label="Staff Count" value={stats.totalStaff} sub={`${stats.ptoPct}% PTO used YTD`} color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={DollarSign} label="Deductions" value={stats.deductions} sub="Child care + loans this period" color="bg-purple-50 text-purple-600" />
+          <KpiCard icon={DollarSign} label="Deductions" value={stats.deductions} sub="Child care + loans this period" color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Clock} label="PTO This Period" value={stats.pendingPTO} sub={`${stats.pendingPTO > 0 ? "Days to deduct" : "No PTO logged"}`} color="bg-amber-50 text-amber-600" />
+          <KpiCard icon={Clock} label="PTO This Period" value={stats.pendingPTO} sub={`${stats.pendingPTO > 0 ? "Days to deduct" : "No PTO logged"}`} color="bg-[#B78A2F]/10 text-[#B78A2F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={ClipboardList} label="History" value={stats.historyCount} sub={`${stats.historyCount > 0 ? "Past submissions" : "No history yet"}`} color="bg-gray-50 text-gray-500" />

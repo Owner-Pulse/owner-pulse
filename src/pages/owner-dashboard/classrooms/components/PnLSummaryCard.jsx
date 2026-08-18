@@ -16,7 +16,7 @@ const PnLSummaryCard = ({ totalRevenue, totalCost, totalProfit, overallMargin })
     <Card className="bg-white border-none shadow-sm h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <DollarSign size={16} className="text-emerald-500" />
+          <DollarSign size={16} className="text-[#1E3A5F]" />
           P&amp;L Summary
         </CardTitle>
       </CardHeader>
@@ -27,20 +27,20 @@ const PnLSummaryCard = ({ totalRevenue, totalCost, totalProfit, overallMargin })
         </div>
         <div className="flex justify-between items-center pb-2 border-b border-gray-100">
           <span className="text-sm text-gray-500">Monthly Operating Costs</span>
-          <span className="text-sm font-bold text-red-500">{fmtMoney(totalCost)}</span>
+          <span className="text-sm font-bold text-[#1E3A5F]">{fmtMoney(totalCost)}</span>
         </div>
         <div className="flex justify-between items-center pb-2 border-b border-gray-100">
           <span className="text-sm text-gray-500">Gross Margin</span>
-          <span className={`text-sm font-bold ${totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>{overallMargin}%</span>
+          <span className={`text-sm font-bold ${totalProfit >= 0 ? "text-[#2F6042]" : "text-[#8A362C]"}`}>{overallMargin}%</span>
         </div>
         <div className="flex justify-between items-center pt-1">
           <span className="text-sm font-semibold text-gray-700">Net Monthly Profit</span>
-          <span className={`text-lg font-extrabold ${totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+          <span className={`text-lg font-extrabold ${totalProfit >= 0 ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
             {totalProfit >= 0 ? "" : "-"}{fmtMoneyShort(Math.abs(totalProfit))}
           </span>
         </div>
         <div className="mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(Math.max(overallMargin + 50, 5), 100)}%` }} />
+          <div className="h-full rounded-full bg-[#3E7A54]" style={{ width: `${Math.min(Math.max(overallMargin + 50, 5), 100)}%` }} />
         </div>
         <p className="text-[10px] text-gray-400 text-center">
           Margin benchmark: healthy &gt; 30% · monitoring &gt; 15% · critical &lt; 15%

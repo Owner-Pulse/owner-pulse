@@ -2,7 +2,7 @@ import React from "react";
 
 const CategoryTag = ({ category }) => {
   const config = {
-    regulatory: { bg: "bg-blue-50", text: "text-blue-700", label: "Regulatory" },
+    regulatory: { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]", label: "Regulatory" },
   };
   const c = config[category] || config.regulatory;
   return (

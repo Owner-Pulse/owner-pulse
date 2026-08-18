@@ -4,7 +4,7 @@ import { Search, X } from "lucide-react";
 const FilterBar = ({ searchQuery, onSearchChange, statusFilter, onStatusChange }) => {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-      <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 flex-1 w-full sm:w-auto">
+      <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-[#1E3A5F] flex-1 w-full sm:w-auto">
         <Search size={16} className="text-gray-400" />
         <input
           type="text"
@@ -29,7 +29,7 @@ const FilterBar = ({ searchQuery, onSearchChange, statusFilter, onStatusChange }
             key={f.id}
             onClick={() => onStatusChange(f.id)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              statusFilter === f.id ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-50"
+              statusFilter === f.id ? "bg-[#1E3A5F] text-white" : "text-gray-500 hover:bg-gray-50"
             }`}
           >
             {f.label}

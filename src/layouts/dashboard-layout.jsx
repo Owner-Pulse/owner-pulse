@@ -44,19 +44,21 @@ const bottomTabs = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-// Notification data & helpers
+// Notification data & helpers — icon glyphs only; the tint is driven by
+// severity (brick = critical, navy = unread, gray = read) so color always
+// means the same thing.
 const NOTIF_ICONS = {
-  maintenance: { icon: Wrench, bg: "bg-orange-50", text: "text-orange-600" },
-  incident: { icon: Shield, bg: "bg-red-50", text: "text-red-600" },
-  compliance: { icon: AlertTriangle, bg: "bg-amber-50", text: "text-amber-600" },
-  staff: { icon: Users, bg: "bg-purple-50", text: "text-purple-600" },
-  substitute: { icon: Users, bg: "bg-blue-50", text: "text-blue-600" },
-  payroll: { icon: DollarSign, bg: "bg-emerald-50", text: "text-emerald-600" },
-  scholarship: { icon: GraduationCap, bg: "bg-violet-50", text: "text-violet-600" },
-  student: { icon: Users, bg: "bg-rose-50", text: "text-rose-600" },
-  task: { icon: ClipboardList, bg: "bg-sky-50", text: "text-sky-600" },
-  financial: { icon: DollarSign, bg: "bg-teal-50", text: "text-teal-600" },
-  general: { icon: Bell, bg: "bg-gray-50", text: "text-gray-600" },
+  maintenance: Wrench,
+  incident: Shield,
+  compliance: AlertTriangle,
+  staff: Users,
+  substitute: Users,
+  payroll: DollarSign,
+  scholarship: GraduationCap,
+  student: Users,
+  task: ClipboardList,
+  financial: DollarSign,
+  general: Bell,
 };
 
 // const getBasePath = () => {
@@ -257,24 +259,31 @@ const DashboardLayout = () => {
                   onClick={() => setNotifOpen(!notifOpen)}
                   className="p-3 hover:bg-gray-100 rounded-xl transition-colors relative text-gray-600"
                 >
-                  <Bell size={22} />
+                  <Bell size={24}/>
                   {notifStats.unread > 0 && (
-                    <span className="absolute top-2 right-2 min-w-4.5 h-4.5 flex items-center justify-center bg-red-500 rounded-full ring-2 ring-white text-[9px] font-bold px-1">
+                    <span className="absolute top-2 right-2 min-w-4.5 h-4.5 flex items-center justify-center bg-[#AE4A3E] rounded-full ring-2 text-white ring-white text-[9px] font-bold px-1">
                       {notifStats.unread > 9 ? "9+" : notifStats.unread}
                     </span>
                   )}
                 </button>
 
                 {/* Dropdown Panel */}
+                <AnimatePresence>
                 {notifOpen && (
-                  <div className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-100 md:max-h-130 bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-100 flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-100 md:max-h-130 bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-100 flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}
+                  >
+                    {/* Header — navy gradient */}
+                    <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#1E3A5F] to-[#2A4C7E] shrink-0">
                       <div>
-                        <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
+                        <h3 className="text-sm font-bold text-white">Notifications</h3>
+                        <p className="text-[10px] text-white/60 mt-0.5">
                           {notifStats.unread > 0
-                            ? `${notifStats.unread} unread · ${notifStats.critical} critical`
+                            ? `${notifStats.unread} unread${notifStats.critical > 0 ? ` · ${notifStats.critical} critical` : ""}`
                             : "All caught up!"}
                         </p>
                       </div>
@@ -282,12 +291,12 @@ const DashboardLayout = () => {
                         {notifStats.unread > 0 && (
                           <button
                             onClick={markAllRead}
-                            className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                            className="text-[10px] font-semibold text-white/80 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
                           >
                             Mark all read
                           </button>
                         )}
-                        <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-gray-500">
+                        <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-white/70">
                           <X size={20} />
                         </button>
                       </div>
@@ -304,7 +313,7 @@ const DashboardLayout = () => {
                           key={f.key}
                           onClick={() => setNotifFilter(f.key)}
                           className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${notifFilter === f.key
-                            ? "bg-gray-900 text-white"
+                            ? "bg-[#1E3A5F] text-white shadow-sm"
                             : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                             }`}
                         >
@@ -317,37 +326,46 @@ const DashboardLayout = () => {
                     <div className="overflow-y-auto flex-1">
                       {filteredNotifs.length === 0 ? (
                         <div className="p-6 text-center">
-                          <div className="mx-auto w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                            <Bell size={20} className="text-gray-400" />
+                          <div className="mx-auto w-10 h-10 bg-[#1E3A5F]/10 rounded-full flex items-center justify-center mb-2">
+                            <Bell size={20} className="text-[#1E3A5F]" />
                           </div>
                           <p className="text-sm font-medium text-gray-900">All clear!</p>
                           <p className="text-xs text-gray-400 mt-0.5">No notifications to show.</p>
                         </div>
                       ) : (
                         filteredNotifs.map((notif) => {
-                          const cfg = NOTIF_ICONS[notif.type] || NOTIF_ICONS.general;
-                          const Icon = cfg.icon;
+                          const Icon = NOTIF_ICONS[notif.type] || NOTIF_ICONS.general;
+                          // Severity-driven tint — brick = critical, navy = unread, gray = read
+                          const tint = notif.critical
+                            ? { bg: "bg-[#AE4A3E]/10", text: "text-[#8A362C]" }
+                            : !notif.read
+                              ? { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]" }
+                              : { bg: "bg-gray-100", text: "text-gray-400" };
                           return (
                             <div
                               key={notif.id}
                               onClick={() => {
                                 toggleNotifRead(notif.id);
-                                if (notif.path) navigate(getBasePath() + notif.path);
+                                if (notif.path) navigate(basePath + notif.path);
                                 setNotifOpen(false);
                               }}
-                              className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${!notif.read ? "bg-blue-50/40" : ""
+                              className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${notif.critical
+                                  ? "bg-[#AE4A3E]/[0.05]"
+                                  : !notif.read
+                                    ? "bg-[#1E3A5F]/[0.04]"
+                                    : ""
+                                } ${notif.critical ? "border-l-2 border-l-[#AE4A3E]" : ""
                                 } border-b border-gray-50 last:border-b-0`}
                             >
-                              {/* Icon */}
-                              <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
-                                <Icon size={18} className={cfg.text} />
+                              {/* Icon — tinted by severity */}
+                              <div className={`w-9 h-9 rounded-xl ${tint.bg} flex items-center justify-center shrink-0`}>
+                                <Icon size={18} className={tint.text} />
                               </div>
 
                               {/* Content */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
                                   <p className={`text-xs ${notif.read ? "font-medium" : "font-semibold"} text-gray-900 line-clamp-1`}>
-                                    {notif.critical && <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 mr-1 shrink-0" />}
                                     {notif.title}
                                   </p>
                                   <span className="text-[9px] text-gray-400 whitespace-nowrap shrink-0 leading-4">{timeAgo(notif.time)}</span>
@@ -356,14 +374,15 @@ const DashboardLayout = () => {
                               </div>
 
                               {/* Unread indicator */}
-                              {!notif.read && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1" />}
+                              {!notif.read && <span className="w-1.5 h-1.5 rounded-full bg-[#1E3A5F] shrink-0 mt-1" />}
                             </div>
                           );
                         })
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
 
               {/* Profile */}

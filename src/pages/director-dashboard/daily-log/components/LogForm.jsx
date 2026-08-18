@@ -4,8 +4,8 @@ import { AlertTriangle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const LOG_TYPES = [
-  { id: "incident", label: "Incident", desc: "Student incident", icon: AlertTriangle, color: "bg-red-500", light: "bg-red-50 text-red-600" },
-  { id: "removal", label: "Removal", desc: "Student removed", icon: null, color: "bg-orange-500", light: "bg-orange-50 text-orange-600" },
+  { id: "incident", label: "Incident", desc: "Student incident", icon: AlertTriangle, color: "bg-[#AE4A3E]", light: "bg-[#AE4A3E]/10 text-[#8A362C]" },
+  { id: "removal", label: "Removal", desc: "Student removed", icon: null, color: "bg-[#B78A2F]", light: "bg-[#B78A2F]/10 text-[#8F6A1F]" },
 ];
 
 const LogForm = ({ onAdd, onClose }) => {
@@ -61,7 +61,7 @@ const LogForm = ({ onAdd, onClose }) => {
             {step === 1 && (
               <>
                 <div className="flex items-center gap-2 mb-4">
-                  <button type="button" onClick={() => setStep(0)} className="text-xs text-blue-600 hover:underline font-medium">← Change type</button>
+                  <button type="button" onClick={() => setStep(0)} className="text-xs text-[#1E3A5F] hover:underline font-medium">← Change type</button>
                   <span className="text-gray-300">·</span>
                   <span className="text-xs text-gray-500 font-medium capitalize">{logType} entry</span>
                 </div>
@@ -69,7 +69,7 @@ const LogForm = ({ onAdd, onClose }) => {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Student</label>
                   <input type="text" value={form.student || ""} onChange={(e) => update("student", e.target.value)} placeholder="Initials OK" required
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                 </div>
 
                 {logType === "incident" && (
@@ -81,9 +81,9 @@ const LogForm = ({ onAdd, onClose }) => {
                           <button key={s} type="button" onClick={() => update("severity", s)}
                             className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                               (form.severity || "minor") === s
-                                ? s === "minor" ? "bg-amber-100 text-amber-700 ring-2 ring-amber-300"
-                                  : s === "moderate" ? "bg-orange-100 text-orange-700 ring-2 ring-orange-300"
-                                  : "bg-red-100 text-red-700 ring-2 ring-red-300"
+                                ? s === "minor" ? "bg-[#B78A2F]/10 text-[#8F6A1F] ring-2 ring-[#B78A2F]"
+                                  : s === "moderate" ? "bg-[#AE4A3E]/10 text-[#8A362C] ring-2 ring-[#AE4A3E]"
+                                  : "bg-[#8A362C]/10 text-[#8A362C] ring-2 ring-[#8A362C]"
                                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                             }`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
                         ))}
@@ -92,7 +92,7 @@ const LogForm = ({ onAdd, onClose }) => {
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 mb-1.5">Area</label>
                       <select value={form.area || "Classroom"} onChange={(e) => update("area", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white">
                         {["Classroom", "Playground", "Cafeteria", "Hallway", "Bathroom", "Outside"].map((a) => <option key={a} value={a}>{a}</option>)}
                       </select>
                     </div>
@@ -103,7 +103,7 @@ const LogForm = ({ onAdd, onClose }) => {
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1.5">Reason</label>
                     <select value={form.reason || "other"} onChange={(e) => update("reason", e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white">
                       <option value="parent_pickup">Parent Pickup</option>
                       <option value="medical">Medical</option>
                       <option value="behavioral">Behavioral</option>

@@ -3,16 +3,11 @@ import { motion } from "framer-motion";
 import { Landmark, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EXPENSE_REASON_COLORS } from "@/lib/theme-tokens";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const EXPENSE_REASON_COLORS = {
-  "Classroom Supplies": "#2563EB", "Events & Food": "#F97316", "Staff Appreciation": "#EC4899",
-  "Cleaning Supplies": "#16A34A", "Office Supplies": "#0EA5E9", "Teacher Appreciation": "#8B5CF6",
-  "Professional Dev.": "#D97706", "Tech & Software": "#7C3AED", "Facilities": "#64748B", "Other": "#94A0B5",
 };
 
 const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, DIRECTOR_BUDGET_TOTAL,
@@ -21,54 +16,54 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
     <Card className="bg-white border-none shadow-sm h-full overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Landmark size={16} className="text-amber-500" />
+          <Landmark size={16} className="text-[#1E3A5F]" />
           Budget Overview
         </CardTitle>
         <CardDescription className="text-[10px]">School budget &amp; Director's discretionary</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+        <div className="p-3 rounded-xl bg-[#1E3A5F]/[0.05] border border-[#1E3A5F]/15">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Landmark size={14} className="text-blue-600" />
+              <div className="w-7 h-7 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center">
+                <Landmark size={14} className="text-[#1E3A5F]" />
               </div>
               <span className="text-xs font-bold text-gray-800">School Budget</span>
             </div>
-            <span className="text-xs font-bold text-blue-600">${(budgetData.total / 1000000).toFixed(1)}M</span>
+            <span className="text-xs font-bold text-[#1E3A5F]">${(budgetData.total / 1000000).toFixed(1)}M</span>
           </div>
-          <div className="h-2 bg-blue-100 rounded-full overflow-hidden mb-1.5">
-            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${budgetPercent}%` }} />
+          <div className="h-2 bg-[#1E3A5F]/10 rounded-full overflow-hidden mb-1.5">
+            <div className="h-full bg-[#1E3A5F] rounded-full" style={{ width: `${budgetPercent}%` }} />
           </div>
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-gray-500">{budgetPercent}% used</span>
-            <span className="text-emerald-600 font-medium">${schoolBudgetRemaining.toLocaleString()} left</span>
+            <span className="text-[#2F6042] font-medium">${schoolBudgetRemaining.toLocaleString()} left</span>
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100">
+        <div className="p-3 rounded-xl bg-[#B78A2F]/[0.06] border border-[#B78A2F]/15">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                <Wallet size={14} className="text-pink-600" />
+              <div className="w-7 h-7 rounded-lg bg-[#B78A2F]/10 flex items-center justify-center">
+                <Wallet size={14} className="text-[#8F6A1F]" />
               </div>
               <span className="text-xs font-bold text-gray-800">Director's Petty Cash</span>
             </div>
-            <span className="text-xs font-bold text-pink-600">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
+            <span className="text-xs font-bold text-[#8F6A1F]">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
           </div>
-          <div className="h-2 bg-pink-100 rounded-full overflow-hidden mb-1.5">
-            <div className="h-full bg-pink-500 rounded-full" style={{ width: `${pettyCashPercent}%` }} />
+          <div className="h-2 bg-[#B78A2F]/15 rounded-full overflow-hidden mb-1.5">
+            <div className="h-full bg-[#B78A2F] rounded-full" style={{ width: `${pettyCashPercent}%` }} />
           </div>
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-gray-500">{pettyCashPercent}% used</span>
-            <span className={`font-medium ${directorRemaining > 0 ? "text-pink-600" : "text-red-500"}`}>
+            <span className={`font-medium ${directorRemaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
               {fmtMoney(directorRemaining)} left
             </span>
           </div>
 
           {recentExpenses.length > 0 && (
-            <div className="mt-3 pt-2 border-t border-pink-200/50">
-              <p className="text-[9px] font-semibold text-pink-700 uppercase tracking-wider mb-1.5">Recent Expenses</p>
+            <div className="mt-3 pt-2 border-t border-[#B78A2F]/20">
+              <p className="text-[9px] font-semibold text-[#8F6A1F] uppercase tracking-wider mb-1.5">Recent Expenses</p>
               <div className="space-y-1.5">
                 {recentExpenses.slice(0, 3).map((exp) => (
                   <div key={exp.id} className="flex items-center justify-between">
@@ -104,7 +99,7 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
           )}
         </div>
 
-        <Button variant="ghost" className="w-full text-xs text-blue-600 h-8 hover:bg-blue-50" onClick={() => onNavigate("/owner/budget")}>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-8 hover:bg-[#1E3A5F]/5" onClick={() => onNavigate("/owner/budget")}>
           View full budget →
         </Button>
       </CardContent>

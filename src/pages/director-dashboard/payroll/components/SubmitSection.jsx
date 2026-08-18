@@ -14,7 +14,7 @@ const SubmitSection = ({ itemCount, payrollDays, onSubmit }) => {
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className={`bg-white border-none shadow-sm ${payrollDays <= 3 ? "ring-2 ring-red-200" : ""}`}>
+      <Card className={`bg-white border-none shadow-sm ${payrollDays <= 3 ? "ring-2 ring-[#AE4A3E]/25" : ""}`}>
         <CardContent className="p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -34,7 +34,7 @@ const SubmitSection = ({ itemCount, payrollDays, onSubmit }) => {
             </Button>
           </div>
           {payrollDays <= 3 && (
-            <div className="flex items-center gap-2 mt-3 p-3 bg-red-50 rounded-xl text-xs text-red-600 font-medium">
+            <div className="flex items-center gap-2 mt-3 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#AE4A3E] font-medium">
               <AlertTriangle size={14} /> Payroll is due soon — please submit promptly.
             </div>
           )}

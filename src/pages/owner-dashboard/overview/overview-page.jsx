@@ -93,11 +93,11 @@ const maintenanceRequests = [
 const budgetData = {
   total: 1850000, spent: 1240000,
   categories: [
-    { name: "Payroll & Benefits", spent: 920000, budget: 1200000, percent: 77, color: "#4F46E5" },
-    { name: "Facilities & Rent", spent: 142000, budget: 180000, percent: 79, color: "#2563EB" },
-    { name: "Curriculum & Books", spent: 58000, budget: 75000, percent: 77, color: "#10B981" },
-    { name: "Insurance", spent: 38000, budget: 45000, percent: 84, color: "#F59E0B" },
-    { name: "Director Discretionary", spent: 7200, budget: 9000, percent: 80, color: "#EC4899" },
+    { name: "Payroll & Benefits", spent: 920000, budget: 1200000, percent: 77, color: "#1E3A5F" },
+    { name: "Facilities & Rent", spent: 142000, budget: 180000, percent: 79, color: "#2A4C7E" },
+    { name: "Curriculum & Books", spent: 58000, budget: 75000, percent: 77, color: "#4A6B96" },
+    { name: "Insurance", spent: 38000, budget: 45000, percent: 84, color: "#5B7FA6" },
+    { name: "Director Discretionary", spent: 7200, budget: 9000, percent: 80, color: "#9DB8D9" },
   ],
 };
 
@@ -261,7 +261,7 @@ const OverviewPage = () => {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
             Dashboard Overview
             {criticalMaintenance > 0 && (
-              <span className="ml-2 md:ml-3 inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] md:text-xs font-bold rounded-full align-middle">
+              <span className="ml-2 md:ml-3 inline-flex items-center gap-1 px-2 py-0.5 bg-[#AE4A3E]/10 text-[#8A362C] text-[10px] md:text-xs font-bold rounded-full align-middle">
                 {criticalMaintenance} critical
               </span>
             )}
@@ -269,15 +269,15 @@ const OverviewPage = () => {
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="text-xs md:text-sm text-gray-500">Integrated:</span>
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 rounded-md">
-              <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center text-[8px] font-bold text-blue-600">P</div>
+              <div className="w-4 h-4 bg-[#1E3A5F]/10 rounded flex items-center justify-center text-[8px] font-bold text-[#1E3A5F]">P</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">Procare</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 rounded-md">
-              <div className="w-4 h-4 bg-green-100 rounded flex items-center justify-center text-[8px] font-bold text-green-600">QB</div>
+              <div className="w-4 h-4 bg-[#1E3A5F]/10 rounded flex items-center justify-center text-[8px] font-bold text-[#1E3A5F]">QB</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">QuickBooks</span>
             </div>
             {quickbooksStatus.reconciled && (
-              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-green-100 text-green-700 text-[9px] md:text-xs rounded-full whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap">
                 <CheckIcon size={10} /> Synced
               </span>
             )}
@@ -298,25 +298,25 @@ const OverviewPage = () => {
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Enrolled" value={totalEnrolled} pct={enrollPercent} color="#2563EB" sub="+12% y/y" subColor="text-emerald-600" icon={kpiIcon.Users} />
-        <DonutKpiCard label="Revenue" value="$184.2k" pct={revenuePct} color="#10B981" sub="+8.4% MoM" subColor="text-emerald-600" icon={kpiIcon.DollarSign} />
-        <DonutKpiCard label="Waitlist" value={totalWaitlist} pct={waitlistPct} color="#F59E0B" sub={`${openSeats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
-        <DonutKpiCard label="Tasks Done" value={`${tasksDone}/${totalTasks}`} pct={tasksPct} color="#4F46E5" sub={`${highPriorityTasks} high priority`} subColor="text-red-500" icon={kpiIcon.CheckCircle2} />
+        <DonutKpiCard label="Enrolled" value={totalEnrolled} pct={enrollPercent} color="#1E3A5F" sub="+12% y/y" subColor="text-[#2F6042]" icon={kpiIcon.Users} />
+        <DonutKpiCard label="Revenue" value="$184.2k" pct={revenuePct} color="#3E7A54" sub="+8.4% MoM" subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
+        <DonutKpiCard label="Waitlist" value={totalWaitlist} pct={waitlistPct} color="#1E3A5F" sub={`${openSeats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
+        <DonutKpiCard label="Tasks Done" value={`${tasksDone}/${totalTasks}`} pct={tasksPct} color="#B78A2F" sub={`${highPriorityTasks} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
       </div>
 
       {/* KPI Row 2 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Maintenance" value={`${maintenanceDone}/${maintenanceRequests.length}`} pct={maintenancePct} color="#EF4444" sub={`${criticalMaintenance} critical`} subColor="text-red-500" icon={kpiIcon.Wrench} />
-        <DonutKpiCard label="At-Risk" value={`${activeAtRisk}/${atRiskStudents.length}`} pct={atRiskPct} color="#8B5CF6" sub="intervening" subColor="text-gray-400" icon={kpiIcon.AlertTriangle} />
-        <DonutKpiCard label="PTO Used" value={`${totalPTOUsed}/${totalPTOAllowance}`} pct={ptoPct} color="#14B8A6" sub={`${substitutes.length} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
-        <DonutKpiCard label="Check-ins" value={procareData.dailyCheckIns} pct={checkinPct} color="#F97316" sub={`${procareData.absentToday} absent`} subColor="text-amber-600" icon={kpiIcon.UserCheck} />
+        <DonutKpiCard label="Maintenance" value={`${maintenanceDone}/${maintenanceRequests.length}`} pct={maintenancePct} color="#AE4A3E" sub={`${criticalMaintenance} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
+        <DonutKpiCard label="At-Risk" value={`${activeAtRisk}/${atRiskStudents.length}`} pct={atRiskPct} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
+        <DonutKpiCard label="PTO Used" value={`${totalPTOUsed}/${totalPTOAllowance}`} pct={ptoPct} color="#1E3A5F" sub={`${substitutes.length} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
+        <DonutKpiCard label="Check-ins" value={procareData.dailyCheckIns} pct={checkinPct} color="#3E7A54" sub={`${procareData.absentToday} absent`} subColor="text-gray-400" icon={kpiIcon.UserCheck} />
       </div>
 
       {/* KPI Row 3 — Compliance, Petty Cash, Discounts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Compliance" value={`${compliantCount}/${complianceItems.length}`} pct={compliancePct} color="#16A34A" sub={`${complianceItems.length - compliantCount} need attention`} subColor={compliancePct >= 80 ? "text-emerald-600" : compliancePct >= 50 ? "text-amber-600" : "text-red-500"} icon={kpiIcon.ShieldCheck} />
-        <DonutKpiCard label="Petty Cash" value={fmtMoney(directorSpent)} pct={pettyCashPercent} color="#EC4899" sub={`${fmtMoney(directorRemaining)} of ${fmtMoney(DIRECTOR_BUDGET_TOTAL)} left`} subColor={directorRemaining > 0 ? "text-pink-600" : "text-red-500"} icon={kpiIcon.Wallet} />
-        <DonutKpiCard label="Discounts" value={fmtMoney(totalDiscountValue)} pct={discountPct} color="#8B5CF6" sub={`${discountCount} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
+        <DonutKpiCard label="Compliance" value={`${compliantCount}/${complianceItems.length}`} pct={compliancePct} color={compliancePct >= 80 ? "#3E7A54" : compliancePct >= 50 ? "#B78A2F" : "#AE4A3E"} sub={`${complianceItems.length - compliantCount} need attention`} subColor={compliancePct >= 80 ? "text-[#2F6042]" : compliancePct >= 50 ? "text-[#8F6A1F]" : "text-[#8A362C]"} icon={kpiIcon.ShieldCheck} />
+        <DonutKpiCard label="Petty Cash" value={fmtMoney(directorSpent)} pct={pettyCashPercent} color="#1E3A5F" sub={`${fmtMoney(directorRemaining)} of ${fmtMoney(DIRECTOR_BUDGET_TOTAL)} left`} subColor={directorRemaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
+        <DonutKpiCard label="Discounts" value={fmtMoney(totalDiscountValue)} pct={discountPct} color="#1E3A5F" sub={`${discountCount} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
         <div />{/* empty slot for symmetry */}
       </div>
 

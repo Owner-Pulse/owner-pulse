@@ -30,7 +30,7 @@ const EnrollmentChart = ({ programs }) => (
             <Bar dataKey="capacity" fill="#E5E8F0" radius={[4, 4, 0, 0]} barSize={18} name="Capacity" />
             <Bar dataKey="enrolled" radius={[4, 4, 0, 0]} barSize={18} name="Enrolled">
               {programs.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.enrolled >= entry.capacity ? "#F59E0B" : "#2563EB"} />
+                <Cell key={`cell-${index}`} fill={entry.enrolled >= entry.capacity ? "#B78A2F" : "#1E3A5F"} />
               ))}
             </Bar>
           </BarChart>

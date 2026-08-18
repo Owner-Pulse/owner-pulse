@@ -22,17 +22,17 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose }) => (
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Classroom Name *</label>
                 <input type="text" value={form.name} onChange={(e) => onFormChange("name", e.target.value)}
-                  placeholder="e.g. VPK C — Oak" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. VPK C — Oak" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Program</label>
                 <input type="text" value={form.program} onChange={(e) => onFormChange("program", e.target.value)}
-                  placeholder="e.g. VPK C" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. VPK C" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tier</label>
                 <select value={form.tier} onChange={(e) => onFormChange("tier", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white">
                   <option value="preschool">Preschool</option>
                   <option value="k8">K-8</option>
                 </select>
@@ -42,24 +42,24 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose }) => (
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Capacity *</label>
                 <input type="number" value={form.capacity} onChange={(e) => onFormChange("capacity", e.target.value)}
-                  placeholder="e.g. 20" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. 20" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Teacher</label>
                 <input type="text" value={form.teacher} onChange={(e) => onFormChange("teacher", e.target.value)}
-                  placeholder="e.g. Ms. Smith" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. Ms. Smith" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tuition/Seat ($)</label>
                 <input type="number" value={form.tuitionPerSeat} onChange={(e) => onFormChange("tuitionPerSeat", e.target.value)}
-                  placeholder="e.g. 950" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. 950" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Monthly Cost ($)</label>
                 <input type="number" value={form.monthlyCost} onChange={(e) => onFormChange("monthlyCost", e.target.value)}
-                  placeholder="e.g. 8000" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="e.g. 8000" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
             </div>
             <button onClick={onSave}

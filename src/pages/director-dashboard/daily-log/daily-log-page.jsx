@@ -1,10 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowUpRight } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import EscalationPrompt from "@/components/EscalationPrompt";
-import { addEscalation } from "@/lib/escalation-store";
 import LogForm from "./components/LogForm";
 import DailyLogStatsCard from "./components/DailyLogStatsCard";
 import DailyLogSearchBar from "./components/DailyLogSearchBar";
@@ -34,7 +31,6 @@ const DailyLogPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [escalationOpen, setEscalationOpen] = useState(false);
 
   const handleAdd = (entry) => setLog((prev) => [entry, ...prev]);
 
@@ -99,42 +95,6 @@ const DailyLogPage = () => {
 
       {/* Form Modal */}
       {showForm && <LogForm onAdd={handleAdd} onClose={() => setShowForm(false)} />}
-
-      {/* Escalate to Owner */}
-      <motion.div variants={itemVariants}>
-        <Card className="bg-white border-none shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Need the Owner involved?</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Escalate any item for approval or decision</p>
-              </div>
-              <Button onClick={() => setEscalationOpen(true)} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
-                <ArrowUpRight size={14} className="mr-1.5" /> Escalate to Owner
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Escalation Prompt Modal */}
-      <EscalationPrompt
-        isOpen={escalationOpen}
-        onClose={() => setEscalationOpen(false)}
-        onSubmit={(data) => {
-          // Save to shared escalation store so Owner can review in Pending Decisions page
-          addEscalation(data);
-          // Also log locally
-          setLog((prev) => [{
-            id: Date.now(),
-            type: "escalation",
-            date: new Date().toISOString().split("T")[0],
-            escalation: data,
-          }, ...prev]);
-          setEscalationOpen(false);
-        }}
-        itemDescription="Route a decision or approval item from the Daily Log"
-      />
     </motion.div>
   );
 };

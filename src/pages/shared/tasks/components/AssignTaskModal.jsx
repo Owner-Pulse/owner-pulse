@@ -73,7 +73,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                 type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Order classroom supplies"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent"
               />
             </div>
 
@@ -81,7 +81,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Assign To</label>
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white">
                   {currentRole === "owner" ? (
                     <>
                       <option value="" disabled>Select a director</option>
@@ -99,7 +99,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
                 <select value={priority} onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white">
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
@@ -112,7 +112,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
               <input
                 type="date" value={due} onChange={(e) => setDue(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent"
               />
             </div>
 
@@ -123,7 +123,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                 placeholder="e.g. Please ensure all forms are signed..."
                 required
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent resize-none"
               />
             </div>
 

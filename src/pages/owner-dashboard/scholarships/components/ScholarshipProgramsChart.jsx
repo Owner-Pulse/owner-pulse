@@ -18,7 +18,7 @@ const ScholarshipProgramsChart = ({ programs }) => (
   <Card className="bg-white border-none shadow-sm">
     <CardHeader>
       <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-        <Award size={16} /> Scholarship Programs
+        <Award size={16} className="text-[#1E3A5F]" /> Scholarship Programs
       </CardTitle>
       <CardDescription>Award amounts by program type</CardDescription>
     </CardHeader>

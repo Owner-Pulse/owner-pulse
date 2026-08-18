@@ -230,24 +230,20 @@ const CompliancePage = () => {
             <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
               Compliance
             </h1>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-xs font-semibold border whitespace-nowrap ${
-              complianceScore >= 80
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : complianceScore >= 50
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                  : "bg-red-50 text-red-700 border-red-200"
-            }`}>
-              {complianceScore}%
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-xs font-bold border whitespace-nowrap bg-[#1E3A5F]/[0.05] border-[#1E3A5F]/15">
+              <span className="bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] bg-clip-text text-transparent">
+                {complianceScore}%
+              </span>
             </span>
           </div>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
             {stats.compliant}/{stats.total} compliant ·{" "}
             {stats.expiring + stats.expired > 0 ? (
-              <span className="text-red-500 font-medium">
+              <span className="text-[#8A362C] font-medium">
                 {stats.expiring + stats.expired} need attention
               </span>
             ) : (
-              <span className="text-emerald-600 font-medium">all clear</span>
+              <span className="text-[#2F6042] font-medium">all clear</span>
             )}
           </p>
         </div>
@@ -269,7 +265,7 @@ const CompliancePage = () => {
             label="Compliant"
             value={stats.compliant}
             sub={`${Math.round((stats.compliant / stats.total) * 100)}% of all items`}
-            iconBg="bg-emerald-50 text-emerald-600"
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -278,7 +274,7 @@ const CompliancePage = () => {
             label="Expiring Soon"
             value={stats.expiring}
             sub={`${stats.expiring > 0 ? `Next: ${stats.nextDeadline} days` : "No pending items"}`}
-            iconBg="bg-amber-50 text-amber-600"
+            iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -287,7 +283,7 @@ const CompliancePage = () => {
             label="Expired"
             value={stats.expired}
             sub={stats.expired > 0 ? "Action required" : "All current"}
-            iconBg={stats.expired > 0 ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400"}
+            iconBg={stats.expired > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-gray-50 text-gray-400"}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -296,7 +292,7 @@ const CompliancePage = () => {
             label="Next Deadline"
             value={stats.nextDeadline > 0 ? `${stats.nextDeadline}d` : "—"}
             sub={stats.nextDeadline > 0 ? "until nearest expiration" : "No upcoming deadlines"}
-            iconBg={stats.nextDeadline <= 14 && stats.nextDeadline > 0 ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-600"}
+            iconBg={stats.nextDeadline <= 14 && stats.nextDeadline > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"}
           />
         </motion.div>
       </div>
@@ -327,14 +323,14 @@ const CompliancePage = () => {
         />
       </motion.div>
 
-      {/* ── Compliance Items Grid ────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* ── Compliance Items List ───────────────────────────────── */}
+      <div className="space-y-3">
         {sorted.map((item) => (
           <ComplianceItemCard key={item.id} item={item} />
         ))}
 
         {sorted.length === 0 && (
-          <div className="col-span-2 py-12 text-center">
+          <div className="py-12 text-center">
             <ShieldCheck size={32} className="mx-auto text-gray-300 mb-2" />
             <p className="text-sm text-gray-500">No items match the selected filters.</p>
           </div>

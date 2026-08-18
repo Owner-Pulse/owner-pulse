@@ -21,7 +21,7 @@ const KpiCard = ({ icon: Icon, label, value, sub, accent, trend }) => (
       )}
       {trend && (
         <div className="mt-2 flex items-center text-xs">
-          <span className="flex items-center text-emerald-600 font-medium">
+          <span className="flex items-center text-[#2F6042] font-medium">
             <ArrowUpRight size={12} className="mr-1" />
             {trend}
           </span>

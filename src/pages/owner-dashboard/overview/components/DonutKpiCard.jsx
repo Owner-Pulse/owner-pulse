@@ -9,15 +9,13 @@ const itemVariants = {
 };
 
 const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0 }) => {
-  const iconEl = typeof Icon === "function" ? <Icon size={15} className="text-gray-500" strokeWidth={2} /> : null;
-
   return (
     <motion.div variants={itemVariants} key={index}>
       <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            {iconEl || (
-              <div className="w-4 h-4 rounded bg-gray-100 flex items-center justify-center text-[8px] text-gray-500" />
+            {Icon && (
+              <Icon size={15} strokeWidth={2} style={{ color }} aria-hidden />
             )}
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
           </div>

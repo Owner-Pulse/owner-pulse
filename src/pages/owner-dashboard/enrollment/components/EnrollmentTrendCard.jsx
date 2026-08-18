@@ -21,7 +21,7 @@ const EnrollmentTrendCard = ({ trend }) => {
                 <span className="text-xs font-medium text-gray-500 w-8">{entry.month}</span>
                 <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${isUp ? "bg-emerald-400" : "bg-blue-400"}`}
+                    className={`h-full rounded-full transition-all ${isUp ? "bg-[#3E7A54]" : "bg-[#1E3A5F]"}`}
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>

@@ -13,7 +13,7 @@ const WaitlistCard = ({ entries }) => {
     <Card className="bg-white border-none shadow-sm h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calendar size={18} className="text-purple-500" />
+          <Calendar size={18} className="text-[#1E3A5F]" />
           Waitlist
         </CardTitle>
         <CardDescription>{entries.length} families waiting for spots</CardDescription>
@@ -46,11 +46,11 @@ const WaitlistCard = ({ entries }) => {
 
         <div className="mt-4 grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
           <div className="text-center">
-            <p className="text-lg font-bold text-purple-600">{activeCount}</p>
+            <p className="text-lg font-bold text-[#1E3A5F]">{activeCount}</p>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">Active</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-emerald-600">{touredCount}</p>
+            <p className="text-lg font-bold text-[#2F6042]">{touredCount}</p>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">Toured</p>
           </div>
           <div className="text-center">
@@ -59,7 +59,7 @@ const WaitlistCard = ({ entries }) => {
           </div>
         </div>
 
-        <Button variant="ghost" className="w-full mt-3 text-sm text-blue-600">
+        <Button variant="ghost" className="w-full mt-3 text-sm text-[#1E3A5F]">
           View full waitlist →
         </Button>
       </CardContent>
