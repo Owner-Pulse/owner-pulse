@@ -5,32 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 
-const CATEGORY_COLORS = {
-  "Classroom Supplies": "#2563EB",
-  "Events & Food": "#F97316",
-  "Cleaning & Sanitation": "#16A34A",
-  "Office Supplies": "#0EA5E9",
-  "Faculty Appreciation": "#EC4899",
-  "Uncategorized": "#94A0B5",
-};
+// const CATEGORY_COLORS = {
+//   "Classroom Supplies": "#2563EB",
+//   "Events & Food": "#F97316",
+//   "Cleaning & Sanitation": "#16A34A",
+//   "Office Supplies": "#0EA5E9",
+//   "Faculty Appreciation": "#EC4899",
+//   "Uncategorized": "#94A0B5",
+// };
 
-const categorize = (description) => {
-  const CATEGORIES = {
-    "Classroom Supplies": ["pencil", "crayon", "paper", "glue", "scissor", "book", "art", "craft", "marker", "construction"],
-    "Events & Food": ["pizza", "cake", "food", "snack", "coffee", "donut", "party", "celebration", "birthday"],
-    "Cleaning & Sanitation": ["cleaning", "wipe", "soap", "sanitizer", "disinfectant"],
-    "Office Supplies": ["printer", "ink", "cartridge", "stapler", "tape", "pen"],
-    "Faculty Appreciation": ["gift card", "teacher appreciation", "flowers"],
-    "Uncategorized": [],
-  };
-  const desc = (description || "").toLowerCase();
-  for (const [cat, keywords] of Object.entries(CATEGORIES)) {
-    if (keywords.some((k) => desc.includes(k))) return cat;
-  }
-  return "Uncategorized";
-};
+// const categorize = (description) => {
+//   const CATEGORIES = {
+//     "Classroom Supplies": ["pencil", "crayon", "paper", "glue", "scissor", "book", "art", "craft", "marker", "construction"],
+//     "Events & Food": ["pizza", "cake", "food", "snack", "coffee", "donut", "party", "celebration", "birthday"],
+//     "Cleaning & Sanitation": ["cleaning", "wipe", "soap", "sanitizer", "disinfectant"],
+//     "Office Supplies": ["printer", "ink", "cartridge", "stapler", "tape", "pen"],
+//     "Faculty Appreciation": ["gift card", "teacher appreciation", "flowers"],
+//     "Uncategorized": [],
+//   };
+//   const desc = (description || "").toLowerCase();
+//   for (const [cat, keywords] of Object.entries(CATEGORIES)) {
+//     if (keywords.some((k) => desc.includes(k))) return cat;
+//   }
+//   return "Uncategorized";
+// };
 
-const ExpenseListCard = ({ expenses, isDirector, onDelete, onShowAdd }) => (
+const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
   <Card className="bg-white border-none shadow-sm h-full">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -43,12 +43,12 @@ const ExpenseListCard = ({ expenses, isDirector, onDelete, onShowAdd }) => (
       <div className="space-y-1">
         {expenses.length > 0 ? (
           [...expenses].reverse().map((exp) => {
-            const reason = exp.reason || categorize(exp.description);
-            const color = CATEGORY_COLORS[reason] || "#94A0B5";
+            const reason = exp.category
+            const color = exp.color
             return (
               <div key={exp.id} className="group flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-gray-900 truncate font-medium">{exp.description}</p>
@@ -63,12 +63,6 @@ const ExpenseListCard = ({ expenses, isDirector, onDelete, onShowAdd }) => (
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
                   <span className="text-sm font-semibold text-gray-900">{fmtMoney(exp.amount)}</span>
-                  {isDirector && (
-                    <button onClick={() => onDelete(exp.id)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all">
-                      <Trash2 size={13} className="text-red-400" />
-                    </button>
-                  )}
                 </div>
               </div>
             );

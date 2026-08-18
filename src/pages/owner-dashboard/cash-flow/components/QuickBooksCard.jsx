@@ -3,17 +3,7 @@ import { motion } from "framer-motion";
 import { Building2, CheckCircle2, AlertTriangle, RefreshCw, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-const fmtMoneyShort = (n) =>
-  n >= 1000000 ? "$" + (n / 1000000).toFixed(1) + "M"
-    : n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K"
-      : "$" + n;
+import { itemVariants, fmtMoney, fmtMoneyShort } from "../cashflow.utils";
 
 const QuickBooksCard = ({ status }) => (
   <motion.div variants={itemVariants}>
