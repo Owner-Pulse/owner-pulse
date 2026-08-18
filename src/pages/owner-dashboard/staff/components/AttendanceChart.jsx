@@ -12,11 +12,11 @@ import {
   Cell,
 } from "recharts";
 
-const AttendanceChart = ({ counts }) => {
+const AttendanceChart = ({ counts = { present: 0, late: 0, callout: 0 } }) => {
   const chartData = [
-    { name: "Present", value: counts.present, color: "#059669" },
-    { name: "Late", value: counts.late, color: "#D97706" },
-    { name: "Call-out", value: counts.callout, color: "#DC2626" },
+    { name: "Present", value: counts.present || 0, color: "#059669" },
+    { name: "Late", value: counts.late || 0, color: "#D97706" },
+    { name: "Call-out", value: counts.callout || 0, color: "#DC2626" },
   ];
 
   return (
