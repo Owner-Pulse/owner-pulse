@@ -6,6 +6,7 @@ import AttendanceChart from "./components/AttendanceChart";
 import PTOSummaryCard from "./components/PTOSummaryCard";
 import SubstitutesCard from "./components/SubstitutesCard";
 import StaffRosterTable from "./components/StaffRosterTable";
+import { useGetStaff } from "@/hooks";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -37,6 +38,10 @@ const SUBSTITUTES = [
 ];
 
 const StaffPage = () => {
+  const { data, isLoading } = useGetStaff();
+  const stafData = data?.staff_dashboard;
+  console.log("Staff dashboard", stafData);
+
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("name");
 

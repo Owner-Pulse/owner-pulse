@@ -2,16 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { PiggyBank } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const fmtMoneyShort = (n) =>
-  n >= 1000000 ? "$" + (n / 1000000).toFixed(1) + "M"
-    : n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K"
-      : "$" + n;
+import { itemVariants, fmtMoneyShort } from "../cashflow.utils";
 
 const BudgetVsActualCard = ({ categories, totalSpent, totalBudget, budgetPct }) => (
   <motion.div variants={itemVariants}>

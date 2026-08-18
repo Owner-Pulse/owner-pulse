@@ -6,18 +6,23 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const TierFilter = ({ tierFilter, onTierChange, count }) => (
+// filters: string[] from API (e.g. ["All Classrooms", "Preschool"])
+// activeFilter: currently selected filter string
+const TierFilter = ({ activeFilter, filters = [], onFilterChange, count }) => (
   <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3">
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filter:</span>
-      {[
-        { id: "all", label: "All Classrooms" },
-        { id: "preschool", label: "Preschool" },
-        { id: "k8", label: "K–8" },
-      ].map((f) => (
-        <button key={f.id} onClick={() => onTierChange(f.id)}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${tierFilter === f.id ? "bg-[#1E3A5F] text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
-          {f.label}
+      {filters.map((f) => (
+        <button
+          key={f}
+          onClick={() => onFilterChange(f)}
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activeFilter === f
+              ? "bg-[#1E3A5F] text-white shadow-sm"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+          }`}
+        >
+          {f}
         </button>
       ))}
     </div>

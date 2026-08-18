@@ -2,16 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
-
-const fmtMoneyShort = (n) =>
-  n >= 1000000 ? "$" + (n / 1000000).toFixed(1) + "M"
-    : n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K"
-      : "$" + n;
+import { itemVariants, fmtMoneyShort } from "../cashflow.utils";
 
 const FullYearTable = ({ data, years, currentYear }) => (
   <motion.div variants={itemVariants}>
@@ -39,24 +30,28 @@ const FullYearTable = ({ data, years, currentYear }) => (
             </thead>
             <tbody>
               {data.map((cat) => {
-                const values = years.map((y) => cat.values[y] || 0);
-                const first = values[0];
-                const last = values[values.length - 1];
-                const totalGrowth = first > 0 ? ((last - first) / first) * 100 : 0;
-                const isUp = totalGrowth > 2;
-                const isDown = totalGrowth < -2;
+                const values = years.map((y) => cat.values?.[y] || 0);
+                // Use API-provided trend if available, otherwise compute
+                const trendStr = cat.trend || (() => {
+                  const first = values[0];
+                  const last = values[values.length - 1];
+                  const totalGrowth = first > 0 ? ((last - first) / first) * 100 : 0;
+                  const isUp = totalGrowth > 2;
+                  const isDown = totalGrowth < -2;
+                  return `${isUp ? "↑" : isDown ? "↓" : "→"} ${Math.abs(totalGrowth).toFixed(0)}%`;
+                })();
+                const isUp = trendStr.startsWith("↑");
+                const isDown = trendStr.startsWith("↓");
                 return (
                   <tr key={cat.category} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="py-2.5 font-medium text-gray-700">
-                      <span className="mr-1.5">{cat.icon}</span> {cat.category}
-                    </td>
+                    <td className="py-2.5 font-medium text-gray-700 max-w-45 truncate">{cat.category}</td>
                     {values.map((v, i) => (
                       <td key={i} className={`py-2.5 text-right font-medium ${years[i] === currentYear ? "text-gray-900" : "text-gray-500"}`}>
                         {fmtMoneyShort(v)}
                       </td>
                     ))}
                     <td className={`py-2.5 text-right font-semibold ${isUp ? "text-red-500" : isDown ? "text-emerald-600" : "text-gray-400"}`}>
-                      {isUp ? "↑" : isDown ? "↓" : "→"} {Math.abs(totalGrowth).toFixed(0)}%
+                      {trendStr}
                     </td>
                   </tr>
                 );
@@ -70,3 +65,4 @@ const FullYearTable = ({ data, years, currentYear }) => (
 );
 
 export default FullYearTable;
+

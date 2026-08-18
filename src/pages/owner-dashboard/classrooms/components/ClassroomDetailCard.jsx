@@ -2,50 +2,68 @@ import React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, AlertTriangle, TrendingDown, Baby } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import YoYBadge from "./YoYBadge";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const classroomEconomics = (c) => {
-  const monthlyRevenue = c.tuitionPerSeat * c.enrolled;
-  const monthlyProfit = monthlyRevenue - c.monthlyCost;
-  const margin = monthlyRevenue > 0 ? Math.round((monthlyProfit / monthlyRevenue) * 100) : 0;
-  return { monthlyRevenue, monthlyProfit, margin };
+const fmtMoneyShort = (n) => {
+  const abs = Math.abs(n ?? 0);
+  const fmt = abs >= 1_000_000
+    ? "$" + (abs / 1_000_000).toFixed(1) + "M"
+    : abs >= 1000
+    ? "$" + (abs / 1000).toFixed(1) + "K"
+    : "$" + Math.round(abs);
+  return (n ?? 0) < 0 ? `-${fmt}` : fmt;
 };
 
-const yoyDelta = (current, lastYear, goodWhenUp = true) => {
-  if (current === null || current === undefined || lastYear === null || lastYear === undefined) return null;
-  const delta = current - lastYear;
-  if (delta === 0) return { arrow: "→", color: "text-gray-400", text: "flat" };
-  const isImprovement = goodWhenUp ? delta > 0 : delta < 0;
-  return { arrow: delta > 0 ? "▲" : "▼", color: isImprovement ? "text-emerald-600" : "text-red-500", text: `${delta > 0 ? "+" : ""}${delta}` };
-};
+const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
 
-const fmtMoneyShort = (n) => (n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$" + n);
-const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-
-const NWEA_BENCHMARK = {
-  K: 159, "1st": 177, "2nd": 188, "3rd": 199,
-  "4th": 208, "5th": 215, "6th": 220, "7th": 224, "8th": 228,
-};
+// ── API shape from classrooms_list ──────────────────────────────
+// {
+//   id, name, category_group, teacher,
+//   net_monthly_profit, profit_change,
+//   enrollment: { current, capacity, fill_rate_percentage, empty_seats, is_low_enrollment, change },
+//   revenue: { total, per_seat },
+//   cost: { total, per_seat },
+//   margin: { percentage, status },
+//   nwea_map: { score, benchmark },
+//   incidents: { count }
+// }
 
 const ClassroomDetailCard = ({ classroom }) => {
-  const econ = classroomEconomics(classroom);
-  const isPreschool = classroom.tier === "preschool";
-  const isK8 = classroom.tier === "k8";
-  const fillRate = Math.round((classroom.enrolled / classroom.capacity) * 100);
-  const isFull = classroom.enrolled >= classroom.capacity;
-  const isLowFill = fillRate < 70;
-  const nweaBench = isK8 ? NWEA_BENCHMARK[classroom.program] : null;
-  const nweaDelta = isK8 && classroom.nweaMap && nweaBench ? yoyDelta(classroom.nweaMap, nweaBench) : null;
-  const nweaYoY = isK8 && classroom.nweaMap && classroom.lastYear.nweaMap ? yoyDelta(classroom.nweaMap, classroom.lastYear.nweaMap) : null;
-  const profitYoY = yoyDelta(econ.monthlyProfit, classroom.lastYear.monthlyProfit);
-  const enrolledYoY = yoyDelta(classroom.enrolled, classroom.lastYear.enrolled);
-  const incidentsYoY = isK8 ? yoyDelta(classroom.incidents || 0, classroom.lastYear.incidents, false) : null;
-  const withdrawalsYoY = isPreschool ? yoyDelta(classroom.withdrawals || 0, classroom.lastYear.withdrawals, false) : null;
+  const profit = classroom.net_monthly_profit ?? 0;
+  const isProfit = profit >= 0;
+
+  const enrollment = classroom.enrollment ?? {};
+  const revenue = classroom.revenue ?? {};
+  const cost = classroom.cost ?? {};
+  const margin = classroom.margin ?? {};
+  const nweaMap = classroom.nwea_map;
+  const incidents = classroom.incidents ?? {};
+
+  const fillRate = enrollment.fill_rate_percentage ?? 0;
+  const isFull = enrollment.current >= enrollment.capacity;
+  const isLowFill = enrollment.is_low_enrollment ?? fillRate < 70;
+
+  const isPreschool = (classroom.category_group ?? "").toLowerCase() === "preschool";
+
+  const marginStatus = margin.status ?? (
+    (margin.percentage ?? 0) >= 30 ? "Healthy"
+    : (margin.percentage ?? 0) >= 15 ? "Monitoring"
+    : "Critical"
+  );
+  const marginColor =
+    marginStatus === "Healthy" ? "text-emerald-600"
+    : marginStatus === "Monitoring" ? "text-amber-600"
+    : "text-red-500";
+
+  const nweaVsBenchmark = nweaMap
+    ? (nweaMap.score ?? 0) >= (nweaMap.benchmark ?? 0)
+      ? "text-emerald-600"
+      : "text-amber-600"
+    : "text-gray-900";
 
   return (
     <motion.div variants={itemVariants}>
@@ -54,24 +72,35 @@ const ClassroomDetailCard = ({ classroom }) => {
           {/* Row 1: Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${econ.monthlyProfit > 0 ? "bg-emerald-50" : "bg-red-50"}`}>
-                {isPreschool ? <Baby size={18} className={econ.monthlyProfit > 0 ? "text-emerald-600" : "text-red-500"} /> : <GraduationCap size={18} className={econ.monthlyProfit > 0 ? "text-emerald-600" : "text-red-500"} />}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isProfit ? "bg-emerald-50" : "bg-red-50"}`}>
+                {isPreschool
+                  ? <Baby size={18} className={isProfit ? "text-emerald-600" : "text-red-500"} />
+                  : <GraduationCap size={18} className={isProfit ? "text-emerald-600" : "text-red-500"} />
+                }
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-gray-900 text-sm md:text-base">{classroom.name}</h3>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${isPreschool ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}>
-                    {isPreschool ? "Preschool" : "K–8"}
-                  </span>
-                  <span className="text-xs text-gray-400">{classroom.teacher}</span>
+                  {classroom.category_group && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${isPreschool ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}>
+                      {classroom.category_group}
+                    </span>
+                  )}
+                  {classroom.teacher && (
+                    <span className="text-xs text-gray-400">{classroom.teacher}</span>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className={`text-lg font-extrabold ${econ.monthlyProfit > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {econ.monthlyProfit < 0 ? "-" : ""}{fmtMoneyShort(Math.abs(econ.monthlyProfit))}/mo
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`text-lg font-extrabold ${isProfit ? "text-emerald-600" : "text-red-500"}`}>
+                {fmtMoneyShort(profit)}/mo
               </span>
-              <YoYBadge delta={profitYoY} />
+              {(classroom.profit_change ?? 0) !== 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+                  {classroom.profit_change > 0 ? "▲" : "▼"} {fmtMoneyShort(Math.abs(classroom.profit_change))}
+                </span>
+              )}
             </div>
           </div>
 
@@ -81,108 +110,99 @@ const ClassroomDetailCard = ({ classroom }) => {
             <div className="p-2.5 rounded-lg bg-gray-50">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Enrollment</span>
-                <YoYBadge delta={enrolledYoY} />
+                {(enrollment.change ?? 0) !== 0 && (
+                  <span className={`text-[9px] font-bold ${enrollment.change > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    {enrollment.change > 0 ? "▲" : "▼"}{Math.abs(enrollment.change)}
+                  </span>
+                )}
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-base font-extrabold text-gray-900">{classroom.enrolled}</span>
-                <span className="text-xs text-gray-400">/ {classroom.capacity}</span>
+                <span className="text-base font-extrabold text-gray-900">{enrollment.current ?? 0}</span>
+                <span className="text-xs text-gray-400">/ {enrollment.capacity ?? 0}</span>
               </div>
               <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${isFull ? "bg-amber-500" : isLowFill ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${fillRate}%` }} />
+                <div
+                  className={`h-full rounded-full ${isFull ? "bg-amber-500" : isLowFill ? "bg-red-400" : "bg-emerald-400"}`}
+                  style={{ width: `${Math.min(fillRate, 100)}%` }}
+                />
               </div>
             </div>
 
             {/* Revenue */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Revenue</span>
-              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(econ.monthlyRevenue)}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">${classroom.tuitionPerSeat}/seat</p>
+              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(revenue.total ?? 0)}</span>
+              <p className="text-[10px] text-gray-400 mt-0.5">{fmtMoney(revenue.per_seat ?? 0)}/seat</p>
             </div>
 
             {/* Cost */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Cost</span>
-              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(classroom.monthlyCost)}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{fmtMoneyShort(Math.round(classroom.monthlyCost / classroom.capacity))}/seat</p>
+              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(cost.total ?? 0)}</span>
+              <p className="text-[10px] text-gray-400 mt-0.5">{fmtMoney(Math.round(cost.per_seat ?? 0))}/seat</p>
             </div>
 
             {/* Margin */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Margin</span>
-              <span className={`text-base font-extrabold ${econ.margin >= 30 ? "text-emerald-600" : econ.margin >= 15 ? "text-amber-600" : "text-red-500"}`}>
-                {econ.margin}%
+              <span className={`text-base font-extrabold ${marginColor}`}>
+                {margin.percentage ?? 0}%
               </span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{econ.margin >= 30 ? "Healthy" : econ.margin >= 15 ? "Monitoring" : "Critical"}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{marginStatus}</p>
             </div>
 
-            {/* K-8: NWEA MAP */}
-            {isK8 && (
+            {/* NWEA MAP (if available) */}
+            {nweaMap && (
               <div className="p-2.5 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">NWEA MAP</span>
-                  {nweaYoY && <YoYBadge delta={nweaYoY} />}
-                </div>
-                <span className={`text-base font-extrabold ${nweaDelta && nweaDelta.color.includes("emerald") ? "text-emerald-600" : nweaDelta && nweaDelta.color.includes("red") ? "text-amber-600" : "text-gray-900"}`}>
-                  {classroom.nweaMap || "—"}
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">NWEA MAP</span>
+                <span className={`text-base font-extrabold ${nweaVsBenchmark}`}>
+                  {nweaMap.score ?? "—"}
                 </span>
-                <p className="text-[10px] text-gray-400 mt-0.5">Benchmark: {nweaBench || "—"}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Benchmark: {nweaMap.benchmark ?? "—"}</p>
               </div>
             )}
 
-            {/* K-8: Incidents YTD */}
-            {isK8 && (
+            {/* Incidents (if available) */}
+            {incidents.count !== undefined && (
               <div className="p-2.5 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Incidents</span>
-                  {incidentsYoY && <YoYBadge delta={incidentsYoY} />}
-                </div>
-                <span className={`text-base font-extrabold ${(classroom.incidents || 0) > 3 ? "text-red-500" : (classroom.incidents || 0) > 1 ? "text-amber-600" : "text-gray-900"}`}>
-                  {classroom.incidents || 0}
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Incidents</span>
+                <span className={`text-base font-extrabold ${(incidents.count ?? 0) > 3 ? "text-red-500" : (incidents.count ?? 0) > 1 ? "text-amber-600" : "text-gray-900"}`}>
+                  {incidents.count ?? 0}
                 </span>
                 <p className="text-[10px] text-gray-400 mt-0.5">YTD</p>
               </div>
             )}
 
-            {/* Preschool: Withdrawals YTD */}
-            {isPreschool && (
-              <div className="p-2.5 rounded-lg bg-gray-50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Withdrawals</span>
-                  {withdrawalsYoY && <YoYBadge delta={withdrawalsYoY} />}
-                </div>
-                <span className={`text-base font-extrabold ${(classroom.withdrawals || 0) > 2 ? "text-red-500" : (classroom.withdrawals || 0) > 0 ? "text-amber-600" : "text-gray-900"}`}>
-                  {classroom.withdrawals || 0}
-                </span>
-                <p className="text-[10px] text-gray-400 mt-0.5">YTD</p>
-              </div>
-            )}
-
-            {/* Preschool: Fill Rate */}
+            {/* Fill Rate (Preschool) */}
             {isPreschool && (
               <div className="p-2.5 rounded-lg bg-gray-50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Fill Rate</span>
-                <span className={`text-base font-extrabold ${isFull ? "text-amber-600" : isLowFill ? "text-red-500" : "text-emerald-600"}`}>{fillRate}%</span>
-                <p className="text-[10px] text-gray-400 mt-0.5">{isFull ? "At capacity" : `${classroom.capacity - classroom.enrolled} open`}</p>
+                <span className={`text-base font-extrabold ${isFull ? "text-amber-600" : isLowFill ? "text-red-500" : "text-emerald-600"}`}>
+                  {fillRate}%
+                </span>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {isFull ? "At capacity" : `${enrollment.empty_seats ?? 0} open`}
+                </p>
               </div>
             )}
           </div>
 
           {/* Row 3: Warnings */}
-          {econ.monthlyProfit <= 0 && (
+          {!isProfit && (
             <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-              <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
+              <AlertTriangle size={14} className="text-red-500 shrink-0" />
               <p className="text-xs text-red-700">
                 <span className="font-bold">Loss-making classroom.</span>{" "}
-                Operating costs of {fmtMoneyShort(classroom.monthlyCost)} exceed revenue of {fmtMoneyShort(econ.monthlyRevenue)}. Review pricing or enrollment strategy.
+                Operating costs of {fmtMoneyShort(cost.total ?? 0)} exceed revenue of {fmtMoneyShort(revenue.total ?? 0)}. Review pricing or enrollment strategy.
               </p>
             </div>
           )}
-          {isLowFill && econ.monthlyProfit > 0 && (
+          {isLowFill && isProfit && (
             <div className="mt-3 p-2.5 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
-              <TrendingDown size={14} className="text-amber-500 flex-shrink-0" />
+              <TrendingDown size={14} className="text-amber-500 shrink-0" />
               <p className="text-xs text-amber-700">
                 <span className="font-bold">Low enrollment.</span>{" "}
-                {classroom.enrolled}/{classroom.capacity} enrolled ({fillRate}% fill rate). {classroom.capacity - classroom.enrolled} empty seat{classroom.capacity - classroom.enrolled > 1 ? "s" : ""}.
+                {enrollment.current}/{enrollment.capacity} enrolled ({fillRate}% fill rate). {enrollment.empty_seats ?? 0} empty seat{(enrollment.empty_seats ?? 0) !== 1 ? "s" : ""}.
               </p>
             </div>
           )}
