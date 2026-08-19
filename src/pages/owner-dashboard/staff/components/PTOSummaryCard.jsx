@@ -44,7 +44,7 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-              <Calendar size={16} className="text-purple-600" /> PTO Summary
+              <Calendar size={16} className="text-[#B78A2F]" /> PTO Summary
             </CardTitle>
             <CardDescription className="mt-1">
               {overallPct}% of total PTO allowance used YTD ({usedDays}/{allowanceDays} days total)

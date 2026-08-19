@@ -119,14 +119,6 @@ const EnrollmentPage = () => {
             {totalEnrolled} students · {PROGRAMS.length} programs · {enrollPercent}% capacity
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-            <UserPlus size={14} className="mr-1.5" /> <span className="hidden xs:inline">Add</span> Student
-          </Button>
-          <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
-            <GraduationCap size={14} className="mr-1.5" /> Waitlist
-          </Button>
-        </div>
       </div>
 
       {/* ── KPI Row ──────────────────────────────────────────────── */}
@@ -153,13 +145,10 @@ const EnrollmentPage = () => {
         <EnrollmentTargetsCard targets={ENROLLMENT_TARGETS} />
       </motion.div>
 
-      {/* ── Enrollment by Program + Trend ────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <motion.div variants={itemVariants} className="lg:col-span-2">
-          <EnrollmentChart programs={PROGRAMS} />
-        </motion.div>
+      {/* ── Enrollment by Program ────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4">
         <motion.div variants={itemVariants}>
-          <EnrollmentTrendCard trend={enrollmentTrend} />
+          <EnrollmentChart programs={PROGRAMS} />
         </motion.div>
       </div>
 

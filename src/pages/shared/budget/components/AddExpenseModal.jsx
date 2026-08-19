@@ -1,26 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
-const EXPENSE_REASONS = [
-  "Classroom Supplies",
-  "Events & Food",
-  "Staff Appreciation",
-  "Cleaning Supplies",
-  "Office Supplies",
-  "Teacher Appreciation",
-  "Professional Dev.",
-  "Tech & Software",
-  "Facilities",
-  "Other",
-];
-
-const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
+const AddExpenseModal = ({ isOpen, onClose, onAdd, categories = [] }) => {
   const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("Other");
+  const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setReason(categories[0].name);
+    } else {
+      setReason("Other");
+    }
+  }, [categories, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,7 +28,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
 
     onAdd({ amount: numAmount, reason, description: description.trim(), date });
     setAmount("");
-    setReason("Other");
     setDescription("");
     setDate(new Date().toISOString().split("T")[0]);
     onClose();
@@ -67,10 +61,11 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reason</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category</label>
                 <select value={reason} onChange={(e) => setReason(e.target.value)}
                   className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] transition-all bg-white">
-                  {EXPENSE_REASONS.map((r) => (<option key={r} value={r}>{r}</option>))}
+                  {categories.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
+                  {(!categories || categories.length === 0) && <option value="Other">Other</option>}
                 </select>
               </div>
               <div>

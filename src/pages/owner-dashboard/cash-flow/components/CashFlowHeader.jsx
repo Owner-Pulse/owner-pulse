@@ -1,6 +1,4 @@
 import React from "react";
-import { RefreshCw, BarChart3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const CashFlowHeader = ({ title, syncStatus, bannerSummary, metrics, netCashFlow }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -27,15 +25,8 @@ const CashFlowHeader = ({ title, syncStatus, bannerSummary, metrics, netCashFlow
         )}
       </p>
     </div>
-    <div className="flex items-center gap-2 shrink-0">
-      <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-        <RefreshCw size={14} className="mr-1.5" /> Sync
-      </Button>
-      <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
-        <BarChart3 size={14} className="mr-1.5" /> Export
-      </Button>
-    </div>
   </div>
 );
 
 export default CashFlowHeader;
+

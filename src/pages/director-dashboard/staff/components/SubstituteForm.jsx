@@ -165,7 +165,7 @@ const SubstituteForm = ({ onClose }) => {
                   setAbsentDropdownOpen((v) => !v);
                   setSubDropdownOpen(false);
                 }}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white flex items-center justify-between"
               >
                 <span className={form.absentEmployeeName ? "text-gray-900 font-medium" : "text-gray-400"}>
                   {form.absentEmployeeName
@@ -197,7 +197,7 @@ const SubstituteForm = ({ onClose }) => {
                           placeholder="Search absent staff by name or Procare ID..."
                           value={absentSearch}
                           onChange={(e) => setAbsentSearch(e.target.value)}
-                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20"
                           autoFocus
                         />
                       </div>
@@ -206,7 +206,7 @@ const SubstituteForm = ({ onClose }) => {
                     <div ref={absentDropdownRef} className="max-h-56 overflow-y-auto">
                       {staffLoading || staffFetching ? (
                         <div className="px-4 py-6 text-sm text-gray-500 flex items-center justify-center gap-2">
-                          <Loader2 size={16} className="animate-spin text-blue-600" />
+                          <Loader2 size={16} className="animate-spin text-[#1E3A5F]" />
                           <span>Loading staff members...</span>
                         </div>
                       ) : absentFilteredStaff?.length === 0 ? (
@@ -219,7 +219,7 @@ const SubstituteForm = ({ onClose }) => {
                               key={s.id}
                               type="button"
                               onClick={() => selectAbsentStaff(s)}
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#1E3A5F]/5 flex items-center justify-between group transition-colors"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-800 font-medium">{s?.name}</span>
@@ -230,7 +230,7 @@ const SubstituteForm = ({ onClose }) => {
                                 )}
                               </div>
                               {form.absentEmployeeId === s?.id && (
-                                <Check size={14} className="text-blue-600" />
+                                <Check size={14} className="text-[#1E3A5F]" />
                               )}
                             </button>
                           );
@@ -255,7 +255,7 @@ const SubstituteForm = ({ onClose }) => {
                   setSubDropdownOpen((v) => !v);
                   setAbsentDropdownOpen(false);
                 }}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white flex items-center justify-between"
               >
                 <span className={form.subEmployeeName ? "text-gray-900 font-medium" : "text-gray-400"}>
                   {form.subEmployeeName
@@ -287,7 +287,7 @@ const SubstituteForm = ({ onClose }) => {
                           placeholder="Search substitute by name or Procare ID..."
                           value={subSearch}
                           onChange={(e) => setSubSearch(e.target.value)}
-                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20"
                           autoFocus
                         />
                       </div>
@@ -296,7 +296,7 @@ const SubstituteForm = ({ onClose }) => {
                     <div ref={subDropdownRef} className="max-h-48 overflow-y-auto">
                       {staffLoading || staffFetching ? (
                         <div className="px-4 py-6 text-sm text-gray-500 flex items-center justify-center gap-2">
-                          <Loader2 size={16} className="animate-spin text-blue-600" />
+                          <Loader2 size={16} className="animate-spin text-[#1E3A5F]" />
                           <span>Loading staff members...</span>
                         </div>
                       ) : subFilteredStaff?.length === 0 ? (
@@ -309,7 +309,7 @@ const SubstituteForm = ({ onClose }) => {
                               key={s.id}
                               type="button"
                               onClick={() => selectSubStaff(s)}
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#1E3A5F]/5 flex items-center justify-between group transition-colors"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-800 font-medium">{s?.name}</span>
@@ -320,7 +320,7 @@ const SubstituteForm = ({ onClose }) => {
                                 )}
                               </div>
                               {form.subEmployeeId === s?.id && (
-                                <Check size={14} className="text-blue-600" />
+                                <Check size={14} className="text-[#1E3A5F]" />
                               )}
                             </button>
                           );
@@ -342,7 +342,7 @@ const SubstituteForm = ({ onClose }) => {
                 value={form.date}
                 onChange={(e) => update("date", e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white"
               />
             </div>
 

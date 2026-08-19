@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, PiggyBank, Wallet, TrendingUp } from "lucide-react";
+import { DollarSign, PiggyBank, Wallet, TrendingUp, Plus } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
 import CategoryBreakdownCard from "./components/CategoryBreakdownCard";
@@ -8,11 +8,13 @@ import SpendingByReasonCard from "./components/SpendingByReasonCard";
 import ExpenseListCard from "./components/ExpenseListCard";
 import BudgetTipCard from "./components/BudgetTipCard";
 import DirectorInsightsCard from "./components/DirectorInsightsCard";
+import DeclareBudgetModal from "./components/DeclareBudgetModal";
+import AddExpenseModal from "./components/AddExpenseModal";
+import { Button } from "@/components/ui/button";
 import { useGetBudget } from "@/hooks/budget";
 import { useGetUser } from "@/hooks";
 
 // ─── Helpers ──────────────────────────────────────────────────────
-
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 const fmtMoneyShort = (n) => n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$" + Math.round(n);
 
@@ -31,54 +33,131 @@ const BudgetPage = () => {
   const isDirector = user?.role === "director";
   const [view, setView] = useState("school");
 
+  // Local state for School and Director budget categories
+  const [localSchoolCategories, setLocalSchoolCategories] = useState([]);
+  const [localDirectorCategories, setLocalDirectorCategories] = useState([
+    { name: "Discretionary", budget: 3000, spent: 0 },
+    { name: "Curriculum & Supplies", budget: 2500, spent: 0 },
+    { name: "Minor Repairs", budget: 1500, spent: 0 },
+    { name: "Staff Appreciation", budget: 1200, spent: 0 },
+    { name: "Office Supplies", budget: 800, spent: 0 },
+  ]);
+  const [localDirectorExpenses, setLocalDirectorExpenses] = useState([]);
+
+  // Modals state
+  const [isDeclareSchoolBudgetOpen, setIsDeclareSchoolBudgetOpen] = useState(false);
+  const [isDeclareDirectorBudgetOpen, setIsDeclareDirectorBudgetOpen] = useState(false);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+
   const activeType = isDirector ? "director" : view;
   const { isLoading, isError, data } = useGetBudget(activeType);
 
   const budgetData = data?.budget_vs_actual;
-  console.log("Budget API data", budgetData);
 
-  useEffect(() => { if (isDirector) setView("director"); }, [isDirector]);
+  useEffect(() => {
+    if (isDirector) setView("director");
+  }, [isDirector]);
 
-  // School Data Mappings
-  const schoolBudgetTotal = budgetData?.annual_budget_numeric || 0;
-  const schoolSpent = budgetData?.spent_ytd_numeric || 0;
-  const schoolBudgetPct = budgetData?.consumed_percentage_numeric || 0;
-  const schoolRemaining = budgetData?.remaining_numeric || 0;
+  // Sync School Budget from API
+  useEffect(() => {
+    if (budgetData?.budget_categories?.categories) {
+      const mapped = budgetData.budget_categories.categories.map((c) => ({
+        name: c.name,
+        spent: c.spent_numeric || 0,
+        budget: c.budgeted_numeric || 0
+      }));
+      setLocalSchoolCategories(mapped);
+    }
+  }, [budgetData]);
+
+  // Sync Director Expenses from API
+  useEffect(() => {
+    if (budgetData?.recent_expenses) {
+      const mapped = budgetData.recent_expenses.map((e, index) => ({
+        id: index,
+        category: e.category || "Discretionary",
+        description: e.description || e.title,
+        date: e.date,
+        amount: e.numeric_amount || 0,
+        color: e.color || "#1E3A5F"
+      }));
+      setLocalDirectorExpenses(mapped);
+
+      // Distribute spent across Director categories based on loaded expenses
+      setLocalDirectorCategories(prev => {
+        return prev.map(cat => {
+          const matchingSpent = mapped
+            .filter(e => e.category === cat.name)
+            .reduce((sum, curr) => sum + curr.amount, 0);
+          return {
+            ...cat,
+            spent: matchingSpent
+          };
+        });
+      });
+    }
+  }, [budgetData]);
+
+  // Calculated School Totals
+  const schoolBudgetTotal = localSchoolCategories.reduce((sum, c) => sum + c.budget, 0);
+  const schoolSpent = localSchoolCategories.reduce((sum, c) => sum + c.spent, 0);
+  const schoolRemaining = schoolBudgetTotal - schoolSpent;
+  const schoolBudgetPct = schoolBudgetTotal > 0 ? Math.round((schoolSpent / schoolBudgetTotal) * 100) : 0;
   const schoolAvgMonthly = budgetData?.avg_monthly_numeric || 0;
 
-  const schoolCategories = useMemo(() => {
-    if (!budgetData?.budget_categories?.categories) return [];
-    return budgetData.budget_categories.categories.map((c) => ({
-      name: c.name,
-      spent: c.spent_numeric,
-      budget: c.budgeted_numeric
-    }));
-  }, [budgetData]);
+  // Calculated Director Totals
+  const directorBudgetTotal = localDirectorCategories.reduce((sum, c) => sum + c.budget, 0);
+  const directorSpent = localDirectorExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const directorRemaining = directorBudgetTotal - directorSpent;
+  const directorAvgPerExpense = localDirectorExpenses.length > 0 ? directorSpent / localDirectorExpenses.length : 0;
 
-  // Director Data Mappings
-  const directorBudgetTotal = budgetData?.director_budget_numeric || 0;
-  const directorSpent = budgetData?.spent_ytd_numeric || 0;
-  const directorRemaining = budgetData?.remaining_numeric || 0;
-  const directorAvgPerExpense = budgetData?.avg_per_expense_numeric || 0;
-
-  const directorExpenses = useMemo(() => {
-    if (!budgetData?.recent_expenses) return [];
-    return budgetData.recent_expenses.map((e, index) => ({
-      id: index,
-      reason: e.category,
-      description: e.description || e.title,
-      date: e.date,
-      amount: e.numeric_amount
-    }));
-  }, [budgetData]);
-
+  // Pie chart mappings
   const expenseByReason = useMemo(() => {
-    if (!budgetData?.spending_by_reason?.items) return [];
-    return budgetData.spending_by_reason.items.map((i) => ({
-      name: i.name,
-      total: i.numeric_amount
+    return localDirectorCategories.map(cat => ({
+      name: cat.name,
+      total: cat.spent
     })).sort((a, b) => b.total - a.total);
-  }, [budgetData]);
+  }, [localDirectorCategories]);
+
+  // Save budget handlers
+  const handleSaveSchoolBudget = (updatedCategories) => {
+    setLocalSchoolCategories(updatedCategories);
+  };
+
+  const handleSaveDirectorBudget = (updatedCategories) => {
+    setLocalDirectorCategories(updatedCategories);
+  };
+
+  // Add director expense handler
+  const handleAddExpense = (expense) => {
+    const categoryColors = {
+      "Discretionary": "#1E3A5F",
+      "Curriculum & Supplies": "#2A4C7E",
+      "Minor Repairs": "#4A6B96",
+      "Staff Appreciation": "#5B7FA6",
+      "Office Supplies": "#9DB8D9",
+    };
+
+    const newExpense = {
+      id: Math.floor(Math.random() * 1000) + 500,
+      category: expense.reason,
+      description: expense.description,
+      date: expense.date,
+      amount: expense.amount,
+      color: categoryColors[expense.reason] || "#94A0B5"
+    };
+
+    setLocalDirectorExpenses(prev => [...prev, newExpense]);
+
+    // Add spent to local category
+    setLocalDirectorCategories(prev =>
+      prev.map(c =>
+        c.name === expense.reason
+          ? { ...c, spent: c.spent + expense.amount }
+          : c
+      )
+    );
+  };
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -117,12 +196,36 @@ const BudgetPage = () => {
               </button>
             </div>
           )}
+          {!isDirector && view === "school" && (
+            <Button
+              onClick={() => setIsDeclareSchoolBudgetOpen(true)}
+              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
+            >
+              Declare School Budget
+            </Button>
+          )}
+          {!isDirector && view === "director" && (
+            <Button
+              onClick={() => setIsDeclareDirectorBudgetOpen(true)}
+              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
+            >
+              Declare Director Budget
+            </Button>
+          )}
+          {isDirector && (
+            <Button
+              onClick={() => setIsAddExpenseOpen(true)}
+              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
+            >
+              <Plus size={16} /> Log Expense
+            </Button>
+          )}
         </div>
       </div>
 
       {isLoading ? (
         <div className="space-y-6">
-          {/* KPI Skeletons */}
+          {/* Skeletons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-37.5 bg-white border border-gray-100 rounded-xl p-5 animate-pulse flex flex-col justify-between">
@@ -136,37 +239,6 @@ const BudgetPage = () => {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Progress Bar Skeleton */}
-          <div className="h-25 bg-white border border-gray-100 rounded-xl p-5 animate-pulse flex flex-col justify-center space-y-4">
-            <div className="flex justify-between">
-              <div className="w-48 h-5 bg-gray-200 rounded" />
-              <div className="w-24 h-5 bg-gray-200 rounded" />
-            </div>
-            <div className="w-full h-3 bg-gray-100 rounded-full" />
-          </div>
-
-          {/* Cards Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="h-75 bg-white border border-gray-100 rounded-xl p-6 animate-pulse flex flex-col gap-4">
-              <div className="w-40 h-6 bg-gray-200 rounded mb-4" />
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex justify-between items-center">
-                  <div className="w-1/2 h-4 bg-gray-100 rounded" />
-                  <div className="w-16 h-4 bg-gray-100 rounded" />
-                </div>
-              ))}
-            </div>
-            <div className="h-75 bg-white border border-gray-100 rounded-xl p-6 animate-pulse flex flex-col gap-4">
-              <div className="w-40 h-6 bg-gray-200 rounded mb-4" />
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                  <div className="w-2/3 h-8 bg-gray-100 rounded" />
-                  <div className="w-10 h-8 bg-gray-100 rounded" />
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       ) : isError ? (
@@ -196,7 +268,7 @@ const BudgetPage = () => {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <CategoryBreakdownCard categories={schoolCategories} />
+                <CategoryBreakdownCard categories={localSchoolCategories} />
               </motion.div>
             </>
           )}
@@ -215,7 +287,7 @@ const BudgetPage = () => {
                   <KpiCard icon={Wallet} label="Remaining" value={fmtMoney(directorRemaining)} sub={directorRemaining > 0 ? "Available" : "Exhausted"} iconBg={directorRemaining > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"} />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(directorAvgPerExpense)} sub={`${directorExpenses.length} expenses`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+                  <KpiCard icon={DollarSign} label="Avg per Expense" value={fmtMoney(directorAvgPerExpense)} sub={`${localDirectorExpenses.length} expenses`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
                 </motion.div>
               </div>
 
@@ -225,10 +297,10 @@ const BudgetPage = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <motion.div variants={itemVariants}>
-                  <SpendingByReasonCard expenses={expenseByReason} total={directorSpent} />
+                  <CategoryBreakdownCard categories={localDirectorCategories} />
                 </motion.div>
                 <motion.div variants={itemVariants}>
-                  <ExpenseListCard expenses={directorExpenses} isDirector={isDirector} onShowAdd={() => { }} />
+                  <ExpenseListCard expenses={localDirectorExpenses} isDirector={isDirector} onShowAdd={() => setIsAddExpenseOpen(true)} />
                 </motion.div>
               </div>
 
@@ -236,10 +308,10 @@ const BudgetPage = () => {
                 <BudgetTipCard remaining={directorRemaining} total={directorBudgetTotal} expenseByReason={expenseByReason} />
               </motion.div>
 
-              {!isDirector && directorExpenses.length > 0 && (
+              {!isDirector && localDirectorExpenses.length > 0 && (
                 <motion.div variants={itemVariants}>
                   <DirectorInsightsCard
-                    expenseCount={directorExpenses.length}
+                    expenseCount={localDirectorExpenses.length}
                     directorSpent={directorSpent}
                     expenseByReason={expenseByReason}
                     directorRemaining={directorRemaining}
@@ -251,6 +323,34 @@ const BudgetPage = () => {
           )}
         </>
       )}
+
+      {/* Declare School Budget Modal */}
+      <DeclareBudgetModal
+        isOpen={isDeclareSchoolBudgetOpen}
+        onClose={() => setIsDeclareSchoolBudgetOpen(false)}
+        categories={localSchoolCategories}
+        onSave={handleSaveSchoolBudget}
+        title="Declare School Budget"
+        subtitle="Specify the annual spending targets for all major operations categories."
+      />
+
+      {/* Declare Director Budget Modal */}
+      <DeclareBudgetModal
+        isOpen={isDeclareDirectorBudgetOpen}
+        onClose={() => setIsDeclareDirectorBudgetOpen(false)}
+        categories={localDirectorCategories}
+        onSave={handleSaveDirectorBudget}
+        title="Declare Director Budget Categories"
+        subtitle="Allocate specific budget portions for each director-managed category."
+      />
+
+      {/* Add Expense Modal */}
+      <AddExpenseModal
+        isOpen={isAddExpenseOpen}
+        onClose={() => setIsAddExpenseOpen(false)}
+        onAdd={handleAddExpense}
+        categories={localDirectorCategories}
+      />
     </motion.div>
   );
 };

@@ -2,8 +2,6 @@ import React, { useMemo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
-  FileText,
-  Receipt,
   Users,
   DollarSign,
   ClipboardList,
@@ -15,15 +13,17 @@ import {
   ShieldCheck,
   Wallet,
   Tag,
+  Link2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { computeOwnerPulse } from "@/lib/pulse-engine";
+import { getPayrollHistory, getPayrollSchedule } from "@/utils/payroll-storage";
 
 // ─── Extracted Components ─────────────────────────────────────
 import PulseSection from "./components/PulseSection";
 import FinancialChart from "./components/FinancialChart";
-import QuickStatCards from "./components/QuickStatCards";
 import AtRiskStudentsCard from "./components/AtRiskStudentsCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import TasksCard from "./components/TasksCard";
@@ -167,6 +167,24 @@ const OverviewPage = () => {
     try { const saved = localStorage.getItem("directorExpenses"); return saved ? JSON.parse(saved) : DEFAULT_EXPENSES; } catch { return DEFAULT_EXPENSES; }
   });
 
+  const [payrollHistory, setPayrollHistory] = useState([]);
+  const [payrollSchedule, setPayrollSchedule] = useState([]);
+
+  useEffect(() => {
+    setPayrollHistory(getPayrollHistory());
+    setPayrollSchedule(getPayrollSchedule());
+  }, []);
+
+  const nextPendingPeriod = useMemo(() => {
+    return payrollSchedule.find(p => p.status === "Pending") || null;
+  }, [payrollSchedule]);
+
+  const daysRemaining = useMemo(() => {
+    if (!nextPendingPeriod) return 0;
+    const diffTime = new Date(nextPendingPeriod.dueDate) - new Date("2026-05-11");
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }, [nextPendingPeriod]);
+
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === "directorExpenses") { try { setExpenses(JSON.parse(e.newValue)); } catch { } }
@@ -284,11 +302,11 @@ const OverviewPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3 h-9">
-            <FileText size={14} className="mr-1.5" /> Export
-          </Button>
-          <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3 h-9">
-            <Receipt size={14} className="mr-1.5" /> Run Payroll
+          <Button 
+            onClick={() => toast.success("QuickBooks connected successfully!")}
+            className="bg-[#2CA01C] hover:bg-[#207514] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all"
+          >
+            <Link2 size={14} /> Connect QuickBooks
           </Button>
         </div>
       </motion.div>
@@ -317,13 +335,21 @@ const OverviewPage = () => {
         <DonutKpiCard label="Compliance" value={`${compliantCount}/${complianceItems.length}`} pct={compliancePct} color={compliancePct >= 80 ? "#3E7A54" : compliancePct >= 50 ? "#B78A2F" : "#AE4A3E"} sub={`${complianceItems.length - compliantCount} need attention`} subColor={compliancePct >= 80 ? "text-[#2F6042]" : compliancePct >= 50 ? "text-[#8F6A1F]" : "text-[#8A362C]"} icon={kpiIcon.ShieldCheck} />
         <DonutKpiCard label="Petty Cash" value={fmtMoney(directorSpent)} pct={pettyCashPercent} color="#1E3A5F" sub={`${fmtMoney(directorRemaining)} of ${fmtMoney(DIRECTOR_BUDGET_TOTAL)} left`} subColor={directorRemaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
         <DonutKpiCard label="Discounts" value={fmtMoney(totalDiscountValue)} pct={discountPct} color="#1E3A5F" sub={`${discountCount} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
-        <div />{/* empty slot for symmetry */}
+        <DonutKpiCard 
+          label="Payroll Cycles" 
+          value={`${payrollHistory.length} filed`} 
+          pct={nextPendingPeriod ? Math.max(0, Math.min(100, Math.round((daysRemaining / 14) * 100))) : 0} 
+          color="#1E3A5F" 
+          sub={nextPendingPeriod ? `Next due in ${daysRemaining}d` : "No pending periods"} 
+          subColor="text-gray-400" 
+          icon={kpiIcon.ClipboardList}
+          onClick={() => navigate("/owner/payroll")}
+        />
       </div>
 
-      {/* Financial Chart + Quick Stat Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Financial Chart */}
+      <div className="w-full">
         <FinancialChart data={revenueData} />
-        <QuickStatCards quickbooksStatus={quickbooksStatus} procareData={procareData} />
       </div>
 
       {/* Middle Row — At-Risk + Maintenance + Tasks */}

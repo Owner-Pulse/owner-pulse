@@ -23,9 +23,6 @@ const ClassroomsHeader = ({ isLoading, metrics, onAddClick }) => (
       </p>
     </div>
     <div className="flex items-center gap-2 shrink-0">
-      <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-        <BarChart3 size={14} className="mr-1.5" /> Reports
-      </Button>
       <Button onClick={onAddClick} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
         <School size={14} className="mr-1.5" /> Add Classroom
       </Button>

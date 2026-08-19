@@ -19,6 +19,7 @@ const ownerTabs = [
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
   { id: "budget", label: "Budget", icon: DollarSign },
+  { id: "payroll", label: "Payroll", icon: DollarSign },
   { id: "scholarships", label: "Scholarships", icon: GraduationCap },
   { id: "staff", label: "Staff", icon: Users },
   { id: "waitlist", label: "Waitlist", icon: Calendar },

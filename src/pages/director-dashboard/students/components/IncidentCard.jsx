@@ -8,16 +8,16 @@ const fmtRelative = (d) => {
 };
 
 const SEVERITY_STYLES = {
-  major: { dot: "bg-red-500", badge: "bg-red-100 text-red-700" },
-  moderate: { dot: "bg-orange-500", badge: "bg-orange-100 text-orange-700" },
-  minor: { dot: "bg-amber-500", badge: "bg-amber-100 text-amber-700" },
+  major: { dot: "bg-[#AE4A3E]", badge: "bg-[#AE4A3E]/10 text-[#8A362C]", border: "border-l-[#AE4A3E]" },
+  moderate: { dot: "bg-[#B78A2F]", badge: "bg-[#B78A2F]/10 text-[#8F6A1F]", border: "border-l-[#B78A2F]" },
+  minor: { dot: "bg-[#8F6A1F]", badge: "bg-[#B78A2F]/10 text-[#8F6A1F]", border: "border-l-[#8F6A1F]" },
 };
 
 const IncidentCard = ({ incident }) => {
   const styles = SEVERITY_STYLES[incident.severity] || SEVERITY_STYLES.minor;
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
+    <div className={`flex items-start gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all border-l-3 ${styles.border}`}>
       <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${styles.dot}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

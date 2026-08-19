@@ -9,7 +9,7 @@ const itemVariants = {
 };
 
 const FinancialChart = ({ data }) => (
-  <motion.div variants={itemVariants} className="lg:col-span-2">
+  <motion.div variants={itemVariants} className="w-full">
     <Card className="bg-white border-none shadow-sm h-full">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

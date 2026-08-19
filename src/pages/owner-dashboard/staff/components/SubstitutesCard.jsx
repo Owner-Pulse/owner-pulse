@@ -23,7 +23,7 @@ const SubstitutesCard = ({ substitutesData }) => {
     <Card className="bg-white border-none shadow-sm">
       <CardHeader>
         <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-          <UserCheck size={16} className="text-purple-500" /> Substitutes
+          <UserCheck size={16} className="text-[#1E3A5F]" /> Substitutes
         </CardTitle>
         <CardDescription>
           {total} substitutes this month · {uniqueSubs} unique subs · {thisWeek} this week
@@ -31,21 +31,21 @@ const SubstitutesCard = ({ substitutesData }) => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-purple-50">
+          <div className="p-3 rounded-xl bg-[#1E3A5F]/5">
             <p className="text-[10px] font-semibold text-gray-400 uppercase">Total</p>
             <p className="text-xl font-bold text-gray-900">{total}</p>
           </div>
-          <div className="p-3 rounded-xl bg-blue-50">
+          <div className="p-3 rounded-xl bg-[#1E3A5F]/5">
             <p className="text-[10px] font-semibold text-gray-400 uppercase">This Week</p>
-            <p className="text-xl font-bold text-blue-600">{thisWeek}</p>
+            <p className="text-xl font-bold text-[#1E3A5F]">{thisWeek}</p>
           </div>
           <div className="p-3 rounded-xl bg-gray-50">
             <p className="text-[10px] font-semibold text-gray-400 uppercase">Unique Subs</p>
             <p className="text-xl font-bold text-gray-900">{uniqueSubs}</p>
           </div>
-          <div className="p-3 rounded-xl bg-emerald-50">
+          <div className="p-3 rounded-xl bg-[#3E7A54]/10">
             <p className="text-[10px] font-semibold text-gray-400 uppercase">Coverage Rate</p>
-            <p className="text-xl font-bold text-emerald-600">{coverageRate}%</p>
+            <p className="text-xl font-bold text-[#2F6042]">{coverageRate}%</p>
           </div>
         </div>
         <div className="space-y-2">
@@ -59,7 +59,7 @@ const SubstitutesCard = ({ substitutesData }) => {
               return (
                 <div key={entry.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">
+                    <div className="w-8 h-8 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center text-xs font-bold text-[#1E3A5F]">
                       {initials[0]}
                     </div>
                     <div>

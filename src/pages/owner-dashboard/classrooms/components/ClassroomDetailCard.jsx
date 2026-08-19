@@ -1,7 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, AlertTriangle, TrendingDown, Baby } from "lucide-react";
+import { GraduationCap, AlertTriangle, TrendingDown, Baby, Edit2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+
+import { useNavigate } from "react-router";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -32,7 +34,8 @@ const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
 //   incidents: { count }
 // }
 
-const ClassroomDetailCard = ({ classroom }) => {
+const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
+  const navigate = useNavigate();
   const profit = classroom.net_monthly_profit ?? 0;
   const isProfit = profit >= 0;
 
@@ -67,7 +70,10 @@ const ClassroomDetailCard = ({ classroom }) => {
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow">
+      <Card 
+        onClick={() => navigate(`/owner/classrooms/${classroom.id}`)}
+        className="bg-white border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
         <CardContent className="p-5">
           {/* Row 1: Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -101,6 +107,28 @@ const ClassroomDetailCard = ({ classroom }) => {
                   {classroom.profit_change > 0 ? "▲" : "▼"} {fmtMoneyShort(Math.abs(classroom.profit_change))}
                 </span>
               )}
+              <div className="flex items-center gap-1.5 border-l border-slate-100 pl-2 ml-1 shrink-0">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(classroom);
+                  }}
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                  title="Edit Classroom"
+                >
+                  <Edit2 size={13} />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(classroom.id);
+                  }}
+                  className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-650 transition-colors"
+                  title="Remove Classroom"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
           </div>
 

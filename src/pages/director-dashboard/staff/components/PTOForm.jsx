@@ -117,7 +117,7 @@ const PTOForm = ({ onClose }) => {
               <button
                 type="button"
                 onClick={() => setDropdownOpen((v) => !v)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex items-center justify-between"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white flex items-center justify-between"
               >
                 <span className={form.staffName ? "text-gray-900 font-medium" : "text-gray-400"}>
                   {form.staffName
@@ -149,7 +149,7 @@ const PTOForm = ({ onClose }) => {
                           placeholder="Search by name or Procare ID..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20"
                           autoFocus
                         />
                       </div>
@@ -161,7 +161,7 @@ const PTOForm = ({ onClose }) => {
                     >
                       {staffLoading || staffFetching ? (
                         <div className="px-4 py-6 text-sm text-gray-500 flex items-center justify-center gap-2">
-                          <Loader2 size={16} className="animate-spin text-blue-600" />
+                          <Loader2 size={16} className="animate-spin text-[#1E3A5F]" />
                           <span>Loading staff members...</span>
                         </div>
                       ) : filteredStaff.length === 0 ? (
@@ -174,7 +174,7 @@ const PTOForm = ({ onClose }) => {
                               key={s.id}
                               type="button"
                               onClick={() => selectStaff(s)}
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#1E3A5F]/5 flex items-center justify-between group transition-colors"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-800 font-medium">{s?.name}</span>
@@ -189,7 +189,7 @@ const PTOForm = ({ onClose }) => {
                                   {s?.pto_remaining ?? 0}d left
                                 </span>
                                 {form.staffId === s?.id && (
-                                  <Check size={14} className="text-blue-600" />
+                                  <Check size={14} className="text-[#1E3A5F]" />
                                 )}
                               </span>
                             </button>
@@ -215,7 +215,7 @@ const PTOForm = ({ onClose }) => {
                 <select
                   value={form.dayType}
                   onChange={(e) => update("dayType", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white"
                 >
                   <option value="sick">Sick</option>
                   <option value="personal">Personal</option>
@@ -235,7 +235,7 @@ const PTOForm = ({ onClose }) => {
                   max={10}
                   step={1}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20"
                 />
               </div>
             </div>
@@ -248,7 +248,7 @@ const PTOForm = ({ onClose }) => {
                 value={form.date}
                 onChange={(e) => update("date", e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white"
               />
             </div>
 

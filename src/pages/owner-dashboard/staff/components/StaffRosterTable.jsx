@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Users } from "lucide-react";
+import { Users, Edit2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const RosterSkeletonRow = () => (
@@ -25,6 +25,9 @@ const RosterSkeletonRow = () => (
         <div className="w-6 h-3 bg-gray-200 rounded" />
       </div>
     </td>
+    <td className="py-3 px-2">
+      <div className="w-10 h-4 bg-gray-200 rounded ml-auto" />
+    </td>
   </tr>
 );
 
@@ -35,6 +38,8 @@ const StaffRosterTable = ({
   pagination,
   onLoadMore,
   isLoadingMore,
+  onEdit,
+  onDelete
 }) => {
   const hasMore = pagination ? Number(pagination.current_page) < Number(pagination.last_page) : false;
   const listContainerRef = useRef(null);
@@ -101,12 +106,13 @@ const StaffRosterTable = ({
                     Remaining {sortBy === "ptoRemaining" && "↓"}
                   </th>
                   <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Usage</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {sorted.map((s, idx) => {
                   const ptoUsed = s.pto_used ?? s.ptoUsed ?? 0;
-                  const remaining = s.remaining ?? (s.ptoAllowance ? s.ptoAllowance - ptoUsed : 0);
+                  const remaining = s.remaining ?? (s.ptoAllowance ? s.ptoAllowance - ptoUsed : s.remaining_pto ?? 0);
                   const usagePct = s.usage_percentage ?? (s.ptoAllowance ? Math.round((ptoUsed / s.ptoAllowance) * 100) : 0);
                   const isHigh = usagePct >= 70;
                   const name = s.name || "Staff Member";
@@ -122,7 +128,7 @@ const StaffRosterTable = ({
                     <tr key={key} className="hover:bg-gray-50 transition-colors">
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
+                          <div className="w-7 h-7 rounded-full bg-[#1E3A5F] flex items-center justify-center text-xs font-bold text-white">
                             {initials}
                           </div>
                           <span className="font-medium text-gray-900">{name}</span>
@@ -134,9 +140,27 @@ const StaffRosterTable = ({
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2 justify-center">
                           <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${isHigh ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min(usagePct, 100)}%` }} />
+                            <div className={`h-full rounded-full ${isHigh ? "bg-red-500" : "bg-[#1E3A5F]"}`} style={{ width: `${Math.min(usagePct, 100)}%` }} />
                           </div>
                           <span className={`text-[10px] font-bold ${isHigh ? "text-red-600" : "text-gray-400"}`}>{usagePct}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <button
+                            onClick={() => onEdit(s)}
+                            className="p-1 hover:bg-slate-100 rounded text-gray-400 hover:text-[#1E3A5F] transition-colors"
+                            title="Edit Staff"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => onDelete(s.employee_id || s.id)}
+                            className="p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-650 transition-colors"
+                            title="Remove Staff"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -162,3 +186,4 @@ const StaffRosterTable = ({
 };
 
 export default StaffRosterTable;
+
