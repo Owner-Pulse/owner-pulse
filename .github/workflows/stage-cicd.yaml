@@ -1,0 +1,75 @@
+name: Build, Push to ECR, and Deploy to EC2
+
+on:
+  push:
+    branches:
+      - staging
+
+env:
+  AWS_REGION: us-east-1                    
+  ECR_REPOSITORY: uat-owner-pulse-frontend-uat              
+  CONTAINER_NAME: frontend                 
+
+jobs:
+  build-and-deploy:
+    name: Build Image & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, Tag, and Push Docker Image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build image passing Vite ARGs from GitHub Secrets
+        docker build \
+          --build-arg VITE_BASE_URL="${{ secrets.STAGING_VITE_BASE_URL }}" \
+          --build-arg VITE_AUTH_TOKEN_NAME="${{ secrets.STAGING_VITE_AUTH_TOKEN_NAME }}" \
+          --build-arg VITE_TIME_OUT="${{ secrets.VITE_TIME_OUT }}" \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+        # Push both commit SHA and latest tags
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.STAGING_EC2_HOST }}
+        username: ${{ secrets.STAGING_EC2_USERNAME }} 
+        key: ${{ secrets.STAGING_EC2_SSH_KEY }}
+        script: |
+          # Log into ECR on EC2
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+          # Pull latest image
+          docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+
+          # Stop and remove existing container if running
+          docker stop ${{ env.CONTAINER_NAME }} || true
+          docker rm ${{ env.CONTAINER_NAME }} || true
+
+          # Run new container
+          docker run -d \
+            --name ${{ env.CONTAINER_NAME }} \
+            --restart always \
+            -p 3000:3000 \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+
+          # Cleanup unused images
+          docker image prune -af
