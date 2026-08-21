@@ -182,9 +182,9 @@ const StudentManagementPage = () => {
   const handleEnrollSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.classroom) return;
-    
+
     const matchedClassroom = displayClassrooms.find(c => c.name === formData.classroom);
-    
+
     enrollMutation.mutate({
       procare_child_id: Number(formData.childId),
       student_full_name: formData.name,
@@ -297,7 +297,7 @@ const StudentManagementPage = () => {
         toast.success("Student withdrawn");
       }
     });
-    
+
     setActiveTab("removals");
     setIsConfirmWithdrawOpen(false);
     setPendingWithdrawStudent(null);
@@ -308,22 +308,22 @@ const StudentManagementPage = () => {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Student Management</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          {/* <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Student Management</h1> */}
+          {/* <p className="text-sm text-gray-500 mt-1">
             {totalEnrolled} enrolled · {displayClassrooms.length} classrooms
-          </p>
+          </p> */}
         </div>
-        
+
         {/* Actions Button */}
         {activeTab === "enrollment" ? (
-          <Button 
+          <Button
             className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
             onClick={handleEnrollClick}
           >
             <Plus size={16} /> Enroll Student
           </Button>
         ) : activeTab === "at-risk" ? (
-          <Button 
+          <Button
             className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
             onClick={() => setShowForm("at-risk")}
           >
@@ -506,7 +506,7 @@ const StudentManagementPage = () => {
       <AnimatePresence>
         {showForm === "enroll" && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex justify-end" onClick={() => setShowForm(null)}>
-            <motion.div 
+            <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -529,8 +529,8 @@ const StudentManagementPage = () => {
                 <div className="grid grid-cols-2 gap-3 bg-blue-50/40 p-3 rounded-xl border border-blue-100/60">
                   <div>
                     <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Child ID</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={formData.childId}
                       onChange={(e) => setFormData(prev => ({ ...prev, childId: e.target.value }))}
@@ -539,8 +539,8 @@ const StudentManagementPage = () => {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Person ID</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={formData.personId}
                       onChange={(e) => setFormData(prev => ({ ...prev, personId: e.target.value }))}
@@ -552,8 +552,8 @@ const StudentManagementPage = () => {
                 {/* Name */}
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Student Full Name *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="e.g. Liam T. Miller"
                     value={formData.name}
@@ -566,8 +566,8 @@ const StudentManagementPage = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Date of Birth</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       required
                       value={formData.dob}
                       onChange={(e) => setFormData(prev => ({ ...prev, dob: e.target.value }))}
@@ -576,7 +576,7 @@ const StudentManagementPage = () => {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Gender</label>
-                    <select 
+                    <select
                       value={formData.gender}
                       onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
@@ -591,7 +591,7 @@ const StudentManagementPage = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Assign Classroom *</label>
-                    <select 
+                    <select
                       required
                       value={formData.classroom}
                       onChange={(e) => setFormData(prev => ({ ...prev, classroom: e.target.value }))}
@@ -607,7 +607,7 @@ const StudentManagementPage = () => {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Status</label>
-                    <select 
+                    <select
                       value={formData.status}
                       onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
@@ -624,8 +624,8 @@ const StudentManagementPage = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       required
                       value={formData.enrollmentDate}
                       onChange={(e) => setFormData(prev => ({ ...prev, enrollmentDate: e.target.value }))}
@@ -634,8 +634,8 @@ const StudentManagementPage = () => {
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Medical/Allergy Alerts</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.allergies}
                       onChange={(e) => setFormData(prev => ({ ...prev, allergies: e.target.value }))}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
@@ -648,8 +648,8 @@ const StudentManagementPage = () => {
                 <div className="border-t border-slate-100 pt-3">
                   <h4 className="text-[10px] font-extrabold text-blue-650 uppercase tracking-wider mb-2">Primary Parent Contact</h4>
                   <div className="space-y-2">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Parent Name"
                       required
                       value={formData.parent}
@@ -657,16 +657,16 @@ const StudentManagementPage = () => {
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
                     />
                     <div className="grid grid-cols-2 gap-3">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder="Phone Number"
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
                       />
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         placeholder="Email Address"
                         required
                         value={formData.email}
@@ -679,7 +679,7 @@ const StudentManagementPage = () => {
 
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
-                  <Button 
+                  <Button
                     type="button"
                     variant="outline"
                     onClick={() => setShowForm(null)}
@@ -687,7 +687,7 @@ const StudentManagementPage = () => {
                   >
                     Cancel
                   </Button>
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={enrollMutation.isPending}
                     className="h-9 text-xs bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl font-bold"
