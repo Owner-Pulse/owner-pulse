@@ -12,9 +12,9 @@ import KpiCard from "./components/KpiCard";
 import TaskCard from "./components/TaskCard";
 import TaskFilters from "./components/TaskFilters";
 import AssignTaskModal from "./components/AssignTaskModal";
-import { useGetTaskList } from "@/hooks/owner-task-assign";
-import { useGetDirectorTaskList } from "@/hooks/director-task-assign";
-import { useGetUser } from "@/hooks";
+import { useGetTaskList } from "@/hooks/owner-hook/task-assign.hook";
+import { useGetDirectorTaskList } from "@/hooks/director-hook/task-assign.hook";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
 

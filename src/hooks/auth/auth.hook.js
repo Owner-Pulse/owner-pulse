@@ -1,14 +1,16 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { axiosPublic } from "@/lib/axios.public";
-import { AuthService } from "@/services";
+import { AuthService } from "@/services/auth/auth.service";
 import { useMutation } from "@tanstack/react-query";
 
 // sign in hook for owner and director
 export const useSignin = () => {
     const publicAxios = axiosPublic();
     const {
-        mutateAsync: signin,
-        isPending
+        mutate: signin,
+        isPending,
+        error,
+        isError
     } = useMutation({
         mutationKey: ['signin'],
         mutationFn: (payload) => AuthService.signInService(payload, publicAxios),
@@ -16,7 +18,9 @@ export const useSignin = () => {
 
     return {
         signin,
-        isPending
+        isPending,
+        error,
+        isError
     };
 };
 

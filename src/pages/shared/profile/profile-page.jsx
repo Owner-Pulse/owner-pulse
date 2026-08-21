@@ -7,7 +7,7 @@ import ProfileHeader from "./components/ProfileHeader";
 import ProfileBioCard from "./components/ProfileBioCard";
 import ContactInfoCard from "./components/ContactInfoCard";
 import AccountDetailsCard from "./components/AccountDetailsCard";
-import { useGetUser, useUpdateOwnerUserDetails, useUpdateDirectorUserDetails } from "@/hooks";
+import { useGetUser, useUpdateOwnerUserDetails, useUpdateDirectorUserDetails } from "@/hooks/auth/user-details.hook";
 import toast from "react-hot-toast";
 
 const containerVariants = {

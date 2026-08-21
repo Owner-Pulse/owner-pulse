@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import PasswordCard from "./components/PasswordCard";
 import DirectorAccountCard from "./components/DirectorAccountCard";
-import { useGetUser } from "@/hooks";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, AlertTriangle, CheckCircle2, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreateDirector } from "@/hooks/create-director/create-director.hook";
+import { useCreateDirector } from "@/hooks/owner-hook/create-director.hook";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";

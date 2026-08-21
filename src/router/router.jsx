@@ -27,6 +27,7 @@ import DirectorStudentsPage from "@/pages/director-dashboard/students/director-s
 import DirectorClassroomDetailPage from "@/pages/director-dashboard/students/student-details/page";
 import DailyLogPage from "@/pages/director-dashboard/daily-log/daily-log-page";
 import PayrollPage from "@/pages/director-dashboard/payroll/payroll-page";
+import DirectorCompliancePage from "@/pages/director-dashboard/compliance/director-compliance-page";
 
 // ─── Shared Pages ───
 import NotFoundPage from "@/pages/not-found/not-found-page";
@@ -190,6 +191,10 @@ export const router = createBrowserRouter([
               {
                 path: 'billing',
                 element: <BillingPage />
+              },
+              {
+                path: 'compliance',
+                element: <DirectorCompliancePage />
               },
             ]
           },

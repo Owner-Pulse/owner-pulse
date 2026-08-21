@@ -7,7 +7,7 @@ import DirectorCard from "./components/DirectorCard";
 import DirectorDetailModal from "./components/DirectorDetailModal";
 import CreateDirectorForm from "./components/CreateDirectorForm";
 import FilterBar from "./components/FilterBar";
-import { useGetAllDirector, useGetSingleDirector } from "@/hooks/create-director/create-director.hook";
+import { useGetAllDirector, useGetSingleDirector } from "@/hooks/owner-hook/create-director.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },

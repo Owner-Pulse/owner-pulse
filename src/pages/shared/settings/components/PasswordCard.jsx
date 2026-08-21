@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, AlertTriangle, CheckCircle2, KeyRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useGetUser, useChangeOwnerPassword, useChangeDirectorPassword } from "@/hooks";
+import { useGetUser, useChangeOwnerPassword, useChangeDirectorPassword } from "@/hooks/auth/user-details.hook";
 import toast from "react-hot-toast";
 
 const itemVariants = {

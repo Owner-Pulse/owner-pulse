@@ -10,12 +10,14 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const EnrollmentTable = ({ classrooms, incidents, searchQuery, onSearchChange }) => {
+const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", onSearchChange = () => {} }) => {
   const navigate = useNavigate();
-  const filteredClassrooms = classrooms.filter((c) => {
-    if (!searchQuery.trim()) return true;
+  const filteredClassrooms = (classrooms || []).filter((c) => {
+    if (!searchQuery || typeof searchQuery !== "string" || !searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
-    return c.name.toLowerCase().includes(q) || c.program.toLowerCase().includes(q);
+    const nameStr = String(c?.name || c?.classroom_name || "").toLowerCase();
+    const progStr = String(c?.program || "").toLowerCase();
+    return nameStr.includes(q) || progStr.includes(q);
   });
 
   return (
@@ -45,9 +47,11 @@ const EnrollmentTable = ({ classrooms, incidents, searchQuery, onSearchChange })
           <div className="grid grid-cols-1 gap-3 p-4 md:hidden">
             {filteredClassrooms.length > 0 ? (
               filteredClassrooms.map((c, i) => {
-                const open = c.capacity - c.enrolled;
-                const pct = Math.round((c.enrolled / c.capacity) * 100);
-                const incCount = incidents.filter((inc) => inc.classroom === c.name).length;
+                const cap = c.capacity || 0;
+                const enr = c.enrolled || 0;
+                const open = Math.max(0, cap - enr);
+                const pct = cap > 0 ? Math.round((enr / cap) * 100) : (c.fill_percentage || 0);
+                const incCount = (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
                 return (
                   <div 
                     key={i} 
@@ -130,9 +134,11 @@ const EnrollmentTable = ({ classrooms, incidents, searchQuery, onSearchChange })
               <tbody className="divide-y divide-gray-100">
                 {filteredClassrooms.length > 0 ? (
                   filteredClassrooms.map((c, i) => {
-                    const open = c.capacity - c.enrolled;
-                    const pct = Math.round((c.enrolled / c.capacity) * 100);
-                    const incCount = incidents.filter((inc) => inc.classroom === c.name).length;
+                    const cap = c.capacity || 0;
+                    const enr = c.enrolled || 0;
+                    const open = Math.max(0, cap - enr);
+                    const pct = cap > 0 ? Math.round((enr / cap) * 100) : (c.fill_percentage || 0);
+                    const incCount = (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
                     return (
                       <tr 
                         key={i} 

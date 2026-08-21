@@ -3,15 +3,10 @@ import { motion } from "framer-motion";
 import { X, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const CLASSROOMS = [
-  { name: "Age 1 — Bumblebees" }, { name: "Age 2 — Ladybugs" }, { name: "PreK3 — Caterpillars" },
-  { name: "PreK4 — Butterflies" }, { name: "VPK — Fireflies" }, { name: "K — Sequoia" },
-  { name: "1st — Redwood" }, { name: "2nd — Willow" }, { name: "3rd — Oak" },
-  { name: "4th — Maple" }, { name: "5th — Pine" }, { name: "6th — Cedar" },
-  { name: "7th — Birch" }, { name: "8th — Aspen" },
-];
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
 const RemovalForm = ({ onAdd, onClose }) => {
+  const { classrooms } = useGetAllClassrooms();
   const [form, setForm] = useState({
     student: "",
     reason: "transferring",
@@ -94,7 +89,11 @@ const RemovalForm = ({ onAdd, onClose }) => {
               <select value={form.classroom} onChange={(e) => update("classroom", e.target.value)} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white">
                 <option value="">Select classroom...</option>
-                {CLASSROOMS.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+                {classrooms.map((c) => (
+                  <option key={c.id || c.classroom_name} value={c.classroom_name || c.name}>
+                    {c.classroom_name || c.name}
+                  </option>
+                ))}
               </select>
             </div>
 

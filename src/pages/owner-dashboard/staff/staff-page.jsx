@@ -8,7 +8,7 @@ import StaffRosterTable from "./components/StaffRosterTable";
 import StaffFormModal from "./components/StaffFormModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { Button } from "@/components/ui/button";
-import { useGetStaff } from "@/hooks";
+import { useGetStaff } from "@/hooks/owner-hook/staff.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },

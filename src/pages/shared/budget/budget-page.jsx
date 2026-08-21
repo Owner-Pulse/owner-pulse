@@ -11,8 +11,8 @@ import DirectorInsightsCard from "./components/DirectorInsightsCard";
 import DeclareBudgetModal from "./components/DeclareBudgetModal";
 import AddExpenseModal from "./components/AddExpenseModal";
 import { Button } from "@/components/ui/button";
-import { useGetBudget } from "@/hooks/budget";
-import { useGetUser } from "@/hooks";
+import { useGetBudget } from "@/hooks/owner-hook/budget.hook";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 // ─── Helpers ──────────────────────────────────────────────────────
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
