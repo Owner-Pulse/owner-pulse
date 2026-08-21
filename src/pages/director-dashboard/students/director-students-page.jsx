@@ -308,7 +308,7 @@ const StudentManagementPage = () => {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          {/* <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Student Management</h1> */}
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Student Management</h1>
           <p className="text-sm text-gray-500 mt-1">
             {totalEnrolled} enrolled · {displayClassrooms.length} classrooms
           </p>
