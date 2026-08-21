@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Phone, Mail, CheckCircle2, UserPlus, Pencil } from "lucide-react";
+import { Calendar, Phone, Mail, CheckCircle2, Pencil, Trash2, ChevronRight, UserX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StatusPill from "./StatusPill";
 import SourceTag from "./SourceTag";
 import ProgramBadge from "./ProgramBadge";
-import { useChangeDirectorWaitlistStatus } from "@/hooks";
-import AddWaitlistModal from "./AddWaitlistModal";
+import { daysSince } from "@/hooks/waitlist/useWaitlistStore";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -17,145 +16,185 @@ const itemVariants = {
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
-const STATUS_FLOW = ["inquiry", "applied", "toured", "offered", "enrolled"];
-
-const STATUS_LABEL = {
-  inquiry: "Inquiry",
-  applied: "Applied",
-  toured: "Toured",
-  offered: "Offered",
-  enrolled: "Enrolled",
-};
-// Color scheme for each "advance to" button
-const STATUS_COLORS = {
-  applied:  "bg-[#1E3A5F]/10 text-[#1E3A5F] hover:bg-[#1E3A5F]/20",
-  toured:   "bg-[#2A4C7E]/10 text-[#2A4C7E] hover:bg-[#2A4C7E]/20",
-  offered:  "bg-[#B78A2F]/10 text-[#8F6A1F] hover:bg-[#B78A2F]/20",
-  enrolled: "bg-[#3E7A54]/10 text-[#2F6042] hover:bg-[#3E7A54]/20",
-};
-
-// ─── Skeleton row
-const SkeletonRow = () => (
-  <tr className="animate-pulse">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <td key={i} className="py-3 px-4">
-        <div className="h-3 bg-gray-200 rounded w-3/4" />
-      </td>
-    ))}
-  </tr>
-);
-
-// ─── Status Action Cell
-const StatusAction = ({ entry }) => {
-  const { changeStatus, isPending } = useChangeDirectorWaitlistStatus();
-  const currentIdx = STATUS_FLOW.indexOf(entry.status);
-  const nextStatus = STATUS_FLOW[currentIdx + 1] ?? null;
-
-  if (entry.status === "enrolled") {
-    return (
-      <span className="text-xs text-[#2F6042] font-semibold flex items-center gap-1 justify-end">
-        <CheckCircle2 size={12} /> Enrolled
-      </span>
-    );
-  }
-
-  return (
-    <button
-      disabled={isPending}
-      onClick={() =>
-        changeStatus({ id: entry.id, payload: { status: nextStatus } })
-      }
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 ${
-        STATUS_COLORS[nextStatus] ?? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-      }`}
-    >
-      {isPending ? (
-        <>
-          <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          Updating…
-        </>
-      ) : (
-        <>Move to {STATUS_LABEL[nextStatus]}</>
-      )}
-    </button>
-  );
-};
-
-const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
-  const [editEntry, setEditEntry] = useState(null);
+const WaitlistTable = ({
+  entries,
+  role,
+  onOpenAdd,
+  onOpenEdit,
+  onOpenTour,
+  onOpenApplied,
+  onOpenOffer,
+  onOpenEnroll,
+  onOpenLost,
+  onDelete,
+}) => {
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm">
+      <Card className="bg-white border-none shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Child</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Parent</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Source</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Added</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Wait</th>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Child</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Program</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Parent</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Notes & History</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Wait Time</th>
                   {role === "director" && (
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+                    <th className="text-right py-3.5 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pipeline Actions</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                ) : entries.length > 0 ? (
+              <tbody className="divide-y divide-gray-100">
+                {entries.length > 0 ? (
                   entries.map((w) => {
-                    const waitDays = w.wait_time_days ?? 0;
-                    const isStale = waitDays >= 30 && w.status !== "enrolled";
+                    const waitDays = daysSince(w.addedDate);
+                    const isStale = waitDays >= 30 && !["Enrolled", "Lost"].includes(w.status);
+                    const isLost = w.status === "Lost";
+
                     return (
                       <tr
                         key={w.id}
-                        className={`hover:bg-gray-50 transition-colors ${isStale ? "bg-[#AE4A3E]/[0.05]" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${
+                          isLost ? "bg-red-50/40" : isStale ? "bg-[#AE4A3E]/[0.05]" : ""
+                        }`}
                       >
-                        <td className="py-3 px-4">
+                        {/* Child info */}
+                        <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">{w.child_name}</span>
+                            <div>
+                              <span className="font-bold text-gray-900">{w.childName}</span>
+                              <div className="text-[11px] text-gray-400">{w.age}</div>
+                            </div>
                             {role === "director" && (
                               <button
-                                onClick={() => setEditEntry(w)}
-                                className="p-1 rounded-lg text-gray-400 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/10 transition-colors"
-                                title="Edit entry"
+                                onClick={() => onOpenEdit(w)}
+                                className="p-1 rounded-md text-gray-400 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/10 transition-colors"
+                                title="Edit family entry"
                               >
-                                <Pencil size={13} />
+                                <Pencil size={12} />
                               </button>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4"><ProgramBadge program={w.program} /></td>
-                        <td className="py-3 px-4">
+
+                        {/* Program */}
+                        <td className="py-3.5 px-4">
+                          <ProgramBadge program={w.program} />
+                        </td>
+
+                        {/* Parent */}
+                        <td className="py-3.5 px-4">
                           <div>
-                            <span className="text-gray-900">{w.parent_name}</span>
+                            <span className="font-semibold text-gray-900">{w.parentName}</span>
                             <div className="flex items-center gap-2 mt-0.5">
                               {w.phone && (
-                                <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                                <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
                                   <Phone size={9} /> {w.phone}
-                                </span>
-                              )}
-                              {w.email && (
-                                <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
-                                  <Mail size={9} /> {w.email}
                                 </span>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4"><StatusPill status={w.status} /></td>
-                        <td className="py-3 px-4"><SourceTag source={w.source} /></td>
-                        <td className="py-3 px-4 text-gray-500 text-xs">{fmtDate(w.added_date)}</td>
-                        <td className={`py-3 px-4 text-xs font-medium ${isStale ? "text-[#8A362C]" : waitDays >= 14 ? "text-[#8F6A1F]" : "text-gray-500"}`}>
-                          {waitDays}d
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <StatusPill status={w.status} />
+                            {isStale && (
+                              <span className="text-[10px] font-bold text-[#8A362C] bg-[#AE4A3E]/15 px-1.5 py-0.5 rounded">
+                                Stale (30d+)
+                              </span>
+                            )}
+                          </div>
                         </td>
+
+                        {/* Notes */}
+                        <td className="py-3.5 px-4 max-w-xs">
+                          <p className="text-xs text-gray-600 line-clamp-2">{w.notes || "No notes logged."}</p>
+                          <SourceTag source={w.source} />
+                        </td>
+
+                        {/* Wait Time */}
+                        <td className="py-3.5 px-4 text-xs font-semibold">
+                          <span className={isStale ? "text-[#8A362C] font-extrabold" : "text-gray-700"}>
+                            {waitDays}d
+                          </span>
+                        </td>
+
+                        {/* Actions for Director */}
                         {role === "director" && (
-                          <td className="py-3 px-4 text-right">
-                            <StatusAction entry={w} />
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              {w.status === "Inquiry" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onOpenTour(w)}
+                                  className="h-7 px-2.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold"
+                                >
+                                  Log Tour
+                                </Button>
+                              )}
+
+                              {w.status === "Toured" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onOpenApplied(w)}
+                                  className="h-7 px-2.5 bg-[#1E3A5F] hover:bg-[#15294A] text-white text-[11px] font-semibold"
+                                >
+                                  Move to Applied
+                                </Button>
+                              )}
+
+                              {w.status === "Applied" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onOpenOffer(w)}
+                                  className="h-7 px-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold"
+                                >
+                                  Offer Spot
+                                </Button>
+                              )}
+
+                              {w.status === "Offered" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onOpenEnroll(w)}
+                                  className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold"
+                                >
+                                  Confirm Enroll
+                                </Button>
+                              )}
+
+                              {w.status === "Enrolled" && (
+                                <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
+                                  <CheckCircle2 size={13} /> Enrolled
+                                </span>
+                              )}
+
+                              {!["Enrolled", "Lost"].includes(w.status) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => onOpenLost(w)}
+                                  className="h-7 px-2 text-[11px] text-red-600 hover:bg-red-50 hover:text-red-700"
+                                >
+                                  Mark Lost
+                                </Button>
+                              )}
+
+                              {onDelete && (
+                                <button
+                                  onClick={() => onDelete(w.id)}
+                                  className="p-1 text-gray-400 hover:text-red-600 rounded"
+                                  title="Delete family"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -163,13 +202,13 @@ const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={role === "director" ? 8 : 7}>
+                    <td colSpan={role === "director" ? 7 : 6}>
                       <div className="py-12 text-center">
                         <Calendar size={32} className="mx-auto text-gray-300 mb-2" />
-                        <p className="text-sm text-gray-500">No families match the current filters.</p>
+                        <p className="text-sm text-gray-500">No families match the selected filters.</p>
                         {role === "director" && (
-                          <Button variant="outline" className="mt-3 border-gray-200" onClick={onShowAdd}>
-                            <UserPlus size={14} className="mr-2" /> Add a Family
+                          <Button onClick={onOpenAdd} className="mt-3 bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
+                            + Add to Waitlist
                           </Button>
                         )}
                       </div>
@@ -181,14 +220,8 @@ const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Edit modal — local to the table */}
-      <AddWaitlistModal
-        isOpen={Boolean(editEntry)}
-        editItem={editEntry}
-        onClose={() => setEditEntry(null)}
-      />
     </motion.div>
   );
 };
+
 export default WaitlistTable;

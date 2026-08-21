@@ -32,6 +32,7 @@ const directorTabs = [
   { id: "daily-log", label: "Daily Log", icon: ClipboardList },
   { id: "staff", label: "Staff", icon: Users },
   { id: "students", label: "Students", icon: GraduationCap },
+  { id: "compliance", label: "Compliance", icon: AlertTriangle },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },

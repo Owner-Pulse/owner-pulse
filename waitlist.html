@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnerPulse - Waitlist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        .modal {
+            display: none;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Header -->
+    <div class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <div>
+            <h1 class="text-2xl font-bold">Waitlist</h1>
+            <p class="text-sm text-gray-500">Manage inquiries → tours → enrollment</p>
+        </div>
+        <button onclick="openModal('addModal')"
+            class="bg-[#0A0F1E] text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-black">
+            <i class="fa-solid fa-plus"></i> Add to Waitlist
+        </button>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-6">
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <p class="text-xs text-gray-500">Total</p>
+                <p class="text-2xl font-bold" id="totalCount">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <p class="text-xs text-gray-500">Inquiry</p>
+                <p class="text-2xl font-bold text-blue-600" id="inquiryCount">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <p class="text-xs text-gray-500">Toured</p>
+                <p class="text-2xl font-bold text-purple-600" id="touredCount">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <p class="text-xs text-gray-500">Offered</p>
+                <p class="text-2xl font-bold text-teal-600" id="offeredCount">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <p class="text-xs text-gray-500">Stale (30+)</p>
+                <p class="text-2xl font-bold text-amber-600" id="staleCount">0</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-2 mb-6 items-center">
+            <button onclick="filterStatus('all')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-[#0A0F1E] text-white text-sm">All</button>
+            <button onclick="filterStatus('Inquiry')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Inquiry</button>
+            <button onclick="filterStatus('Toured')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Toured</button>
+            <button onclick="filterStatus('Applied')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Applied</button>
+            <button onclick="filterStatus('Offered')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Offered</button>
+            <button onclick="filterStatus('Enrolled')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Enrolled</button>
+            <button onclick="filterStatus('Lost')"
+                class="filter-btn px-4 py-1.5 rounded-full bg-white border text-sm">Lost</button>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-left text-gray-600">
+                    <tr>
+                        <th class="px-5 py-3 font-medium">Child</th>
+                        <th class="px-5 py-3 font-medium">Program</th>
+                        <th class="px-5 py-3 font-medium">Parent</th>
+                        <th class="px-5 py-3 font-medium">Status</th>
+                        <th class="px-5 py-3 font-medium">Notes</th>
+                        <th class="px-5 py-3 font-medium">Wait</th>
+                        <th class="px-5 py-3 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="waitlistBody" class="divide-y">
+                    <!-- Rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====================== MODALS ====================== -->
+
+    <!-- 1. Add New Family Modal -->
+    <div id="addModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold">Add to Waitlist</h3>
+                <button onclick="closeModal('addModal')" class="text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="addForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Child Full Name *</label>
+                    <input type="text" id="childName" required class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Age / DOB</label>
+                        <input type="text" id="childAge" placeholder="e.g. 3 years or 2023-05-12"
+                            class="w-full border rounded-xl px-4 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Desired Program *</label>
+                        <select id="program" required class="w-full border rounded-xl px-4 py-2.5">
+                            <option value="">Select</option>
+                            <option>PreK3</option>
+                            <option>PreK4</option>
+                            <option>VPK</option>
+                            <option>Kindergarten</option>
+                            <option>1st-8th Grade</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Parent / Guardian Name *</label>
+                    <input type="text" id="parentName" required class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Phone *</label>
+                        <input type="tel" id="phone" required class="w-full border rounded-xl px-4 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" id="email" class="w-full border rounded-xl px-4 py-2.5">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Source</label>
+                    <select id="source" class="w-full border rounded-xl px-4 py-2.5">
+                        <option>Website</option>
+                        <option>Referral</option>
+                        <option>Walk-in</option>
+                        <option>Facebook</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Special Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Special needs, language, DO NOT CALL, payment issues..."
+                        class="w-full border rounded-xl px-4 py-2.5"></textarea>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModal('addModal')"
+                        class="flex-1 border rounded-xl py-2.5">Cancel</button>
+                    <button type="submit" class="flex-1 bg-[#0A0F1E] text-white rounded-xl py-2.5">Save as
+                        Inquiry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Log Tour Modal -->
+    <div id="tourModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold">Log Tour</h3>
+                <button onclick="closeModal('tourModal')" class="text-gray-400"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="tourForm" class="space-y-4">
+                <input type="hidden" id="tourId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tour Date *</label>
+                        <input type="date" id="tourDate" required class="w-full border rounded-xl px-4 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tour Time</label>
+                        <input type="time" id="tourTime" class="w-full border rounded-xl px-4 py-2.5">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Did they show up? *</label>
+                    <select id="showedUp" required class="w-full border rounded-xl px-4 py-2.5">
+                        <option value="yes">Yes - Showed up</option>
+                        <option value="no">No - Did not show</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tour Notes</label>
+                    <textarea id="tourNotes" rows="3" class="w-full border rounded-xl px-4 py-2.5"></textarea>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModal('tourModal')"
+                        class="flex-1 border rounded-xl py-2.5">Cancel</button>
+                    <button type="submit" class="flex-1 bg-[#0A0F1E] text-white rounded-xl py-2.5">Save Tour</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Move to Applied Modal -->
+    <div id="appliedModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold">Move to Applied</h3>
+                <button onclick="closeModal('appliedModal')" class="text-gray-400"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="appliedForm" class="space-y-4">
+                <input type="hidden" id="appliedId">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Application / Packet Given?</label>
+                    <select id="packetGiven" class="w-full border rounded-xl px-4 py-2.5">
+                        <option>Yes</option>
+                        <option>No</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Application Date</label>
+                    <input type="date" id="appliedDate" class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Notes</label>
+                    <textarea id="appliedNotes" rows="2" class="w-full border rounded-xl px-4 py-2.5"></textarea>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModal('appliedModal')"
+                        class="flex-1 border rounded-xl py-2.5">Cancel</button>
+                    <button type="submit" class="flex-1 bg-[#0A0F1E] text-white rounded-xl py-2.5">Move to
+                        Applied</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Offer Spot Modal -->
+    <div id="offerModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold">Offer Spot</h3>
+                <button onclick="closeModal('offerModal')" class="text-gray-400"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="offerForm" class="space-y-4">
+                <input type="hidden" id="offerId">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Offer Date *</label>
+                    <input type="date" id="offerDate" required class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Start Date Offered</label>
+                    <input type="date" id="startDate" class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Notes</label>
+                    <textarea id="offerNotes" rows="2" class="w-full border rounded-xl px-4 py-2.5"></textarea>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModal('offerModal')"
+                        class="flex-1 border rounded-xl py-2.5">Cancel</button>
+                    <button type="submit" class="flex-1 bg-[#0A0F1E] text-white rounded-xl py-2.5">Send Offer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Confirm Enrollment Modal -->
+    <div id="enrollModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold">Confirm Enrollment</h3>
+                <button onclick="closeModal('enrollModal')" class="text-gray-400"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="enrollForm" class="space-y-4">
+                <input type="hidden" id="enrollId">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Actual Start Date *</label>
+                    <input type="date" id="actualStart" required class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Final Room / Program</label>
+                    <input type="text" id="finalRoom" class="w-full border rounded-xl px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Notes</label>
+                    <textarea id="enrollNotes" rows="2" class="w-full border rounded-xl px-4 py-2.5"></textarea>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModal('enrollModal')"
+                        class="flex-1 border rounded-xl py-2.5">Cancel</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white rounded-xl py-2.5">Confirm
+                        Enrolled</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample Data
+        let waitlist = [
+            {
+                id: 1,
+                childName: "Emmanuel Reyes Jr.",
+                age: "1.5 years",
+                program: "2 Yr Old Room",
+                parentName: "Jasmine Cruz",
+                phone: "863-844-1579",
+                notes: "Mom said he’s a handful - really wants him here! Works at Publix near us.",
+                status: "Inquiry",
+                added: "2026-08-09",
+                source: "Referral"
+            },
+            {
+                id: 2,
+                childName: "Noah Torres",
+                age: "3 years",
+                program: "PreK3",
+                parentName: "Parent",
+                phone: "347-453-8896",
+                notes: "Enrollment packet given. Projected start 09/23.",
+                status: "Toured",
+                added: "2026-07-20",
+                source: "Website"
+            },
+            {
+                id: 3,
+                childName: "Ta’kahri Scott",
+                age: "2 years",
+                program: "2 year old",
+                parentName: "Parent",
+                phone: "863-712-4584",
+                notes: "Mom was denied for ELC and cannot afford even with discount.",
+                status: "Lost",
+                added: "2026-07-15",
+                source: "Tour"
+            }
+        ];
+
+        let currentFilter = "all";
+
+        function openModal(id) {
+            document.getElementById(id).classList.add("active");
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove("active");
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                Inquiry: "bg-blue-100 text-blue-700",
+                Toured: "bg-purple-100 text-purple-700",
+                Applied: "bg-orange-100 text-orange-700",
+                Offered: "bg-teal-100 text-teal-700",
+                Enrolled: "bg-green-100 text-green-700",
+                Lost: "bg-red-100 text-red-700"
+            };
+            return colors[status] || "bg-gray-100 text-gray-700";
+        }
+
+        function daysSince(dateStr) {
+            const diff = new Date() - new Date(dateStr);
+            return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("waitlistBody");
+            tbody.innerHTML = "";
+
+            let filtered = currentFilter === "all" ? waitlist : waitlist.filter(w => w.status === currentFilter);
+
+            filtered.forEach(item => {
+                const waitDays = daysSince(item.added);
+                const isStale = waitDays > 30 && !["Enrolled", "Lost"].includes(item.status);
+
+                tbody.innerHTML += `
+          <tr class="hover:bg-gray-50 ${item.status === 'Lost' ? 'bg-red-50/40' : ''}">
+            <td class="px-5 py-4">
+              <div class="font-medium">${item.childName}</div>
+              <div class="text-xs text-gray-500">${item.age}</div>
+            </td>
+            <td class="px-5 py-4">
+              <span class="text-xs bg-gray-100 px-2 py-1 rounded">${item.program}</span>
+            </td>
+            <td class="px-5 py-4">
+              <div>${item.parentName}</div>
+              <div class="text-xs text-gray-500">${item.phone}</div>
+            </td>
+            <td class="px-5 py-4">
+              <span class="text-xs px-2.5 py-1 rounded-full ${getStatusColor(item.status)}">${item.status}</span>
+              ${isStale ? '<span class="ml-1 text-xs text-amber-600">Stale</span>' : ''}
+            </td>
+            <td class="px-5 py-4 max-w-xs">
+              <div class="text-xs text-gray-600 line-clamp-2">${item.notes || "—"}</div>
+            </td>
+            <td class="px-5 py-4 text-sm">${waitDays}d</td>
+            <td class="px-5 py-4">
+              <div class="flex flex-col gap-1">
+                ${item.status === "Inquiry" ? `<button onclick="openTour(${item.id})" class="text-blue-600 text-xs hover:underline">Log Tour</button>` : ""}
+                ${item.status === "Toured" ? `<button onclick="openApplied(${item.id})" class="text-blue-600 text-xs hover:underline">Move to Applied</button>` : ""}
+                ${item.status === "Applied" ? `<button onclick="openOffer(${item.id})" class="text-blue-600 text-xs hover:underline">Offer Spot</button>` : ""}
+                ${item.status === "Offered" ? `<button onclick="openEnroll(${item.id})" class="text-green-600 text-xs hover:underline">Confirm Enroll</button>` : ""}
+                ${!["Enrolled", "Lost"].includes(item.status) ? `<button onclick="markLost(${item.id})" class="text-red-500 text-xs hover:underline">Mark Lost</button>` : ""}
+              </div>
+            </td>
+          </tr>
+        `;
+            });
+
+            // Update counts
+            document.getElementById("totalCount").innerText = waitlist.length;
+            document.getElementById("inquiryCount").innerText = waitlist.filter(w => w.status === "Inquiry").length;
+            document.getElementById("touredCount").innerText = waitlist.filter(w => w.status === "Toured").length;
+            document.getElementById("offeredCount").innerText = waitlist.filter(w => w.status === "Offered").length;
+            document.getElementById("staleCount").innerText = waitlist.filter(w => daysSince(w.added) > 30 && !["Enrolled", "Lost"].includes(w.status)).length;
+        }
+
+        function filterStatus(status) {
+            currentFilter = status;
+            document.querySelectorAll(".filter-btn").forEach(btn => {
+                btn.classList.remove("bg-[#0A0F1E]", "text-white");
+                btn.classList.add("bg-white", "border");
+            });
+            event.target.classList.add("bg-[#0A0F1E]", "text-white");
+            event.target.classList.remove("bg-white", "border");
+            renderTable();
+        }
+
+        // Form Handlers
+        document.getElementById("addForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            waitlist.unshift({
+                id: Date.now(),
+                childName: document.getElementById("childName").value,
+                age: document.getElementById("childAge").value,
+                program: document.getElementById("program").value,
+                parentName: document.getElementById("parentName").value,
+                phone: document.getElementById("phone").value,
+                notes: document.getElementById("notes").value,
+                status: "Inquiry",
+                added: new Date().toISOString().split("T")[0],
+                source: document.getElementById("source").value
+            });
+            closeModal("addModal");
+            this.reset();
+            renderTable();
+        });
+
+        function openTour(id) {
+            document.getElementById("tourId").value = id;
+            openModal("tourModal");
+        }
+        document.getElementById("tourForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = +document.getElementById("tourId").value;
+            const item = waitlist.find(w => w.id === id);
+            const showed = document.getElementById("showedUp").value;
+            item.status = showed === "yes" ? "Toured" : "Lost";
+            item.notes = (item.notes || "") + " | Tour: " + document.getElementById("tourNotes").value;
+            closeModal("tourModal");
+            renderTable();
+        });
+
+        function openApplied(id) {
+            document.getElementById("appliedId").value = id;
+            openModal("appliedModal");
+        }
+        document.getElementById("appliedForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = +document.getElementById("appliedId").value;
+            const item = waitlist.find(w => w.id === id);
+            item.status = "Applied";
+            closeModal("appliedModal");
+            renderTable();
+        });
+
+        function openOffer(id) {
+            document.getElementById("offerId").value = id;
+            openModal("offerModal");
+        }
+        document.getElementById("offerForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = +document.getElementById("offerId").value;
+            const item = waitlist.find(w => w.id === id);
+            item.status = "Offered";
+            closeModal("offerModal");
+            renderTable();
+        });
+
+        function openEnroll(id) {
+            document.getElementById("enrollId").value = id;
+            openModal("enrollModal");
+        }
+        document.getElementById("enrollForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = +document.getElementById("enrollId").value;
+            const item = waitlist.find(w => w.id === id);
+            item.status = "Enrolled";
+            closeModal("enrollModal");
+            renderTable();
+        });
+
+        function markLost(id) {
+            if (confirm("Mark this family as Lost?")) {
+                const item = waitlist.find(w => w.id === id);
+                item.status = "Lost";
+                renderTable();
+            }
+        }
+
+        // Initial render
+        renderTable();
+    </script>
+</body>
+
+</html>

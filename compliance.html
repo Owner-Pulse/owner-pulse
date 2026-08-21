@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Workflow Diagrams</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            padding: 2rem;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 1rem;
+            color: #1e40af;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #1e40af;
+        }
+
+        /* Diagram styles */
+        .diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .flow-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 150px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .box.action {
+            background: #dbeafe;
+            border-color: #1e40af;
+            color: #1e40af;
+        }
+
+        .box.decision {
+            background: #fef3c7;
+            border-color: #d97706;
+            color: #92400e;
+            min-width: 180px;
+        }
+
+        .box.alert {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+        .box.success {
+            background: #ecfdf5;
+            border-color: #059669;
+            color: #059669;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: #1e40af;
+            font-weight: bold;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .timeline-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1e40af;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #1e40af;
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .timeline-marker.alert {
+            background: #dc2626;
+            box-shadow: 0 0 0 2px #dc2626;
+        }
+
+        .timeline-marker.warning {
+            background: #d97706;
+            box-shadow: 0 0 0 2px #d97706;
+        }
+
+        .timeline-marker.success {
+            background: #059669;
+            box-shadow: 0 0 0 2px #059669;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-date {
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-desc {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-action {
+            background: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border-left: 3px solid #1e40af;
+        }
+
+        /* Impact diagram */
+        .impact-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .impact-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #111827;
+        }
+
+        .impact-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+
+        .impact-value {
+            font-weight: 600;
+        }
+
+        .impact-bar {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin: 0 1rem;
+            overflow: hidden;
+        }
+
+        .impact-fill {
+            height: 100%;
+            background: #1e40af;
+            border-radius: 3px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            background: #f3f4f6;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+        }
+
+        td {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-compliant {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .badge-expiring {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .badge-expired {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .flow-row {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+
+            .impact-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .impact-bar {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 Compliance Tracking: Workflow & Logic</h1>
+
+        <!-- WORKFLOW DIAGRAM -->
+        <div class="section">
+            <h2>🔄 Daily Compliance Monitoring Workflow</h2>
+
+            <div class="diagram">
+                <div class="flow-row">
+                    <div class="box action">Director opens app</div>
+                    <div class="arrow">→</div>
+                    <div class="box action">Views Compliance page</div>
+                    <div class="arrow">→</div>
+                    <div class="box action">Checks Urgency Timeline</div>
+                </div>
+                <div class="flow-row">
+                    <div class="box decision">Any items EXPIRED?</div>
+                    <div class="arrow">→ YES →</div>
+                    <div class="box alert">🔴 URGENT</div>
+                </div>
+                <div style="margin-left: 1rem; padding-left: 1rem; border-left: 2px solid #dc2626;">
+                    <div class="flow-row">
+                        <div class="box">Call owner</div>
+                        <div class="arrow">→</div>
+                        <div class="box">Start renewal</div>
+                        <div class="arrow">→</div>
+                        <div class="box">Update item status</div>
+                    </div>
+                </div>
+                <div class="flow-row">
+                    <div class="box decision">Any items EXPIRING <60 days?</div>
+                            <div class="arrow">→ YES →</div>
+                            <div class="box warning">⏱️ PREPARE</div>
+                    </div>
+                    <div style="margin-left: 1rem; padding-left: 1rem; border-left: 2px solid #d97706;">
+                        <div class="flow-row">
+                            <div class="box">Schedule action</div>
+                            <div class="arrow">→</div>
+                            <div class="box">Contact vendor</div>
+                            <div class="arrow">→</div>
+                            <div class="box">Track progress</div>
+                        </div>
+                    </div>
+                    <div class="flow-row">
+                        <div class="box decision">All others current?</div>
+                        <div class="arrow">→ YES →</div>
+                        <div class="box success">✅ COMPLIANT</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATA FLOW -->
+            <div class="section">
+                <h2>📊 Compliance Data Flow & Auto-Calculation</h2>
+
+                <div class="diagram">
+                    <div class="flow-row">
+                        <div class="box action">Director enters item</div>
+                        <div class="arrow">→</div>
+                        <div class="box">Name, Type, Expiry</div>
+                    </div>
+                    <div class="flow-row">
+                        <div class="box">System auto-calculates</div>
+                        <div class="arrow">→</div>
+                        <div class="box">Days until expiry</div>
+                    </div>
+                    <div class="flow-row">
+                        <div class="box">Applies rules:</div>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Days Until Expiry</th>
+                            <th>Status</th>
+                            <th>Badge Color</th>
+                            <th>Action</th>
+                        </tr>
+                        <tr>
+                            <td>&lt; 0 (PAST)</td>
+                            <td><span class="badge badge-expired">EXPIRED</span></td>
+                            <td>🔴 Red</td>
+                            <td>URGENT - Immediate renewal required</td>
+                        </tr>
+                        <tr>
+                            <td>0 - 60 days</td>
+                            <td><span class="badge badge-expiring">EXPIRING</span></td>
+                            <td>🟠 Orange</td>
+                            <td>PREPARE - Start renewal process</td>
+                        </tr>
+                        <tr>
+                            <td>60+ days</td>
+                            <td><span class="badge badge-compliant">COMPLIANT</span></td>
+                            <td>🟢 Green</td>
+                            <td>OK - Monitor, no action yet</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PULSE IMPACT -->
+            <div class="section">
+                <h2>❤️ How Compliance Affects Pulse Score</h2>
+
+                <div class="impact-card">
+                    <div class="impact-title">Compliance Scoring Logic</div>
+                    <table>
+                        <tr>
+                            <th>Condition</th>
+                            <th>Compliance Score</th>
+                            <th>Impact on Pulse</th>
+                        </tr>
+                        <tr>
+                            <td>Any item EXPIRED</td>
+                            <td>30 / 100</td>
+                            <td>❤️ BPM increases 40-50 points (CRITICAL state)</td>
+                        </tr>
+                        <tr>
+                            <td>Any item expires &lt;14 days</td>
+                            <td>70 / 100</td>
+                            <td>❤️ BPM increases 20-30 points (STRESSED state)</td>
+                        </tr>
+                        <tr>
+                            <td>Any item expires &lt;60 days</td>
+                            <td>85 / 100</td>
+                            <td>❤️ BPM increases 5-10 points (ELEVATED state)</td>
+                        </tr>
+                        <tr>
+                            <td>All items CURRENT</td>
+                            <td>100 / 100</td>
+                            <td>✅ Compliance not dragging down pulse</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="impact-card">
+                    <div class="impact-title">Example: Owner's Pulse Calculation</div>
+                    <div class="impact-row">
+                        <span>Compliance Score:</span>
+                        <span class="impact-value">30 / 100</span>
+                        <div class="impact-bar">
+                            <div class="impact-fill" style="width: 30%"></div>
+                        </div>
+                        <span>🔴 (CPR expired)</span>
+                    </div>
+                    <div class="impact-row">
+                        <span>Compliance Weight:</span>
+                        <span class="impact-value">15%</span>
+                        <div class="impact-bar"></div>
+                        <span>→ (30 × 0.15 = 4.5)</span>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                        <div class="impact-row">
+                            <span><strong>Owner's BPM without compliance issue:</strong></span>
+                            <span class="impact-value">78</span>
+                        </div>
+                        <div class="impact-row">
+                            <span><strong>Owner's BPM WITH expired compliance:</strong></span>
+                            <span class="impact-value">111</span>
+                            <span style="color: #dc2626; font-weight: 700;">+33 BPM ↑↑↑</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MONTHLY TIMELINE -->
+            <div class="section">
+                <h2>📅 Real-World Example: Insurance Renewal Timeline</h2>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker success"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">May 1, 2026</div>
+                            <div class="timeline-desc">Owner reviews compliance</div>
+                            <div class="timeline-action">Insurance expires Nov 18 (201 days away) - Status: ✅ Compliant
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">June - August</div>
+                            <div class="timeline-desc">Monthly checks (no action needed)</div>
+                            <div class="timeline-action">Status remains: ✅ Compliant | Days left: 139 → 110 → 79</div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker warning"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">September 1, 2026 (60-day window)</div>
+                            <div class="timeline-desc">ALERT: Shop insurance renewal rates</div>
+                            <div class="timeline-action">
+                                Status changed to: ⏱️ Expiring Soon<br>
+                                Owner receives notification: "Time to start shopping insurance rates"
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker warning"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">September 5, 2026</div>
+                            <div class="timeline-desc">Owner starts shopping process</div>
+                            <div class="timeline-action">
+                                ✓ Calls current broker for quote<br>
+                                ✓ Gets quotes from 2-3 new carriers<br>
+                                ✓ Updates item: "Awaiting 3 quotes"
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker warning"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">September 20, 2026 (30-day window)</div>
+                            <div class="timeline-desc">ALERT: Make final decision</div>
+                            <div class="timeline-action">
+                                Status: ⏱️ Expiring Soon<br>
+                                Owner reviews quotes, selects carrier<br>
+                                Updates item: "Selected ABC Insurance, processing new policy"
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">October 15, 2026</div>
+                            <div class="timeline-desc">New policy issued</div>
+                            <div class="timeline-action">
+                                ✓ Receive new policy documents<br>
+                                ✓ Upload certificate to file system<br>
+                                ✓ Update expiry date to Nov 18, 2027<br>
+                                ✓ Mark status: ✅ Compliant
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker success"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">October 16, 2026</div>
+                            <div class="timeline-desc">Pulse updates automatically</div>
+                            <div class="timeline-action">
+                                Compliance score: 85 → 100<br>
+                                Owner's BPM may decrease by 5-10 points<br>
+                                Insurance removed from "Expiring Soon" count
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTEGRATION POINTS -->
+            <div class="section">
+                <h2>🔗 Integration with Other Dashboard Pages</h2>
+
+                <div class="flow-row">
+                    <div class="box" style="background: #dbeafe; color: #1e40af; border-color: #1e40af;">
+                        Compliance Page
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="box" style="background: #ecfdf5; color: #059669; border-color: #059669;">
+                        Pulse Calculator
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="box" style="background: #fef3c7; color: #92400e; border-color: #d97706;">
+                        Owner Dashboard
+                    </div>
+                </div>
+
+                <table style="margin-top: 1.5rem;">
+                    <tr>
+                        <th>Page</th>
+                        <th>What it Shows</th>
+                        <th>Compliance Connection</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance</strong></td>
+                        <td>Full list of all compliance items, deadlines, status</td>
+                        <td>📝 Where Director & Owner manage items</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Owner Dashboard</strong></td>
+                        <td>Pulse score (BPM), sub-scores, recommendations</td>
+                        <td>❤️ Compliance score feeds into pulse (15% weight)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recommendations</strong></td>
+                        <td>Top 3 actions to improve pulse</td>
+                        <td>⚡ "Renew CPR certificates" appears if expired</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DCF Checklist</strong></td>
+                        <td>Daily operational compliance (ratios, logs)</td>
+                        <td>📋 Daily checklist vs. tracking (strategic overview)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alerts/Notifications</strong></td>
+                        <td>Email reminders, push notifications</td>
+                        <td>🔔 Alerts when compliance items expire</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- KEY DECISIONS -->
+            <div class="section">
+                <h2>🎯 Key Business Decisions Made by Users</h2>
+
+                <div class="impact-card">
+                    <div class="impact-title">Director's Weekly Decisions</div>
+                    <ul style="margin-left: 1.5rem; gap: 0.75rem;">
+                        <li><strong>Enroll staff:</strong> "CPR class expires in 45 days → Book class now"</li>
+                        <li><strong>Contact vendor:</strong> "Background check renewal → Initiate process"</li>
+                        <li><strong>Prepare facility:</strong> "DCF inspection in 30 days → Schedule prep"</li>
+                        <li><strong>Flag for owner:</strong> "Insurance expires in 60 days → Alert owner"</li>
+                        <li><strong>Update status:</strong> "Compliance item renewed → Mark complete"</li>
+                    </ul>
+                </div>
+
+                <div class="impact-card">
+                    <div class="impact-title">Owner's Weekly Decisions</div>
+                    <ul style="margin-left: 1.5rem; gap: 0.75rem;">
+                        <li><strong>Start shopping:</strong> "Insurance expires in 60 days → Get quotes"</li>
+                        <li><strong>Make renewal:</strong> "Compare quotes → Select new carrier"</li>
+                        <li><strong>Approve costs:</strong> "Review renewal costs vs. current"</li>
+                        <li><strong>Address violations:</strong> "CPR expired → Call director for emergency action"</li>
+                        <li><strong>Prepare audit:</strong> "Annual audit coming → Export compliance report"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- BOTTOM LINE -->
+            <div class="section" style="background: #eff6ff; border-color: #1e40af;">
+                <h2 style="border-bottom-color: #1e40af;">💡 Bottom Line</h2>
+
+                <div style="line-height: 1.8;">
+                    <p style="margin-bottom: 1rem;">
+                        <strong>Compliance Tracking exists to answer ONE question:</strong>
+                        "What regulatory/contractual items do we need to maintain, and when do they expire?"
+                    </p>
+
+                    <p style="margin-bottom: 1rem;">
+                        <strong>Without it:</strong> Deadlines get missed, fines are paid, staff can't work, school gets
+                        shut down
+                    </p>
+
+                    <p style="margin-bottom: 1rem;">
+                        <strong>With it:</strong> Owner & Director have 30-60 day advance warning, time to plan,
+                        business stays compliant & profitable
+                    </p>
+
+                    <p style="margin-bottom: 0;">
+                        <strong>Impact on Pulse:</strong> Compliance is 15% of Owner's health score. A single expired
+                        item can raise pulse from "healthy" (75 BPM) to "stressed" (110 BPM)
+                    </p>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
