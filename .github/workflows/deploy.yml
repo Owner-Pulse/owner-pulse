@@ -1,14 +1,14 @@
-name: Build, Push to ECR, and Deploy to EC2
+name: PROD CICD FRONTEND
 
 on:
   push:
     branches:
-      - staging
+      - main
   workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: owner-pulse-prod-frontend
+  ECR_REPOSITORY: prod-owner-pulse-prod-frontend
   CONTAINER_NAME: frontend
 
 jobs:
