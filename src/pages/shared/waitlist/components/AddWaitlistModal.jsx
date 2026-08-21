@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UserPlus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const PRESCHOOL_PROGRAMS = ["2 Yr Old Room", "PreK3", "PreK4", "VPK", "Summer"];
-const K8_PROGRAMS = ["Kindergarten", "1st-8th Grade"];
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
 const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) => {
   const isEdit = !!editItem;
+  const { classrooms } = useGetAllClassrooms();
 
   const [form, setForm] = useState({
     childName: "",
     age: "",
-    program: "PreK3",
+    program: "Ones",
     parentName: "",
     phone: "",
     email: "",
@@ -25,7 +24,7 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) =
       setForm({
         childName: editItem.childName || editItem.child_name || "",
         age: editItem.age || "",
-        program: editItem.program || "PreK3",
+        program: editItem.program || editItem.classroom || "Ones",
         parentName: editItem.parentName || editItem.parent_name || "",
         phone: editItem.phone || "",
         email: editItem.email || "",
@@ -36,7 +35,7 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) =
       setForm({
         childName: "",
         age: "",
-        program: "PreK3",
+        program: classrooms[0]?.classroom_name || classrooms[0]?.name || "Ones",
         parentName: "",
         phone: "",
         email: "",
@@ -44,7 +43,7 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) =
         notes: "",
       });
     }
-  }, [editItem, isOpen]);
+  }, [editItem, isOpen, classrooms]);
 
   if (!isOpen) return null;
 
@@ -57,6 +56,7 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) =
         childName: form.childName.trim(),
         age: form.age.trim() || "3 years",
         program: form.program,
+        classroom: form.program,
         parentName: form.parentName.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
@@ -118,15 +118,19 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null }) =
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Desired Program *</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Classroom *</label>
                 <select
                   value={form.program}
                   onChange={(e) => setForm({ ...form, program: e.target.value })}
                   className="w-full px-3.5 py-2 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white"
+                  required
                 >
-                  {PRESCHOOL_PROGRAMS.map((p) => <option key={p} value={p}>{p}</option>)}
-                  <option disabled>──────────</option>
-                  {K8_PROGRAMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                  <option value="">Select Classroom</option>
+                  {classrooms.map((c) => (
+                    <option key={c.id || c.classroom_name} value={c.classroom_name || c.name}>
+                      {c.classroom_name || c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

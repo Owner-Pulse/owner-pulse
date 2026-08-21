@@ -1,5 +1,5 @@
-import { useInProgressTask, useCompleteTask, useDeleteTask } from "@/hooks/owner-task-assign";
-import { useInProgressDirectorTask, useCompleteDirectorTask, useDeleteDirectorTask } from "@/hooks/director-task-assign";
+import { useInProgressTask, useCompleteTask, useDeleteTask } from "@/hooks/owner-hook/task-assign.hook";
+import { useInProgressDirectorTask, useCompleteDirectorTask, useDeleteDirectorTask } from "@/hooks/director-hook/task-assign.hook";
 
 /**
  * Returns the correct task action hooks based on the user's role.

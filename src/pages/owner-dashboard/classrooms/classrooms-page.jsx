@@ -11,7 +11,7 @@ import AddClassroomModal from "./components/AddClassroomModal";
 import Pagination from "./components/Pagination";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { ClassroomCardSkeleton, PnLChartSkeleton } from "./components/Skeleton";
-import { useGetClassroom } from "@/hooks";
+import { useGetClassroom } from "@/hooks/classroom/classroom.hook";
 
 // ─── Motion Variants ──────────────────────────────────────────────
 const containerVariants = {

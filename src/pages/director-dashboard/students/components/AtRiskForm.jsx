@@ -3,15 +3,10 @@ import { motion } from "framer-motion";
 import { X, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const CLASSROOMS = [
-  { name: "Age 1 — Bumblebees" }, { name: "Age 2 — Ladybugs" }, { name: "PreK3 — Caterpillars" },
-  { name: "PreK4 — Butterflies" }, { name: "VPK — Fireflies" }, { name: "K — Sequoia" },
-  { name: "1st — Redwood" }, { name: "2nd — Willow" }, { name: "3rd — Oak" },
-  { name: "4th — Maple" }, { name: "5th — Pine" }, { name: "6th — Cedar" },
-  { name: "7th — Birch" }, { name: "8th — Aspen" },
-];
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
 const AtRiskForm = ({ onAdd, onClose }) => {
+  const { classrooms } = useGetAllClassrooms();
   const [form, setForm] = useState({
     student: "",
     reason: "financial",
@@ -26,7 +21,7 @@ const AtRiskForm = ({ onAdd, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.student || !form.grade) { setError("Student and Classroom/Grade are required."); return; }
+    if (!form.student || !form.grade) { setError("Student and Classroom are required."); return; }
     onAdd(form);
     onClose();
   };
@@ -72,11 +67,15 @@ const AtRiskForm = ({ onAdd, onClose }) => {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Classroom / Grade *</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Classroom *</label>
                 <select value={form.grade} onChange={(e) => update("grade", e.target.value)} required
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white">
                   <option value="">Select classroom...</option>
-                  {CLASSROOMS.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+                  {classrooms.map((c) => (
+                    <option key={c.id || c.classroom_name} value={c.classroom_name || c.name}>
+                      {c.classroom_name || c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

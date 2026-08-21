@@ -1,11 +1,9 @@
-const TOKEN_NAME = import.meta.env.VITE_AUTH_TOKEN_NAME;
+const TOKEN_NAME = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
 
 export const setToken = (token) => {
-    if (!TOKEN_NAME) {
-        throw new Error('No token name found');
-    }
     if (!token) {
-        throw new Error('No token found');
+        console.warn('No token provided to setToken');
+        return;
     }
     localStorage.setItem(TOKEN_NAME, token);
 };

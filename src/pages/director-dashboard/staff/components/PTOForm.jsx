@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Loader2, ChevronDown, Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAddPto, useGetPtoStaff } from "@/hooks";
+import { useAddPto, useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
 

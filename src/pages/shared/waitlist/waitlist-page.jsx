@@ -27,7 +27,7 @@ import WaitlistFunnelCard from "./components/WaitlistFunnelCard";
 import StaleLeadAlertCard from "./components/StaleLeadAlertCard";
 
 import { useWaitlistStore, daysSince } from "@/hooks/waitlist/useWaitlistStore";
-import { useGetUser } from "@/hooks";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },

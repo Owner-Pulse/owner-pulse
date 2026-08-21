@@ -18,7 +18,7 @@ import SubstituteForm from "./components/SubstituteForm";
 import StaffRosterTable from "../../owner-dashboard/staff/components/StaffRosterTable";
 import StaffFormModal from "../../owner-dashboard/staff/components/StaffFormModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { useGetPtoStaff } from "@/hooks";
+import { useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
 
 const TODAY = new Date("2026-05-11");
 

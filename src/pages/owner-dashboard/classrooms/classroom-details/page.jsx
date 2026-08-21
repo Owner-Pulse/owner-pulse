@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useGetClassroom } from "@/hooks";
+import { useGetClassroom } from "@/hooks/classroom/classroom.hook";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 const containerVariants = {

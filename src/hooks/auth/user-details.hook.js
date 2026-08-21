@@ -1,5 +1,5 @@
 import { axiosPrivate } from "@/lib/axios.private"
-import { getUserService } from "@/services";
+import { getUserService } from "@/services/auth/user-details.service";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const axiosInstance = axiosPrivate();
