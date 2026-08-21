@@ -3,9 +3,9 @@ import { AlertTriangle } from "lucide-react";
 
 const PriorityTag = ({ priority }) => {
   const config = {
-    critical: { bg: "bg-red-50", text: "text-red-700", label: "Critical" },
-    high: { bg: "bg-orange-50", text: "text-orange-700", label: "High" },
-    medium: { bg: "bg-amber-50", text: "text-amber-700", label: "Medium" },
+    critical: { bg: "bg-[#AE4A3E]/10", text: "text-[#8A362C]", label: "Critical" },
+    high: { bg: "bg-[#B78A2F]/10", text: "text-[#8F6A1F]", label: "High" },
+    medium: { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]", label: "Medium" },
     low: { bg: "bg-gray-50", text: "text-gray-600", label: "Low" },
   };
   const c = config[priority] || config.medium;

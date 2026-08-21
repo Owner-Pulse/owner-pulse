@@ -6,11 +6,11 @@ const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { mon
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 
 // const CATEGORY_COLORS = {
-//   "Classroom Supplies": "#2563EB",
-//   "Events & Food": "#F97316",
-//   "Cleaning & Sanitation": "#16A34A",
-//   "Office Supplies": "#0EA5E9",
-//   "Faculty Appreciation": "#EC4899",
+//   "Classroom Supplies": "#1E3A5F",
+//   "Events & Food": "#2A4C7E",
+//   "Cleaning & Sanitation": "#4A6B96",
+//   "Office Supplies": "#5B7FA6",
+//   "Faculty Appreciation": "#9DB8D9",
 //   "Uncategorized": "#94A0B5",
 // };
 
@@ -34,7 +34,7 @@ const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
   <Card className="bg-white border-none shadow-sm h-full">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <Receipt size={16} className="text-gray-500" />
+        <Receipt size={16} className="text-[#1E3A5F]" />
         Recent Expenses
       </CardTitle>
       {isDirector && <CardDescription>Track what you've spent</CardDescription>}
@@ -72,7 +72,7 @@ const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
             <Receipt size={24} className="mx-auto text-gray-300 mb-2" />
             <p className="text-sm text-gray-400">No expenses yet</p>
             {isDirector && (
-              <button onClick={() => onShowAdd && onShowAdd()} className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700">
+              <button onClick={() => onShowAdd && onShowAdd()} className="mt-2 text-xs font-semibold text-[#1E3A5F] hover:text-[#15294A]">
                 Add your first expense →
               </button>
             )}

@@ -2,8 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const LOG_TYPES = [
-  { id: "incident", label: "Incident", desc: "Student incident", color: "bg-red-500", light: "bg-red-50 text-red-600" },
-  { id: "removal", label: "Removal", desc: "Student removed", color: "bg-orange-500", light: "bg-orange-50 text-orange-600" },
+  { id: "incident", label: "Incident", desc: "Student incident", color: "bg-[#AE4A3E]", light: "bg-[#AE4A3E]/10 text-[#8A362C]" },
+  { id: "removal", label: "Removal", desc: "Student removed", color: "bg-[#B78A2F]", light: "bg-[#B78A2F]/10 text-[#8F6A1F]" },
 ];
 
 const fmtRelative = (d) => {
@@ -23,8 +23,8 @@ const LogEntryCard = ({ entry, index }) => {
           <span className="font-medium text-gray-700">{entry.student}</span>
           <span className="text-gray-300">·</span>
           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-            entry.severity === "minor" ? "bg-amber-50 text-amber-600" :
-            entry.severity === "moderate" ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"
+            entry.severity === "minor" ? "bg-[#B78A2F]/10 text-[#8F6A1F]" :
+            entry.severity === "moderate" ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#8A362C]/10 text-[#8A362C]"
           }`}>{entry.severity}</span>
           <span className="text-gray-300">·</span>
           <span>{entry.area}</span>
@@ -40,13 +40,6 @@ const LogEntryCard = ({ entry, index }) => {
         </div>
       );
     }
-    if (entry.type === "escalation") {
-      return (
-        <div className="text-xs text-amber-600">
-          Escalated to Owner · Action: {entry.escalation?.action?.replace("_", " ") || "pending"}
-        </div>
-      );
-    }
     return null;
   };
 
@@ -59,9 +52,7 @@ const LogEntryCard = ({ entry, index }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-gray-900">
-            {entry.type === "incident" ? `Incident: ${entry.student}` : 
-             entry.type === "removal" ? `Removal: ${entry.student}` :
-             "Escalated to Owner"}
+            {entry.type === "incident" ? `Incident: ${entry.student}` : `Removal: ${entry.student}`}
           </p>
           <span className="text-[10px] text-gray-400 whitespace-nowrap font-medium">{fmtRelative(entry.date)}</span>
         </div>

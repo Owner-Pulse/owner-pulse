@@ -15,30 +15,30 @@ const AtRiskStudentsCard = ({ students, activeAtRisk, fmtDate, onNavigate }) => 
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <AlertTriangle size={16} className="text-red-500" />
+            <AlertTriangle size={16} className="text-[#AE4A3E]" />
             At-Risk Students
           </CardTitle>
-          <span className="text-[10px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{activeAtRisk} active</span>
+          <span className="text-[10px] font-medium text-[#8A362C] bg-[#AE4A3E]/10 px-2 py-0.5 rounded-full">{activeAtRisk} active</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-2.5">
         {students.map((r, i) => (
-          <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${r.status === "lost" ? "bg-gray-50 opacity-60" : "bg-red-50"}`}>
-            <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${r.status === "lost" ? "bg-gray-400" : "bg-red-500"}`} />
+          <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${r.status === "lost" ? "bg-gray-50 opacity-60" : "bg-[#AE4A3E]/[0.06]"}`}>
+            <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${r.status === "lost" ? "bg-gray-400" : "bg-[#AE4A3E]"}`} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-xs font-semibold text-gray-900">{r.name} · {r.grade}</p>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.status === "lost" ? "bg-gray-200 text-gray-500" : "bg-red-100 text-red-700"}`}>{r.status}</span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.status === "lost" ? "bg-gray-200 text-gray-500" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>{r.status}</span>
               </div>
               <p className="text-[10px] text-gray-500 mt-0.5">{r.detail}</p>
               <p className="text-[9px] text-gray-400 mt-0.5">{r.reason} · Flagged {fmtDate(r.flagged)}</p>
             </div>
             {r.status !== "lost" && (
-              <span className="text-[9px] font-semibold text-blue-600 hover:underline cursor-pointer shrink-0">Intervene</span>
+              <span className="text-[9px] font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0">Intervene</span>
             )}
           </div>
         ))}
-        <Button variant="ghost" className="w-full text-xs text-blue-600 h-7 mt-1" onClick={() => onNavigate("/owner/enrollment")}>View all at-risk →</Button>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-7 mt-1" onClick={() => onNavigate("/owner/enrollment")}>View all at-risk →</Button>
       </CardContent>
     </Card>
   </motion.div>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Skeleton from "./Skeleton";
 import { fmtMoneyShort } from "./format";
 
-const ClassroomsHeader = ({ isLoading, metrics }) => (
+const ClassroomsHeader = ({ isLoading, metrics, onAddClick }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
     <div className="min-w-0">
       <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
@@ -23,10 +23,7 @@ const ClassroomsHeader = ({ isLoading, metrics }) => (
       </p>
     </div>
     <div className="flex items-center gap-2 shrink-0">
-      <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-        <BarChart3 size={14} className="mr-1.5" /> Reports
-      </Button>
-      <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
+      <Button onClick={onAddClick} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
         <School size={14} className="mr-1.5" /> Add Classroom
       </Button>
     </div>

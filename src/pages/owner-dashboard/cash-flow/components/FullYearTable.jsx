@@ -9,7 +9,7 @@ const FullYearTable = ({ data, years, currentYear }) => (
     <Card className="bg-white border-none shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <BarChart3 size={16} className="text-gray-400" />
+          <BarChart3 size={16} className="text-[#1E3A5F]" />
           Full Year Comparison
         </CardTitle>
         <CardDescription>All expense categories · 5-year trend</CardDescription>
@@ -21,7 +21,7 @@ const FullYearTable = ({ data, years, currentYear }) => (
               <tr className="border-b border-gray-100">
                 <th className="text-left pb-2.5 font-semibold text-gray-400 uppercase tracking-wider">Category</th>
                 {years.map((y) => (
-                  <th key={y} className={`text-right pb-2.5 font-semibold uppercase tracking-wider ${y === currentYear ? "text-blue-600" : "text-gray-400"}`}>
+                  <th key={y} className={`text-right pb-2.5 font-semibold uppercase tracking-wider ${y === currentYear ? "text-[#1E3A5F]" : "text-gray-400"}`}>
                     {y}{y === currentYear ? " · YTD" : ""}
                   </th>
                 ))}
@@ -50,7 +50,7 @@ const FullYearTable = ({ data, years, currentYear }) => (
                         {fmtMoneyShort(v)}
                       </td>
                     ))}
-                    <td className={`py-2.5 text-right font-semibold ${isUp ? "text-red-500" : isDown ? "text-emerald-600" : "text-gray-400"}`}>
+                    <td className={`py-2.5 text-right font-semibold ${isUp ? "text-[#8A362C]" : isDown ? "text-[#2F6042]" : "text-gray-400"}`}>
                       {trendStr}
                     </td>
                   </tr>

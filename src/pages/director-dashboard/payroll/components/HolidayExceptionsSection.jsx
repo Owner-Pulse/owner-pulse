@@ -41,7 +41,7 @@ const HolidayExceptionsSection = ({ holidays, exceptions, onToggleExclusion }) =
                       return (
                         <button key={s.id} onClick={() => onToggleExclusion(h.id, s.id)}
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ${
-                            isExcluded ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                            isExcluded ? "bg-[#3E7A54]/10 text-[#3E7A54] ring-1 ring-[#3E7A54]/40" : "bg-gray-50 text-gray-500 hover:bg-gray-100"
                           }`}>
                           {isExcluded ? "✓ " : ""}{s.name.split(" ").slice(-1)[0]}
                         </button>
@@ -49,7 +49,7 @@ const HolidayExceptionsSection = ({ holidays, exceptions, onToggleExclusion }) =
                     })}
                   </div>
                   {excluded.length > 0 && (
-                    <p className="text-[10px] text-emerald-600 mt-1 font-medium">
+                    <p className="text-[10px] text-[#3E7A54] mt-1 font-medium">
                       {excluded.length} staff marked for pay exception
                     </p>
                   )}

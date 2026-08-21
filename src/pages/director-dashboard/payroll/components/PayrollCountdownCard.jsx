@@ -19,13 +19,13 @@ const fmtRelative = (d) => {
 const PayrollCountdownCard = ({ periodEnd, payrollDays }) => {
   return (
     <motion.div variants={itemVariants}>
-      <Card className={`bg-white border-none shadow-sm ${payrollDays <= 3 ? "ring-2 ring-red-200" : ""}`}>
+      <Card className={`bg-white border-none shadow-sm ${payrollDays <= 3 ? "ring-2 ring-[#AE4A3E]/25" : ""}`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-              payrollDays <= 3 ? "bg-red-50" : "bg-blue-50"
+              payrollDays <= 3 ? "bg-[#AE4A3E]/10" : "bg-[#1E3A5F]/10"
             }`}>
-              <Calendar size={22} className={payrollDays <= 3 ? "text-red-500" : "text-blue-500"} />
+              <Calendar size={22} className={payrollDays <= 3 ? "text-[#AE4A3E]" : "text-[#1E3A5F]"} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Next Payroll</p>
@@ -37,7 +37,7 @@ const PayrollCountdownCard = ({ periodEnd, payrollDays }) => {
               </p>
             </div>
             <div className={`px-4 py-2 rounded-xl text-sm font-bold ${
-              payrollDays <= 3 ? "bg-red-50 text-red-600" : payrollDays <= 7 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+              payrollDays <= 3 ? "bg-[#AE4A3E]/10 text-[#AE4A3E]" : payrollDays <= 7 ? "bg-[#B78A2F]/10 text-[#B78A2F]" : "bg-[#3E7A54]/10 text-[#3E7A54]"
             }`}>
               {payrollDays}d
             </div>

@@ -6,7 +6,7 @@ const ProgramDetailTable = ({ programs }) => (
   <Card className="bg-white border-none shadow-sm">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <Building2 size={18} className="text-gray-500" />
+        <Building2 size={18} className="text-[#1E3A5F]" />
         Program Detail
       </CardTitle>
       <CardDescription>Full breakdown by program with capacity and waitlist</CardDescription>
@@ -36,19 +36,19 @@ const ProgramDetailTable = ({ programs }) => (
                   <td className="py-2.5 text-right font-semibold text-gray-900">{p.enrolled}</td>
                   <td className="py-2.5 text-right text-gray-500">{p.capacity}</td>
                   <td className="py-2.5 text-right">
-                    <span className={`font-semibold ${p.capacity - p.enrolled === 0 ? "text-red-500" : nearFull ? "text-amber-500" : "text-emerald-600"}`}>
+                    <span className={`font-semibold ${p.capacity - p.enrolled === 0 ? "text-[#8A362C]" : nearFull ? "text-[#8F6A1F]" : "text-[#2F6042]"}`}>
                       {p.capacity - p.enrolled}
                     </span>
                   </td>
                   <td className="py-2.5 text-right text-gray-500 hidden md:table-cell">
-                    {p.waitlist > 0 ? <span className="font-semibold text-purple-600">{p.waitlist}</span> : <span className="text-gray-300">—</span>}
+                    {p.waitlist > 0 ? <span className="font-semibold text-[#1E3A5F]">{p.waitlist}</span> : <span className="text-gray-300">—</span>}
                   </td>
                   <td className="py-2.5 text-right hidden md:table-cell">
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${isFull ? "bg-amber-500" : nearFull ? "bg-emerald-400" : "bg-blue-500"}`} style={{ width: `${fillPct}%` }} />
+                        <div className={`h-full rounded-full ${isFull ? "bg-[#B78A2F]" : nearFull ? "bg-[#3E7A54]" : "bg-[#1E3A5F]"}`} style={{ width: `${fillPct}%` }} />
                       </div>
-                      <span className={`text-xs font-semibold ${isFull ? "text-amber-600" : "text-gray-500"}`}>{fillPct}%</span>
+                      <span className={`text-xs font-semibold ${isFull ? "text-[#8F6A1F]" : "text-gray-500"}`}>{fillPct}%</span>
                     </div>
                   </td>
                 </tr>
@@ -60,13 +60,13 @@ const ProgramDetailTable = ({ programs }) => (
 
       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-4 text-xs text-gray-400">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" /><span>Preschool</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A5F]" /><span>Preschool</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span>Elementary (K–5th)</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2A4C7E]" /><span>Elementary (K–5th)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-purple-500" /><span>Middle School (6th–8th)</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#4A6B96]" /><span>Middle School (6th–8th)</span>
         </div>
       </div>
     </CardContent>

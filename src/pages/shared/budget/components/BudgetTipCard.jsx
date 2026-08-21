@@ -12,8 +12,8 @@ const BudgetTipCard = ({ remaining, total, expenseByReason }) => {
     <Card className="bg-white border-none shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${hasFunds ? "bg-amber-100" : "bg-red-100"}`}>
-            <Wallet size={18} className={hasFunds ? "text-amber-600" : "text-red-500"} />
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${hasFunds ? "bg-[#B78A2F]/10" : "bg-[#AE4A3E]/10"}`}>
+            <Wallet size={18} className={hasFunds ? "text-[#8F6A1F]" : "text-[#8A362C]"} />
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-900">

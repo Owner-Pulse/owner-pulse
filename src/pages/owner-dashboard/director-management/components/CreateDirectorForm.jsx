@@ -74,8 +74,8 @@ const CreateDirectorForm = ({ onClose }) => {
 
           {isSuccess ? (
             <div className="py-12 text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 size={32} className="text-emerald-500" />
+              <div className="w-16 h-16 bg-[#3E7A54]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={32} className="text-[#2F6042]" />
               </div>
               <p className="text-lg font-bold text-gray-900">Director Created!</p>
               <p className="text-sm text-gray-500 mt-1">{getValues("name")} has been added. They'll need to log in to activate.</p>
@@ -88,8 +88,8 @@ const CreateDirectorForm = ({ onClose }) => {
                   <input type="text"
                     {...register("name", { required: "Name is required" })}
                     placeholder="e.g. Jane Smith"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+                  {errors.name && <p className="text-[#8A362C] text-xs mt-1">{errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email Address</label>
@@ -102,15 +102,15 @@ const CreateDirectorForm = ({ onClose }) => {
                       }
                     })}
                     placeholder="director@hclc.com"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+                  {errors.email && <p className="text-[#8A362C] text-xs mt-1">{errors.email.message}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Phone (optional)</label>
                   <input type="text"
                     {...register("phone")}
                     placeholder="(813) 555-0000"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                 </div>
 
                 <div>
@@ -122,18 +122,18 @@ const CreateDirectorForm = ({ onClose }) => {
                         minLength: { value: 6, message: "Password must be at least 6 characters" }
                       })}
                       placeholder="Min. 6 characters"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12" />
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] pr-12" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+                  {errors.password && <p className="text-[#8A362C] text-xs mt-1">{errors.password.message}</p>}
                 </div>
               </div>
 
               {errorMessage && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-xs text-red-600 font-medium">
+                <div className="flex items-center gap-2 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#8A362C] font-medium">
                   <AlertTriangle size={14} /> {errorMessage}
                 </div>
               )}

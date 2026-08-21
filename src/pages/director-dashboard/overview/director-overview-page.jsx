@@ -128,7 +128,7 @@ const DirectorOverviewPage = () => {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             30-Second View
             {criticalMaintenance > 0 && (
-              <span className="ml-3 inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+              <span className="ml-3 inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#AE4A3E]/10 text-[#8A362C] text-xs font-bold rounded-full">
                 {criticalMaintenance} critical
               </span>
             )}
@@ -144,10 +144,10 @@ const DirectorOverviewPage = () => {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiMetricCard label="Enrollment" value="222" sub="76% of 292 capacity · 70 open spots" icon={Users} color="#2563EB" onClick={() => go("/director/enrollment")} />
-        <KpiMetricCard label="Late Payments" value="$3,400" sub="7 families need follow-up" icon={DollarSign} color="#EF4444" subColor="text-red-500" onClick={() => go("/director/billing")} />
-        <KpiMetricCard label="Maintenance" value={openMaintenance} sub={`${criticalMaintenance} critical items`} icon={Wrench} color="#D97706" subColor="text-red-500" onClick={() => go("/director/maintenance")} />
-        <KpiMetricCard label="Open Tasks" value={openTasks} sub={`${highPriorityTasks} high priority`} icon={ClipboardList} color="#111827" subColor="text-red-500" onClick={() => go("/director/tasks")} />
+        <KpiMetricCard label="Enrollment" value="222" sub="76% of 292 capacity · 70 open spots" icon={Users} color="#1E3A5F" onClick={() => go("/director/enrollment")} />
+        <KpiMetricCard label="Late Payments" value="$3,400" sub="7 families need follow-up" icon={DollarSign} color="#AE4A3E" subColor="text-[#8A362C]" onClick={() => go("/director/billing")} />
+        <KpiMetricCard label="Maintenance" value={openMaintenance} sub={`${criticalMaintenance} critical items`} icon={Wrench} color="#B78A2F" subColor="text-[#8F6A1F]" onClick={() => go("/director/maintenance")} />
+        <KpiMetricCard label="Open Tasks" value={openTasks} sub={`${highPriorityTasks} high priority`} icon={ClipboardList} color="#1E3A5F" subColor="text-[#8F6A1F]" onClick={() => go("/director/tasks")} />
       </div>
 
       {/* Section 3 + 4: Enrollment + Coverage */}

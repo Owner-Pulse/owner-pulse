@@ -18,7 +18,7 @@ const DailyLogGroupList = ({ groupedByDate, todayStr }) => {
           {groupedByDate.map(([date, entries]) => (
             <div key={date}>
               <div className="flex items-center gap-3 mb-3">
-                <div className={`w-2 h-2 rounded-full ${date === todayStr ? "bg-blue-500" : "bg-gray-300"}`} />
+                <div className={`w-2 h-2 rounded-full ${date === todayStr ? "bg-[#1E3A5F]" : "bg-gray-300"}`} />
                 <span className="text-sm font-bold text-gray-700">
                   {date === todayStr ? "Today" : fmtDate(date)}
                 </span>

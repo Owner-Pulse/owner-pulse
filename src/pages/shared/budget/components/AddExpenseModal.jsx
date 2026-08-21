@@ -1,26 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
-const EXPENSE_REASONS = [
-  "Classroom Supplies",
-  "Events & Food",
-  "Staff Appreciation",
-  "Cleaning Supplies",
-  "Office Supplies",
-  "Teacher Appreciation",
-  "Professional Dev.",
-  "Tech & Software",
-  "Facilities",
-  "Other",
-];
-
-const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
+const AddExpenseModal = ({ isOpen, onClose, onAdd, categories = [] }) => {
   const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("Other");
+  const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setReason(categories[0].name);
+    } else {
+      setReason("Other");
+    }
+  }, [categories, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,7 +28,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
 
     onAdd({ amount: numAmount, reason, description: description.trim(), date });
     setAmount("");
-    setReason("Other");
     setDescription("");
     setDate(new Date().toISOString().split("T")[0]);
     onClose();
@@ -63,28 +57,29 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd }) => {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
                   <input type="number" step="0.01" min="0.01" value={amount} onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00" className="w-full h-10 pl-7 pr-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
+                    placeholder="0.00" className="w-full h-10 pl-7 pr-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] transition-all" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reason</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category</label>
                 <select value={reason} onChange={(e) => setReason(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white">
-                  {EXPENSE_REASONS.map((r) => (<option key={r} value={r}>{r}</option>))}
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] transition-all bg-white">
+                  {categories.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
+                  {(!categories || categories.length === 0) && <option value="Other">Other</option>}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Description</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)}
                   placeholder="What was this for?" rows={3}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none" />
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] transition-all resize-none" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">Date</label>
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F] transition-all" />
               </div>
-              {error && <div className="p-3 rounded-xl bg-red-50 border border-red-200"><p className="text-xs font-medium text-red-600">{error}</p></div>}
+              {error && <div className="p-3 rounded-xl bg-[#AE4A3E]/10 border border-[#AE4A3E]/25"><p className="text-xs font-medium text-[#8A362C]">{error}</p></div>}
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={onClose}
                   className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>

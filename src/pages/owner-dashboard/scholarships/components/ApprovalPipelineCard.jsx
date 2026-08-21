@@ -33,7 +33,7 @@ const ApprovalPipelineCard = ({ approvals }) => {
   const isStale = pendingByAge.stale > 0 && !isRedFlag;
 
   return (
-    <Card className={`bg-white border-none shadow-sm ${isRedFlag ? "border-l-4 border-l-red-400" : isStale ? "border-l-4 border-l-amber-400" : ""}`}>
+    <Card className={`bg-white border-none shadow-sm ${isRedFlag ? "border-l-4 border-l-[#AE4A3E]" : isStale ? "border-l-4 border-l-[#B78A2F]" : ""}`}>
       <CardHeader>
         <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
           <FileText size={16} /> Step Up Payment Approvals
@@ -48,10 +48,10 @@ const ApprovalPipelineCard = ({ approvals }) => {
         {/* Pipeline buckets */}
         <div className="grid grid-cols-4 gap-2 mb-5">
           {[
-            { key: "fresh", label: "Fresh (<7d)", count: pendingByAge.fresh, color: "bg-emerald-500" },
-            { key: "aging", label: "Aging (7-13d)", count: pendingByAge.aging, color: "bg-amber-500" },
-            { key: "stale", label: "Stale (14-19d)", count: pendingByAge.stale, color: "bg-orange-500" },
-            { key: "redflag", label: "Red Flag (20d+)", count: pendingByAge.redflag, color: "bg-red-500" },
+            { key: "fresh", label: "Fresh (<7d)", count: pendingByAge.fresh, color: "bg-[#3E7A54]" },
+            { key: "aging", label: "Aging (7-13d)", count: pendingByAge.aging, color: "bg-[#B78A2F]" },
+            { key: "stale", label: "Stale (14-19d)", count: pendingByAge.stale, color: "bg-[#AE4A3E]" },
+            { key: "redflag", label: "Red Flag (20d+)", count: pendingByAge.redflag, color: "bg-[#8A362C]" },
           ].map((bucket) => (
             <div key={bucket.key} className="text-center p-3 bg-gray-50 rounded-xl">
               <p className={`text-2xl font-bold ${bucket.count > 0 ? bucket.color.replace("bg-", "text-") : "text-gray-400"}`}>{bucket.count}</p>
@@ -69,9 +69,9 @@ const ApprovalPipelineCard = ({ approvals }) => {
               const isStale = age >= 14 && age < 20;
               const isAging = age >= 7 && age < 14;
               return (
-                <div key={a.id} className={`flex items-center justify-between p-3 rounded-xl ${isRed ? "bg-red-50" : isStale ? "bg-orange-50" : isAging ? "bg-amber-50" : "bg-gray-50"}`}>
+                <div key={a.id} className={`flex items-center justify-between p-3 rounded-xl ${isRed ? "bg-[#AE4A3E]/10" : isStale ? "bg-[#AE4A3E]/[0.06]" : isAging ? "bg-[#B78A2F]/[0.08]" : "bg-gray-50"}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${isRed ? "bg-red-500" : isStale ? "bg-orange-500" : isAging ? "bg-amber-500" : "bg-emerald-500"}`} />
+                    <div className={`w-2 h-2 rounded-full ${isRed ? "bg-[#8A362C]" : isStale ? "bg-[#AE4A3E]" : isAging ? "bg-[#B78A2F]" : "bg-[#3E7A54]"}`} />
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{a.parent} → {a.student}</p>
                       <p className="text-xs text-gray-500">{a.grade} · Last contact: {a.lastContact}</p>
@@ -79,7 +79,7 @@ const ApprovalPipelineCard = ({ approvals }) => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-gray-900">{fmtMoney(a.amount)}</p>
-                    <p className={`text-xs font-medium ${isRed ? "text-red-600" : isStale ? "text-orange-600" : "text-gray-500"}`}>{age}d pending</p>
+                    <p className={`text-xs font-medium ${isRed ? "text-[#8A362C]" : isStale ? "text-[#8F6A1F]" : "text-gray-500"}`}>{age}d pending</p>
                   </div>
                 </div>
               );
@@ -87,7 +87,7 @@ const ApprovalPipelineCard = ({ approvals }) => {
           </div>
         ) : (
           <div className="py-6 text-center">
-            <CheckCircle2 size={24} className="mx-auto text-emerald-400 mb-2" />
+            <CheckCircle2 size={24} className="mx-auto text-[#3E7A54] mb-2" />
             <p className="text-sm text-gray-500">No pending approvals — all caught up!</p>
           </div>
         )}
@@ -98,7 +98,7 @@ const ApprovalPipelineCard = ({ approvals }) => {
             <p className="text-xs text-gray-500">
               <span className="font-semibold text-gray-700">{approved.length}</span> approved this year · Avg turnaround{" "}
               <span className="font-semibold text-gray-700">{avgTurnaround}d</span> ·{" "}
-              <span className="font-semibold text-emerald-600">{turnaroundPct}%</span> within 14 days
+              <span className="font-semibold text-[#2F6042]">{turnaroundPct}%</span> within 14 days
             </p>
           </div>
         )}

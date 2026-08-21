@@ -110,7 +110,7 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">Tasks</h1>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            {stats.myOpen} assigned · {stats.open} open · {stats.overdue > 0 && <span className="text-red-500 font-medium">{stats.overdue} overdue</span>}
+            {stats.myOpen} assigned · {stats.open} open · {stats.overdue > 0 && <span className="text-[#8A362C] font-medium">{stats.overdue} overdue</span>}
           </p>
         </div>
         <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-3 shrink-0" onClick={() => setShowAssignModal(true)}>
@@ -120,10 +120,10 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard icon={ListTodo} label="My Tasks" value={stats.myOpen} sub={`Assigned to ${currentRole}`} iconBg="bg-blue-50 text-blue-600" />
-        <KpiCard icon={ClipboardList} label="Total Open" value={stats.open} sub={`${stats.total} total tasks`} iconBg="bg-purple-50 text-purple-600" />
-        <KpiCard icon={Flag} label="High Priority" value={stats.high} sub={stats.high === 1 ? "1 urgent item" : `${stats.high} urgent`} iconBg="bg-red-50 text-red-500" />
-        <KpiCard icon={AlertTriangle} label="Overdue" value={stats.overdue} sub={stats.myOverdue > 0 ? `${stats.myOverdue} on you` : "All on track"} iconBg={stats.overdue > 0 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"} />
+        <KpiCard icon={ListTodo} label="My Tasks" value={stats.myOpen} sub={`Assigned to ${currentRole}`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <KpiCard icon={ClipboardList} label="Total Open" value={stats.open} sub={`${stats.total} total tasks`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <KpiCard icon={Flag} label="High Priority" value={stats.high} sub={stats.high === 1 ? "1 urgent item" : `${stats.high} urgent`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
+        <KpiCard icon={AlertTriangle} label="Overdue" value={stats.overdue} sub={stats.myOverdue > 0 ? `${stats.myOverdue} on you` : "All on track"} iconBg={stats.overdue > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"} />
       </div>
 
       {/* Filters */}

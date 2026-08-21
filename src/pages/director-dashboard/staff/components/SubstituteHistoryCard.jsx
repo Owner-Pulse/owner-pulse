@@ -18,7 +18,7 @@ const SubstituteHistoryCard = ({ substitutes }) => (
         {substitutes.length > 0 ? substitutes.map((entry) => (
           <div key={entry.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-xs font-bold text-purple-600">
+              <div className="w-8 h-8 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center text-xs font-bold text-[#1E3A5F]">
                 {entry.subName.split(" ").slice(-1)[0]}
               </div>
               <div>

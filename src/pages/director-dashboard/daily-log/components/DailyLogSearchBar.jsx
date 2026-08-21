@@ -17,7 +17,7 @@ const DailyLogSearchBar = ({ searchQuery, onSearchChange, filterType, onFilterCh
   return (
     <motion.div variants={itemVariants}>
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 flex-1">
+        <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-[#1E3A5F] flex-1">
           <Search size={16} className="text-gray-400" />
           <input
             type="text"
@@ -37,7 +37,7 @@ const DailyLogSearchBar = ({ searchQuery, onSearchChange, filterType, onFilterCh
             <button
               key={f.id}
               onClick={() => onFilterChange(f.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === f.id ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-50"}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === f.id ? "bg-[#1E3A5F] text-white" : "text-gray-500 hover:bg-gray-50"}`}
             >
               {f.label}
             </button>

@@ -74,7 +74,7 @@ const YearOverYearCard = ({ title, subtitle, availableCategories, individualData
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <LineChart size={18} className="text-blue-500" />
+                <LineChart size={18} className="text-[#1E3A5F]" />
                 {title || "Year-over-Year Comparison"}
               </CardTitle>
               <CardDescription>
@@ -109,7 +109,7 @@ const YearOverYearCard = ({ title, subtitle, availableCategories, individualData
                   onClick={() => toggleCategory(cat)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                     on
-                      ? "bg-gray-900 text-white shadow-sm"
+                      ? "bg-[#1E3A5F] text-white shadow-sm"
                       : "bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100"
                   }`}
                 >
@@ -201,7 +201,7 @@ const YearOverYearCard = ({ title, subtitle, availableCategories, individualData
                           <td className="py-2 font-medium text-gray-700 truncate max-w-40">{category}</td>
                           <td className="py-2 text-right text-gray-500">{fmtMoneyShort(prevVal)}</td>
                           <td className="py-2 text-right font-medium text-gray-900">{fmtMoneyShort(currVal)}</td>
-                          <td className={`py-2 text-right font-semibold ${isUp ? "text-red-500" : isDown ? "text-emerald-600" : "text-gray-400"}`}>
+                          <td className={`py-2 text-right font-semibold ${isUp ? "text-[#8A362C]" : isDown ? "text-[#2F6042]" : "text-gray-400"}`}>
                             {isUp ? "↑" : isDown ? "↓" : "→"} {Math.abs(change).toFixed(1)}%
                           </td>
                         </tr>

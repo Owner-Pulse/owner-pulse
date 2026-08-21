@@ -37,7 +37,7 @@ const DirectorCard = ({ director, onClick }) => {
             )}
 
             {/* Status indicator dot */}
-            <div className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-white rounded-full ${isActive ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+            <div className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-white rounded-full ${isActive ? 'bg-[#3E7A54]' : 'bg-[#B78A2F]'}`} />
           </div>
 
           <div className="flex-1 min-w-0 w-full">
@@ -52,8 +52,8 @@ const DirectorCard = ({ director, onClick }) => {
                 </p>
               </div>
               <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md border ${isActive
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                  : "bg-amber-50 text-amber-700 border-amber-200/50"
+                  ? "bg-[#3E7A54]/10 text-[#2F6042] border-[#3E7A54]/25"
+                  : "bg-[#B78A2F]/10 text-[#8F6A1F] border-[#B78A2F]/25"
                 }`}>
                 {isActive ? "ACTIVE" : "PENDING"}
               </span>
@@ -86,8 +86,8 @@ const DirectorCard = ({ director, onClick }) => {
                   </>
                 ) : (
                   <>
-                    <AlertTriangle size={14} className="text-amber-500" />
-                    <span className="text-amber-600 font-medium">Never logged in</span>
+                    <AlertTriangle size={14} className="text-[#B78A2F]" />
+                    <span className="text-[#8F6A1F] font-medium">Never logged in</span>
                   </>
                 )}
               </div>

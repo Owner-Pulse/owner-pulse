@@ -6,7 +6,7 @@ import PulseRecommendations from "@/components/PulseRecommendations";
 
 // ─── Design tokens ───────────────────────────────────────────────
 const DARK_NAVY = "#0A0F1E";
-const MONITOR_GREEN = "#10B981";
+const MONITOR_GREEN = "#3E9B67";
 const TEXT_DIM = "#94A3B8";
 
 const itemVariants = {

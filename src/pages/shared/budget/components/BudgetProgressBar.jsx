@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const fmtMoneyShort = (n) => n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$" + Math.round(n);
 
-const BudgetProgressBar = ({ spent, total, label = "Budget Used", color = "bg-amber-400" }) => {
+const BudgetProgressBar = ({ spent, total, label = "Budget Used", color = "bg-[#B78A2F]" }) => {
   const pct = Math.round((spent / total) * 100);
 
   return (
@@ -11,7 +11,7 @@ const BudgetProgressBar = ({ spent, total, label = "Budget Used", color = "bg-am
       <CardContent className="p-5">
         <div className="flex justify-between text-sm mb-1.5">
           <span className="font-semibold text-gray-700">{label}</span>
-          <span className={`font-bold ${spent > total ? "text-red-500" : pct > 85 ? "text-red-500" : "text-amber-600"}`}>
+          <span className={`font-bold ${spent > total ? "text-[#8A362C]" : pct > 85 ? "text-[#8A362C]" : "text-[#8F6A1F]"}`}>
             {pct}%
           </span>
         </div>

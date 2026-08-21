@@ -55,12 +55,12 @@ const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, i
     <>
     <motion.div variants={itemVariants}>
       <Card
-        className={`bg-white border-none shadow-sm transition-all ${isDone ? "opacity-60" : ""} ${isForMe ? "border-l-4 border-l-blue-400" : ""}`}
+        className={`bg-white border-none shadow-sm transition-all ${isDone ? "opacity-60" : ""} ${isForMe ? "border-l-4 border-l-[#1E3A5F]" : ""}`}
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             {/* Status checkbox */}
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isDone ? "bg-emerald-500 border-emerald-500" : isOverdue ? "border-red-400" : isDueSoon ? "border-amber-400" : "border-gray-300"}`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isDone ? "bg-[#3E7A54] border-[#3E7A54]" : isOverdue ? "border-[#AE4A3E]" : isDueSoon ? "border-[#B78A2F]" : "border-gray-300"}`}>
               {isDone && <CheckCircle2 size={14} className="text-white" />}
             </div>
 
@@ -72,11 +72,11 @@ const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, i
                   <PriorityTag priority={task.priority} />
                   <StatusTag status={status} />
                   <AssigneeTag assignee={task.assignee} />
-                  {isForMe && <span className="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">Mine</span>}
+                  {isForMe && <span className="text-[9px] md:text-[10px] font-bold text-[#1E3A5F] bg-[#1E3A5F]/10 px-1.5 py-0.5 rounded-full">Mine</span>}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                <span className={`text-xs flex items-center gap-1 ${isOverdue ? "text-red-500 font-semibold" : isDueSoon ? "text-amber-600 font-semibold" : "text-gray-400"}`}>
+                <span className={`text-xs flex items-center gap-1 ${isOverdue ? "text-[#8A362C] font-semibold" : isDueSoon ? "text-[#8F6A1F] font-semibold" : "text-gray-400"}`}>
                   <Calendar size={10} /> Due {fmtDate(task.due)}
                   {isOverdue && ` · ${Math.abs(days)}d overdue`}
                   {isDueSoon && ` · ${days}d left`}
@@ -90,7 +90,7 @@ const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, i
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs bg-red-50 text-red-600 hover:bg-red-100 border-none px-2"
+                  className="h-7 text-xs bg-[#AE4A3E]/10 text-[#8A362C] hover:bg-[#AE4A3E]/20 border-none px-2"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={isDeleting}
                 >
@@ -103,7 +103,7 @@ const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, i
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border-none px-2"
+                      className="h-7 text-xs bg-[#1E3A5F]/10 text-[#1E3A5F] hover:bg-[#1E3A5F]/20 border-none px-2"
                       onClick={() => inProgressTask(task.id)}
                       disabled={isActionDisabled || isInProgressPending}
                     >
@@ -114,7 +114,7 @@ const TaskCardInner = ({ task, status, currentRole, daysUntil, onUpdateStatus, i
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-none px-2"
+                      className="h-7 text-xs bg-[#3E7A54]/10 text-[#2F6042] hover:bg-[#3E7A54]/20 border-none px-2"
                       onClick={() => completeTask(task.id)}
                       disabled={isActionDisabled || isCompleting}
                     >

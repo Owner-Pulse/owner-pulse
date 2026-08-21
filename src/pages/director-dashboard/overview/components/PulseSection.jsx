@@ -34,7 +34,7 @@ import PulseRecommendations from "@/components/PulseRecommendations";
 
 // ─── Design tokens ───────────────────────────────────────────────
 const DARK_NAVY = "#0A0F1E";
-const MONITOR_GREEN = "#22C55E";
+const MONITOR_GREEN = "#3E9B67";
 const TEXT_DIM = "#94A3B8";
 
 const itemVariants = {
@@ -53,7 +53,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
         className="relative border-none shadow-2xl overflow-hidden"
         style={{
           background: DARK_NAVY,
-          border: "1px solid rgba(34, 197, 94, 0.15)",
+          border: "1px solid rgba(62, 155, 103, 0.15)",
         }}
       >
         {/* Scan line effect */}
@@ -93,7 +93,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
               </span>
               <span
                 className="text-[9px] font-mono px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(34,197,94,0.1)", color: MONITOR_GREEN }}
+                style={{ background: "rgba(62,155,103,0.1)", color: MONITOR_GREEN }}
               >
                 ● LIVE
               </span>
@@ -143,7 +143,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                 style={{
                   width: 80,
                   background: `linear-gradient(to right, 
-                    ${directorPulse.composite >= 80 ? MONITOR_GREEN : directorPulse.composite >= 60 ? "#D97706" : "#DC2626"} 
+                    ${directorPulse.composite >= 80 ? MONITOR_GREEN : directorPulse.composite >= 60 ? "#C89B3C" : "#C33B2E"} 
                     ${directorPulse.composite}%, 
                     rgba(255,255,255,0.08) ${directorPulse.composite}%)`,
                 }}
@@ -213,7 +213,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                     contentStyle={{
                       background: "#1E293B",
                       borderRadius: "8px",
-                      border: "1px solid rgba(34,197,94,0.2)",
+                      border: "1px solid rgba(62,155,103,0.2)",
                       fontSize: "11px",
                       boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
                       color: "#E2E8F0",
@@ -233,17 +233,17 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 cursor-pointer"
               style={{
                 background: expanded
-                  ? "rgba(34,197,94,0.12)"
+                  ? "rgba(62,155,103,0.12)"
                   : "rgba(148,163,184,0.08)",
                 color: expanded ? MONITOR_GREEN : TEXT_DIM,
                 border: `1px solid ${
                   expanded
-                    ? "rgba(34,197,94,0.25)"
+                    ? "rgba(62,155,103,0.25)"
                     : "rgba(148,163,184,0.15)"
                 }`,
               }}
               whileHover={{
-                background: "rgba(34,197,94,0.15)",
+                background: "rgba(62,155,103,0.15)",
                 color: MONITOR_GREEN,
               }}
               whileTap={{ scale: 0.97 }}
@@ -272,7 +272,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
             >
               <div
                 className="px-5 pb-5 md:px-6 md:pb-6"
-                style={{ borderTop: "1px solid rgba(34,197,94,0.1)" }}
+                style={{ borderTop: "1px solid rgba(62,155,103,0.1)" }}
               >
                 <div className="pt-4">
                   {/* Gauge + Subscores side by side */}
@@ -301,8 +301,8 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                             sub.score >= 80
                               ? MONITOR_GREEN
                               : sub.score >= 60
-                              ? "#D97706"
-                              : "#DC2626";
+                              ? "#C89B3C"
+                              : "#C33B2E";
                           return (
                             <div
                               key={sub.key}
@@ -318,7 +318,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                               <div
                               className="mb-0.5 p-1.5 rounded-lg"
                               style={{
-                                background: "rgba(34,197,94,0.08)",
+                                background: "rgba(62,155,103,0.08)",
                               }}
                             >
                               {(() => {

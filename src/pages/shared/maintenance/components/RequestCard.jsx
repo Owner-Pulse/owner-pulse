@@ -20,10 +20,10 @@ const itemVariants = {
 const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner }) => {
   const days = daysSince(req.logged);
   const isDone = status === "done";
-  const borderColor = isDone ? "border-l-emerald-500"
-    : req.priority === "critical" ? "border-l-red-500"
-      : req.priority === "high" ? "border-l-orange-500"
-        : req.priority === "medium" ? "border-l-amber-500"
+  const borderColor = isDone ? "border-l-[#3E7A54]"
+    : req.priority === "critical" ? "border-l-[#AE4A3E]"
+      : req.priority === "high" ? "border-l-[#B78A2F]"
+        : req.priority === "medium" ? "border-l-[#1E3A5F]"
           : "border-l-gray-400";
 
   return (
@@ -64,7 +64,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
                       e.stopPropagation();
                       onEdit(req);
                     }}
-                    className="text-gray-400 hover:text-blue-500 transition-colors p-1.5 rounded-lg hover:bg-blue-50"
+                    className="text-gray-400 hover:text-[#1E3A5F] transition-colors p-1.5 rounded-lg hover:bg-[#1E3A5F]/10"
                     title="Edit Request"
                   >
                     <Pencil size={14} />
@@ -76,7 +76,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
                       e.stopPropagation();
                       onDelete(req);
                     }}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+                    className="text-gray-400 hover:text-[#8A362C] transition-colors p-1.5 rounded-lg hover:bg-[#AE4A3E]/10"
                     title="Delete Request"
                   >
                     <Trash2 size={14} />
@@ -92,8 +92,8 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
                 <button key={s} onClick={() => onUpdateStatus(req.id, s)}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
                     status === s
-                      ? s === "done" ? "bg-emerald-500 text-white"
-                        : s === "in_progress" ? "bg-blue-500 text-white"
+                      ? s === "done" ? "bg-[#3E7A54] text-white"
+                        : s === "in_progress" ? "bg-[#1E3A5F] text-white"
                         : "bg-gray-500 text-white"
                       : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
                   }`}>
@@ -109,12 +109,12 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
             </div>
           )}
           {!isOwner && status === "in_progress" && (
-            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-blue-500 font-medium">
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#1E3A5F] font-medium">
               <Clock size={10} /> Being worked on
             </div>
           )}
           {!isOwner && status === "done" && (
-            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-500 font-medium">
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#2F6042] font-medium">
               <CheckCircle2 size={10} /> Resolved by owner
             </div>
           )}

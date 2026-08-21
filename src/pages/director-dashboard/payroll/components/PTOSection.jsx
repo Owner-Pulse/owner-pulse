@@ -22,8 +22,8 @@ const STAFF = [
 
 const ptoBalance = (staffId) => { const s = STAFF.find((x) => x.id === Number(staffId)); return s ? s.ptoAllowance - s.ptoUsed : null; };
 const daysBetween = (start, end) => { if (!start) return 0; if (!end || end === start) return 1; return Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1); };
-const balanceColor = (n) => n <= 0 ? "text-red-600" : n <= 2 ? "text-amber-600" : "text-emerald-600";
-const balanceBg = (n) => n <= 0 ? "bg-red-50" : n <= 2 ? "bg-amber-50" : "bg-emerald-50";
+const balanceColor = (n) => n <= 0 ? "text-[#AE4A3E]" : n <= 2 ? "text-[#B78A2F]" : "text-[#3E7A54]";
+const balanceBg = (n) => n <= 0 ? "bg-[#AE4A3E]/10" : n <= 2 ? "bg-[#B78A2F]/10" : "bg-[#3E7A54]/10";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -49,17 +49,17 @@ const PTOSection = ({ rows, onAdd, onUpdate, onRemove }) => {
                   <StaffSelect value={row.staffId} onChange={(v) => onUpdate(i, "staffId", v)} />
                   <div className="flex gap-1 items-center">
                     <input type="date" value={row.startDate} onChange={(e) => onUpdate(i, "startDate", e.target.value)}
-                      className="flex-1 min-w-0 px-2 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="flex-1 min-w-0 px-2 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                     <span className="text-xs text-gray-400">→</span>
                     <input type="date" value={row.endDate} onChange={(e) => onUpdate(i, "endDate", e.target.value)}
-                      className="flex-1 min-w-0 px-2 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="flex-1 min-w-0 px-2 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                   </div>
                   <div className={`px-2 py-2 rounded-xl text-[10px] text-center font-bold ${
                     afterBalance !== null ? balanceBg(afterBalance) : "bg-gray-50"
                   } ${afterBalance !== null ? balanceColor(afterBalance) : "text-gray-400"}`}>
                     {afterBalance !== null ? `${afterBalance} left` : "—"}
                   </div>
-                  <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors">
                     <X size={14} />
                   </button>
                 </div>

@@ -25,8 +25,8 @@ const BirthdaySection = ({ rows, onAdd, onUpdate, onRemove }) => {
               <div key={row.id} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 1fr 28px" }}>
                 <StaffSelect value={row.staffId} onChange={(v) => onUpdate(i, "staffId", v)} />
                 <input type="date" value={row.date} onChange={(e) => onUpdate(i, "date", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+                <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors">
                   <X size={14} />
                 </button>
               </div>

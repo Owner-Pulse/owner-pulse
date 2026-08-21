@@ -142,21 +142,21 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Location *</label>
               <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)}
                 placeholder="e.g. K — Sequoia, Cafeteria"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Issue Description *</label>
               <textarea value={form.issue} onChange={(e) => update("issue", e.target.value)}
                 placeholder="Describe the problem clearly…" rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Priority</label>
                 <select value={form.priority} onChange={(e) => update("priority", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white">
                   <option value="critical">Critical</option>
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
@@ -167,14 +167,14 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Est. Cost ($)</label>
                 <input type="number" value={form.estCost} onChange={(e) => update("estCost", e.target.value)}
                   placeholder="0.00" min={0}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Assigned To *</label>
               <select value={form.assignedTo} onChange={(e) => update("assignedTo", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white">
                 <option value="">Select who handles this</option>
                 {ASSIGNED_TO_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
               </select>
@@ -184,7 +184,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Which staff member? *</label>
                 <select value={form.assignedStaff} onChange={(e) => update("assignedStaff", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white">
                   <option value="">Select staff member</option>
                   {STAFF_ROSTER.map((name) => (<option key={name} value={name}>{name}</option>))}
                 </select>
@@ -196,12 +196,12 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Describe who *</label>
                 <input type="text" value={form.assignedOther} onChange={(e) => update("assignedOther", e.target.value)}
                   placeholder="e.g. Electrician, Plumber..." maxLength={100}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
             )}
 
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-xs text-red-600 font-medium">
+              <div className="flex items-center gap-2 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#8A362C] font-medium">
                 <AlertTriangle size={14} /> {error}
               </div>
             )}

@@ -1,18 +1,20 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { staffService } from "@/services/staff";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 // ─── Staff Dashboard 
-export const useGetStaff = () => {
+export const useGetStaff = (params) => {
     const axiosInstance = axiosPrivate();
 
-    const { data, isError, isLoading, error } = useQuery({
-        queryKey: ["staff"],
-        queryFn: () => staffService.getStaff(axiosInstance),
+    const { data, isError, isLoading, isFetching, error } = useQuery({
+        queryKey: ["staff", params],
+        queryFn: () => staffService.getStaff(axiosInstance, params),
+        staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
     });
 
-    return { data, isLoading, isError, error };
+    return { data, isLoading, isFetching, isError, error };
 };
 
 // ─── PTO staff list
@@ -23,9 +25,10 @@ export const useGetPtoStaff = (params = { per_page: 1000 }) => {
         queryKey: ["pto-staff", params],
         queryFn: () => staffService.getPtoStaff(axiosInstance, params),
         staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
     });
 
-    const staffList = data?.staff_list?.data ?? [];
+    const staffList = data?.staff_list?.data ?? (Array.isArray(data?.staff_list) ? data.staff_list : []);
 
     return { data, staffList, isLoading, isFetching, isError, error };
 };

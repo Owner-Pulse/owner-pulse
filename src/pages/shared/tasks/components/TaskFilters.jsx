@@ -31,7 +31,7 @@ const TaskFilters = ({ activeTab, onTabChange, filterPriority, onFilterChange, t
           <button
             key={p}
             onClick={() => onFilterChange(p)}
-            className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all ${filterPriority === p ? "bg-gray-900 text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
+            className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all ${filterPriority === p ? "bg-[#1E3A5F] text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
           >
             {p === "all" ? "All" : p.charAt(0).toUpperCase() + p.slice(1)}
           </button>

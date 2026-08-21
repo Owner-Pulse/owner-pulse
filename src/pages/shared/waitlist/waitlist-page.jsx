@@ -127,23 +127,23 @@ const WaitlistPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
           <KpiCard icon={Calendar} label="Total Families" value={totalFamilies}
-            sub={`${summary.by_status?.enrolled ?? 0} enrolled`} iconBg="bg-blue-50 text-blue-600" />
+            sub={`${summary.by_status?.enrolled ?? 0} enrolled`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={Users} label="Preschool" value={preschoolCount}
             sub={totalFamilies > 0 ? `${Math.round(preschoolCount / totalFamilies * 100)}% of waitlist` : "—"}
-            iconBg="bg-purple-50 text-purple-600" />
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={GraduationCap} label="K–8" value={k8Count}
             sub={totalFamilies > 0 ? `${Math.round(k8Count / totalFamilies * 100)}% of waitlist` : "—"}
-            iconBg="bg-amber-50 text-amber-600" />
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
           <KpiCard icon={AlertTriangle} label="Stale (30d+)" value={staleCount}
             sub={staleCount > 0 ? "Need follow-up" : "All recent"}
-            iconBg={staleCount > 0 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"}
-            valueColor={staleCount > 0 ? "text-red-600" : "text-gray-900"} />
+            iconBg={staleCount > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"}
+            valueColor={staleCount > 0 ? "text-[#8A362C]" : "text-gray-900"} />
         </motion.div>
       </div>
 

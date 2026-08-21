@@ -20,10 +20,10 @@ const itemVariants = {
 };
 
 const SCHOLARSHIP_PROGRAMS = [
-  { id: 1, program: "FES-EO", students: 38, awarded: 342000, color: "#2563EB" },
-  { id: 2, program: "FES-UA", students: 14, awarded: 168000, color: "#7C3AED" },
-  { id: 3, program: "FTC", students: 22, awarded: 198000, color: "#059669" },
-  { id: 4, program: "VPK", students: 27, awarded: 67500, color: "#D97706" },
+  { id: 1, program: "FES-EO", students: 38, awarded: 342000, color: "#1E3A5F" },
+  { id: 2, program: "FES-UA", students: 14, awarded: 168000, color: "#2A4C7E" },
+  { id: 3, program: "FTC", students: 22, awarded: 198000, color: "#4A6B96" },
+  { id: 4, program: "VPK", students: 27, awarded: 67500, color: "#5B7FA6" },
 ];
 
 const STEP_UP_APPROVALS = [
@@ -72,16 +72,16 @@ const ScholarshipsPage = () => {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Award} label="Total Awarded" value={fmtMoney(totalAwarded)} sub={`Across ${SCHOLARSHIP_PROGRAMS.length} programs`} iconBg="bg-amber-50 text-amber-600" />
+          <KpiCard icon={Award} label="Total Awarded" value={fmtMoney(totalAwarded)} sub={`Across ${SCHOLARSHIP_PROGRAMS.length} programs`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Users} label="Scholarship Students" value={totalStudents} sub={`${Math.round(totalStudents / 245 * 100)}% of enrollment`} iconBg="bg-purple-50 text-purple-600" />
+          <KpiCard icon={Users} label="Scholarship Students" value={totalStudents} sub={`${Math.round(totalStudents / 245 * 100)}% of enrollment`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Clock} label="Pending Approvals" value={pending.length} sub={`Avg ${avgTurnaround}d turnaround`} iconBg={pendingByAge.redflag > 0 ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-600"} valueColor={pendingByAge.redflag > 0 ? "text-red-600" : "text-gray-900"} />
+          <KpiCard icon={Clock} label="Pending Approvals" value={pending.length} sub={`Avg ${avgTurnaround}d turnaround`} iconBg={pendingByAge.redflag > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"} valueColor={pendingByAge.redflag > 0 ? "text-[#8A362C]" : "text-gray-900"} />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={TrendingUp} label="Approval Rate" value={`${turnaroundPct}%`} sub={`${approved.length} approved ≤14 days`} iconBg="bg-emerald-50 text-emerald-600" />
+          <KpiCard icon={TrendingUp} label="Approval Rate" value={`${turnaroundPct}%`} sub={`${approved.length} approved ≤14 days`} iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
       </div>
 

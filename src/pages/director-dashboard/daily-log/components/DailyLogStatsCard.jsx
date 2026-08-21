@@ -13,16 +13,16 @@ const LOG_TYPES = [
     id: "incident", 
     label: "Incident", 
     desc: "Student incident", 
-    color: "bg-red-500", 
-    light: "bg-red-50 text-red-600",
+    color: "bg-[#AE4A3E]", 
+    light: "bg-[#AE4A3E]/10 text-[#8A362C]",
     icon: AlertTriangle 
   },
   { 
     id: "removal", 
     label: "Removal", 
     desc: "Student removed", 
-    color: "bg-orange-500", 
-    light: "bg-orange-50 text-orange-600",
+    color: "bg-[#B78A2F]", 
+    light: "bg-[#B78A2F]/10 text-[#8F6A1F]",
     icon: UserX         
   },
 ];
@@ -35,7 +35,7 @@ const DailyLogStatsCard = ({ type, stats, filterType, onFilter }) => {
   return (
     <motion.div variants={itemVariants}>
       <Card
-        className={`bg-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer ${filterType === type ? "ring-2 ring-gray-300" : ""}`}
+        className={`bg-white border-none shadow-sm hover:shadow-md transition-all cursor-pointer ${filterType === type ? "ring-2 ring-[#1E3A5F]/30" : ""}`}
         onClick={() => onFilter(type === filterType ? "all" : type)}
       >
         <CardContent className="p-4">

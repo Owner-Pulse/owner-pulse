@@ -17,15 +17,17 @@ export const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
+// Navy-family categorical shades for multi-series charts — stays
+// monochromatic while keeping each series distinguishable.
 export const ACTIVE_COLORS = [
-  "#2563EB",
-  "#16A34A",
-  "#F97316",
-  "#7C3AED",
-  "#DC2626",
-  "#0EA5E9",
-  "#D97706",
-  "#EC4899",
-  "#6366F1",
-  "#14B8A6",
+  "#1E3A5F",
+  "#2A4C7E",
+  "#4A6B96",
+  "#5B7FA6",
+  "#9DB8D9",
+  "#24466F",
+  "#6C8EB4",
+  "#7FA5CC",
+  "#3F5F8C",
+  "#85A3C2",
 ];

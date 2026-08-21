@@ -10,8 +10,8 @@ const OTHER_DEDUCTIONS = [
   { id: 2, staffName: "Mr. Levine", type: "Advance", originalAmount: 800, balance: 480 },
 ];
 
-const balanceColor = (n) => n <= 0 ? "text-red-600" : n <= 2 ? "text-amber-600" : "text-emerald-600";
-const balanceBg = (n) => n <= 0 ? "bg-red-50" : n <= 2 ? "bg-amber-50" : "bg-emerald-50";
+const balanceColor = (n) => n <= 0 ? "text-[#AE4A3E]" : n <= 2 ? "text-[#B78A2F]" : "text-[#3E7A54]";
+const balanceBg = (n) => n <= 0 ? "bg-[#AE4A3E]/10" : n <= 2 ? "bg-[#B78A2F]/10" : "bg-[#3E7A54]/10";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -34,7 +34,7 @@ const OtherDeductionsSection = ({ rows, onAdd, onUpdate, onRemove }) => {
               return (
                 <div key={row.id} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 80px 120px 28px" }}>
                   <select value={row.loanId} onChange={(e) => onUpdate(i, "loanId", e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] appearance-none bg-white">
                     <option value="">Pick loan…</option>
                     {OTHER_DEDUCTIONS.map((l) => (
                       <option key={l.id} value={l.id}>{l.staffName} · {l.type}</option>
@@ -44,12 +44,12 @@ const OtherDeductionsSection = ({ rows, onAdd, onUpdate, onRemove }) => {
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                     <input type="number" value={row.amount} onChange={(e) => onUpdate(i, "amount", e.target.value)}
                       placeholder="0"
-                      className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
                   </div>
                   <div className={`px-2 py-2 rounded-xl text-[10px] text-center font-bold ${loan ? balanceBg(newBal) : "bg-gray-50"} ${loan ? balanceColor(newBal) : "text-gray-400"}`}>
                     {loan ? `$${newBal.toLocaleString()} left` : "—"}
                   </div>
-                  <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => onRemove(i)} className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors">
                     <X size={14} />
                   </button>
                 </div>

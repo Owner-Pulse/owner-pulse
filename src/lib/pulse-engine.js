@@ -139,18 +139,18 @@ export function compositeToBpm(composite, config = {}) {
  */
 export function bpmState(bpm) {
   if (bpm <= 70) {
-    return { state: 'Thriving', color: '#10B981', zone: 'green' };
+    return { state: 'Thriving', color: '#3E9B67', zone: 'good' };
   }
   if (bpm <= 85) {
-    return { state: 'Healthy', color: '#84CC16', zone: 'greenYellow' };
+    return { state: 'Healthy', color: '#5BB57E', zone: 'good' };
   }
   if (bpm <= 100) {
-    return { state: 'Elevated', color: '#F59E0B', zone: 'amber' };
+    return { state: 'Elevated', color: '#C89B3C', zone: 'warn' };
   }
   if (bpm <= 120) {
-    return { state: 'Stressed', color: '#F97316', zone: 'orange' };
+    return { state: 'Stressed', color: '#B85C50', zone: 'danger' };
   }
-  return { state: 'Critical', color: '#EF4444', zone: 'red' };
+  return { state: 'Critical', color: '#C33B2E', zone: 'danger' };
 }
 
 /**
@@ -159,11 +159,11 @@ export function bpmState(bpm) {
  */
 export function getCompositeBpmTable() {
   return [
-    { minComposite: 95, maxComposite: 100, bpmMin: 60, bpmMax: 70, state: 'Thriving', color: '#10B981' },
-    { minComposite: 85, maxComposite: 94, bpmMin: 71, bpmMax: 85, state: 'Healthy', color: '#84CC16' },
-    { minComposite: 70, maxComposite: 84, bpmMin: 86, bpmMax: 100, state: 'Elevated', color: '#F59E0B' },
-    { minComposite: 55, maxComposite: 69, bpmMin: 101, bpmMax: 120, state: 'Stressed', color: '#F97316' },
-    { minComposite: 0, maxComposite: 54, bpmMin: 121, bpmMax: 160, state: 'Critical', color: '#EF4444' },
+    { minComposite: 95, maxComposite: 100, bpmMin: 60, bpmMax: 70, state: 'Thriving', color: '#3E9B67' },
+    { minComposite: 85, maxComposite: 94, bpmMin: 71, bpmMax: 85, state: 'Healthy', color: '#5BB57E' },
+    { minComposite: 70, maxComposite: 84, bpmMin: 86, bpmMax: 100, state: 'Elevated', color: '#C89B3C' },
+    { minComposite: 55, maxComposite: 69, bpmMin: 101, bpmMax: 120, state: 'Stressed', color: '#B85C50' },
+    { minComposite: 0, maxComposite: 54, bpmMin: 121, bpmMax: 160, state: 'Critical', color: '#C33B2E' },
   ];
 }
 

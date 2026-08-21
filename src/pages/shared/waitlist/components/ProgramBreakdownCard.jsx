@@ -18,7 +18,7 @@ const ProgramBreakdownCard = ({ byProgram, bySource }) => {
       <Card className="bg-white border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Building2 size={16} /> Waitlist by Program
+            <Building2 size={16} className="text-[#1E3A5F]" /> Waitlist by Program
           </CardTitle>
           <CardDescription>Average wait time and demand per program</CardDescription>
         </CardHeader>
@@ -34,7 +34,7 @@ const ProgramBreakdownCard = ({ byProgram, bySource }) => {
                   <span className="text-xs text-gray-500">Avg {p.avgWait}d waiting</span>
                   <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500 rounded-full"
+                      className="h-full bg-[#1E3A5F] rounded-full"
                       style={{ width: `${maxCount ? Math.min(100, (p.count / maxCount) * 100) : 0}%` }}
                     />
                   </div>

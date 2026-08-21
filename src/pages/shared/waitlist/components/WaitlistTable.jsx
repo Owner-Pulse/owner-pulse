@@ -28,10 +28,10 @@ const STATUS_LABEL = {
 };
 // Color scheme for each "advance to" button
 const STATUS_COLORS = {
-  applied:  "bg-blue-50 text-blue-700 hover:bg-blue-100",
-  toured:   "bg-violet-50 text-violet-700 hover:bg-violet-100",
-  offered:  "bg-amber-50 text-amber-700 hover:bg-amber-100",
-  enrolled: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+  applied:  "bg-[#1E3A5F]/10 text-[#1E3A5F] hover:bg-[#1E3A5F]/20",
+  toured:   "bg-[#2A4C7E]/10 text-[#2A4C7E] hover:bg-[#2A4C7E]/20",
+  offered:  "bg-[#B78A2F]/10 text-[#8F6A1F] hover:bg-[#B78A2F]/20",
+  enrolled: "bg-[#3E7A54]/10 text-[#2F6042] hover:bg-[#3E7A54]/20",
 };
 
 // ─── Skeleton row
@@ -53,7 +53,7 @@ const StatusAction = ({ entry }) => {
 
   if (entry.status === "enrolled") {
     return (
-      <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1 justify-end">
+      <span className="text-xs text-[#2F6042] font-semibold flex items-center gap-1 justify-end">
         <CheckCircle2 size={12} /> Enrolled
       </span>
     );
@@ -113,7 +113,7 @@ const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
                     return (
                       <tr
                         key={w.id}
-                        className={`hover:bg-gray-50 transition-colors ${isStale ? "bg-red-50/30" : ""}`}
+                        className={`hover:bg-gray-50 transition-colors ${isStale ? "bg-[#AE4A3E]/[0.05]" : ""}`}
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -121,7 +121,7 @@ const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
                             {role === "director" && (
                               <button
                                 onClick={() => setEditEntry(w)}
-                                className="p-1 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                className="p-1 rounded-lg text-gray-400 hover:text-[#1E3A5F] hover:bg-[#1E3A5F]/10 transition-colors"
                                 title="Edit entry"
                               >
                                 <Pencil size={13} />
@@ -150,7 +150,7 @@ const WaitlistTable = ({ entries, role, isLoading, onShowAdd }) => {
                         <td className="py-3 px-4"><StatusPill status={w.status} /></td>
                         <td className="py-3 px-4"><SourceTag source={w.source} /></td>
                         <td className="py-3 px-4 text-gray-500 text-xs">{fmtDate(w.added_date)}</td>
-                        <td className={`py-3 px-4 text-xs font-medium ${isStale ? "text-red-600" : waitDays >= 14 ? "text-amber-600" : "text-gray-500"}`}>
+                        <td className={`py-3 px-4 text-xs font-medium ${isStale ? "text-[#8A362C]" : waitDays >= 14 ? "text-[#8F6A1F]" : "text-gray-500"}`}>
                           {waitDays}d
                         </td>
                         {role === "director" && (

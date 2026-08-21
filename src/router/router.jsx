@@ -12,16 +12,19 @@ import DirectorRoute from "../routes/DirectorRoute";
 import OverviewPage from "@/pages/owner-dashboard/overview/overview-page";
 import EnrollmentPage from "@/pages/owner-dashboard/enrollment/enrollment-page";
 import ClassroomsPage from "@/pages/owner-dashboard/classrooms/classrooms-page";
+import OwnerClassroomDetailPage from "@/pages/owner-dashboard/classrooms/classroom-details/page";
 import CashFlowPage from "@/pages/owner-dashboard/cash-flow/cashflow-page";
 import CompliancePage from "@/pages/owner-dashboard/compliance/compliance-page";
 import ScholarshipsPage from "@/pages/owner-dashboard/scholarships/scholarships-page";
 import StaffPage from "@/pages/owner-dashboard/staff/staff-page";
 import DirectorManagementPage from "@/pages/owner-dashboard/director-management/director-management-page";
+import OwnerPayrollPage from "@/pages/owner-dashboard/payroll/payroll-page";
 
 // ─── Director Pages ───
 import DirectorOverviewPage from "@/pages/director-dashboard/overview/director-overview-page";
 import DirectorStaffPage from "@/pages/director-dashboard/staff/director-staff-page";
 import DirectorStudentsPage from "@/pages/director-dashboard/students/director-students-page";
+import DirectorClassroomDetailPage from "@/pages/director-dashboard/students/student-details/page";
 import DailyLogPage from "@/pages/director-dashboard/daily-log/daily-log-page";
 import PayrollPage from "@/pages/director-dashboard/payroll/payroll-page";
 
@@ -83,6 +86,10 @@ export const router = createBrowserRouter([
                 element: <ClassroomsPage />
               },
               {
+                path: 'classrooms/:id',
+                element: <OwnerClassroomDetailPage />
+              },
+              {
                 path: 'cashflow',
                 element: <CashFlowPage />
               },
@@ -105,6 +112,10 @@ export const router = createBrowserRouter([
               {
                 path: 'billing',
                 element: <BillingPage />
+              },
+              {
+                path: 'payroll',
+                element: <OwnerPayrollPage />
               },
             ]
           },
@@ -163,6 +174,10 @@ export const router = createBrowserRouter([
               {
                 path: 'students',
                 element: <DirectorStudentsPage />
+              },
+              {
+                path: 'students/:id',
+                element: <DirectorClassroomDetailPage />
               },
               {
                 path: 'daily-log',

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const itemVariants = {
@@ -12,23 +13,25 @@ const IncidentByClassroomCard = ({ incidentByClassroom }) => {
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-sm">Incidents by Classroom</CardTitle>
+      <Card className="bg-white border-none shadow-sm overflow-hidden border-l-3 border-l-[#B78A2F]">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <AlertTriangle size={14} className="text-[#B78A2F]" /> Incidents by Classroom
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {incidentByClassroom.map(([cls, count], i) => (
-              <div key={i} className="p-3 rounded-xl bg-gray-50">
-                <p className="text-xs font-medium text-gray-900 truncate">{cls}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div key={i} className="p-3 rounded-xl bg-gray-50/80 border border-gray-100">
+                <p className="text-xs font-semibold text-gray-900 truncate">{cls}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${count >= 2 ? "bg-red-500" : "bg-amber-500"}`}
+                      className={`h-full rounded-full transition-all ${count >= 2 ? "bg-[#AE4A3E]" : "bg-[#B78A2F]"}`}
                       style={{ width: `${(count / maxCount) * 100}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-bold ${count >= 2 ? "text-red-600" : "text-amber-600"}`}>
+                  <span className={`text-xs font-bold ${count >= 2 ? "text-[#8A362C]" : "text-[#8F6A1F]"}`}>
                     {count}
                   </span>
                 </div>

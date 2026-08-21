@@ -18,7 +18,7 @@ const WaitlistFilters = ({ statusFilter, onStatusChange, searchQuery, onSearchCh
           <button
             key={s}
             onClick={() => onStatusChange(s)}
-            className={`px-2.5 py-1.5 rounded-full text-[10px] font-semibold transition-all ${statusFilter === s ? "bg-gray-900 text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
+            className={`px-2.5 py-1.5 rounded-full text-[10px] font-semibold transition-all ${statusFilter === s ? "bg-[#1E3A5F] text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}
           >
             {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
@@ -31,7 +31,7 @@ const WaitlistFilters = ({ statusFilter, onStatusChange, searchQuery, onSearchCh
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search child, parent, program..."
-          className="pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
         />
       </div>
     </motion.div>

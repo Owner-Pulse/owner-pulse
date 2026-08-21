@@ -11,7 +11,7 @@ const BudgetVsActualCard = ({ categories, totalSpent, totalBudget, budgetPct }) 
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <PiggyBank size={18} className="text-amber-500" />
+              <PiggyBank size={18} className="text-[#1E3A5F]" />
               Annual Budget vs Actual
             </CardTitle>
             <CardDescription>
@@ -25,7 +25,7 @@ const BudgetVsActualCard = ({ categories, totalSpent, totalBudget, budgetPct }) 
               <span>{fmtMoneyShort(totalBudget)}</span>
             </div>
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-amber-500" style={{ width: `${budgetPct}%` }} />
+              <div className="h-full rounded-full bg-[#B78A2F]" style={{ width: `${budgetPct}%` }} />
             </div>
           </div>
         </div>
@@ -35,12 +35,12 @@ const BudgetVsActualCard = ({ categories, totalSpent, totalBudget, budgetPct }) 
           {categories.map((cat) => {
             const pct = Math.round((cat.spent / cat.budget) * 100);
             const overspent = cat.spent > cat.budget;
-            const barColor = overspent ? "bg-red-400" : pct > 85 ? "bg-amber-400" : "bg-blue-500";
+            const barColor = overspent ? "bg-[#AE4A3E]" : pct > 85 ? "bg-[#B78A2F]" : "bg-[#1E3A5F]";
             return (
               <div key={cat.name} className="p-3 rounded-xl bg-gray-50">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm font-medium text-gray-700 truncate mr-2">{cat.name}</span>
-                  <span className={`text-xs font-bold whitespace-nowrap ${overspent ? "text-red-500" : "text-gray-500"}`}>
+                  <span className={`text-xs font-bold whitespace-nowrap ${overspent ? "text-[#8A362C]" : "text-gray-500"}`}>
                     {fmtMoneyShort(cat.spent)} / {fmtMoneyShort(cat.budget)}
                   </span>
                 </div>
@@ -50,9 +50,9 @@ const BudgetVsActualCard = ({ categories, totalSpent, totalBudget, budgetPct }) 
                 <div className="flex justify-between mt-1">
                   <span className="text-[10px] text-gray-400">{pct}% used</span>
                   {overspent ? (
-                    <span className="text-[10px] text-red-500 font-semibold">Overspent by {fmtMoneyShort(cat.spent - cat.budget)}</span>
+                    <span className="text-[10px] text-[#8A362C] font-semibold">Overspent by {fmtMoneyShort(cat.spent - cat.budget)}</span>
                   ) : (
-                    <span className="text-[10px] text-emerald-600 font-semibold">{fmtMoneyShort(cat.budget - cat.spent)} remaining</span>
+                    <span className="text-[10px] text-[#2F6042] font-semibold">{fmtMoneyShort(cat.budget - cat.spent)} remaining</span>
                   )}
                 </div>
               </div>

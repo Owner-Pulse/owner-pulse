@@ -55,7 +55,7 @@ const IncidentForm = ({ onAdd, onClose }) => {
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Student *</label>
                 <input type="text" value={form.student} onChange={(e) => update("student", e.target.value)} placeholder="e.g. J. Martinez"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Severity</label>
@@ -76,7 +76,7 @@ const IncidentForm = ({ onAdd, onClose }) => {
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Classroom *</label>
               <select value={form.classroom} onChange={(e) => update("classroom", e.target.value)} required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white">
                 <option value="">Select classroom...</option>
                 {CLASSROOMS.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
@@ -85,14 +85,14 @@ const IncidentForm = ({ onAdd, onClose }) => {
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Area</label>
                 <select value={form.area} onChange={(e) => update("area", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white">
                   {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Type</label>
                 <select value={form.incidentType || "behavior"} onChange={(e) => update("incidentType", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white">
                   <option value="behavior">Behavior</option>
                   <option value="safety">Safety</option>
                   <option value="medical">Medical</option>
@@ -103,7 +103,7 @@ const IncidentForm = ({ onAdd, onClose }) => {
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Description</label>
               <textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Brief description of what happened..." rows={2}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 resize-none" />
             </div>
             {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
             <div className="flex gap-3 pt-2">

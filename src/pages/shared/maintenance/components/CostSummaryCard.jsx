@@ -9,7 +9,7 @@ const CostSummaryCard = ({ totalEstCost, openCount }) => (
     <CardContent className="p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-50 rounded-lg"><DollarSign size={18} className="text-purple-600" /></div>
+          <div className="p-2 bg-[#1E3A5F]/10 rounded-lg"><DollarSign size={18} className="text-[#1E3A5F]" /></div>
           <div>
             <p className="text-xs font-medium text-gray-500">Estimated Cost for Open Items</p>
             <p className="text-lg font-bold text-gray-900">{fmtMoney(totalEstCost)}</p>

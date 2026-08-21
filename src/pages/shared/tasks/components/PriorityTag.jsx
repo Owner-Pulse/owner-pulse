@@ -3,10 +3,10 @@ import { Flag } from "lucide-react";
 
 const PriorityTag = ({ priority }) => {
   const c = {
-    high: { bg: "bg-red-50", text: "text-red-700" },
-    medium: { bg: "bg-amber-50", text: "text-amber-700" },
+    high: { bg: "bg-[#B78A2F]/10", text: "text-[#8F6A1F]" },
+    medium: { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]" },
     low: { bg: "bg-gray-50", text: "text-gray-600" },
-  }[priority] || { bg: "bg-amber-50", text: "text-amber-700" };
+  }[priority] || { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]" };
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${c.bg} ${c.text}`}>

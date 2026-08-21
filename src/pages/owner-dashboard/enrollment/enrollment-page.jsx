@@ -119,32 +119,24 @@ const EnrollmentPage = () => {
             {totalEnrolled} students · {PROGRAMS.length} programs · {enrollPercent}% capacity
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-            <UserPlus size={14} className="mr-1.5" /> <span className="hidden xs:inline">Add</span> Student
-          </Button>
-          <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
-            <GraduationCap size={14} className="mr-1.5" /> Waitlist
-          </Button>
-        </div>
       </div>
 
       {/* ── KPI Row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Users} label="Total Enrolled" value={totalEnrolled} sub={`out of ${totalCapacity} capacity`} accent="bg-blue-50 text-blue-600" trend="+9% YoY" />
+          <KpiCard icon={Users} label="Total Enrolled" value={totalEnrolled} sub={`out of ${totalCapacity} capacity`} accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" trend="+9% YoY" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Building2} label="Open Seats" value={openSeats} sub={`${Math.round((openSeats / totalCapacity) * 100)}% availability`} accent="bg-emerald-50 text-emerald-600" />
+          <KpiCard icon={Building2} label="Open Seats" value={openSeats} sub={`${Math.round((openSeats / totalCapacity) * 100)}% availability`} accent="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Calendar} label="Waitlist" value={totalWaitlist} sub={`${waitlistEntries.length} families waiting`} accent="bg-purple-50 text-purple-600" trend="+33% this month" />
+          <KpiCard icon={Calendar} label="Waitlist" value={totalWaitlist} sub={`${waitlistEntries.length} families waiting`} accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" trend="+33% this month" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={AlertTriangle} label="At-Risk" value={activeRisk.length} sub={`${staleCases.length} stale · ${lostRisk.length} lost`} accent="bg-red-50 text-red-600" />
+          <KpiCard icon={AlertTriangle} label="At-Risk" value={activeRisk.length} sub={`${staleCases.length} stale · ${lostRisk.length} lost`} accent="bg-[#AE4A3E]/10 text-[#8A362C]" />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Award} label="Discounts" value={discounts.length} sub={`${discountPct}% of students · ${fmtMoneyShort(discountTotal)}/mo`} accent="bg-cyan-50 text-cyan-600" />
+          <KpiCard icon={Award} label="Discounts" value={discounts.length} sub={`${discountPct}% of students · ${fmtMoneyShort(discountTotal)}/mo`} accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
       </div>
 
@@ -153,13 +145,10 @@ const EnrollmentPage = () => {
         <EnrollmentTargetsCard targets={ENROLLMENT_TARGETS} />
       </motion.div>
 
-      {/* ── Enrollment by Program + Trend ────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <motion.div variants={itemVariants} className="lg:col-span-2">
-          <EnrollmentChart programs={PROGRAMS} />
-        </motion.div>
+      {/* ── Enrollment by Program ────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4">
         <motion.div variants={itemVariants}>
-          <EnrollmentTrendCard trend={enrollmentTrend} />
+          <EnrollmentChart programs={PROGRAMS} />
         </motion.div>
       </div>
 

@@ -8,9 +8,9 @@ const ICON_MAP = {
 };
 
 const TONE_STYLES = {
-  red: { border: "border-red-200", bg: "bg-red-50", icon: "text-red-500", text: "text-red-800" },
-  amber: { border: "border-amber-200", bg: "bg-amber-50", icon: "text-amber-500", text: "text-amber-800" },
-  green: { border: "border-emerald-200", bg: "bg-emerald-50", icon: "text-emerald-500", text: "text-emerald-800" },
+  red: { border: "border-[#AE4A3E]/25", bg: "bg-[#AE4A3E]/10", icon: "text-[#8A362C]", text: "text-[#8A362C]" },
+  amber: { border: "border-[#B78A2F]/25", bg: "bg-[#B78A2F]/10", icon: "text-[#8F6A1F]", text: "text-[#8F6A1F]" },
+  green: { border: "border-[#3E7A54]/25", bg: "bg-[#3E7A54]/10", icon: "text-[#2F6042]", text: "text-[#2F6042]" },
 };
 
 const InsightCard = ({ insight }) => {

@@ -15,7 +15,7 @@ const SectionHeader = ({ number, title, description, onAdd, addLabel }) => (
     {onAdd && (
       <button
         onClick={onAdd}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#1E3A5F] bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/15 transition-colors"
       >
         <Plus size={12} /> {addLabel || "Add"}
       </button>

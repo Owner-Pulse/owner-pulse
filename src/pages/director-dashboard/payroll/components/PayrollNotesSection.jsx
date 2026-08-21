@@ -20,13 +20,13 @@ const PayrollNotesSection = ({ notes, onChange }) => {
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Preschool Notes</label>
               <textarea value={notes.preschool} onChange={(e) => onChange({ ...notes, preschool: e.target.value })}
                 placeholder="Anything the Owner should know about preschool staff…"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" rows={2} />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none" rows={2} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Elementary Notes</label>
               <textarea value={notes.elementary} onChange={(e) => onChange({ ...notes, elementary: e.target.value })}
                 placeholder="Anything the Owner should know about elementary staff…"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" rows={2} />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none" rows={2} />
             </div>
           </div>
         </CardContent>
