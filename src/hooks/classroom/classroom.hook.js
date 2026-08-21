@@ -1,6 +1,51 @@
 import { axiosPrivate } from "@/lib/axios.private";
-import { classroomService } from "@/services/classroom";
+import { classroomService } from "@/services/classroom/classroom.service";
+import { GetAllClassroom } from "@/services/all-classroom.service";
 import { useQuery } from "@tanstack/react-query";
+
+const DEFAULT_CLASSROOMS = [
+    { id: 1, classroom_name: "Ones", capacity: 20 },
+    { id: 2, classroom_name: "VPK A", capacity: 20 },
+    { id: 3, classroom_name: "7/8 Grade", capacity: 20 },
+    { id: 4, classroom_name: "Twos", capacity: 20 },
+    { id: 5, classroom_name: "Kindergarten", capacity: 20 },
+    { id: 6, classroom_name: "1st/2nd Grade", capacity: 20 },
+    { id: 7, classroom_name: "VPK B (Mrs.Johnson)", capacity: 20 },
+    { id: 8, classroom_name: "Threes", capacity: 20 },
+    { id: 9, classroom_name: "3rd/4th Grade", capacity: 20 },
+    { id: 10, classroom_name: "5th/6th Grade (Ms.Stinson)", capacity: 20 }
+];
+
+// Fetch all classrooms from procare endpoint
+export const useGetAllClassrooms = () => {
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useQuery({
+        queryKey: ["all-procare-classrooms"],
+        queryFn: () => {
+            const axiosInstance = axiosPrivate();
+            return GetAllClassroom.getAllClassroom(axiosInstance);
+        },
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+    });
+
+    const classroomsList = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : DEFAULT_CLASSROOMS;
+
+    return {
+        classrooms: classroomsList,
+        isLoading,
+        isError,
+        error
+    };
+};
 
 // Data from the dashboard classroom API ( pnl lists )
 export const useGetClassroom = ({ filter = "All Classrooms", per_page = 10, page = 1 } = {}) => {
@@ -24,14 +69,8 @@ export const useGetClassroom = ({ filter = "All Classrooms", per_page = 10, page
                 page: qPage,
             });
         },
-        // Data is considered fresh for 5 minutes.
-        // Revisiting a cached page (e.g. going back to page 1) will NOT trigger a new API call
-        // as long as the cached data is less than 5 minutes old.
         staleTime: 5 * 60 * 1000,
-        // Keep cached pages in memory for 10 minutes after they become inactive.
         gcTime: 10 * 60 * 1000,
-        // Keep the previous page's data visible while the next page loads.
-        // This means isLoading stays false on page changes — only isFetching becomes true.
         placeholderData: (previousData) => previousData,
 
     });

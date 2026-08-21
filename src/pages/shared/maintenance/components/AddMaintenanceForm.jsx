@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance, useGetUser } from "@/hooks";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
+import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
 
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },

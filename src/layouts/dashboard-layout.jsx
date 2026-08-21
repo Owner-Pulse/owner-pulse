@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
 import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { useGetUser, useSignout } from '@/hooks';
+import { useGetUser } from '@/hooks/auth/user-details.hook';
+import { useSignout } from '@/hooks/auth/auth.hook';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -32,6 +33,7 @@ const directorTabs = [
   { id: "daily-log", label: "Daily Log", icon: ClipboardList },
   { id: "staff", label: "Staff", icon: Users },
   { id: "students", label: "Students", icon: GraduationCap },
+  { id: "compliance", label: "Compliance", icon: AlertTriangle },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },

@@ -8,165 +8,32 @@ import {
   FileText,
   RefreshCw,
   ShieldCheck,
+  Plus,
+  Heart,
+  MessageSquare,
+  Edit,
+  Trash2,
+  ClipboardList,
+  Building2,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./components/KpiCard";
 import OverviewCard from "./components/OverviewCard";
 import UrgencyTimelineCard from "./components/UrgencyTimelineCard";
 import FilterBar from "./components/FilterBar";
-import ComplianceItemCard from "./components/ComplianceItemCard";
+import CategoryTag from "./components/CategoryTag";
+import RoleBadge from "./components/RoleBadge";
+import StatusPill from "./components/StatusPill";
 import InsuranceShoppingCard from "./components/InsuranceShoppingCard";
 
-// ─── Data ─────────────────────────────────────────────────────────
-
-// TODO: Backend wiring — replace hardcoded data with API response
-// Data model: each item carries ownerRole flag for role-based emphasis
-const COMPLIANCE_ITEMS = [
-  {
-    id: 1,
-    item: "DCF Annual Renewal",
-    authority: "FL DCF",
-    status: "compliant",
-    expires: "2026-11-18",
-    category: "regulatory",
-    ownerRole: "director",
-    docChecklist: [
-      "Current liability insurance certificate",
-      "Staff background screening results",
-      "CPR/First Aid certificates on file",
-      "Fire inspection report (current year)",
-      "Health department inspection report (current year)",
-    ],
-  },
-  {
-    id: 2,
-    item: "Quarterly DCF Inspections",
-    authority: "FL DCF",
-    status: "expiring",
-    expires: "2026-06-01",
-    category: "regulatory",
-    ownerRole: "director",
-    recurring: true,
-  },
-  {
-    id: 3,
-    item: "AUP (Step Up Audit)",
-    authority: "Step Up FL",
-    status: "expiring",
-    expires: "2026-10-01",
-    category: "regulatory",
-    ownerRole: "owner",
-    notes: "Start working April. Monthly reminders April through October.",
-  },
-  {
-    id: 4,
-    item: "Annual Survey (Step Up)",
-    authority: "Step Up FL",
-    status: "compliant",
-    expires: "2026-12-01",
-    category: "regulatory",
-    ownerRole: "owner",
-  },
-  {
-    id: 5,
-    item: "Compliance Certificate (DOE)",
-    authority: "FL Dept. of Education",
-    status: "compliant",
-    expires: "2027-02-01",
-    category: "regulatory",
-    ownerRole: "owner",
-  },
-  {
-    id: 6,
-    item: "NWEA Test Score Submission (K–8)",
-    authority: "NWEA",
-    status: "compliant",
-    expires: "2026-08-01",
-    category: "regulatory",
-    ownerRole: "director",
-  },
-  {
-    id: 7,
-    item: "SR Contract",
-    authority: "ELC",
-    status: "expiring",
-    expires: "2026-07-01",
-    category: "regulatory",
-    ownerRole: "director",
-  },
-  {
-    id: 8,
-    item: "VPK Contract",
-    authority: "ELC",
-    status: "expiring",
-    expires: "2026-07-01",
-    category: "regulatory",
-    ownerRole: "director",
-  },
-  {
-    id: 9,
-    item: "Fire Inspection",
-    authority: "County Fire",
-    status: "compliant",
-    expires: "2027-01-01",
-    category: "regulatory",
-    ownerRole: "director",
-    notes: "Heads up needed",
-  },
-  {
-    id: 10,
-    item: "Health Dept. Inspection",
-    authority: "FL DOH",
-    status: "compliant",
-    expires: "2027-01-01",
-    category: "regulatory",
-    ownerRole: "director",
-    notes: "Heads up needed",
-  },
-  {
-    id: 11,
-    item: "Insurance (consolidated)",
-    authority: "Multiple carriers",
-    status: "expiring",
-    expires: "2026-11-18",
-    category: "regulatory",
-    ownerRole: "owner",
-    shopReminder: "2026-09-19",
-    notes: "All policies in one item. 60-day shop reminder Sept 19.",
-  },
-  {
-    id: 12,
-    item: "Background Checks (Staff)",
-    authority: "FL DCF",
-    status: "expiring",
-    expires: "2026-06-15",
-    category: "regulatory",
-    ownerRole: "director",
-    notes: "Per-person rolling. Each staff member tracked individually.",
-  },
-  {
-    id: 13,
-    item: "Scoliosis Assessment",
-    authority: "FL State Requirement",
-    status: "compliant",
-    expires: "2027-03-01",
-    category: "regulatory",
-    ownerRole: "director",
-  },
-  {
-    id: 14,
-    item: "CPR / First Aid (faculty)",
-    authority: "Red Cross",
-    status: "expired",
-    expires: "2026-04-12",
-    category: "regulatory",
-    ownerRole: "director",
-    notes: "Rolling renewal per staff member.",
-  },
-];
+import { useCompliance, daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import AddEditComplianceModal from "./components/AddEditComplianceModal";
+import LogActionModal from "./components/LogActionModal";
+import PulseImpactModal from "./components/PulseImpactModal";
+import InsuranceWorkflowModal from "./components/InsuranceWorkflowModal";
 
 const TODAY = new Date("2026-05-11");
-const daysUntil = (dateStr) => Math.ceil((new Date(dateStr) - TODAY) / 86400000);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -178,32 +45,36 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-// ─── Main Component ───────────────────────────────────────────────
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const CompliancePage = () => {
+  const {
+    items,
+    addItem,
+    updateItem,
+    deleteItem,
+    toggleChecklistItem,
+    addProgressLog,
+    updateInsuranceWorkflow,
+    stats,
+  } = useCompliance();
+
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const stats = useMemo(() => {
-    const compliant = COMPLIANCE_ITEMS.filter((c) => c.status === "compliant").length;
-    const expiring = COMPLIANCE_ITEMS.filter((c) => c.status === "expiring").length;
-    const expired = COMPLIANCE_ITEMS.filter((c) => c.status === "expired").length;
-    const nextDeadline = COMPLIANCE_ITEMS
-      .filter((c) => c.status !== "compliant")
-      .map((c) => daysUntil(c.expires))
-      .sort((a, b) => a - b)[0] || 0;
-    return { compliant, expiring, expired, total: COMPLIANCE_ITEMS.length, nextDeadline };
-  }, []);
-
-  const complianceScore = Math.round((stats.compliant / stats.total) * 100);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [logModalItem, setLogModalItem] = useState(null);
+  const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
+  const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
-    return COMPLIANCE_ITEMS.filter((c) => {
+    return items.filter((c) => {
       if (categoryFilter !== "all" && c.ownerRole !== categoryFilter) return false;
       if (statusFilter !== "all" && c.status !== statusFilter) return false;
       return true;
     });
-  }, [categoryFilter, statusFilter]);
+  }, [items, categoryFilter, statusFilter]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -213,8 +84,18 @@ const CompliancePage = () => {
     });
   }, [filtered]);
 
-  const ownerCount = COMPLIANCE_ITEMS.filter((c) => c.ownerRole === "owner").length;
-  const directorCount = COMPLIANCE_ITEMS.filter((c) => c.ownerRole === "director").length;
+  const insuranceItem = useMemo(() => {
+    return items.find((i) => i.item.toLowerCase().includes("insurance")) || items[10] || items[0];
+  }, [items]);
+
+  const handleSaveItem = (formData) => {
+    if (editItem) {
+      updateItem(editItem.id, formData, "Owner");
+      setEditItem(null);
+    } else {
+      addItem({ ...formData, author: "Owner" });
+    }
+  };
 
   return (
     <motion.div
@@ -228,31 +109,41 @@ const CompliancePage = () => {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
-              Compliance
+              Compliance Overview
             </h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-xs font-bold border whitespace-nowrap bg-[#1E3A5F]/[0.05] border-[#1E3A5F]/15">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border whitespace-nowrap bg-[#1E3A5F]/[0.05] border-[#1E3A5F]/15">
               <span className="bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] bg-clip-text text-transparent">
-                {complianceScore}%
+                {stats.complianceScore}% Score
               </span>
             </span>
           </div>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
             {stats.compliant}/{stats.total} compliant ·{" "}
             {stats.expiring + stats.expired > 0 ? (
-              <span className="text-[#8A362C] font-medium">
-                {stats.expiring + stats.expired} need attention
+              <span className="text-[#8A362C] font-semibold">
+                {stats.expiring + stats.expired} items need attention
               </span>
             ) : (
-              <span className="text-[#2F6042] font-medium">all clear</span>
+              <span className="text-[#2F6042] font-semibold">all clear</span>
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="bg-white text-xs md:text-sm px-2.5 md:px-3">
-            <FileText size={14} className="mr-1.5" /> Reports
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <Button
+            onClick={() => setIsPulseModalOpen(true)}
+            variant="outline"
+            className="bg-white text-xs md:text-sm px-3 border-gray-200"
+          >
+            <Heart size={14} className="mr-1.5 text-[#AE4A3E] fill-[#AE4A3E]" /> Pulse Score Impact
           </Button>
-          <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-2.5 md:px-3">
-            <RefreshCw size={14} className="mr-1.5" /> Check
+          <Button
+            onClick={() => {
+              setEditItem(null);
+              setIsAddModalOpen(true);
+            }}
+            className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-3"
+          >
+            <Plus size={14} className="mr-1.5" /> Add Item
           </Button>
         </div>
       </div>
@@ -273,7 +164,7 @@ const CompliancePage = () => {
             icon={Clock}
             label="Expiring Soon"
             value={stats.expiring}
-            sub={`${stats.expiring > 0 ? `Next: ${stats.nextDeadline} days` : "No pending items"}`}
+            sub={stats.expiring > 0 ? `Next: ${stats.nextDeadline} days` : "No pending items"}
             iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]"
           />
         </motion.div>
@@ -300,17 +191,42 @@ const CompliancePage = () => {
       {/* ── Score Ring + Urgency Timeline ────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div variants={itemVariants}>
-          <OverviewCard
-            complianceScore={complianceScore}
-            totalItems={stats.total}
-            ownerCount={ownerCount}
-            directorCount={directorCount}
-          />
+          <div className="h-full flex flex-col justify-between">
+            <OverviewCard
+              complianceScore={stats.complianceScore}
+              totalItems={stats.total}
+              ownerCount={stats.ownerCount}
+              directorCount={stats.directorCount}
+            />
+          </div>
         </motion.div>
         <motion.div variants={itemVariants} className="lg:col-span-2">
-          <UrgencyTimelineCard items={COMPLIANCE_ITEMS} />
+          <UrgencyTimelineCard items={items} />
         </motion.div>
       </div>
+
+      {/* ── Pulse Score Impact Banner ────────────────────────────── */}
+      {stats.pulseBpmPenalty > 0 && (
+        <motion.div variants={itemVariants}>
+          <div
+            onClick={() => setIsPulseModalOpen(true)}
+            className="p-4 rounded-xl bg-[#AE4A3E]/[0.08] border border-[#AE4A3E]/30 flex items-center justify-between cursor-pointer hover:bg-[#AE4A3E]/[0.12] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Heart size={20} className="text-[#8A362C] fill-[#8A362C] shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-[#8A362C]">
+                  Compliance Penalty Active: +{stats.pulseBpmPenalty} BPM added to Owner Health Pulse
+                </p>
+                <p className="text-[11px] text-[#8A362C]/80">{stats.scoreReason}</p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs border-[#AE4A3E]/40 text-[#8A362C] bg-white">
+              View Breakdown
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Filters ──────────────────────────────────────────────── */}
       <motion.div variants={itemVariants}>
@@ -325,22 +241,183 @@ const CompliancePage = () => {
 
       {/* ── Compliance Items List ───────────────────────────────── */}
       <div className="space-y-3">
-        {sorted.map((item) => (
-          <ComplianceItemCard key={item.id} item={item} />
-        ))}
+        {sorted.map((item) => {
+          const d = item.status === "expired" ? daysSince(item.expires) : daysUntil(item.expires);
+          const isExpired = item.status === "expired";
+          const isUrgent = !isExpired && d <= 30;
+          const progressPct = isExpired ? 100 : Math.min(100, Math.round((1 - d / 365) * 100));
+          const pct = clamp(progressPct, 0, 100);
+
+          return (
+            <motion.div key={item.id} variants={itemVariants}>
+              <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border-l-4 p-4 md:p-5 ${
+                isExpired ? "border-l-[#AE4A3E]" : isUrgent ? "border-l-[#B78A2F]" : "border-l-[#1E3A5F]"
+              }`}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm md:text-base">{item.item}</h3>
+                      <CategoryTag category={item.category} />
+                      <RoleBadge role={item.ownerRole} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Building2 size={12} className="text-[#1E3A5F]/40 flex-shrink-0" />
+                      <span className="text-xs text-gray-500">{item.authority}</span>
+                    </div>
+                    {item.notes && <div className="mt-1 text-[11px] text-gray-500 italic">{item.notes}</div>}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <StatusPill status={item.status} />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setLogModalItem(item)}
+                        className="h-7 px-2 text-[11px] text-[#1E3A5F] hover:bg-[#1E3A5F]/10"
+                      >
+                        <MessageSquare size={12} className="mr-1" /> Log Action
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditItem(item);
+                          setIsAddModalOpen(true);
+                        }}
+                        className="h-7 px-2 text-[11px] text-gray-600 hover:bg-gray-100"
+                      >
+                        <Edit size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expiration progress with globe */}
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-xs mb-2">
+                    <span className="text-gray-400">Expires {item.expires}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] bg-clip-text text-transparent">
+                        {pct}%
+                      </span>
+                      <span className={`font-semibold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-500"}`}>
+                        {isExpired ? `${d}d overdue` : `${d} days left`}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="relative h-2.5 bg-[#1E3A5F]/10 ring-1 ring-inset ring-[#1E3A5F]/10 rounded-full">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] transition-[width] duration-700 ease-out"
+                      style={{ width: `${clamp(pct, 2, 100)}%` }}
+                    />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 transition-[left] duration-700 ease-out"
+                      style={{ left: `${clamp(pct, 4, 96)}%` }}
+                    >
+                      <img
+                        src="/world.png"
+                        alt="World"
+                        className="w-7 h-7 rounded-full object-cover shadow-sm ring-1 ring-[#1E3A5F]/30"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Document Checklist with Toggles */}
+                {item.docChecklist && item.docChecklist.length > 0 && (
+                  <div className="mt-3 p-3 rounded-lg bg-[#1E3A5F]/[0.04] border border-[#1E3A5F]/15">
+                    <p className="text-[10px] font-bold text-[#1E3A5F] uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <ClipboardList size={12} /> Document Checklist
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                      {item.docChecklist.map((docObj, idx) => {
+                        const docText = typeof docObj === "string" ? docObj : docObj.text;
+                        const isChecked = typeof docObj === "string" ? true : !!docObj.checked;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => toggleChecklistItem(item.id, idx)}
+                            className={`flex items-center gap-2 text-[11px] p-1.5 rounded text-left transition-colors ${
+                              isChecked
+                                ? "bg-white text-emerald-800 font-medium border border-emerald-200"
+                                : "bg-white/60 text-gray-600 hover:bg-white border border-gray-100"
+                            }`}
+                          >
+                            <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                              isChecked ? "bg-emerald-600 text-white" : "border border-gray-300 bg-white"
+                            }`}>
+                              {isChecked && "✓"}
+                            </span>
+                            <span className="truncate">{docText}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Logs History */}
+                {item.logs && item.logs.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                    <span className="font-semibold text-gray-700 flex items-center gap-1">
+                      <UserCheck size={12} className="text-[#1E3A5F]" /> Latest Log: {item.logs[0].text}
+                    </span>
+                    <span className="text-[10px] text-gray-400">{item.logs[0].date} ({item.logs[0].author})</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
 
         {sorted.length === 0 && (
-          <div className="py-12 text-center">
+          <div className="py-12 text-center bg-white rounded-xl">
             <ShieldCheck size={32} className="mx-auto text-gray-300 mb-2" />
             <p className="text-sm text-gray-500">No items match the selected filters.</p>
           </div>
         )}
       </div>
 
-      {/* ── Insurance Shopping ───────────────────────────────────── */}
+      {/* ── Insurance Shopping Workflow Card ─────────────────────── */}
       <motion.div variants={itemVariants}>
-        <InsuranceShoppingCard />
+        <div onClick={() => setIsInsuranceModalOpen(true)} className="cursor-pointer">
+          <InsuranceShoppingCard />
+        </div>
       </motion.div>
+
+      {/* Modals */}
+      <AddEditComplianceModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditItem(null);
+        }}
+        onSave={handleSaveItem}
+        editItem={editItem}
+        userRole="owner"
+      />
+
+      <LogActionModal
+        isOpen={!!logModalItem}
+        onClose={() => setLogModalItem(null)}
+        item={logModalItem}
+        onAddLog={addProgressLog}
+        userRole="owner"
+      />
+
+      <PulseImpactModal
+        isOpen={isPulseModalOpen}
+        onClose={() => setIsPulseModalOpen(false)}
+        stats={stats}
+      />
+
+      <InsuranceWorkflowModal
+        isOpen={isInsuranceModalOpen}
+        onClose={() => setIsInsuranceModalOpen(false)}
+        insuranceItem={insuranceItem}
+        onUpdateWorkflow={updateInsuranceWorkflow}
+      />
     </motion.div>
   );
 };

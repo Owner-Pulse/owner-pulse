@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import logo from '../../../assets/Logo.png';
 import { Link, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { useSignin } from '@/hooks';
+import { useSignin } from '@/hooks/auth/auth.hook';
 import { setToken } from '@/lib/setToken';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,12 +29,16 @@ const LoginPage = () => {
 
   const onSubmit = (data) => {
     signin(data, {
-      onSuccess: (data) => {
-        toast.success(data?.message || "Login Successful");
+      onSuccess: (resData) => {
+        toast.success(resData?.message || "Login Successful");
         queryClient.clear();
-        setToken(data?.token);
 
-        const role = data?.data?.role;
+        const token = resData?.token || resData?.data?.token || resData?.access_token;
+        if (token) {
+          setToken(token);
+        }
+
+        const role = resData?.data?.role || resData?.role || resData?.user?.role || resData?.data?.user?.role;
         if (role === 'owner') {
           navigate("/owner/overview");
         } else if (role === 'director') {
@@ -45,7 +49,13 @@ const LoginPage = () => {
       },
 
       onError: (error) => {
-        toast.error(error?.response?.data?.message || error?.message || "Login Failed");
+        const errorMsg =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          (error?.response ? `Server Error (${error.response.status})` : null) ||
+          (error?.message && !error.message.includes("undefined") ? error.message : null) ||
+          "Unable to connect to login server. Please check network connection.";
+        toast.error(errorMsg);
       }
     });
   };

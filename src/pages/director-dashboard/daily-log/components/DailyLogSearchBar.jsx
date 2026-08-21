@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Search, X, AlertTriangle, UserMinus } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -8,41 +8,54 @@ const itemVariants = {
 };
 
 const FILTERS = [
-  { id: "all", label: "All" },
-  { id: "incident", label: "Incident" },
-  { id: "removal", label: "Removal" },
+  { id: "all", label: "All History" },
+  { id: "incident", label: "Incidents" },
+  { id: "removal", label: "Removals" },
+  { id: "pto", label: "Staff PTO" },
+  { id: "substitute", label: "Substitutes" },
+  { id: "waitlist", label: "Waitlist" },
+  { id: "maintenance", label: "Maintenance" },
+  { id: "at_risk", label: "At-Risk" },
 ];
 
 const DailyLogSearchBar = ({ searchQuery, onSearchChange, filterType, onFilterChange }) => {
   return (
-    <motion.div variants={itemVariants}>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2 focus-within:ring-2 focus-within:ring-[#1E3A5F] flex-1">
-          <Search size={16} className="text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search entries..."
-            className="text-sm bg-transparent border-none outline-none w-full"
-          />
-          {searchQuery && (
-            <button onClick={() => onSearchChange("")} className="text-gray-400 hover:text-gray-600">
-              <X size={14} />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1 bg-white rounded-xl border border-gray-200 p-1">
-          {FILTERS.map((f) => (
+    <motion.div variants={itemVariants} className="space-y-3">
+      {/* Search Input Bar */}
+      <div className="flex items-center gap-2 bg-white rounded-2xl border border-gray-200 px-3.5 py-2.5 shadow-sm focus-within:ring-2 focus-within:ring-[#1E3A5F]/20 transition-all">
+        <Search size={16} className="text-gray-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search by student, staff, classroom, reason or maintenance title..."
+          className="text-xs bg-transparent border-none outline-none w-full text-gray-800 placeholder-gray-400"
+        />
+        {searchQuery && (
+          <button onClick={() => onSearchChange("")} className="text-gray-400 hover:text-gray-600">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Filter Tabs Row */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        {FILTERS.map((f) => {
+          const isActive = filterType === f.id;
+          return (
             <button
               key={f.id}
               onClick={() => onFilterChange(f.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filterType === f.id ? "bg-[#1E3A5F] text-white" : "text-gray-500 hover:bg-gray-50"}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                isActive 
+                  ? "bg-[#1E3A5F] text-white shadow-sm" 
+                  : "bg-white text-gray-500 hover:bg-slate-100 border border-gray-100"
+              }`}
             >
               {f.label}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </motion.div>
   );

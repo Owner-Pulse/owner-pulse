@@ -9,7 +9,7 @@ import AiInsightsCard from "./components/AiInsightsCard";
 import QuickBooksCard from "./components/QuickBooksCard";
 import BudgetVsActualCard from "./components/BudgetVsActualCard";
 import FullYearTable from "./components/FullYearTable";
-import { useGetCashflow } from "@/hooks/cashflow";
+import { useGetCashflow } from "@/hooks/owner-hook/cashflow.hook";
 
 const DEFAULT_YEARS = [2022, 2023, 2024, 2025, 2026];
 

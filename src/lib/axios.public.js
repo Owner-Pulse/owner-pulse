@@ -17,24 +17,23 @@ export const axiosPublic = () => {
     instance.interceptors.response.use(
         (response) => response,
         (error) => {
-            if (error.response.status === 404) {
+            const status = error?.response?.status;
+            if (status === 404) {
                 console.log('Not Found');
-            }
-            if (error.response.status === 500) {
+            } else if (status === 500) {
                 console.log('Internal Server Error');
-            }
-            if (error.response.status === 502) {
+            } else if (status === 502) {
                 console.log('Bad Gateway');
-            }
-            if (error.response.status === 503) {
+            } else if (status === 503) {
                 console.log('Service Unavailable');
-            }
-            if (error.response.status === 504) {
+            } else if (status === 504) {
                 console.log('Gateway Timeout');
+            } else if (!error?.response) {
+                console.log('Network or connection error:', error?.message);
             }
 
             console.log('Public Axios Error:', error);
-            throw error;
+            return Promise.reject(error);
         }
     );
 
