@@ -39,23 +39,10 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_PTO_LOG = [
-  { id: 1, staffId: 1, dayType: "sick", days: 1, date: "2026-05-08" },
-  { id: 2, staffId: 7, dayType: "personal", days: 1, date: "2026-05-06" },
-  { id: 3, staffId: 7, dayType: "personal", days: 1, date: "2026-05-02" },
-  { id: 4, staffId: 8, dayType: "vacation", days: 2, date: "2026-04-25" },
-];
-
-const INITIAL_SUBSTITUTES = [
-  { id: 1, date: "2026-05-11", coveringFor: "Ms. Cohen", subName: "Ms. Hart", calledBy: "Director" },
-  { id: 2, date: "2026-05-05", coveringFor: "Mr. Levine", subName: "Mr. Owens", calledBy: "Director" },
-  { id: 3, date: "2026-04-28", coveringFor: "Ms. Diaz", subName: "Ms. Hart", calledBy: "Director" },
-];
-
 const DirectorStaffManagement = () => {
   const [activeTab, setActiveTab] = useState("roster");
-  const [ptoLog, setPtoLog] = useState(INITIAL_PTO_LOG);
-  const [substitutes, setSubstitutes] = useState(INITIAL_SUBSTITUTES);
+  const [ptoLog, setPtoLog] = useState([]);
+  const [substitutes, setSubstitutes] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
   // Pagination states
