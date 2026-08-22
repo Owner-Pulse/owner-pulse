@@ -1,5 +1,5 @@
 export const classroomService = {
-    getClassroom: async (axiosInstance, { filter, per_page = 10, page = 1 } = {}) => {
+    getClassroom: async (axiosInstance, { filter, per_page = 50, page = 1 } = {}) => {
         try {
             const params = new URLSearchParams();
             if (filter && filter !== "All Classrooms") {

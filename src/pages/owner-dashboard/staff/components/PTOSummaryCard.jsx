@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Calendar, AlertCircle } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Calendar, AlertCircle, Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const PTOSkeletonItem = () => (
@@ -22,6 +22,7 @@ const PTOSkeletonItem = () => (
 );
 
 const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, isLoadingMore }) => {
+  const [search, setSearch] = useState("");
   const overallPct = ptoSummary?.overall_pto_percentage ?? 0;
   const usedDays = ptoSummary?.total_pto_used_days ?? 0;
   const allowanceDays = ptoSummary?.total_pto_allowance_days ?? 0;
@@ -38,10 +39,20 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
     }
   };
 
+  const filteredStaff = useMemo(() => {
+    if (!search.trim()) return staffList;
+    const q = search.toLowerCase().trim();
+    return staffList.filter((s) => {
+      const name = (s.name || "").toLowerCase();
+      const empId = String(s.employee_id || s.procare_employee_id || s.id || "").toLowerCase();
+      return name.includes(q) || empId.includes(q);
+    });
+  }, [staffList, search]);
+
   return (
     <Card className="bg-white border-none shadow-sm">
       <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
               <Calendar size={16} className="text-[#B78A2F]" /> PTO Summary
@@ -50,21 +61,41 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
               {overallPct}% of total PTO allowance used YTD ({usedDays}/{allowanceDays} days total)
             </CardDescription>
           </div>
-          {ptoSummary?.high_usage_count > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
-              <AlertCircle size={13} /> {ptoSummary.high_usage_count} High Usage
-            </span>
-          )}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search staff PTO balances..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-8 pr-8 py-1.5 text-xs rounded-xl border border-gray-200 bg-gray-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+            {ptoSummary?.high_usage_count > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100 shrink-0">
+                <AlertCircle size={13} /> {ptoSummary.high_usage_count} High Usage
+              </span>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {staffList.length > 0 ? (
+        {filteredStaff.length > 0 ? (
           <div
             ref={listContainerRef}
             onScroll={handleScroll}
             className="max-h-95 overflow-y-auto pr-1 space-y-2.5"
           >
-            {staffList.map((s, idx) => {
+            {filteredStaff.map((s, idx) => {
               const used = s.used_days ?? s.ptoUsed ?? 0;
               const allowance = s.allowance_days ?? s.ptoAllowance ?? 10;
               const remaining = s.remaining_days ?? s.remaining ?? (allowance - used);
@@ -74,6 +105,7 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
 
               const initials = (s.name || "Staff")
                 .split(" ")
+                .filter(Boolean)
                 .map((n) => n[0])
                 .join("")
                 .slice(0, 2)
@@ -146,7 +178,9 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
             )}
           </div>
         ) : (
-          <div className="py-8 text-center text-sm text-gray-500">No PTO summary records found.</div>
+          <div className="py-8 text-center text-sm text-gray-500">
+            {search ? `No staff PTO records matching "${search}"` : "No PTO summary records found."}
+          </div>
         )}
       </CardContent>
     </Card>

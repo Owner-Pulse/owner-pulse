@@ -18,7 +18,7 @@ export const useGetDirectorWaitlistList = (params) => {
     } = useInfiniteQuery({
         queryKey: ["director-waitlist-list", params],
         queryFn: ({ pageParam }) =>
-            directorWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: 10 }),
+            directorWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const pagination = lastPage?.pagination;

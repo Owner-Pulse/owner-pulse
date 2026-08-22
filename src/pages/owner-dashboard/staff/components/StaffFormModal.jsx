@@ -1,29 +1,58 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UserPlus } from "lucide-react";
+import { X, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
 const ROLES = ["Lead Teacher", "Assistant Teacher", "Floater", "Director", "Assistant Director", "Cook/Chef", "Admin"];
 
-const CLASSROOMS = [
-  "Age 1 — Bumblebees", "Age 2 — Ladybugs", "PreK3 — Caterpillars",
-  "PreK4 — Butterflies", "VPK — Fireflies", "K — Sequoia",
-  "1st — Redwood", "2nd — Willow", "3rd — Oak",
-  "4th — Maple", "5th — Pine", "6th — Cedar",
-  "7th — Birch", "8th — Aspen", "Front Office", "Kitchen", "Floater Pool"
-];
+const parseToYYYYMMDD = (dateStr) => {
+  if (!dateStr) return "";
+  if (typeof dateStr !== "string") return "";
+  if (dateStr.includes("-") && dateStr.split("-")[0].length === 4) {
+    return dateStr;
+  }
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const mm = parts[0].padStart(2, "0");
+      const dd = parts[1].padStart(2, "0");
+      const yyyy = parts[2];
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  }
+  return dateStr;
+};
 
-const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
+const formatDateToMMDDYYYY = (dateStr) => {
+  if (!dateStr) return "";
+  if (typeof dateStr !== "string") return "";
+  if (dateStr.includes("/")) return dateStr;
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const yyyy = parts[0];
+      const mm = parts[1];
+      const dd = parts[2];
+      return `${mm}/${dd}/${yyyy}`;
+    }
+  }
+  return dateStr;
+};
+
+const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }) => {
+  const { classrooms = [] } = useGetAllClassrooms();
+
   const [form, setForm] = useState({
     name: "",
     employee_id: "",
-    role: "Lead Teacher",
-    classroom: "Floater Pool",
-    status: "Currently Employed",
-    ptoAllowance: 10,
-    pto_used: 0,
-    hireDate: new Date().toISOString().split("T")[0],
-    dob: "1990-01-01",
+    role: "",
+    classroom: "",
+    status: "",
+    ptoAllowance: "",
+    pto_used: "",
+    hireDate: "",
+    dob: "",
     phone: "",
     email: ""
   });
@@ -32,29 +61,29 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
   useEffect(() => {
     if (staff) {
       setForm({
-        name: staff.name || "",
-        employee_id: staff.employee_id || staff.procare_employee_id || "",
-        role: staff.role || "Lead Teacher",
-        classroom: staff.classroom || staff.work_area || "Floater Pool",
-        status: staff.status || "Currently Employed",
-        ptoAllowance: staff.ptoAllowance || staff.total_allowance_days || 10,
-        pto_used: staff.pto_used ?? staff.ptoUsed ?? 0,
-        hireDate: staff.hireDate || staff.hire_date || new Date().toISOString().split("T")[0],
-        dob: staff.dob || staff.birth_date || staff.date_of_birth || "1990-01-01",
-        phone: staff.phone || "",
+        name: staff.full_name || staff.name || "",
+        employee_id: staff.procare_employee_id || staff.employee_id || "",
+        role: staff.role || "",
+        classroom: staff.primary_assignment || staff.classroom || staff.work_area || "",
+        status: staff.employment_status || staff.status || "Currently Employed",
+        ptoAllowance: staff.pto_allowance ?? staff.ptoAllowance ?? staff.total_allowance_days ?? "",
+        pto_used: staff.pto_used ?? staff.ptoUsed ?? "",
+        hireDate: parseToYYYYMMDD(staff.hire_date || staff.hireDate || ""),
+        dob: parseToYYYYMMDD(staff.date_of_birth || staff.dob || staff.birth_date || ""),
+        phone: staff.phone_number || staff.phone || "",
         email: staff.email || ""
       });
     } else {
       setForm({
         name: "",
-        employee_id: Math.floor(100 + Math.random() * 900).toString(),
-        role: "Lead Teacher",
-        classroom: "Floater Pool",
-        status: "Currently Employed",
-        ptoAllowance: 10,
-        pto_used: 0,
-        hireDate: new Date().toISOString().split("T")[0],
-        dob: "1990-01-01",
+        employee_id: "",
+        role: "",
+        classroom: "",
+        status: "",
+        ptoAllowance: "",
+        pto_used: "",
+        hireDate: "",
+        dob: "",
         phone: "",
         email: ""
       });
@@ -70,8 +99,22 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
       setError("Staff Name and Employee ID are required.");
       return;
     }
-    onSave(form);
-    onClose();
+
+    const payload = {
+      full_name: form.name,
+      employee_id: Number(form.employee_id) || form.employee_id,
+      role: form.role,
+      primary_assignment: form.classroom,
+      employment_status: form.status,
+      date_of_birth: formatDateToMMDDYYYY(form.dob),
+      hire_date: formatDateToMMDDYYYY(form.hireDate),
+      pto_allowance: Number(form.ptoAllowance) || 0,
+      pto_used: Number(form.pto_used) || 0,
+      phone_number: form.phone,
+      email: form.email
+    };
+
+    onSave(payload);
   };
 
   return (
@@ -129,6 +172,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
                       onChange={(e) => update("role", e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white"
                     >
+                      <option value="">Select Role...</option>
                       {ROLES.map((role) => (
                         <option key={role} value={role}>{role}</option>
                       ))}
@@ -144,9 +188,15 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
                       onChange={(e) => update("classroom", e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white"
                     >
-                      {CLASSROOMS.map((cls) => (
-                        <option key={cls} value={cls}>{cls}</option>
-                      ))}
+                      <option value="">Select Classroom...</option>
+                      {classrooms.map((cls) => {
+                        const cName = cls.classroom_name || cls.name || cls.title;
+                        return (
+                          <option key={cls.id || cls.procare_classroom_id || cName} value={cName}>
+                            {cName}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                   <div>
@@ -156,6 +206,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
                       onChange={(e) => update("status", e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white"
                     >
+                      <option value="">Select Status...</option>
                       <option value="Currently Employed">Currently Employed</option>
                       <option value="Terminated Positive">Terminated Positive</option>
                       <option value="Terminated Negative">Terminated Negative</option>
@@ -232,11 +283,20 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose }) => {
                 {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
 
                 <div className="flex gap-3 pt-2">
-                  <Button type="button" variant="outline" onClick={onClose} className="flex-1 rounded-xl">
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="flex-1 rounded-xl">
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl">
-                    {staff ? "Save Changes" : <><UserPlus size={15} className="mr-1.5 inline" /> Add Staff</>}
+                  <Button type="submit" disabled={isSubmitting} className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl">
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="animate-spin" size={16} />
+                        Saving...
+                      </span>
+                    ) : staff ? (
+                      "Save Changes"
+                    ) : (
+                      <><UserPlus size={15} className="mr-1.5 inline" /> Add Staff</>
+                    )}
                   </Button>
                 </div>
               </form>

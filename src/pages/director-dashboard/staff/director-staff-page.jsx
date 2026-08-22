@@ -6,7 +6,8 @@ import {
   AlertTriangle, 
   Clock, 
   Users, 
-  CheckCircle 
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatCard from "./components/StatCard";
@@ -16,9 +17,16 @@ import SubstituteHistoryCard from "./components/SubstituteHistoryCard";
 import PTOForm from "./components/PTOForm";
 import SubstituteForm from "./components/SubstituteForm";
 import StaffRosterTable from "../../owner-dashboard/staff/components/StaffRosterTable";
+import PTOSummaryCard from "../../owner-dashboard/staff/components/PTOSummaryCard";
 import StaffFormModal from "../../owner-dashboard/staff/components/StaffFormModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
+import { 
+  useGetDirectorStaff, 
+  useAddStaff, 
+  useUpdateStaff, 
+  useDeleteStaff, 
+  useGetPtoStaff 
+} from "@/hooks/director-hook/staff.hook";
 
 const TODAY = new Date("2026-05-11");
 
@@ -50,22 +58,76 @@ const DirectorStaffManagement = () => {
   const [substitutes, setSubstitutes] = useState(INITIAL_SUBSTITUTES);
   const [showForm, setShowForm] = useState(false);
 
-  // Local state for staff roster list
+  // Pagination states
+  const [rosterPage, setRosterPage] = useState(1);
+  const [ptoPage, setPtoPage] = useState(1);
+  const [subPage, setSubPage] = useState(1);
+
+  // Local state for accumulated staff list & PTO list
   const [allStaffRoster, setAllStaffRoster] = useState([]);
+  const [allPtoStaff, setAllPtoStaff] = useState([]);
   const [sortBy, setSortBy] = useState("name");
 
-  // Modal and action states for staff management
+  // Modal and action states
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-  const { staffList = [] } = useGetPtoStaff({ per_page: 1000 });
+  // API hooks
+  const currentPageParam = activeTab === "pto" ? ptoPage : activeTab === "substitute" ? subPage : rosterPage;
+  const { data: directorData, isLoading: isDirectorLoading, isFetching: isDirectorFetching } = useGetDirectorStaff({
+    type: activeTab === "substitute" ? "substitutes" : activeTab,
+    page: currentPageParam,
+    per_page: 50,
+  });
 
-  // Sync API staff list with local state
+  const { staffList = [] } = useGetPtoStaff({ per_page: 1000 });
+  const { addStaff, isPending: isAdding } = useAddStaff();
+  const { updateStaff, isPending: isUpdating } = useUpdateStaff();
+  const { deleteStaff, isPending: isDeleting } = useDeleteStaff();
+
+  const directorDataContent = directorData?.data || directorData || {};
+
+  // Extract tab specific data
+  const staffRosterFromApi = directorDataContent.staff_roster || directorDataContent.staff_list || [];
+  const rosterPagination = directorDataContent.staff_roster_pagination || directorDataContent.pagination || null;
+  const summaryMetrics = directorDataContent.summary || directorDataContent.roster_metrics || {};
+
+  // PTO metrics & history from API
+  const ptoMetricsFromApi = directorDataContent.pto_metrics || (directorDataContent.type === "pto" ? directorDataContent.summary : null);
+  const ptoHistoryFromApi = directorDataContent.pto_history;
+  const staffPtoFromApi = directorDataContent.staff_pto_list;
+  const ptoPaginationFromApi = directorDataContent.staff_pto_list_pagination || directorDataContent.pto_history_pagination;
+
+  // Substitute metrics & history from API
+  const subMetricsFromApi = directorDataContent.substitutes_metrics || (directorDataContent.type === "substitutes" ? directorDataContent.summary : null);
+  const subHistoryFromApi = directorDataContent.substitute_history || (Array.isArray(directorDataContent.substitutes) ? directorDataContent.substitutes : null);
+
+  // Sync staff roster list
   useEffect(() => {
-    if (staffList && staffList.length > 0 && allStaffRoster.length === 0) {
-      // Map initial API shape to what RosterTable expects
+    if (staffRosterFromApi && Array.isArray(staffRosterFromApi) && staffRosterFromApi.length > 0) {
+      const formattedApiItems = staffRosterFromApi.map((s) => ({
+        ...s,
+        employee_id: s.employee_id || s.procare_employee_id || s.id,
+        name: s.name,
+        role: s.role || "Lead Teacher",
+        ptoAllowance: s.ptoAllowance || s.total_allowance_days || 10,
+        pto_used: s.pto_used ?? s.ptoUsed ?? 0,
+        remaining: (s.total_allowance_days || s.ptoAllowance || 10) - (s.pto_used ?? s.ptoUsed ?? 0),
+        usage_percentage: Math.round(((s.pto_used ?? s.ptoUsed ?? 0) / (s.total_allowance_days || s.ptoAllowance || 10)) * 100)
+      }));
+
+      if (rosterPage === 1) {
+        setAllStaffRoster(formattedApiItems);
+      } else {
+        setAllStaffRoster((prev) => {
+          const existingIds = new Set(prev.map((item) => item.employee_id || item.id || item.name));
+          const newUnique = formattedApiItems.filter((item) => !existingIds.has(item.employee_id || item.id || item.name));
+          return [...prev, ...newUnique];
+        });
+      }
+    } else if (staffList && staffList.length > 0 && allStaffRoster.length === 0) {
       const formatted = staffList.map((s) => ({
         ...s,
         employee_id: s.employee_id || s.procare_employee_id || s.id,
@@ -78,33 +140,86 @@ const DirectorStaffManagement = () => {
       }));
       setAllStaffRoster(formatted);
     }
-  }, [staffList]);
+  }, [directorData, staffList, rosterPage]);
 
-  const ptoStats = useMemo(() => ({
-    totalDays: ptoLog.reduce((a, r) => a + r.days, 0),
-    sickDays: ptoLog.filter((r) => r.dayType === "sick").reduce((a, r) => a + r.days, 0),
-    personalDays: ptoLog.filter((r) => r.dayType === "personal").reduce((a, r) => a + r.days, 0),
-    uniqueStaff: [...new Set(ptoLog.map((r) => r.staffId))].length,
-  }), [ptoLog]);
+  // Sync PTO staff list
+  useEffect(() => {
+    if (staffPtoFromApi && Array.isArray(staffPtoFromApi)) {
+      if (ptoPage === 1) {
+        setAllPtoStaff(staffPtoFromApi);
+      } else {
+        setAllPtoStaff((prev) => {
+          const existingIds = new Set(prev.map((item) => item.employee_id || item.id || item.name));
+          const newUnique = staffPtoFromApi.filter((item) => !existingIds.has(item.employee_id || item.id || item.name));
+          return [...prev, ...newUnique];
+        });
+      }
+    }
+  }, [directorData, ptoPage]);
 
-  const subStats = useMemo(() => ({
-    total: substitutes.length,
-    thisWeek: substitutes.filter((r) => {
+  const handleLoadMoreRoster = () => {
+    if (rosterPagination && rosterPage < Number(rosterPagination.last_page)) {
+      setRosterPage((prev) => prev + 1);
+    }
+  };
+
+  const handleLoadMorePto = () => {
+    if (ptoPaginationFromApi && ptoPage < Number(ptoPaginationFromApi.last_page)) {
+      setPtoPage((prev) => prev + 1);
+    }
+  };
+
+  // Stat computations (Prioritize real API metrics)
+  const ptoStats = useMemo(() => {
+    if (ptoMetricsFromApi) {
+      return {
+        totalDays: ptoMetricsFromApi.total_pto_days ?? 0,
+        sickDays: ptoMetricsFromApi.sick_days ?? 0,
+        personalDays: ptoMetricsFromApi.personal_days ?? 0,
+        uniqueStaff: ptoMetricsFromApi.staff_affected ?? 0,
+      };
+    }
+    return {
+      totalDays: ptoLog.reduce((a, r) => a + r.days, 0),
+      sickDays: ptoLog.filter((r) => r.dayType === "sick").reduce((a, r) => a + r.days, 0),
+      personalDays: ptoLog.filter((r) => r.dayType === "personal").reduce((a, r) => a + r.days, 0),
+      uniqueStaff: [...new Set(ptoLog.map((r) => r.staffId))].length,
+    };
+  }, [ptoMetricsFromApi, ptoLog]);
+
+  const subStats = useMemo(() => {
+    if (subMetricsFromApi) {
+      return {
+        total: subMetricsFromApi.total_substitutes ?? 0,
+        thisWeek: subMetricsFromApi.this_week ?? 0,
+        uniqueSubs: subMetricsFromApi.unique_subs ?? 0,
+        coverage: subMetricsFromApi.coverage_percentage ? `${subMetricsFromApi.coverage_percentage}%` : "100%"
+      };
+    }
+    const thisWeekCount = substitutes.filter((r) => {
       const diff = Math.ceil((TODAY - new Date(r.date)) / 86400000);
       return diff >= 0 && diff <= 7;
-    }).length,
-    uniqueSubs: [...new Set(substitutes.map((r) => r.subName))].length,
-  }), [substitutes]);
+    }).length;
+    return {
+      total: substitutes.length,
+      thisWeek: thisWeekCount,
+      uniqueSubs: [...new Set(substitutes.map((r) => r.subName))].length,
+      coverage: thisWeekCount > 0 ? `${Math.round((thisWeekCount / substitutes.length) * 100)}%` : "100%"
+    };
+  }, [subMetricsFromApi, substitutes]);
 
   const rosterStats = useMemo(() => ({
-    total: allStaffRoster.length,
-    leadTeachers: allStaffRoster.filter(s => s.role === "Lead Teacher").length,
-    assistants: allStaffRoster.filter(s => s.role === "Assistant Teacher").length,
-    support: allStaffRoster.filter(s => !["Lead Teacher", "Assistant Teacher"].includes(s.role)).length,
-  }), [allStaffRoster]);
+    total: summaryMetrics.total_staff || summaryMetrics.total_roster || allStaffRoster.length,
+    leadTeachers: summaryMetrics.lead_teachers ?? allStaffRoster.filter(s => s.role === "Lead Teacher").length,
+    assistants: summaryMetrics.assistants ?? allStaffRoster.filter(s => s.role === "Assistant Teacher").length,
+    support: summaryMetrics.other_staff ?? allStaffRoster.filter(s => !["Lead Teacher", "Assistant Teacher"].includes(s.role)).length,
+  }), [allStaffRoster, summaryMetrics]);
 
-  const handleAddPTO = (entry) => setPtoLog((prev) => [entry, ...prev]);
-  const handleAddSub = (entry) => setSubstitutes((prev) => [entry, ...prev]);
+  // Active PTO History list (Prioritize API response)
+  const activePtoHistory = Array.isArray(ptoHistoryFromApi) ? ptoHistoryFromApi : ptoLog;
+  
+  // Active Substitutes History list (Prioritize API response)
+  const activeSubstitutesHistory = Array.isArray(subHistoryFromApi) ? subHistoryFromApi : substitutes;
 
   // CRUD events
   const handleAddStaffClick = () => {
@@ -122,51 +237,31 @@ const DirectorStaffManagement = () => {
     setIsConfirmDeleteOpen(true);
   };
 
-  const confirmDeleteStaff = () => {
-    setAllStaffRoster((prev) => prev.filter((s) => (s.employee_id || s.id) !== pendingDeleteId));
-    setIsConfirmDeleteOpen(false);
-    setPendingDeleteId(null);
+  const confirmDeleteStaff = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      await deleteStaff(pendingDeleteId);
+      setAllStaffRoster((prev) => prev.filter((s) => (s.procare_employee_id || s.employee_id || s.id) !== pendingDeleteId));
+    } catch {
+      // Toast handled by hook
+    } finally {
+      setIsConfirmDeleteOpen(false);
+      setPendingDeleteId(null);
+    }
   };
 
-  const handleSaveStaff = (form) => {
-    if (editingStaff) {
-      setAllStaffRoster((prev) =>
-        prev.map((s) =>
-          (s.employee_id || s.id) === (editingStaff.employee_id || editingStaff.id)
-            ? {
-                ...s,
-                name: form.name,
-                role: form.role,
-                classroom: form.classroom,
-                status: form.status,
-                ptoAllowance: form.ptoAllowance,
-                pto_used: form.pto_used,
-                hireDate: form.hireDate,
-                phone: form.phone,
-                email: form.email,
-                remaining: form.ptoAllowance - form.pto_used,
-                usage_percentage: Math.round((form.pto_used / form.ptoAllowance) * 100)
-              }
-            : s
-        )
-      );
-    } else {
-      const newStaff = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        employee_id: form.employee_id,
-        name: form.name,
-        role: form.role,
-        classroom: form.classroom,
-        status: form.status,
-        ptoAllowance: form.ptoAllowance,
-        pto_used: form.pto_used,
-        hireDate: form.hireDate,
-        phone: form.phone,
-        email: form.email,
-        remaining: form.ptoAllowance - form.pto_used,
-        usage_percentage: Math.round((form.pto_used / form.ptoAllowance) * 100)
-      };
-      setAllStaffRoster((prev) => [newStaff, ...prev]);
+  const handleSaveStaff = async (form) => {
+    try {
+      if (editingStaff) {
+        const staffId = editingStaff.procare_employee_id || editingStaff.employee_id || editingStaff.id;
+        await updateStaff({ staffId, body: form });
+      } else {
+        await addStaff(form);
+      }
+      setIsStaffModalOpen(false);
+      setEditingStaff(null);
+    } catch {
+      // Toast handled by hook
     }
   };
 
@@ -176,7 +271,7 @@ const DirectorStaffManagement = () => {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Staff Management</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {allStaffRoster.length > 0 ? allStaffRoster.length : staffList.length} staff members · Track PTO & substitutes
+            {rosterStats.total} staff members · Track PTO & substitutes
           </p>
         </div>
         {activeTab === "roster" ? (
@@ -195,7 +290,16 @@ const DirectorStaffManagement = () => {
 
       {/* Tabs */}
       <motion.div variants={itemVariants}>
-        <TabBar activeTab={activeTab} onTabChange={(id) => { setActiveTab(id); setShowForm(false); }} />
+        <TabBar 
+          activeTab={activeTab} 
+          onTabChange={(id) => { 
+            setActiveTab(id); 
+            setShowForm(false); 
+            setRosterPage(1); 
+            setPtoPage(1);
+            setSubPage(1);
+          }} 
+        />
       </motion.div>
 
       {/* ─── ROSTER TAB ─── */}
@@ -247,6 +351,9 @@ const DirectorStaffManagement = () => {
               staffRoster={allStaffRoster}
               sortBy={sortBy}
               onSortChange={setSortBy}
+              pagination={rosterPagination}
+              onLoadMore={handleLoadMoreRoster}
+              isLoadingMore={isDirectorFetching && rosterPage > 1}
               onEdit={handleEditStaffClick}
               onDelete={handleDeleteStaffClick}
             />
@@ -298,9 +405,27 @@ const DirectorStaffManagement = () => {
             </motion.div>
           </div>
 
-          <motion.div variants={itemVariants} className="mt-6">
-            <PTOHistoryCard ptoLog={ptoLog} staff={allStaffRoster.length > 0 ? allStaffRoster : staffList} />
-          </motion.div>
+          <div className="space-y-6 mt-6">
+            <motion.div variants={itemVariants}>
+              <PTOHistoryCard
+                ptoLog={activePtoHistory}
+                staff={allStaffRoster.length > 0 ? allStaffRoster : staffList}
+              />
+            </motion.div>
+
+            {/* PTO Summary Card for Staff List & Balances */}
+            {allPtoStaff.length > 0 && (
+              <motion.div variants={itemVariants}>
+                <PTOSummaryCard
+                  ptoSummary={directorDataContent.summary || directorDataContent.pto_metrics || {}}
+                  staffList={allPtoStaff}
+                  pagination={ptoPaginationFromApi}
+                  onLoadMore={handleLoadMorePto}
+                  isLoadingMore={isDirectorFetching && ptoPage > 1}
+                />
+              </motion.div>
+            )}
+          </div>
         </>
       )}
 
@@ -340,7 +465,7 @@ const DirectorStaffManagement = () => {
               <StatCard 
                 icon={CheckCircle} 
                 label="Coverage" 
-                value={subStats.thisWeek > 0 ? `${Math.round((subStats.thisWeek / subStats.total) * 100)}%` : "100%"} 
+                value={subStats.coverage} 
                 valueColor="text-[#2F6042]" 
                 sub="Fill rate percentage" 
                 iconBg="bg-[#3E7A54]/10 text-[#2F6042]" 
@@ -349,7 +474,7 @@ const DirectorStaffManagement = () => {
           </div>
 
           <motion.div variants={itemVariants} className="mt-6">
-            <SubstituteHistoryCard substitutes={substitutes} />
+            <SubstituteHistoryCard substitutes={activeSubstitutesHistory} />
           </motion.div>
         </>
       )}
@@ -367,6 +492,7 @@ const DirectorStaffManagement = () => {
         isOpen={isStaffModalOpen}
         staff={editingStaff}
         onSave={handleSaveStaff}
+        isSubmitting={isAdding || isUpdating}
         onClose={() => {
           setIsStaffModalOpen(false);
           setEditingStaff(null);
@@ -383,7 +509,7 @@ const DirectorStaffManagement = () => {
         onConfirm={confirmDeleteStaff}
         title="Remove Staff Member"
         message="Are you sure you want to remove this employee? This will immediately disable their roster assignment and archive their Procare profile history."
-        confirmText="Remove Staff"
+        confirmText={isDeleting ? "Removing..." : "Remove Staff"}
         cancelText="Cancel"
         type="danger"
       />

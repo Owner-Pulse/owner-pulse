@@ -16,7 +16,7 @@ export const useGetOwnerMaintenanceList = (params) => {
     } = useInfiniteQuery({
         queryKey: ["owner-maintenance-list", params],
         queryFn: ({ pageParam }) =>
-            ownerMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 10 }),
+            ownerMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const pagination = lastPage?.pagination || lastPage?.data?.pagination;

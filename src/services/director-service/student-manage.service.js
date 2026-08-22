@@ -1,7 +1,7 @@
 export const directorStudentManageService = {
     enrollStudentByClass: async (axiosInstance, payload) => {
         try {
-            const response = await axiosInstance.post("/api/director/enrollment/store", payload);
+            const response = await axiosInstance.post("/director/enrollment/store", payload);
             return response.data;
         } catch (error) {
             console.error("Error enrolling student by class:", error);
@@ -21,7 +21,12 @@ export const directorStudentManageService = {
 
     getStudentsByClass: async (axiosInstance, params) => {
         try {
-            const response = await axiosInstance.get(`/director/classrooms/${params?.id}/operations`);
+            const response = await axiosInstance.get(`/director/classrooms/${params?.id}/operations`, {
+                params: {
+                    page: params?.page,
+                    per_page: params?.per_page
+                }
+            });
             return response.data;
         } catch (error) {
             console.error("Error getting student by class:", error);
@@ -41,7 +46,7 @@ export const directorStudentManageService = {
 
     updateStudentByClass: async (axiosInstance, payload) => {
         try {
-            const response = await axiosInstance.put(`director/enrollment/update/${payload.enrolment_id}`, payload);
+            const response = await axiosInstance.post(`director/enrollment/update/${payload.enrolment_id}`, payload);
             return response.data;
         } catch (error) {
             console.error("Error updating student by class:", error);
@@ -115,6 +120,16 @@ export const directorStudentManageService = {
             return response.data;
         } catch (error) {
             console.error("Error withdrawing at-risk student:", error);
+            throw error;
+        }
+    },
+
+    withdrawFromClass: async (axiosInstance, params) => {
+        try {
+            const response = await axiosInstance.post(`/director/students/withdraw/${params?.procare_child_id}`, params);
+            return response.data;
+        } catch (error) {
+            console.error("Error withdrawing from class:", error);
             throw error;
         }
     },

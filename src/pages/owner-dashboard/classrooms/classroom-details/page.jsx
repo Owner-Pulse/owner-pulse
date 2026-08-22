@@ -11,7 +11,8 @@ import {
   FileText,
   AlertTriangle,
   UserCheck,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,13 @@ const containerVariants = {
 
 const MOCK_ROSTERS = {
   default: [
-    { id: 101, childId: "2941", personId: "19280", name: "Zain Abdelhade", dob: "2021-06-27", age: 5, gender: "Male", status: "Active", parent: "Zed Abdelhade", contact: "(813) 555-0199", billingType: "Private Pay" },
-    { id: 102, childId: "2942", personId: "19281", name: "Ny Troutma", dob: "2022-03-10", age: 4, gender: "Female", status: "Active", parent: "Brit Davis", contact: "(813) 555-0144", billingType: "ELC Subsidized" },
-    { id: 103, childId: "2943", personId: "19281", name: "Zy Troutma", dob: "2022-03-10", age: 4, gender: "Female", status: "Active", parent: "Brit Davis", contact: "(813) 555-0144", billingType: "ELC Subsidized" },
-    { id: 104, childId: "2944", personId: "19282", name: "Sarah Connor", dob: "2021-09-12", age: 5, gender: "Female", status: "Active", parent: "John Connor", contact: "(813) 555-0210", billingType: "VPK Vouchers" },
-    { id: 105, childId: "2945", personId: "19283", name: "Caleb Antoine", dob: "2022-03-23", age: 4, gender: "Male", status: "Active", parent: "Cal Antoine", contact: "(813) 555-0182", billingType: "Private Pay" },
-    { id: 106, childId: "2946", personId: "19284", name: "Liam Miller", dob: "2021-11-05", age: 5, gender: "Male", status: "Active", parent: "Mollie Miller", contact: "(813) 555-0105", billingType: "VPK Vouchers" },
-    { id: 107, childId: "2947", personId: "19285", name: "Chloe Lee", dob: "2022-01-14", age: 4, gender: "Female", status: "Active", parent: "Seon Lee", contact: "(813) 555-0311", billingType: "Private Pay" }
+    { id: 101, childId: "2941", personId: "19280", name: "Zain Abdelhade", dob: "2021-06-27", age: "5yo", gender: "Male", status: "Active", parent: "Zed Abdelhade", contact: "(813) 555-0199", billingType: "Private Pay" },
+    { id: 102, childId: "2942", personId: "19281", name: "Ny Troutma", dob: "2022-03-10", age: "4yo", gender: "Female", status: "Active", parent: "Brit Davis", contact: "(813) 555-0144", billingType: "ELC Subsidized" },
+    { id: 103, childId: "2943", personId: "19281", name: "Zy Troutma", dob: "2022-03-10", age: "4yo", gender: "Female", status: "Active", parent: "Brit Davis", contact: "(813) 555-0144", billingType: "ELC Subsidized" },
+    { id: 104, childId: "2944", personId: "19282", name: "Sarah Connor", dob: "2021-09-12", age: "5yo", gender: "Female", status: "Active", parent: "John Connor", contact: "(813) 555-0210", billingType: "VPK Vouchers" },
+    { id: 105, childId: "2945", personId: "19283", name: "Caleb Antoine", dob: "2022-03-23", age: "4yo", gender: "Male", status: "Active", parent: "Cal Antoine", contact: "(813) 555-0182", billingType: "Private Pay" },
+    { id: 106, childId: "2946", personId: "19284", name: "Liam Miller", dob: "2021-11-05", age: "5yo", gender: "Male", status: "Active", parent: "Mollie Miller", contact: "(813) 555-0105", billingType: "VPK Vouchers" },
+    { id: 107, childId: "2947", personId: "19285", name: "Chloe Lee", dob: "2022-01-14", age: "4yo", gender: "Female", status: "Active", parent: "Seon Lee", contact: "(813) 555-0311", billingType: "Private Pay" }
   ]
 };
 
@@ -44,11 +45,11 @@ const OwnerClassroomDetailPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch classrooms list to find matching detail row
-  const { data, isLoading } = useGetClassroom({ per_page: 50 });
+  const { data, isLoading } = useGetClassroom({ per_page: 100 });
   const classroomsList = data?.classroom_pnl?.classrooms_list?.data ?? [];
 
-  // Match classroom or fallback to dummy info
-  const classroom = classroomsList.find(c => c.id === Number(id)) || {
+  // Match classroom by id or procare_classroom_id
+  const classroom = classroomsList.find(c => c.id === Number(id) || c.procare_classroom_id === Number(id)) || {
     id: Number(id) || 9,
     name: "VPK B (Mrs.Johnson)",
     category_group: "Preschool",
@@ -84,24 +85,81 @@ const OwnerClassroomDetailPage = () => {
     }
   };
 
-  const revenue = classroom.revenue?.total ?? 0;
-  const cost = classroom.cost?.total ?? 0;
-  const profit = classroom.net_monthly_profit ?? 0;
-  const margin = classroom.margin?.percentage ?? 0;
+  const economics = classroom?.classroom_economics;
+  const financialPerformance = economics?.financial_performance;
+  const apiRoster = financialPerformance?.class_roster || [];
 
-  // Chart data for funding source breakdown
-  const pieData = [
-    { name: "Private Pay", value: Math.round(revenue * 0.45) },
-    { name: "ELC Subsidized", value: Math.round(revenue * 0.35) },
-    { name: "VPK Vouchers", value: Math.round(revenue * 0.20) }
-  ];
+  // Extract financial card values from classroom_economics or top level classroom object
+  const netMonthlyProfit = economics?.net_monthly_profit?.amount ?? classroom.net_monthly_profit ?? 0;
+  const profitFormatted = economics?.net_monthly_profit?.formatted_amount || `$${Math.round(netMonthlyProfit).toLocaleString()}`;
+  const profitChangeText = economics?.net_monthly_profit?.change_percentage || "+5.2%";
+
+  const grossRevenue = economics?.gross_revenue?.amount ?? classroom.revenue?.total ?? 0;
+  const grossRevenueFormatted = economics?.gross_revenue?.formatted_amount || `$${Math.round(grossRevenue).toLocaleString()}`;
+  const seatsBilledText = economics?.gross_revenue?.formatted_seats_billed || `${classroom.enrollment?.current ?? 0} Seats billed`;
+
+  const operatingCosts = economics?.operating_costs?.amount ?? classroom.cost?.total ?? 0;
+  const operatingCostsFormatted = economics?.operating_costs?.formatted_amount || `$${Math.round(operatingCosts).toLocaleString()}`;
+  const costPerSeatFormatted = economics?.operating_costs?.formatted_cost_per_seat || `$${Math.round(classroom.cost?.per_seat ?? 0)}/seat`;
+
+  const grossMarginPct = economics?.gross_margin?.percentage ?? classroom.margin?.percentage ?? 0;
+  const grossMarginStatus = economics?.gross_margin?.status ?? classroom.margin?.status ?? "Healthy";
+
+  // Seat yields
+  const seatYields = economics?.classroom_seat_yields;
+  const revPerSeatFormatted = seatYields?.revenue_per_seat?.formatted_amount || `$${Math.round(classroom.revenue?.per_seat ?? 950)}/mo`;
+  const costPerSeatYieldFormatted = seatYields?.cost_per_seat?.formatted_amount || `$${Math.round(classroom.cost?.per_seat ?? 61)}/mo`;
+  const netMarginPerSeatFormatted = seatYields?.net_margin_per_seat?.formatted_amount || `$${Math.round((classroom.revenue?.per_seat ?? 950) - (classroom.cost?.per_seat ?? 61))}/mo`;
+
+  // Revenue mix by program category
+  const revenueBreakdown = economics?.revenue_mix_by_program?.breakdown;
+  const pieData = revenueBreakdown
+    ? [
+        { name: revenueBreakdown.private_pay?.label || "Private Pay", value: Math.round(revenueBreakdown.private_pay?.amount || 0) },
+        { name: revenueBreakdown.elc_subsidized?.label || "ELC Subsidized", value: Math.round(revenueBreakdown.elc_subsidized?.amount || 0) },
+        { name: revenueBreakdown.vpk_vouchers?.label || "VPK Vouchers", value: Math.round(revenueBreakdown.vpk_vouchers?.amount || 0) }
+      ]
+    : [
+        { name: "Private Pay", value: Math.round(grossRevenue * 0.45) },
+        { name: "ELC Subsidized", value: Math.round(grossRevenue * 0.35) },
+        { name: "VPK Vouchers", value: Math.round(grossRevenue * 0.20) }
+      ];
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
   };
 
+  // Build full roster array from API or mock fallback
+  const displayRoster = apiRoster.length > 0
+    ? apiRoster.map((s) => {
+        let ageStr = "—";
+        if (s.date_of_birth) {
+          const dobDate = new Date(s.date_of_birth);
+          if (!isNaN(dobDate)) {
+            const ageYears = Math.floor((new Date() - dobDate) / (365.25 * 24 * 60 * 60 * 1000));
+            ageStr = `${ageYears}yo`;
+          }
+        }
+        return {
+          id: s.id || s.procare_child_id,
+          childId: s.procare_child_id?.toString() || s.id?.toString(),
+          personId: s.procare_child_id || s.id,
+          name: s.full_name || s.name || "Student Profile",
+          dob: s.date_of_birth || "N/A",
+          age: ageStr,
+          gender: s.gender || "—",
+          status: s.enrollment_status || "Enrolled",
+          parent: s.parent || "—",
+          contact: s.contact || "—",
+          billingType: s.billingType || s.billing_type || "Private Pay"
+        };
+      })
+    : MOCK_ROSTERS.default;
+
+  const totalRosterCount = financialPerformance?.class_roster_count ?? classroom.enrollment?.current ?? displayRoster.length;
+
   // Filter students based on search query (name or childId)
-  const filteredRoster = MOCK_ROSTERS.default.filter(student => {
+  const filteredRoster = displayRoster.filter(student => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
     return (
@@ -129,7 +187,7 @@ const OwnerClassroomDetailPage = () => {
         </Button>
         <div>
           <span className="text-xs font-semibold text-blue-650 uppercase tracking-wider">Classroom Economics</span>
-          <h2 className="text-2xl font-bold text-gray-900">{classroom.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{classroom.name} {classroom.teacher ? `(${classroom.teacher})` : ""}</h2>
         </div>
       </div>
 
@@ -139,9 +197,9 @@ const OwnerClassroomDetailPage = () => {
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Net Monthly Profit</span>
             <div className="flex items-baseline justify-between mt-1.5">
-              <span className="text-xl font-extrabold text-[#2F6042]">{formatCurrency(profit)}</span>
+              <span className="text-xl font-extrabold text-[#2F6042]">{profitFormatted}</span>
               <span className="text-[10px] font-bold bg-[#3E7A54]/10 text-[#2F6042] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                <TrendingUp size={10} /> +5.2%
+                <TrendingUp size={10} /> {profitChangeText}
               </span>
             </div>
           </CardContent>
@@ -151,8 +209,8 @@ const OwnerClassroomDetailPage = () => {
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Gross Revenue</span>
             <div className="flex items-baseline justify-between mt-1.5">
-              <span className="text-xl font-extrabold text-gray-900">{formatCurrency(revenue)}</span>
-              <span className="text-xs text-gray-450">{classroom.enrollment?.current} Seats billed</span>
+              <span className="text-xl font-extrabold text-gray-900">{grossRevenueFormatted}</span>
+              <span className="text-xs text-gray-450">{seatsBilledText}</span>
             </div>
           </CardContent>
         </Card>
@@ -161,8 +219,8 @@ const OwnerClassroomDetailPage = () => {
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Operating Costs</span>
             <div className="flex items-baseline justify-between mt-1.5">
-              <span className="text-xl font-extrabold text-[#8A362C]">{formatCurrency(cost)}</span>
-              <span className="text-xs text-gray-450">{formatCurrency(classroom.cost?.per_seat ?? 0)}/seat</span>
+              <span className="text-xl font-extrabold text-[#8A362C]">{operatingCostsFormatted}</span>
+              <span className="text-xs text-gray-450">{costPerSeatFormatted}</span>
             </div>
           </CardContent>
         </Card>
@@ -171,8 +229,8 @@ const OwnerClassroomDetailPage = () => {
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Gross Margin</span>
             <div className="flex items-baseline justify-between mt-1.5">
-              <span className="text-xl font-extrabold text-blue-600">{margin}%</span>
-              <span className="text-xs text-gray-500 font-semibold">Healthy</span>
+              <span className="text-xl font-extrabold text-blue-600">{grossMarginPct}%</span>
+              <span className="text-xs text-gray-500 font-semibold">{grossMarginStatus}</span>
             </div>
           </CardContent>
         </Card>
@@ -194,7 +252,7 @@ const OwnerClassroomDetailPage = () => {
             activeTab === "roster" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
-          Class Roster ({classroom.enrollment?.current ?? 0})
+          Class Roster ({totalRosterCount})
         </button>
       </div>
 
@@ -205,8 +263,8 @@ const OwnerClassroomDetailPage = () => {
             {/* Funding breakdown pie chart */}
             <Card className="bg-white border-none shadow-sm lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-sm">Revenue Mix by Program Category</CardTitle>
-                <CardDescription>Private collections vs Early Learning Coalition voucher shares</CardDescription>
+                <CardTitle className="text-sm">{economics?.revenue_mix_by_program?.title || "Revenue Mix by Program Category"}</CardTitle>
+                <CardDescription>{economics?.revenue_mix_by_program?.subtitle || "Private collections vs Early Learning Coalition voucher shares"}</CardDescription>
               </CardHeader>
               <CardContent className="h-64 flex flex-col md:flex-row items-center justify-around">
                 <div className="w-full h-full max-w-[240px]">
@@ -246,20 +304,20 @@ const OwnerClassroomDetailPage = () => {
             {/* Sub-Pace / Seat Margin */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader>
-                <CardTitle className="text-sm">Classroom Seat Yields</CardTitle>
+                <CardTitle className="text-sm">{seatYields?.title || "Classroom Seat Yields"}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-slate-50 rounded-xl">
                   <span className="text-[10px] text-gray-400 block font-semibold uppercase">Revenue Per Seat</span>
-                  <span className="text-lg font-bold text-gray-800">{formatCurrency(classroom.revenue?.per_seat ?? 950)}/mo</span>
+                  <span className="text-lg font-bold text-gray-800">{revPerSeatFormatted}</span>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-xl">
                   <span className="text-[10px] text-gray-400 block font-semibold uppercase">Cost Per Seat</span>
-                  <span className="text-lg font-bold text-gray-800">{formatCurrency(classroom.cost?.per_seat ?? 61)}/mo</span>
+                  <span className="text-lg font-bold text-gray-800">{costPerSeatYieldFormatted}</span>
                 </div>
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                   <span className="text-[10px] text-emerald-600 block font-semibold uppercase">Net Margin Per Seat</span>
-                  <span className="text-lg font-bold text-emerald-700">{formatCurrency((classroom.revenue?.per_seat ?? 950) - (classroom.cost?.per_seat ?? 61))}/mo</span>
+                  <span className="text-lg font-bold text-emerald-700">{netMarginPerSeatFormatted}</span>
                 </div>
               </CardContent>
             </Card>
@@ -270,8 +328,8 @@ const OwnerClassroomDetailPage = () => {
           <Card className="bg-white border-none shadow-sm">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-50">
               <div>
-                <CardTitle className="text-sm">Student Demographics & Profiles</CardTitle>
-                <CardDescription>View registered children matching the master enrollment database</CardDescription>
+                <CardTitle className="text-sm">Student Demographics & Profiles ({totalRosterCount})</CardTitle>
+                <CardDescription>View all registered children in this classroom</CardDescription>
               </div>
 
               {/* Roster Search Bar */}
@@ -287,60 +345,75 @@ const OwnerClassroomDetailPage = () => {
               </div>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Student Name</th>
-                      <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Age / Gender</th>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Primary Parent Contact</th>
-                      <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Program Flag</th>
-                      <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredRoster.length > 0 ? (
-                      filteredRoster.map((student) => (
-                        <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-3 px-2">
-                            <span className="font-semibold text-gray-900 block">{student.name}</span>
-                            <span className="text-[10px] text-gray-455 block font-medium">Child ID: {student.childId || student.id} · Person ID: {student.personId}</span>
-                          </td>
-                          <td className="py-3 px-2 text-center text-gray-500 font-medium">
-                            {student.age}yo · {student.gender}
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className="font-semibold text-gray-800 block">{student.parent}</span>
-                            <span className="text-[10px] text-gray-400">{student.contact}</span>
-                          </td>
-                          <td className="py-3 px-2 text-center">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                              student.billingType.includes("ELC") 
-                                ? "bg-amber-100 text-amber-700" 
-                                : student.billingType.includes("VPK") 
-                                  ? "bg-purple-100 text-purple-700" 
-                                  : "bg-blue-100 text-blue-700"
-                            }`}>
-                              {student.billingType}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-center">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700">
-                              {student.status}
-                            </span>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-500">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  <p className="text-xs font-medium">Loading classroom student roster...</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Student Name</th>
+                        <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">DOB / Age</th>
+                        <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Primary Parent Contact</th>
+                        <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Program Flag</th>
+                        <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {filteredRoster.length > 0 ? (
+                        filteredRoster.map((student) => (
+                          <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-3 px-2">
+                              <span className="font-semibold text-gray-900 block">
+                                {student.name}
+                              </span>
+                              <span className="text-[10px] text-gray-400 block font-medium">
+                                Child ID: {student.childId || student.id}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-center text-gray-500 font-medium">
+                              {student.dob !== "N/A" ? student.dob : ""} {student.age !== "—" ? `(${student.age})` : (student.dob === "N/A" ? "N/A" : "")}
+                            </td>
+                            <td className="py-3 px-2">
+                              <span className="font-semibold text-gray-800 block">{student.parent}</span>
+                              <span className="text-[10px] text-gray-400">{student.contact}</span>
+                            </td>
+                            <td className="py-3 px-2 text-center">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                student.billingType.includes("ELC") 
+                                  ? "bg-amber-100 text-amber-700" 
+                                  : student.billingType.includes("VPK") 
+                                    ? "bg-purple-100 text-purple-700" 
+                                    : "bg-blue-100 text-blue-700"
+                              }`}>
+                                {student.billingType}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-center">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                student.status === "Active" || student.status === "Enrolled"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                  : "bg-amber-50 text-amber-700 border border-amber-100"
+                              }`}>
+                                {student.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" className="py-8 text-center text-xs text-gray-400">
+                            No student matching "{searchQuery}" was found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className="py-8 text-center text-xs text-gray-400">
-                          No student matching "{searchQuery}" was found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -350,3 +423,4 @@ const OwnerClassroomDetailPage = () => {
 };
 
 export default OwnerClassroomDetailPage;
+
