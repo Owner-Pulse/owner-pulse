@@ -27,6 +27,7 @@ import AtRiskCard from "./components/AtRiskCard";
 import IncidentForm from "./components/IncidentForm";
 import RemovalForm from "./components/RemovalForm";
 import AtRiskForm from "./components/AtRiskForm";
+import StudentDetailsModal from "./components/StudentDetailsModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import {
@@ -48,31 +49,13 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_AT_RISK = [
-  { id: 1, student: "J. Martinez", grade: "5th — Pine", reason: "financial", detail: "Lost job · asking about payment plan", flagged: "2026-05-04", status: "intervening" },
-  { id: 2, student: "A. Choi", grade: "7th — Birch", reason: "transferring", detail: "Touring private school in Tampa", flagged: "2026-05-06", status: "intervening" },
-  { id: 3, student: "R. Hassan", grade: "3rd — Oak", reason: "financial", detail: "Asked about scholarship eligibility", flagged: "2026-05-08", status: "intervening" },
-  { id: 4, student: "M. Webb", grade: "8th — Aspen", reason: "moving", detail: "Family relocating out of state", flagged: "2026-04-18", status: "lost" },
-];
-
-const INITIAL_INCIDENTS = [
-  { id: 101, date: "2026-05-07", student: "Student A.", severity: "minor", classroom: "PreK3 — Caterpillars", area: "Playground", description: "Pushed another student on slide", loggedBy: "Director" },
-  { id: 102, date: "2026-05-03", student: "Student C.", severity: "moderate", classroom: "1st — Redwood", area: "Classroom", description: "Refused to follow instructions, disruptive behavior", loggedBy: "Director" },
-  { id: 103, date: "2026-04-22", student: "Student D.", severity: "major", classroom: "2nd — Willow", area: "Playground", description: "Physical altercation with peer", loggedBy: "Director" },
-];
-
-const INITIAL_REMOVALS = [
-  { id: 201, date: "2026-05-04", student: "Student B.", reason: "behavioral", classroom: "3rd — Oak", detail: "Repeated behavioral issues after multiple interventions", parentNotified: "Yes" },
-  { id: 202, date: "2026-04-15", student: "Student E.", reason: "transferring", classroom: "5th — Pine", detail: "Family relocating out of state", parentNotified: "Yes" },
-];
-
 const StudentManagementPage = () => {
   const { classrooms: allClassrooms } = useGetAllClassrooms();
   const [activeTab, setActiveTab] = useState("enrollment");
   const [searchQuery, setSearchQuery] = useState("");
-  const [incidents, setIncidents] = useState(INITIAL_INCIDENTS);
-  const [removals, setRemovals] = useState(INITIAL_REMOVALS);
-  const [atRiskList, setAtRiskList] = useState(INITIAL_AT_RISK);
+  const [incidents, setIncidents] = useState([]);
+  const [removals, setRemovals] = useState([]);
+  const [atRiskList, setAtRiskList] = useState([]);
   const [showForm, setShowForm] = useState(null);
 
   // TanStack Query Hooks for API synchronization
@@ -85,16 +68,17 @@ const StudentManagementPage = () => {
   const atRiskMutation = useAddAtRiskStudent();
   const withdrawMutation = useWithdrawAtRisk();
 
-  // Confirmation Modal states
+  // Confirmation Modal & View Details states
   const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
   const [pendingWithdrawStudent, setPendingWithdrawStudent] = useState(null);
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
 
   // Form inputs matching Procare schema for student enrollment
   const [formData, setFormData] = useState({
     childId: "",
     personId: "",
     name: "",
-    dob: "2022-01-01",
+    dob: "",
     gender: "Male",
     classroom: "",
     status: "Active",
@@ -111,22 +95,16 @@ const StudentManagementPage = () => {
     procare_classroom_id: c.procare_classroom_id,
     capacity: c.capacity || 20,
     enrolled: c.enrolled_students || 0
-  })) : [
-    { id: 1, name: "Age 1 — Bumblebees", capacity: 8, enrolled: 6 },
-    { id: 2, name: "Age 2 — Ladybugs", capacity: 12, enrolled: 10 },
-    { id: 3, name: "PreK3 — Caterpillars", capacity: 16, enrolled: 14 },
-    { id: 4, name: "PreK4 — Butterflies", capacity: 18, enrolled: 16 },
-    { id: 5, name: "VPK — Fireflies", capacity: 12, enrolled: 11 },
-  ];
+  })) : [];
 
   const totalEnrolled = displayClassrooms.reduce((a, c) => a + c.enrolled, 0);
   const totalCapacity = displayClassrooms.reduce((a, c) => a + c.capacity, 0);
   const openSeats = Math.max(0, totalCapacity - totalEnrolled);
   const enrollPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
-  // Derive API data if available, fallback to local state
+  // Derive API data directly
   const currentTabItems = useMemo(() => {
-    if (apiTabData?.data && Array.isArray(apiTabData.data) && apiTabData.data.length > 0) {
+    if (apiTabData?.data && Array.isArray(apiTabData.data)) {
       return apiTabData.data;
     }
     if (activeTab === "incidents") return incidents;
@@ -212,19 +190,21 @@ const StudentManagementPage = () => {
   const handleAddIncident = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.classroom);
     incidentMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       severity: record.severity,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       area: record.area,
       type: record.incidentType || "Behavior",
       description: record.description
     }, {
       onSuccess: () => {
         toast.success("Incident logged successfully");
+        setShowForm(null);
       },
       onError: () => {
         setIncidents(prev => [record, ...prev]);
         toast.success("Incident logged");
+        setShowForm(null);
       }
     });
   };
@@ -232,19 +212,21 @@ const StudentManagementPage = () => {
   const handleAddRemoval = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.classroom);
     removalMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       reason: record.reason,
       effective_date: record.date,
       parent_notification_received: record.parentNotified === "Yes" ? 1 : 0,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       details: record.detail
     }, {
       onSuccess: () => {
         toast.success("Removal recorded successfully");
+        setShowForm(null);
       },
       onError: () => {
         setRemovals(prev => [record, ...prev]);
         toast.success("Removal recorded");
+        setShowForm(null);
       }
     });
   };
@@ -252,18 +234,20 @@ const StudentManagementPage = () => {
   const handleAddAtRisk = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.grade);
     atRiskMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       risk_category: record.reason,
       flag_date: record.flagged,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       risk_details: record.detail
     }, {
       onSuccess: () => {
         toast.success("At-Risk student flagged successfully");
+        setShowForm(null);
       },
       onError: () => {
         setAtRiskList((prev) => [record, ...prev]);
         toast.success("At-Risk student flagged");
+        setShowForm(null);
       }
     });
   };
@@ -493,13 +477,13 @@ const StudentManagementPage = () => {
 
       {/* Modal Forms */}
       {showForm === "incident" && (
-        <IncidentForm onAdd={handleAddIncident} onClose={() => setShowForm(null)} />
+        <IncidentForm onAdd={handleAddIncident} onClose={() => setShowForm(null)} isLoading={incidentMutation.isPending} />
       )}
       {showForm === "removal" && (
-        <RemovalForm onAdd={handleAddRemoval} onClose={() => setShowForm(null)} />
+        <RemovalForm onAdd={handleAddRemoval} onClose={() => setShowForm(null)} isLoading={removalMutation.isPending} />
       )}
       {showForm === "at-risk" && (
-        <AtRiskForm onAdd={handleAddAtRisk} onClose={() => setShowForm(null)} />
+        <AtRiskForm onAdd={handleAddAtRisk} onClose={() => setShowForm(null)} isLoading={atRiskMutation.isPending} />
       )}
 
       {/* Enroll Student Slide-over Modal */}
@@ -716,6 +700,17 @@ const StudentManagementPage = () => {
         cancelText="Keep Student"
         type="danger"
       />
+
+      {/* Student Details Modal */}
+      <AnimatePresence>
+        {selectedStudentForModal && (
+          <StudentDetailsModal 
+            studentId={selectedStudentForModal.id || selectedStudentForModal.child_id || selectedStudentForModal.procare_child_id}
+            fallbackStudent={selectedStudentForModal}
+            onClose={() => setSelectedStudentForModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

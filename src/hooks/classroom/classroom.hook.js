@@ -48,7 +48,7 @@ export const useGetAllClassrooms = () => {
 };
 
 // Data from the dashboard classroom API ( pnl lists )
-export const useGetClassroom = ({ filter = "All Classrooms", per_page = 10, page = 1 } = {}) => {
+export const useGetClassroom = ({ filter = "All Classrooms", per_page = 50, page = 1 } = {}) => {
 
     const {
         data,

@@ -45,7 +45,7 @@ const ClassroomsPage = () => {
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-  const PER_PAGE = 10;
+  const PER_PAGE = 50;
 
   const { data, isLoading, isFetching } = useGetClassroom({
     filter: activeFilter,
@@ -68,20 +68,14 @@ const ClassroomsPage = () => {
     }
   }, [classroomsList]);
 
-  // Local classroom IDs used as a reference set to filter the API chart data
-  const localClassroomIds = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-
-  // Filter API chart entries to only those matching the local classroom IDs,
-  // then normalise the shape to { name, profit } that ProfitChart expects.
-  const profitChartData = apiChartData
-    .filter((item) => localClassroomIds.has(item.classroom_id))
-    .map((item) => ({
-      id: item.classroom_id,
-      name: item.classroom_name,
-      profit: item.profit,
-      marginPercentage: item.margin_percentage,
-      enrolledStudents: item.enrolled_students,
-    }));
+  // Normalize apiChartData shape to { name, profit } that ProfitChart expects.
+  const profitChartData = apiChartData.map((item) => ({
+    id: item.classroom_id,
+    name: item.classroom_name,
+    profit: item.profit,
+    marginPercentage: item.margin_percentage,
+    enrolledStudents: item.enrolled_students,
+  }));
 
   const handleFilterChange = (f) => {
     setActiveFilter(f);
