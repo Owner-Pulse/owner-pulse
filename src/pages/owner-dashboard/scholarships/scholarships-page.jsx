@@ -1,14 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Award, Users, Clock, TrendingUp } from "lucide-react";
+import { Award, Users, Clock, TrendingUp, Plus, Loader2 } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import ScholarshipProgramsChart from "./components/ScholarshipProgramsChart";
 import ApprovalPipelineCard from "./components/ApprovalPipelineCard";
-
-const TODAY = new Date("2026-05-11");
-const daysSince = (d) => Math.floor((TODAY - new Date(d)) / 86400000);
-
-const fmtMoney = (v) => "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0 });
+import AddScholarshipModal from "./components/AddScholarshipModal";
+import ScholarshipsPageSkeleton from "./components/ScholarshipsSkeleton";
+import { useGetOwnerScholarships, useUpdateScholarshipStatus } from "@/hooks/owner-hook/scholarship.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -19,81 +17,120 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const SCHOLARSHIP_PROGRAMS = [
-  { id: 1, program: "FES-EO", students: 38, awarded: 342000, color: "#1E3A5F" },
-  { id: 2, program: "FES-UA", students: 14, awarded: 168000, color: "#2A4C7E" },
-  { id: 3, program: "FTC", students: 22, awarded: 198000, color: "#4A6B96" },
-  { id: 4, program: "VPK", students: 27, awarded: 67500, color: "#5B7FA6" },
-];
-
-const STEP_UP_APPROVALS = [
-  { id: 1, parent: "R. Garcia", student: "M. Garcia", grade: "3rd", amount: 2850, sent: "2026-05-08", status: "pending", lastContact: "2026-05-10" },
-  { id: 2, parent: "L. Singh", student: "A. Singh", grade: "1st", amount: 2850, sent: "2026-05-06", status: "pending", lastContact: "2026-05-09" },
-  { id: 3, parent: "D. Kim", student: "J. Kim", grade: "5th", amount: 3100, sent: "2026-05-04", status: "pending", lastContact: "2026-05-09" },
-  { id: 4, parent: "M. Owens", student: "T. Owens", grade: "2nd", amount: 2900, sent: "2026-04-28", status: "pending", lastContact: "2026-05-08" },
-  { id: 5, parent: "S. Patel", student: "R. Patel", grade: "K", amount: 2750, sent: "2026-05-01", status: "approved", approvedOn: "2026-05-09" },
-  { id: 6, parent: "J. Miller", student: "L. Miller", grade: "4th", amount: 2950, sent: "2026-04-25", status: "approved", approvedOn: "2026-05-05" },
-  { id: 7, parent: "T. Brown", student: "A. Brown", grade: "7th", amount: 3050, sent: "2026-04-20", status: "approved", approvedOn: "2026-05-02" },
-  { id: 8, parent: "C. Davis", student: "E. Davis", grade: "1st", amount: 2800, sent: "2026-04-15", status: "approved", approvedOn: "2026-04-28" },
-];
+const fmtMoney = (v) => "$" + (Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 0 });
 
 const ScholarshipsPage = () => {
-  const totalAwarded = useMemo(() => SCHOLARSHIP_PROGRAMS.reduce((a, s) => a + s.awarded, 0), []);
-  const totalStudents = useMemo(() => SCHOLARSHIP_PROGRAMS.reduce((a, s) => a + s.students, 0), []);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const pending = STEP_UP_APPROVALS.filter((s) => s.status === "pending");
-  const approved = STEP_UP_APPROVALS.filter((s) => s.status === "approved");
+  const { scholarshipData, isLoading, isFetching } = useGetOwnerScholarships();
 
-  const pendingByAge = useMemo(() => ({
-    fresh: pending.filter((s) => daysSince(s.sent) < 7).length,
-    aging: pending.filter((s) => daysSince(s.sent) >= 7 && daysSince(s.sent) < 14).length,
-    stale: pending.filter((s) => daysSince(s.sent) >= 14 && daysSince(s.sent) < 20).length,
-    redflag: pending.filter((s) => daysSince(s.sent) >= 20).length,
-  }), [pending]);
+  const { updateStatus, isPending: isUpdatingStatus } = useUpdateScholarshipStatus();
 
-  const turnaroundTimes = approved.map((s) =>
-    Math.round((new Date(s.approvedOn) - new Date(s.sent)) / 86400000)
-  );
-  const avgTurnaround = turnaroundTimes.length
-    ? Math.round(turnaroundTimes.reduce((a, b) => a + b, 0) / turnaroundTimes.length)
-    : 0;
-  const turnaroundPct = turnaroundTimes.length
-    ? Math.round((turnaroundTimes.filter((t) => t <= 14).length / turnaroundTimes.length) * 100)
-    : 100;
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      await updateStatus({ scholarship_id: id, payload: { status: newStatus } });
+    } catch (err) {
+      // Toast handles error
+    }
+  };
+
+  if (isLoading) {
+    return <ScholarshipsPageSkeleton />;
+  }
+
+  const metrics = scholarshipData?.metrics || {};
+  const programsData = scholarshipData?.scholarship_programs?.programs || [];
+  const stepUpData = scholarshipData?.step_up_payment_approvals || {};
+
+  const totalAwarded = metrics.total_awarded?.formatted_amount || fmtMoney(metrics.total_awarded?.amount || 0);
+  const totalStudents = metrics.scholarship_students?.count || 0;
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Scholarships</h1>
-        <p className="text-sm text-gray-500 mt-1">{totalStudents} students · {fmtMoney(totalAwarded)} awarded YTD</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+            Scholarships
+            {isFetching && <Loader2 size={18} className="animate-spin text-[#1E3A5F]" />}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {totalStudents} students · {totalAwarded} awarded YTD
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-[#1E3A5F] hover:bg-[#152A45] text-white text-xs font-semibold shadow-sm flex items-center gap-2 transition-colors"
+        >
+          <Plus size={16} />
+          Add Scholarship
+        </button>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Award} label="Total Awarded" value={fmtMoney(totalAwarded)} sub={`Across ${SCHOLARSHIP_PROGRAMS.length} programs`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
+          <KpiCard
+            icon={Award}
+            label="Total Awarded"
+            value={totalAwarded}
+            sub={`Across ${metrics.total_awarded?.programs_count || programsData.length || 0} programs`}
+            iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]"
+          />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Users} label="Scholarship Students" value={totalStudents} sub={`${Math.round(totalStudents / 245 * 100)}% of enrollment`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <KpiCard
+            icon={Users}
+            label="Scholarship Students"
+            value={totalStudents}
+            sub={`${metrics.scholarship_students?.formatted_percentage || "0%"} of enrollment`}
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
+          />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Clock} label="Pending Approvals" value={pending.length} sub={`Avg ${avgTurnaround}d turnaround`} iconBg={pendingByAge.redflag > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"} valueColor={pendingByAge.redflag > 0 ? "text-[#8A362C]" : "text-gray-900"} />
+          <KpiCard
+            icon={Clock}
+            label="Pending Approvals"
+            value={metrics.pending_approvals?.count || 0}
+            sub={`Avg ${metrics.pending_approvals?.formatted_avg_turnaround || "0d"} turnaround`}
+            iconBg={
+              (stepUpData?.pipeline_summary?.red_flag_20d_plus || 0) > 0
+                ? "bg-[#AE4A3E]/10 text-[#8A362C]"
+                : "bg-[#1E3A5F]/10 text-[#1E3A5F]"
+            }
+            valueColor={
+              (stepUpData?.pipeline_summary?.red_flag_20d_plus || 0) > 0 ? "text-[#8A362C]" : "text-gray-900"
+            }
+          />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={TrendingUp} label="Approval Rate" value={`${turnaroundPct}%`} sub={`${approved.length} approved ≤14 days`} iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
+          <KpiCard
+            icon={TrendingUp}
+            label="Approval Rate"
+            value={metrics.approval_rate?.formatted_percentage || "0%"}
+            sub={`${metrics.approval_rate?.approved_count || 0} approved`}
+            iconBg="bg-[#3E7A54]/10 text-[#2F6042]"
+          />
         </motion.div>
       </div>
 
       {/* Scholarship Programs Chart */}
       <motion.div variants={itemVariants}>
-        <ScholarshipProgramsChart programs={SCHOLARSHIP_PROGRAMS} />
+        <ScholarshipProgramsChart programs={programsData} />
       </motion.div>
 
-      {/* Step Up Approval Pipeline */}
+      {/* Step Up Approval Pipeline (with Infinite Scroll) */}
       <motion.div variants={itemVariants}>
-        <ApprovalPipelineCard approvals={STEP_UP_APPROVALS} />
+        <ApprovalPipelineCard
+          stepUpData={stepUpData}
+          onUpdateStatus={handleUpdateStatus}
+          isUpdatingStatus={isUpdatingStatus}
+        />
       </motion.div>
+
+      {/* Add Scholarship Modal */}
+      <AddScholarshipModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
     </motion.div>
   );
 };
