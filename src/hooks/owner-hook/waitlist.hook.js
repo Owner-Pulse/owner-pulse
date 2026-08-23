@@ -33,7 +33,7 @@ export const useGetOwnerWaitlistList = (params) => {
     const firstPage = data?.pages?.[0]?.data;
     const allWaitlists = data?.pages?.flatMap((page) => page?.data?.waitlists || []) || [];
     const waitlistData = firstPage
-        ? { summary: firstPage.summary, waitlists: allWaitlists }
+        ? { ...firstPage, waitlists: allWaitlists }
         : undefined;
 
     return {

@@ -21,7 +21,7 @@ const PTOSkeletonItem = () => (
   </div>
 );
 
-const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, isLoadingMore }) => {
+const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, isLoading = false, isLoadingMore }) => {
   const [search, setSearch] = useState("");
   const overallPct = ptoSummary?.overall_pto_percentage ?? 0;
   const usedDays = ptoSummary?.total_pto_used_days ?? 0;
@@ -89,7 +89,14 @@ const PTOSummaryCard = ({ ptoSummary, staffList = [], pagination, onLoadMore, is
         </div>
       </CardHeader>
       <CardContent>
-        {filteredStaff.length > 0 ? (
+        {isLoading ? (
+          <div className="space-y-2.5">
+            <PTOSkeletonItem />
+            <PTOSkeletonItem />
+            <PTOSkeletonItem />
+            <PTOSkeletonItem />
+          </div>
+        ) : filteredStaff.length > 0 ? (
           <div
             ref={listContainerRef}
             onScroll={handleScroll}

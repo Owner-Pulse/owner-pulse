@@ -1,14 +1,36 @@
-import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, X, AlertTriangle, UserX, Calendar, UserCheck, UserPlus, Wrench, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import LogForm from "./components/LogForm";
+import toast from "react-hot-toast";
+
+// Daily Log Hook
+import { useGetDailyLogs } from "@/hooks/director-hook/dailyLog.hook";
+
+// Sub-components for Daily Log page
 import DailyLogStatsCard from "./components/DailyLogStatsCard";
 import DailyLogSearchBar from "./components/DailyLogSearchBar";
 import DailyLogGroupList from "./components/DailyLogGroupList";
 
-const TODAY = new Date("2026-05-11");
-const todayStr = TODAY.toISOString().split("T")[0];
+// Category Forms & Modals
+import IncidentForm from "@/pages/director-dashboard/students/components/IncidentForm";
+import RemovalForm from "@/pages/director-dashboard/students/components/RemovalForm";
+import AtRiskForm from "@/pages/director-dashboard/students/components/AtRiskForm";
+import PTOForm from "@/pages/director-dashboard/staff/components/PTOForm";
+import SubstituteForm from "@/pages/director-dashboard/staff/components/SubstituteForm";
+import AddWaitlistModal from "@/pages/shared/waitlist/components/AddWaitlistModal";
+import AddMaintenanceForm from "@/pages/shared/maintenance/components/AddMaintenanceForm";
+
+// Mutations for forms requiring parent callbacks
+import {
+  useLogIncident,
+  useAddRemovalStudent,
+  useAddAtRiskStudent,
+} from "@/hooks/director-hook/student-manage.hook";
+import { useAddDirectorWaitlist } from "@/hooks/director-hook/waitlist.hook";
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
+
+const TODAY = new Date().toISOString().split("T")[0];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -19,35 +41,63 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_LOG = [
-  // Incidents
-  { id: 101, type: "incident", date: "2026-05-11", student: "Student A.", classroom: "PreK3", severity: "minor", area: "Playground", description: "Minor scrape on elbow during recess" },
-  { id: 102, type: "incident", date: "2026-05-07", student: "Student C.", classroom: "1st/2nd Grade", severity: "moderate", area: "Classroom", description: "Disruptive behavior and refused instruction" },
-  { id: 103, type: "incident", date: "2026-04-22", student: "Student D.", classroom: "Twos", severity: "major", area: "Playground", description: "Biting incident on playground" },
-
-  // Removals
-  { id: 201, type: "removal", date: "2026-05-04", student: "Student B.", classroom: "3rd/4th Grade", reason: "behavioral", detail: "Parent withdrew student following intervention plan" },
-  { id: 202, type: "removal", date: "2026-04-15", student: "Student E.", classroom: "5th/6th Grade (Ms.Stinson)", reason: "transferring", detail: "Family relocated out of state" },
-
-  // Staff PTO
-  { id: 301, type: "pto", date: "2026-05-11", staffName: "Ms. Sarah Jenkins", role: "Lead Teacher", ptoType: "Sick Leave", startDate: "2026-05-11", endDate: "2026-05-11", notes: "Called in sick, coverage arranged" },
-  { id: 302, type: "pto", date: "2026-05-09", staffName: "Mr. Robert Vance", role: "Assistant Teacher", ptoType: "Vacation", startDate: "2026-05-09", endDate: "2026-05-12", notes: "Pre-approved family trip" },
-
-  // Substitutes
-  { id: 401, type: "substitute", date: "2026-05-11", coveredStaff: "Ms. Sarah Jenkins", substituteName: "Amanda Clark", classroom: "VPK A", shiftDate: "2026-05-11", notes: "Full day sub coverage verified" },
-  { id: 402, type: "substitute", date: "2026-05-08", coveredStaff: "Ms. Rebecca Cole", substituteName: "David Miller", classroom: "Threes", shiftDate: "2026-05-08", notes: "Morning shift sub coverage" },
-
-  // Waitlist
-  { id: 501, type: "waitlist", date: "2026-05-11", childName: "Leo Vance", parentName: "David Vance", classroom: "Ones", phone: "(863) 555-0192", source: "Referral", notes: "Tour completed, requested August start" },
-  { id: 502, type: "waitlist", date: "2026-05-06", childName: "Sophie Miller", parentName: "Rachel Miller", classroom: "Kindergarten", phone: "(863) 555-0144", source: "Website", notes: "Inquired via online form" },
-
-  // Maintenance
-  { id: 601, type: "maintenance", date: "2026-05-11", title: "HVAC Unit Leaking Water", location: "Room 104 (VPK B)", priority: "High", category: "HVAC", details: "Maintenance team dispatched, bucket placed" },
-  { id: 602, type: "maintenance", date: "2026-05-02", title: "Playground Latch Loose", location: "Outside Yard 2", priority: "Emergency", category: "Safety", details: "Latch re-secured and safety inspected" },
-
-  // At-Risk
-  { id: 701, type: "at_risk", date: "2026-05-10", student: "J. Martinez", classroom: "5th/6th Grade (Ms.Stinson)", riskCategory: "financial", detail: "Parent inquired about tuition payment plan" },
-  { id: 702, type: "at_risk", date: "2026-05-05", student: "A. Choi", classroom: "7/8 Grade", riskCategory: "transferring", detail: "Family looking at alternative private school" }
+export const LOG_TYPES = [
+  { 
+    id: "incident", 
+    label: "Incident", 
+    desc: "Safety, behavior or medical event", 
+    icon: AlertTriangle, 
+    color: "bg-[#AE4A3E]", 
+    light: "bg-[#AE4A3E]/10 text-[#8A362C] border-[#AE4A3E]/20" 
+  },
+  { 
+    id: "removal", 
+    label: "Removal", 
+    desc: "Student withdrawal or drop", 
+    icon: UserX, 
+    color: "bg-[#8A362C]", 
+    light: "bg-[#8A362C]/10 text-[#8A362C] border-[#8A362C]/20" 
+  },
+  { 
+    id: "pto", 
+    label: "PTO Entry", 
+    desc: "Staff vacation or sick leave", 
+    icon: Calendar, 
+    color: "bg-blue-600", 
+    light: "bg-blue-50 text-blue-700 border-blue-200" 
+  },
+  { 
+    id: "substitute", 
+    label: "Substitute Entry", 
+    desc: "Covering classroom shift", 
+    icon: UserCheck, 
+    color: "bg-teal-600", 
+    light: "bg-teal-50 text-teal-700 border-teal-200" 
+  },
+  { 
+    id: "waitlist", 
+    label: "Waitlist Entry", 
+    desc: "Inquiry or prospective child", 
+    icon: UserPlus, 
+    color: "bg-purple-600", 
+    light: "bg-purple-50 text-purple-700 border-purple-200" 
+  },
+  { 
+    id: "maintenance", 
+    label: "Maintenance Entry", 
+    desc: "Facility repair or ticket", 
+    icon: Wrench, 
+    color: "bg-amber-600", 
+    light: "bg-amber-50 text-amber-700 border-amber-200" 
+  },
+  { 
+    id: "at_risk", 
+    label: "At-Risk Entry", 
+    desc: "Early retention intervention", 
+    icon: ShieldAlert, 
+    color: "bg-rose-600", 
+    light: "bg-rose-50 text-rose-700 border-rose-200" 
+  },
 ];
 
 const BUTTON_LABELS = {
@@ -62,56 +112,141 @@ const BUTTON_LABELS = {
 };
 
 const DailyLogPage = () => {
-  const [log, setLog] = useState(INITIAL_LOG);
-  const [showForm, setShowForm] = useState(false);
-  const [formInitialType, setFormInitialType] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeModalType, setActiveModalType] = useState(null); // 'picker' or category string ('incident', 'pto', etc.)
 
-  const handleAdd = (entry) => setLog((prev) => [entry, ...prev]);
+  // Classrooms hook
+  const { classrooms } = useGetAllClassrooms();
 
-  const openLogModal = (type = null) => {
-    setFormInitialType(type || (filterType === "all" ? null : filterType));
-    setShowForm(true);
+  // Fetch backend daily log data using custom TanStack Query hook
+  const {
+    summary,
+    groupedTimeline,
+    isLoading,
+    refetch
+  } = useGetDailyLogs({
+    type: filterType,
+    search: searchQuery,
+  });
+
+  // API Mutation hooks
+  const incidentMutation = useLogIncident();
+  const removalMutation = useAddRemovalStudent();
+  const atRiskMutation = useAddAtRiskStudent();
+  const waitlistMutation = useAddDirectorWaitlist();
+
+  // Stats Card counts mapped from API summary
+  const counts = {
+    all: summary.total_logs_today || 0,
+    incident: summary.incidents || 0,
+    removal: summary.removals || 0,
+    pto: summary.pto_entries || 0,
+    substitute: summary.substitutes || 0,
+    waitlist: summary.waitlist_inquiries || 0,
+    maintenance: summary.maintenance || 0,
+    at_risk: summary.at_risk_flags || 0,
   };
 
-  const counts = useMemo(() => {
-    const c = {
-      all: log.length,
-      incident: 0,
-      removal: 0,
-      pto: 0,
-      substitute: 0,
-      waitlist: 0,
-      maintenance: 0,
-      at_risk: 0,
-    };
-    log.forEach((e) => {
-      if (c[e.type] !== undefined) c[e.type] += 1;
-    });
-    return c;
-  }, [log]);
-
-  const filtered = useMemo(() => {
-    let result = log;
-    if (filterType !== "all") {
-      result = result.filter((e) => e.type === filterType);
+  const openModalForCurrentFilter = () => {
+    if (filterType === "all") {
+      setActiveModalType("picker");
+    } else {
+      setActiveModalType(filterType);
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((e) => Object.values(e).join(" ").toLowerCase().includes(q));
-    }
-    return result;
-  }, [log, filterType, searchQuery]);
+  };
 
-  const groupedByDate = useMemo(() => {
-    const groups = {};
-    [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((e) => {
-      if (!groups[e.date]) groups[e.date] = [];
-      groups[e.date].push(e);
+  const closeModal = () => {
+    setActiveModalType(null);
+    refetch();
+  };
+
+  // Handler for Incident modal submit
+  const handleAddIncident = (record) => {
+    const matchedClassroom = classrooms.find((c) => (c.classroom_name || c.name) === record.classroom);
+    incidentMutation.mutate(
+      {
+        procare_child_id: Number(record.procare_child_id || record.childId || 1),
+        severity: record.severity,
+        procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
+        area: record.area,
+        type: record.incidentType || "Behavior",
+        description: record.description,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Incident logged successfully");
+          closeModal();
+        },
+        onError: () => {
+          toast.error("Failed to log incident");
+        },
+      }
+    );
+  };
+
+  // Handler for Removal modal submit
+  const handleAddRemoval = (record) => {
+    const matchedClassroom = classrooms.find((c) => (c.classroom_name || c.name) === record.classroom);
+    removalMutation.mutate(
+      {
+        procare_child_id: Number(record.procare_child_id || record.childId || 1),
+        reason: record.reason,
+        effective_date: record.date,
+        parent_notification_received: record.parentNotified === "Yes" ? 1 : 0,
+        procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
+        details: record.detail,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Removal recorded successfully");
+          closeModal();
+        },
+        onError: () => {
+          toast.error("Failed to record removal");
+        },
+      }
+    );
+  };
+
+  // Handler for At-Risk modal submit
+  const handleAddAtRisk = (record) => {
+    const matchedClassroom = classrooms.find((c) => (c.classroom_name || c.name) === record.grade);
+    atRiskMutation.mutate(
+      {
+        procare_child_id: Number(record.procare_child_id || record.childId || 1),
+        risk_category: record.reason,
+        flag_date: record.flagged,
+        procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
+        risk_details: record.detail,
+      },
+      {
+        onSuccess: () => {
+          toast.success("At-Risk student flagged successfully");
+          closeModal();
+        },
+        onError: () => {
+          toast.error("Failed to flag at-risk student");
+        },
+      }
+    );
+  };
+
+  // Handler for Waitlist modal submit
+  const handleSaveWaitlist = async (formData) => {
+    const matchedClassroom = classrooms.find((c) => (c.classroom_name || c.name) === formData.program);
+    await waitlistMutation.addWaitlist({
+      child_name: formData.childName,
+      date_of_birth: formData.dob,
+      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      parent_name: formData.parentName,
+      phone: formData.phone,
+      email: formData.email,
+      lead_source: formData.source,
+      notes: formData.notes,
     });
-    return Object.entries(groups).sort(([a], [b]) => new Date(b) - new Date(a));
-  }, [filtered]);
+    closeModal();
+  };
 
   const actionButtonText = BUTTON_LABELS[filterType] || "New Entry";
 
@@ -127,7 +262,7 @@ const DailyLogPage = () => {
         </div>
         <Button 
           className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold rounded-xl text-xs px-4 py-2 flex items-center gap-1.5 shrink-0" 
-          onClick={() => openLogModal()}
+          onClick={openModalForCurrentFilter}
         >
           <Plus size={16} /> {actionButtonText}
         </Button>
@@ -154,17 +289,120 @@ const DailyLogPage = () => {
         onFilterChange={setFilterType}
       />
 
-      {/* Entries List grouped by date */}
-      <DailyLogGroupList groupedByDate={groupedByDate} todayStr={todayStr} />
+      {/* Grouped Timeline Entries */}
+      <DailyLogGroupList
+        groupedTimeline={groupedTimeline}
+        filterType={filterType}
+        searchQuery={searchQuery}
+        isLoading={isLoading}
+        todayStr={TODAY}
+      />
 
-      {/* Dynamic Unified Log Form Modal */}
-      {showForm && (
-        <LogForm 
-          defaultType={formInitialType}
-          onAdd={handleAdd} 
-          onClose={() => setShowForm(false)} 
-        />
-      )}
+      {/* ─── MODAL CONTROLLER ─── */}
+      <AnimatePresence>
+        {/* Category Picker Modal when clicked from 'all' */}
+        {activeModalType === "picker" && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeModal}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Select Log Category</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Choose the operational event type to record</p>
+                </div>
+                <button onClick={closeModal} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3">
+                {LOG_TYPES.map((lt) => {
+                  const Icon = lt.icon;
+                  return (
+                    <button
+                      key={lt.id}
+                      type="button"
+                      onClick={() => setActiveModalType(lt.id)}
+                      className="flex items-start gap-3.5 p-4 rounded-2xl border border-gray-100 hover:border-[#1E3A5F]/30 hover:bg-slate-50/80 transition-all text-left group"
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${lt.light} shrink-0 group-hover:scale-105 transition-transform`}>
+                        <Icon size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 group-hover:text-[#1E3A5F]">{lt.label}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">{lt.desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 1. Incident Form Modal */}
+        {activeModalType === "incident" && (
+          <IncidentForm
+            onAdd={handleAddIncident}
+            onClose={closeModal}
+            isLoading={incidentMutation.isPending}
+          />
+        )}
+
+        {/* 2. Removal Form Modal */}
+        {activeModalType === "removal" && (
+          <RemovalForm
+            onAdd={handleAddRemoval}
+            onClose={closeModal}
+            isLoading={removalMutation.isPending}
+          />
+        )}
+
+        {/* 3. At-Risk Form Modal */}
+        {activeModalType === "at_risk" && (
+          <AtRiskForm
+            onAdd={handleAddAtRisk}
+            onClose={closeModal}
+            isLoading={atRiskMutation.isPending}
+          />
+        )}
+
+        {/* 4. Staff PTO Form Modal */}
+        {activeModalType === "pto" && (
+          <PTOForm
+            onClose={closeModal}
+          />
+        )}
+
+        {/* 5. Substitute Form Modal */}
+        {activeModalType === "substitute" && (
+          <SubstituteForm
+            onClose={closeModal}
+          />
+        )}
+
+        {/* 6. Waitlist Inquiry Modal */}
+        {activeModalType === "waitlist" && (
+          <AddWaitlistModal
+            isOpen={true}
+            onClose={closeModal}
+            onSave={handleSaveWaitlist}
+            isPending={waitlistMutation.isPending}
+          />
+        )}
+
+        {/* 7. Maintenance Request Modal */}
+        {activeModalType === "maintenance" && (
+          <AddMaintenanceForm
+            onClose={closeModal}
+            onAdd={() => closeModal()}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

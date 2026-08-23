@@ -3,15 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertOctagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost }) => {
+const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost, isPending = false }) => {
   const [reason, setReason] = useState("Financial / Pricing");
 
   if (!isOpen || !entry) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onMarkLost(entry.id, reason);
-    onClose();
+    try {
+      await onMarkLost(entry.id, reason);
+      onClose();
+    } catch (err) {
+      // Error handled by mutation toast notification
+    }
   };
 
   return (
@@ -29,7 +33,7 @@ const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost }) => {
               <AlertOctagon size={18} className="text-white/90" />
               <h2 className="text-base font-bold">Mark as Lost: {entry.childName}</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} disabled={isPending} className="p-1 text-white/80 hover:text-white rounded-lg disabled:opacity-50">
               <X size={18} />
             </button>
           </div>
@@ -58,11 +62,12 @@ const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+              <Button type="button" variant="outline" onClick={onClose} className="text-xs" disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#AE4A3E] hover:bg-[#8A362C] text-white text-xs font-bold">
-                Mark Family Lost
+              <Button type="submit" disabled={isPending} className="bg-[#AE4A3E] hover:bg-[#8A362C] text-white text-xs font-bold flex items-center gap-1.5">
+                {isPending && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>}
+                {isPending ? "Saving..." : "Mark Family Lost"}
               </Button>
             </div>
           </form>

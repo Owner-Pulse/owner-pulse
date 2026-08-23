@@ -4,7 +4,7 @@ import { X, FileText, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied }) => {
+const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, isPending = false }) => {
   const [packetGiven, setPacketGiven] = useState("Yes");
   const [appliedDate, setAppliedDate] = useState("");
   const [appliedNotes, setAppliedNotes] = useState("");
@@ -17,14 +17,18 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied }) => {
 
   if (!isOpen || !entry) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onMoveToApplied(entry.id, {
-      packetGiven,
-      appliedDate,
-      appliedNotes: appliedNotes.trim(),
-    });
-    onClose();
+    try {
+      await onMoveToApplied(entry.id, {
+        packetGiven,
+        appliedDate,
+        appliedNotes: appliedNotes.trim(),
+      });
+      onClose();
+    } catch (err) {
+      // Error handled by mutation toast notification
+    }
   };
 
   return (
@@ -42,7 +46,7 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied }) => {
               <FileText size={18} className="text-[#9DB8D9]" />
               <h2 className="text-base font-bold">Move to Applied: {entry.childName}</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} disabled={isPending} className="p-1 text-white/80 hover:text-white rounded-lg disabled:opacity-50">
               <X size={18} />
             </button>
           </div>
@@ -90,11 +94,12 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+              <Button type="button" variant="outline" onClick={onClose} className="text-xs" disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
-                Move to Applied
+              <Button type="submit" disabled={isPending} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs font-bold flex items-center gap-1.5">
+                {isPending && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>}
+                {isPending ? "Moving..." : "Move to Applied"}
               </Button>
             </div>
           </form>

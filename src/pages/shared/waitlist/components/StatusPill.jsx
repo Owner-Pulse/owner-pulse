@@ -9,7 +9,7 @@ const COLORS = {
 };
 
 const StatusPill = ({ status }) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${COLORS[status] || COLORS.inquiry}`}>
+  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${COLORS[status?.toLowerCase()] || COLORS.inquiry}`}>
     {status}
   </span>
 );

@@ -24,7 +24,7 @@ const fmtRelative = (d) => {
   }
 };
 
-const PTOHistoryCard = ({ ptoLog = [], staff = [] }) => {
+const PTOHistoryCard = ({ ptoLog = [], staff = [], isLoading = false }) => {
   const [search, setSearch] = useState("");
 
   const filteredLogs = useMemo(() => {
@@ -67,7 +67,20 @@ const PTOHistoryCard = ({ ptoLog = [], staff = [] }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {filteredLogs && filteredLogs.length > 0 ? (
+          {isLoading ? (
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50/80 rounded-xl animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gray-200 shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="w-32 h-3.5 bg-gray-200 rounded" />
+                    <div className="w-20 h-3 bg-gray-100 rounded" />
+                  </div>
+                </div>
+                <div className="w-16 h-3 bg-gray-200 rounded" />
+              </div>
+            ))
+          ) : filteredLogs && filteredLogs.length > 0 ? (
             filteredLogs.map((entry, idx) => {
               const s = Array.isArray(staff) ? staff.find((st) => (st.id || st.employee_id) === (entry.staffId || entry.employee_id)) : null;
               const name = entry.employee_name || entry.teacher_name || entry.name || s?.name || "Staff Member";

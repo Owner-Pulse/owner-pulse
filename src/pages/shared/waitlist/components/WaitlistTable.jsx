@@ -16,6 +16,46 @@ const itemVariants = {
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
+const SkeletonRow = ({ role }) => (
+  <tr className="animate-pulse">
+    <td className="py-4 px-4">
+      <div className="space-y-1.5">
+        <div className="h-3.5 w-32 bg-gray-200 rounded" />
+        <div className="h-2.5 w-16 bg-gray-100 rounded" />
+      </div>
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-5 w-16 bg-gray-100 rounded-full" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="space-y-1">
+        <div className="h-3.5 w-24 bg-gray-200 rounded" />
+        <div className="h-2.5 w-28 bg-gray-100 rounded" />
+      </div>
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-4.5 w-14 bg-gray-100 rounded" />
+    </td>
+    <td className="py-4 px-4">
+      <div className="space-y-1">
+        <div className="h-3 w-40 bg-gray-100 rounded" />
+        <div className="h-2.5 w-12 bg-gray-100 rounded" />
+      </div>
+    </td>
+    <td className="py-4 px-4">
+      <div className="h-3 w-6 bg-gray-200 rounded" />
+    </td>
+    {role === "director" && (
+      <td className="py-4 px-4 text-right">
+        <div className="flex justify-end gap-1.5">
+          <div className="h-7 w-20 bg-gray-200 rounded" />
+          <div className="h-7 w-6 bg-gray-100 rounded" />
+        </div>
+      </td>
+    )}
+  </tr>
+);
+
 const WaitlistTable = ({
   entries,
   role,
@@ -27,6 +67,7 @@ const WaitlistTable = ({
   onOpenEnroll,
   onOpenLost,
   onDelete,
+  isLoading = false,
 }) => {
   return (
     <motion.div variants={itemVariants}>
@@ -48,11 +89,16 @@ const WaitlistTable = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {entries.length > 0 ? (
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <SkeletonRow key={idx} role={role} />
+                  ))
+                ) : entries.length > 0 ? (
                   entries.map((w) => {
                     const waitDays = daysSince(w.addedDate);
-                    const isStale = waitDays >= 30 && !["Enrolled", "Lost"].includes(w.status);
-                    const isLost = w.status === "Lost";
+                    const statusLower = w.status?.toLowerCase() || "";
+                    const isStale = waitDays >= 30 && !["enrolled", "lost"].includes(statusLower);
+                    const isLost = statusLower === "lost";
 
                     return (
                       <tr
@@ -128,7 +174,7 @@ const WaitlistTable = ({
                         {role === "director" && (
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                              {w.status === "Inquiry" && (
+                              {statusLower === "inquiry" && (
                                 <Button
                                   size="sm"
                                   onClick={() => onOpenTour(w)}
@@ -138,7 +184,7 @@ const WaitlistTable = ({
                                 </Button>
                               )}
 
-                              {w.status === "Toured" && (
+                              {statusLower === "toured" && (
                                 <Button
                                   size="sm"
                                   onClick={() => onOpenApplied(w)}
@@ -148,7 +194,7 @@ const WaitlistTable = ({
                                 </Button>
                               )}
 
-                              {w.status === "Applied" && (
+                              {statusLower === "applied" && (
                                 <Button
                                   size="sm"
                                   onClick={() => onOpenOffer(w)}
@@ -158,7 +204,7 @@ const WaitlistTable = ({
                                 </Button>
                               )}
 
-                              {w.status === "Offered" && (
+                              {statusLower === "offered" && (
                                 <Button
                                   size="sm"
                                   onClick={() => onOpenEnroll(w)}
@@ -168,13 +214,13 @@ const WaitlistTable = ({
                                 </Button>
                               )}
 
-                              {w.status === "Enrolled" && (
+                              {statusLower === "enrolled" && (
                                 <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
                                   <CheckCircle2 size={13} /> Enrolled
                                 </span>
                               )}
 
-                              {!["Enrolled", "Lost"].includes(w.status) && (
+                              {!["enrolled", "lost"].includes(statusLower) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -187,7 +233,7 @@ const WaitlistTable = ({
 
                               {onDelete && (
                                 <button
-                                  onClick={() => onDelete(w.id)}
+                                  onClick={() => onDelete(w)}
                                   className="p-1 text-gray-400 hover:text-red-600 rounded"
                                   title="Delete family"
                                 >

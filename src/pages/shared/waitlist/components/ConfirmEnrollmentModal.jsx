@@ -4,7 +4,7 @@ import { X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment }) => {
+const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, isPending = false }) => {
   const { classrooms } = useGetAllClassrooms();
 
   const [form, setForm] = useState({
@@ -45,24 +45,28 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment })
 
   if (!isOpen || !entry) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onConfirmEnrollment(entry.id, {
-      childId: form.childId,
-      personId: form.personId,
-      childName: form.childName.trim(),
-      dob: form.dob,
-      gender: form.gender,
-      finalRoom: form.finalRoom.trim(),
-      status: form.status,
-      actualStart: form.actualStart,
-      allergies: form.allergies.trim(),
-      parentName: form.parentName.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim(),
-      enrollNotes: form.enrollNotes.trim(),
-    });
-    onClose();
+    try {
+      await onConfirmEnrollment(entry.id, {
+        childId: form.childId,
+        personId: form.personId,
+        childName: form.childName.trim(),
+        dob: form.dob,
+        gender: form.gender,
+        finalRoom: form.finalRoom.trim(),
+        status: form.status,
+        actualStart: form.actualStart,
+        allergies: form.allergies.trim(),
+        parentName: form.parentName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        enrollNotes: form.enrollNotes.trim(),
+      });
+      onClose();
+    } catch (err) {
+      // Error handled by mutation toast notification
+    }
   };
 
   return (
@@ -80,7 +84,7 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment })
               <CheckCircle2 size={18} className="text-emerald-200" />
               <h2 className="text-base font-bold">Confirm Enrollment: {entry.childName}</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} disabled={isPending} className="p-1 text-white/80 hover:text-white rounded-lg disabled:opacity-50">
               <X size={18} />
             </button>
           </div>
@@ -264,11 +268,12 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment })
 
             {/* Action buttons */}
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+              <Button type="button" variant="outline" onClick={onClose} className="text-xs" disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
-                Confirm Enrolled
+              <Button type="submit" disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 font-bold">
+                {isPending && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>}
+                {isPending ? "Confirming..." : "Confirm Enrolled"}
               </Button>
             </div>
           </form>

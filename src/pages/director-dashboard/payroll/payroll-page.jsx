@@ -333,6 +333,10 @@ const PayrollPage = () => {
             <p className="text-sm text-gray-500 mt-1">
               Pay period Ending {fmtDate(periodEnding)} · Replaces bi-weekly email to Owner
             </p>
+          ) : activeTab === "history" ? (
+            <p className="text-sm text-gray-500 mt-1">
+              Review bi-weekly payroll submission records and history.
+            </p>
           ) : (
             <p className="text-sm text-gray-500 mt-1">
               Schedule bi-weekly payroll submission periods.
@@ -345,15 +349,23 @@ const PayrollPage = () => {
             <button
               onClick={() => setActiveTab("submit")}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                activeTab === "submit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+                activeTab === "submit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
               }`}
             >
               Submit Payroll
             </button>
             <button
+              onClick={() => setActiveTab("history")}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                activeTab === "history" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              Payroll History
+            </button>
+            <button
               onClick={() => setActiveTab("schedule")}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                activeTab === "schedule" ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
+                activeTab === "schedule" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"
               }`}
             >
               Payroll Schedule
@@ -366,14 +378,14 @@ const PayrollPage = () => {
                 <AlertTriangle size={12} /> {payrollDays}d until due
               </span>
             )
-          ) : (
+          ) : activeTab === "schedule" ? (
             <Button
               onClick={() => setIsAddPeriodOpen(true)}
               className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-semibold rounded-xl text-xs md:text-sm flex items-center gap-1.5"
             >
               <Plus size={16} /> Schedule Period
             </Button>
-          )}
+          ) : null}
         </div>
       </motion.div>
 
@@ -404,7 +416,7 @@ const PayrollPage = () => {
         </motion.div>
       </div>
 
-      {activeTab === "submit" ? (
+      {activeTab === "submit" && (
         <>
           {/* Period Selector Dropdown */}
           <motion.div variants={itemVariants} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -451,11 +463,14 @@ const PayrollPage = () => {
               disabled={itemCount === 0 || !activePeriod || activePeriod.status === "Submitted"}
             />
           </div>
-
-          {/* ─── Payroll History ────────────────────────────────────── */}
-          <PayrollHistoryCard history={history} />
         </>
-      ) : (
+      )}
+
+      {activeTab === "history" && (
+        <PayrollHistoryCard history={history} />
+      )}
+
+      {activeTab === "schedule" && (
         /* Schedule Tab */
         <motion.div
           key="schedule-tab"
