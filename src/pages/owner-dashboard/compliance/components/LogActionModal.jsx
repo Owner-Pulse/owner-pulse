@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageSquare, Send, Clock, UserCheck } from "lucide-react";
+import { X, MessageSquare, Send, Clock, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const LogActionModal = ({ isOpen, onClose, item, onAddLog, userRole = "Director" }) => {
+const LogActionModal = ({ isOpen, onClose, item, onAddLog, userRole = "Director", isLoading = false }) => {
   const [logText, setLogText] = useState("");
 
   if (!isOpen || !item) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!logText.trim()) return;
-    onAddLog(item.id, logText.trim(), userRole === "owner" ? "Owner" : "Director");
+    await onAddLog(item.id, logText.trim(), userRole === "owner" ? "Owner" : "Director");
     setLogText("");
   };
 
@@ -65,11 +65,20 @@ const LogActionModal = ({ isOpen, onClose, item, onAddLog, userRole = "Director"
               </div>
 
               <div className="flex items-center justify-end gap-2">
-                <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+                <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="text-xs">
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
-                  <Send size={12} className="mr-1.5" /> Submit Log
+                <Button type="submit" disabled={isLoading} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={12} className="mr-1.5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={12} className="mr-1.5" /> Submit Log
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

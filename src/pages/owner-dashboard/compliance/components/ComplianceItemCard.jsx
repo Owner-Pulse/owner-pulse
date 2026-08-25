@@ -112,12 +112,15 @@ const ComplianceItemCard = ({ item, preWarningDays = 60 }) => {
                 <ClipboardList size={12} /> DCF Document Checklist — Prepare these before renewal
               </p>
               <ul className="space-y-1">
-                {item.docChecklist.map((doc, i) => (
-                  <li key={i} className="flex items-center gap-1.5 text-[10px] text-[#1E3A5F]/75">
-                    <CheckCircle2 size={10} className="text-[#1E3A5F]/50 flex-shrink-0" />
-                    {doc}
-                  </li>
-                ))}
+                {item.docChecklist.map((doc, i) => {
+                  const text = typeof doc === "string" ? doc : (doc?.text || doc?.title || "");
+                  return (
+                    <li key={i} className="flex items-center gap-1.5 text-[10px] text-[#1E3A5F]/75">
+                      <CheckCircle2 size={10} className="text-[#1E3A5F]/50 flex-shrink-0" />
+                      {text}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

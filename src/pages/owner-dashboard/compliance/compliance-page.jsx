@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Building2,
   UserCheck,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./components/KpiCard";
@@ -27,13 +28,22 @@ import RoleBadge from "./components/RoleBadge";
 import StatusPill from "./components/StatusPill";
 import InsuranceShoppingCard from "./components/InsuranceShoppingCard";
 
-import { useCompliance, daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import {
+  useGetOwnerComplianceOverview,
+  useGetOwnerComplianceItems,
+  useGetOwnerPulseImpact,
+  useAddOwnerComplianceItem,
+  useUpdateOwnerComplianceItem,
+  useDeleteOwnerComplianceItem,
+  useAddOwnerComplianceLogNote,
+  useToggleOwnerComplianceChecklist,
+} from "@/hooks/owner-hook/compliance.hook";
 import AddEditComplianceModal from "./components/AddEditComplianceModal";
 import LogActionModal from "./components/LogActionModal";
 import PulseImpactModal from "./components/PulseImpactModal";
 import InsuranceWorkflowModal from "./components/InsuranceWorkflowModal";
-
-const TODAY = new Date("2026-05-11");
+import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -48,16 +58,16 @@ const itemVariants = {
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const CompliancePage = () => {
-  const {
-    items,
-    addItem,
-    updateItem,
-    deleteItem,
-    toggleChecklistItem,
-    addProgressLog,
-    updateInsuranceWorkflow,
-    stats,
-  } = useCompliance();
+  // API Hooks
+  const { overviewData, isLoading: isOverviewLoading } = useGetOwnerComplianceOverview();
+  const { complianceItems, isLoading: isItemsLoading } = useGetOwnerComplianceItems();
+  const { pulseImpactData } = useGetOwnerPulseImpact();
+
+  const { addComplianceItem, isPending: isAdding } = useAddOwnerComplianceItem();
+  const { updateComplianceItem, isPending: isUpdating } = useUpdateOwnerComplianceItem();
+  const { deleteComplianceItem, isPending: isDeleting } = useDeleteOwnerComplianceItem();
+  const { addLogNote, isPending: isAddingLog } = useAddOwnerComplianceLogNote();
+  const { toggleChecklist, isPending: isToggling } = useToggleOwnerComplianceChecklist();
 
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -65,8 +75,59 @@ const CompliancePage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [logModalItem, setLogModalItem] = useState(null);
+  const [deleteModalItem, setDeleteModalItem] = useState(null);
+  const [togglingChecklistId, setTogglingChecklistId] = useState(null);
   const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
   const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
+
+  // Normalize API compliance items
+  const items = useMemo(() => {
+    return (complianceItems || []).map((c) => ({
+      id: c.id,
+      item: c.name || c.item || "",
+      authority: c.authority_agency || c.authority || "",
+      expires: c.expiration_date ? c.expiration_date.slice(0, 10) : c.expires || "",
+      category: c.category || "regulatory",
+      ownerRole: c.responsible_role || c.ownerRole || "owner",
+      notes: c.renewal_notes || c.notes || "",
+      status: c.status || "compliant",
+      days_left: c.days_left ?? 0,
+      days_overdue: c.days_overdue ?? 0,
+      progress_percentage: c.progress_percentage ?? 0,
+      docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
+        id: ch.id,
+        text: ch.title || ch.text || "",
+        checked: ch.is_completed ?? ch.checked ?? false,
+      })),
+      logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
+        id: l.id,
+        date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
+        author: l.user_name || l.author || "User",
+        text: l.note || l.text || "",
+      })),
+      raw: c,
+    }));
+  }, [complianceItems]);
+
+  // Compute stats from Overview API
+  const stats = useMemo(() => {
+    const pulse = overviewData?.pulse_health || {};
+    return {
+      compliant: overviewData?.compliant_count ?? 0,
+      expiring: overviewData?.expiring_count ?? 0,
+      expired: overviewData?.expired_count ?? 0,
+      total: overviewData?.total_count ?? items.length,
+      nextDeadline: overviewData?.next_deadline?.days_left ?? 0,
+      nextDeadlineItem: overviewData?.next_deadline,
+      complianceScore: pulse.score ?? pulseImpactData?.current_score ?? 100,
+      pulseBpmPenalty: pulse.bpm_penalty ?? pulseImpactData?.bpm_penalty ?? 0,
+      scoreReason: pulse.status_label
+        ? `Status: ${pulse.status_label}`
+        : "Compliance requirements status ok",
+      ownerCount: overviewData?.owner_owned_count ?? 0,
+      directorCount: overviewData?.director_owned_count ?? 0,
+    };
+  }, [overviewData, pulseImpactData, items]);
 
   const filtered = useMemo(() => {
     return items.filter((c) => {
@@ -85,17 +146,53 @@ const CompliancePage = () => {
   }, [filtered]);
 
   const insuranceItem = useMemo(() => {
-    return items.find((i) => i.item.toLowerCase().includes("insurance")) || items[10] || items[0];
+    return items.find((i) => (i.item || "").toLowerCase().includes("insurance")) || items[0];
   }, [items]);
 
-  const handleSaveItem = (formData) => {
+  const handleSaveItem = async (formData) => {
+    const payload = {
+      name: formData.item,
+      authority_agency: formData.authority,
+      category: formData.category,
+      responsible_role: formData.ownerRole,
+      expiration_date: formData.expires,
+      reminder_window_date: formData.shopReminder || formData.expires,
+      renewal_notes: formData.notes,
+      checklist_items: (formData.docChecklist || []).map((c) => (typeof c === "string" ? c : c.text)),
+    };
+
     if (editItem) {
-      updateItem(editItem.id, formData, "Owner");
+      await updateComplianceItem({ id: editItem.id, data: payload });
       setEditItem(null);
+      setIsAddModalOpen(false);
     } else {
-      addItem({ ...formData, author: "Owner" });
+      await addComplianceItem(payload);
+      setIsAddModalOpen(false);
     }
   };
+
+  const confirmDeleteItem = async () => {
+    if (!deleteModalItem) return;
+    await deleteComplianceItem(deleteModalItem.id);
+    setDeleteModalItem(null);
+  };
+
+  const handleToggleChecklist = async (itemId, checkObj) => {
+    if (checkObj && checkObj.id) {
+      setTogglingChecklistId(checkObj.id);
+      try {
+        await toggleChecklist({ checklist_id: checkObj.id });
+      } finally {
+        setTogglingChecklistId(null);
+      }
+    }
+  };
+
+  const handleAddLog = async (itemId, text) => {
+    await addLogNote({ item_id: itemId, note: text });
+    setLogModalItem(null);
+  };
+
 
   return (
     <motion.div
@@ -288,6 +385,14 @@ const CompliancePage = () => {
                       >
                         <Edit size={12} />
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteModalItem(item)}
+                        className="h-7 px-2 text-[11px] text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 size={12} />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -333,22 +438,28 @@ const CompliancePage = () => {
                       {item.docChecklist.map((docObj, idx) => {
                         const docText = typeof docObj === "string" ? docObj : docObj.text;
                         const isChecked = typeof docObj === "string" ? true : !!docObj.checked;
+                        const isThisToggling = docObj && docObj.id && togglingChecklistId === docObj.id;
                         return (
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => toggleChecklistItem(item.id, idx)}
+                            disabled={isThisToggling || isToggling}
+                            onClick={() => handleToggleChecklist(item.id, docObj, idx)}
                             className={`flex items-center gap-2 text-[11px] p-1.5 rounded text-left transition-colors ${
                               isChecked
                                 ? "bg-white text-emerald-800 font-medium border border-emerald-200"
                                 : "bg-white/60 text-gray-600 hover:bg-white border border-gray-100"
-                            }`}
+                            } disabled:opacity-60`}
                           >
-                            <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                              isChecked ? "bg-emerald-600 text-white" : "border border-gray-300 bg-white"
-                            }`}>
-                              {isChecked && "✓"}
-                            </span>
+                            {isThisToggling ? (
+                              <Loader2 size={14} className="animate-spin text-[#1E3A5F] shrink-0" />
+                            ) : (
+                              <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                isChecked ? "bg-emerald-600 text-white" : "border border-gray-300 bg-white"
+                              }`}>
+                                {isChecked && "✓"}
+                              </span>
+                            )}
                             <span className="truncate">{docText}</span>
                           </button>
                         );
@@ -381,9 +492,7 @@ const CompliancePage = () => {
 
       {/* ── Insurance Shopping Workflow Card ─────────────────────── */}
       <motion.div variants={itemVariants}>
-        <div onClick={() => setIsInsuranceModalOpen(true)} className="cursor-pointer">
-          <InsuranceShoppingCard />
-        </div>
+        <InsuranceShoppingCard onOpenWorkflow={() => setIsInsuranceModalOpen(true)} />
       </motion.div>
 
       {/* Modals */}
@@ -396,14 +505,24 @@ const CompliancePage = () => {
         onSave={handleSaveItem}
         editItem={editItem}
         userRole="owner"
+        isLoading={isAdding || isUpdating}
       />
 
       <LogActionModal
         isOpen={!!logModalItem}
         onClose={() => setLogModalItem(null)}
         item={logModalItem}
-        onAddLog={addProgressLog}
+        onAddLog={handleAddLog}
         userRole="owner"
+        isLoading={isAddingLog}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!deleteModalItem}
+        onClose={() => setDeleteModalItem(null)}
+        onConfirm={confirmDeleteItem}
+        itemTitle={deleteModalItem?.item || deleteModalItem?.name || ""}
+        isLoading={isDeleting}
       />
 
       <PulseImpactModal
@@ -416,7 +535,7 @@ const CompliancePage = () => {
         isOpen={isInsuranceModalOpen}
         onClose={() => setIsInsuranceModalOpen(false)}
         insuranceItem={insuranceItem}
-        onUpdateWorkflow={updateInsuranceWorkflow}
+        onUpdateWorkflow={() => {}}
       />
     </motion.div>
   );
