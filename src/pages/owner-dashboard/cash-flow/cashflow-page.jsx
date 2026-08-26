@@ -6,7 +6,6 @@ import CashFlowHeader from "./components/CashFlowHeader";
 import KpiRow from "./components/KpiRow";
 import YearOverYearCard from "./components/YearOverYearCard";
 import AiInsightsCard from "./components/AiInsightsCard";
-import QuickBooksCard from "./components/QuickBooksCard";
 import BudgetVsActualCard from "./components/BudgetVsActualCard";
 import FullYearTable from "./components/FullYearTable";
 import { useGetCashflow } from "@/hooks/owner-hook/cashflow.hook";
@@ -19,7 +18,6 @@ const CashFlowPage = () => {
 
   // ── Derived values from API 
   const metrics = cf?.metrics || {};
-  const qbStatus = cf?.quickbooks_status || {};
   const yoyData = cf?.year_over_year_comparison || {};
   const aiObservations = cf?.ai_generated_observations || {};
   const budgetVsActual = cf?.annual_budget_vs_actual || {};
@@ -83,19 +81,6 @@ const CashFlowPage = () => {
     },
   ];
 
-  // ── QuickBooks status mapping
-  const qbForCard = {
-    connected: qbStatus.is_connected || false,
-    lastSync: qbStatus.last_sync_at || "—",
-    pendingTransactions: qbStatus.pending_transactions || 0,
-    reconciled: qbStatus.reconciled || false,
-    bankBalance: qbStatus.bank_balance_numeric || 0,
-    bankAccount: qbStatus.bank_account || "—",
-    creditBalance: qbStatus.credit_balance_numeric || 0,
-    receivable: qbStatus.receivables_numeric || 0,
-    payable: qbStatus.payables_numeric || 0,
-  };
-
   // AI insights mapping
   const insights = (aiObservations.insights || []).map((text) => ({
     tone: "amber",
@@ -155,14 +140,11 @@ const CashFlowPage = () => {
         currentYear={currentYear}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <AiInsightsCard
-          title={aiObservations.title}
-          subtitle={aiObservations.subtitle}
-          insights={insights}
-        />
-        <QuickBooksCard status={qbForCard} />
-      </div>
+      <AiInsightsCard
+        title={aiObservations.title}
+        subtitle={aiObservations.subtitle}
+        insights={insights}
+      />
 
       {budgetCategories.length > 0 && (
         <BudgetVsActualCard

@@ -30,8 +30,7 @@ const AtRiskStudentsCard = ({ students, activeAtRisk, fmtDate, onNavigate }) => 
                 <p className="text-xs font-semibold text-gray-900">{r.name} · {r.grade}</p>
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${r.status === "lost" ? "bg-gray-200 text-gray-500" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>{r.status}</span>
               </div>
-              <p className="text-[10px] text-gray-500 mt-0.5">{r.detail}</p>
-              <p className="text-[9px] text-gray-400 mt-0.5">{r.reason} · Flagged {fmtDate(r.flagged)}</p>
+              <p className="text-[9px] text-gray-400 mt-0.5">{r.category} · {r.reason} · Flagged {fmtDate(r.flagged_date)}</p>
             </div>
             {r.status !== "lost" && (
               <span className="text-[9px] font-semibold text-[#1E3A5F] hover:underline cursor-pointer shrink-0">Intervene</span>

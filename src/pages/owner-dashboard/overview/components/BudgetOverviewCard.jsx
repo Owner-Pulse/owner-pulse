@@ -68,9 +68,9 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
                 {recentExpenses.slice(0, 3).map((exp) => (
                   <div key={exp.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.reason] || "#94A0B5" }} />
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.category] || "#94A0B5" }} />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-gray-700 truncate">{exp.description}</p>
+                        <p className="text-[10px] text-gray-700 truncate">{exp.category}</p>
                         <div className="flex items-center gap-1">
                           <span className="text-[8px] font-medium text-gray-400">{exp.reason}</span>
                           <span className="text-[8px] text-gray-400">· {fmtDate(exp.date)}</span>

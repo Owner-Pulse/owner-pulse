@@ -262,7 +262,7 @@ const OverviewPage = () => {
           pettyCashPercent={Math.round(directorPettyCash.used_pct)} recentExpenses={directorPettyCash.recent_expenses || []} expenseByReason={[]}
           fmtMoney={fmtMoney} fmtDate={fmtDate} onNavigate={go}
         />
-        <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrolledData.open_spots || 0} />
+        <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrollmentByGrade.reduce((sum, g) => sum + (g.available || 0), 0)} />
         <UpcomingEventsCard events={upcomingEvents} />
       </div>
     </motion.div>
