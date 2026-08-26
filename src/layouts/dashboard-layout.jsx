@@ -5,6 +5,7 @@ import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
 import { useSignout } from '@/hooks/auth/auth.hook';
+import { useGetNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/hooks/notification.hook';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -94,6 +95,9 @@ const timeAgo = (ts) => {
 const DashboardLayout = () => {
   const { user } = useGetUser();
   const { signout, isPending: isPendingSignout } = useSignout();
+  const { notifications: apiNotifications } = useGetNotifications();
+  const { markAsRead } = useMarkNotificationAsRead();
+  const { markAllAsRead } = useMarkAllNotificationsAsRead();
   console.log("User data", user);
 
 
@@ -101,7 +105,6 @@ const DashboardLayout = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifFilter, setNotifFilter] = useState("all");
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const notifRef = useRef(null);
   const navigate = useNavigate();
@@ -110,6 +113,13 @@ const DashboardLayout = () => {
 
   const role = user?.role;
   const menuItems = role === "owner" ? ownerTabs : directorTabs;
+
+  const notificationsList = useMemo(() => {
+    if (apiNotifications && apiNotifications.length > 0) {
+      return apiNotifications;
+    }
+    return INITIAL_NOTIFS;
+  }, [apiNotifications]);
 
   // Click-outside handler for notification dropdown
   useEffect(() => {
@@ -125,24 +135,24 @@ const DashboardLayout = () => {
 
   // Notif helpers
   const notifStats = useMemo(() => ({
-    unread: notifications.filter((n) => !n.read).length,
-    critical: notifications.filter((n) => n.critical && !n.read).length,
-  }), [notifications]);
+    unread: notificationsList.filter((n) => !n.read).length,
+    critical: notificationsList.filter((n) => n.critical && !n.read).length,
+  }), [notificationsList]);
 
   const filteredNotifs = useMemo(() => {
-    if (notifFilter === "unread") return notifications.filter((n) => !n.read);
-    if (notifFilter === "critical") return notifications.filter((n) => n.critical);
-    return notifications;
-  }, [notifFilter, notifications]);
+    if (notifFilter === "unread") return notificationsList.filter((n) => !n.read);
+    if (notifFilter === "critical") return notificationsList.filter((n) => n.critical);
+    return notificationsList;
+  }, [notifFilter, notificationsList]);
 
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    markAllAsRead();
   };
 
   const toggleNotifRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n))
-    );
+    if (id) {
+      markAsRead(id);
+    }
   };
 
   const queryClient = useQueryClient();
