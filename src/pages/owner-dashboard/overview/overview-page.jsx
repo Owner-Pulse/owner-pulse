@@ -17,9 +17,12 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router";
 import { computeOwnerPulse } from "@/lib/pulse-engine";
-import { getPayrollHistory, getPayrollSchedule } from "@/utils/payroll-storage";
+import { useGetOwnerOverview } from "@/hooks/owner-hook/overview.hook";
+import { useConnectQuickBooks, useGetQuickbookStatus } from "@/hooks/owner-hook/quickbookConnect.hook";
+import OwnerOverviewSkeleton from "./components/OwnerOverviewSkeleton";
 
 // ─── Extracted Components ─────────────────────────────────────
 import PulseSection from "./components/PulseSection";
@@ -32,121 +35,10 @@ import EnrollmentChart from "./components/EnrollmentChart";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
 import DonutKpiCard from "./components/DonutKpiCard";
 
-// ─── Data ──────────────────────────────────────────────────────────
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const revenueData = [
-  { name: "Jan", revenue: 145000, expenses: 95000, tuition: 125000, scholarships: 20000 },
-  { name: "Feb", revenue: 152000, expenses: 98000, tuition: 130000, scholarships: 22000 },
-  { name: "Mar", revenue: 158000, expenses: 94000, tuition: 135000, scholarships: 23000 },
-  { name: "Apr", revenue: 165000, expenses: 102000, tuition: 140000, scholarships: 25000 },
-  { name: "May", revenue: 172000, expenses: 99000, tuition: 145000, scholarships: 27000 },
-  { name: "Jun", revenue: 184200, expenses: 105000, tuition: 155000, scholarships: 29200 },
-];
-
-const enrollmentData = [
-  { name: "PreK3", students: 34, capacity: 40, waitlist: 12 },
-  { name: "PreK4", students: 42, capacity: 45, waitlist: 8 },
-  { name: "Kinder", students: 38, capacity: 40, waitlist: 15 },
-  { name: "1st Grade", students: 35, capacity: 35, waitlist: 5 },
-  { name: "2nd Grade", students: 30, capacity: 35, waitlist: 7 },
-];
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const complianceItems = [
-  { id: 1, name: "Fire Inspection", status: "compliant", expires: "2026-11-04", daysLeft: 162, authority: "County Fire" },
-  { id: 2, name: "Health Dept. Inspection", status: "compliant", expires: "2026-08-22", daysLeft: 88, authority: "FL DOH" },
-  { id: 3, name: "Background Checks", status: "expiring", expires: "2026-06-15", daysLeft: 20, authority: "FL DCF" },
-  { id: 4, name: "CPR / First Aid", status: "expired", expires: "2026-04-12", daysLeft: -29, authority: "Red Cross" },
-  { id: 5, name: "General Liability", status: "expiring", expires: "2026-07-01", daysLeft: 36, authority: "Travelers" },
-  { id: 6, name: "VPK Provider Cert.", status: "compliant", expires: "2027-01-30", daysLeft: 249, authority: "ELC" },
-];
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const tasks = [
-  { id: 1, title: "Parent-teacher conference scheduling", assignee: "director", priority: "high", status: "in_progress", due: "2026-05-14" },
-  { id: 2, title: "Renew faculty CPR certifications", assignee: "director", priority: "high", status: "open", due: "2026-05-20" },
-  { id: 3, title: "Order Grade 5 yearbooks", assignee: "director", priority: "medium", status: "open", due: "2026-05-25" },
-  { id: 4, title: "Step Up Q4 attestation", assignee: "director", priority: "high", status: "open", due: "2026-05-28" },
-  { id: 5, title: "HVAC replacement quotes", assignee: "owner", priority: "medium", status: "in_progress", due: "2026-05-18" },
-  { id: 6, title: "Scholarship renewal letters", assignee: "director", priority: "low", status: "open", due: "2026-06-01" },
-];
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const atRiskStudents = [
-  { name: "J. Martinez", grade: "5th", reason: "financial", detail: "Lost job · asking about payment plan", flagged: "2026-05-04", status: "intervening" },
-  { name: "A. Choi", grade: "7th", reason: "transferring", detail: "Touring private school in Tampa", flagged: "2026-05-06", status: "intervening" },
-  { name: "R. Hassan", grade: "3rd", reason: "financial", detail: "Asked about scholarship eligibility", flagged: "2026-05-08", status: "intervening" },
-  { name: "M. Webb", grade: "8th", reason: "moving", detail: "Family relocating out of state", flagged: "2026-04-18", status: "lost" },
-];
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const maintenanceRequests = [
-  { id: 1, location: "K — Sequoia", issue: "AC unit not cooling", priority: "critical", status: "open", submittedBy: "Director" },
-  { id: 2, location: "Playground", issue: "Swing chain snapped", priority: "high", status: "in_progress", submittedBy: "Director" },
-  { id: 3, location: "PreK3 — Caterpillars", issue: "Sink faucet dripping", priority: "low", status: "open", submittedBy: "Director" },
-  { id: 4, location: "Front Office", issue: "Printer not connecting to network", priority: "medium", status: "done", submittedBy: "Owner" },
-  { id: 5, location: "1st — Redwood", issue: "Ceiling light flickering", priority: "low", status: "open", submittedBy: "Director" },
-  { id: 6, location: "Cafeteria", issue: "Refrigerator temp running warm", priority: "critical", status: "open", submittedBy: "Director" },
-];
-
-const budgetData = {
-  total: 1850000, spent: 1240000,
-  categories: [
-    { name: "Payroll & Benefits", spent: 920000, budget: 1200000, percent: 77, color: "#1E3A5F" },
-    { name: "Facilities & Rent", spent: 142000, budget: 180000, percent: 79, color: "#2A4C7E" },
-    { name: "Curriculum & Books", spent: 58000, budget: 75000, percent: 77, color: "#4A6B96" },
-    { name: "Insurance", spent: 38000, budget: 45000, percent: 84, color: "#5B7FA6" },
-    { name: "Director Discretionary", spent: 7200, budget: 9000, percent: 80, color: "#9DB8D9" },
-  ],
-};
-
-const DEFAULT_EXPENSES = [
-  { id: 1, amount: 47.50, reason: "Events & Food", description: "Pizza for parent meeting", date: "2026-04-12" },
-  { id: 2, amount: 124.00, reason: "Classroom Supplies", description: "Crayons and markers — PreK3", date: "2026-04-15" },
-  { id: 3, amount: 38.00, reason: "Staff Appreciation", description: "Coffee and donuts for staff PD", date: "2026-04-22" },
-  { id: 4, amount: 89.00, reason: "Cleaning Supplies", description: "Cleaning wipes restock", date: "2026-04-28" },
-  { id: 5, amount: 215.00, reason: "Classroom Supplies", description: "Construction paper bulk order", date: "2026-05-01" },
-  { id: 6, amount: 65.00, reason: "Staff Appreciation", description: "Birthday cake for office party", date: "2026-05-04" },
-  { id: 7, amount: 180.00, reason: "Office Supplies", description: "Printer ink cartridges", date: "2026-05-06" },
-  { id: 8, amount: 42.00, reason: "Teacher Appreciation", description: "Gift cards for teacher appreciation", date: "2026-05-08" },
-];
-
-const procareData = {
-  dailyCheckIns: 42, absentToday: 4, illnesses: 2, medicationGiven: 1, incidents: 0, parentMessages: 8,
-};
-
-const quickbooksStatus = {
-  lastSync: "2026-05-11 02:34 AM", pendingTransactions: 3, reconciled: true, bankBalance: 487200,
-};
-
-const staffPTO = [
-  { name: "Ms. Cohen", used: 7, allowance: 10, recent: "Personal (May 2, May 6)" },
-  { name: "Ms. Hassan", used: 8, allowance: 10, recent: "Sick (Apr 28)" },
-  { name: "Mr. Nguyen", used: 6, allowance: 10, recent: "Vacation (Apr 22)" },
-  { name: "Ms. Patel", used: 5, allowance: 10, recent: "Personal (Apr 15)" },
-  { name: "Ms. Brooks", used: 4, allowance: 10, recent: "Sick (Apr 10)" },
-];
-
-const substitutes = [
-  { id: 1, date: "2026-05-11", coveringFor: "Ms. Cohen", subName: "Ms. Hart" },
-  { id: 2, date: "2026-05-05", coveringFor: "Mr. Levine", subName: "Mr. Owens" },
-  { id: 3, date: "2026-04-28", coveringFor: "Ms. Diaz", subName: "Ms. Hart" },
-];
-
-// TODO: Backend wiring — replace hardcoded data with API response
-const discounts = [
-  { student: "E. Foster", grade: "K", type: "staff_child", monthlyValue: 850 },
-  { student: "N. Patel", grade: "2nd", type: "sibling", monthlyValue: 225 },
-  { student: "C. Patel", grade: "K", type: "sibling", monthlyValue: 213 },
-  { student: "D. Alvarez", grade: "3rd", type: "staff_child", monthlyValue: 925 },
-  { student: "S. Tran", grade: "5th", type: "staff_child", monthlyValue: 850 },
-];
-
 const DIRECTOR_BUDGET_TOTAL = 9000;
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
 const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
 
 const containerVariants = {
@@ -162,113 +54,92 @@ const OverviewPage = () => {
   const navigate = useNavigate();
   const go = (path) => navigate(path);
 
-  // ─── Expenses from localStorage ───
-  const [expenses, setExpenses] = useState(() => {
-    try { const saved = localStorage.getItem("directorExpenses"); return saved ? JSON.parse(saved) : DEFAULT_EXPENSES; } catch { return DEFAULT_EXPENSES; }
-  });
+  // Fetch API data
+  const { ownerOverviewData, isLoading } = useGetOwnerOverview();
+  const { isConnected: isQbConnected, isLoading: isQbStatusLoading } = useGetQuickbookStatus();
+  const { getConnectUrl, isPending: isConnectingQb } = useConnectQuickBooks();
 
-  const [payrollHistory, setPayrollHistory] = useState([]);
-  const [payrollSchedule, setPayrollSchedule] = useState([]);
+  // If fetching, render Skeleton Loader
+  if (isLoading) {
+    return <OwnerOverviewSkeleton />;
+  }
 
-  useEffect(() => {
-    setPayrollHistory(getPayrollHistory());
-    setPayrollSchedule(getPayrollSchedule());
-  }, []);
+  const pulseApi = ownerOverviewData?.pulse;
+  const kpiCards = ownerOverviewData?.kpi_cards;
+  const financialData = ownerOverviewData?.financial_performance || [];
+  const atRiskList = ownerOverviewData?.at_risk_students || [];
+  const openMaintList = ownerOverviewData?.open_maintenance || [];
+  const activeTaskList = ownerOverviewData?.active_tasks || [];
+  const budgetOverview = ownerOverviewData?.budget_overview;
+  const enrollmentByGrade = ownerOverviewData?.enrollment_by_grade || [];
+  const upcomingEvents = ownerOverviewData?.upcoming_events || [];
 
-  const nextPendingPeriod = useMemo(() => {
-    return payrollSchedule.find(p => p.status === "Pending") || null;
-  }, [payrollSchedule]);
+  // Mapped Pulse
+  const ownerPulse = {
+    bpm: pulseApi?.bpm ?? 117,
+    composite: Math.round(pulseApi?.composite_score ?? 59),
+    state: {
+      state: pulseApi?.state || "Stressed",
+      color: pulseApi?.color || "#F97316",
+    },
+    recommendations: pulseApi?.top_3_recommendations || [],
+    sub_scores: pulseApi?.sub_scores || {},
+  };
 
-  const daysRemaining = useMemo(() => {
-    if (!nextPendingPeriod) return 0;
-    const diffTime = new Date(nextPendingPeriod.dueDate) - new Date("2026-05-11");
-    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-  }, [nextPendingPeriod]);
-
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === "directorExpenses") { try { setExpenses(JSON.parse(e.newValue)); } catch { } }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  const directorSpent = useMemo(() => expenses.reduce((a, e) => a + e.amount, 0), [expenses]);
-  const directorRemaining = DIRECTOR_BUDGET_TOTAL - directorSpent;
-  const pettyCashPercent = Math.round((directorSpent / DIRECTOR_BUDGET_TOTAL) * 100);
-
-  const expenseByReason = useMemo(() => {
-    const map = {};
-    expenses.forEach((e) => {
-      const reason = e.reason || "Other";
-      map[reason] = (map[reason] || 0) + e.amount;
-    });
-    return Object.entries(map).map(([name, total]) => ({ name, total })).sort((a, b) => b.total - a.total);
-  }, [expenses]);
-
-  const recentExpenses = useMemo(() => [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5), [expenses]);
-
-  // ─── Computed stats ───
-  const totalEnrolled = 245;
-  const totalCapacity = 292;
-  const enrollPercent = Math.round((totalEnrolled / totalCapacity) * 100);
-  const totalWaitlist = enrollmentData.reduce((sum, e) => sum + e.waitlist, 0);
-  const openSeats = 47;
-  const tasksDone = tasks.filter((t) => t.status === "done").length;
-  const totalTasks = tasks.length;
-  const tasksPct = Math.round((tasksDone / totalTasks) * 100);
-  const highPriorityTasks = tasks.filter((t) => t.priority === "high" && t.status !== "done").length;
-  const criticalMaintenance = maintenanceRequests.filter((m) => m.priority === "critical" && m.status !== "done").length;
-  const openMaintenance = maintenanceRequests.filter((m) => m.status !== "done").length;
-  const maintenanceDone = maintenanceRequests.filter((m) => m.status === "done").length;
-  const maintenancePct = Math.round((maintenanceDone / maintenanceRequests.length) * 100);
-  const activeAtRisk = atRiskStudents.filter(r => r.status !== "lost").length;
-  const atRiskPct = Math.round((activeAtRisk / atRiskStudents.length) * 100);
-  const totalPTOUsed = staffPTO.reduce((sum, s) => sum + s.used, 0);
-  const totalPTOAllowance = staffPTO.reduce((sum, s) => sum + s.allowance, 0);
-  const ptoPct = Math.round((totalPTOUsed / totalPTOAllowance) * 100);
-  const totalCheckins = procareData.dailyCheckIns + procareData.absentToday;
-  const checkinPct = Math.round((procareData.dailyCheckIns / totalCheckins) * 100);
-  const revenueTarget = 220000;
-  const revenuePct = Math.round((184200 / revenueTarget) * 100);
-  const waitlistPct = Math.round((totalWaitlist / totalEnrolled) * 100);
-  const budgetPercent = Math.round((budgetData.spent / budgetData.total) * 100);
-  const schoolBudgetRemaining = budgetData.total - budgetData.spent;
-
-  // ─── Compliance stats ───
-  const compliantCount = complianceItems.filter((c) => c.status === "compliant").length;
-  const compliancePct = Math.round((compliantCount / complianceItems.length) * 100);
-
-  // ─── Discount stats ───
-  const totalDiscountValue = discounts.reduce((sum, d) => sum + d.monthlyValue, 0);
-  const discountTarget = 5000; // monthly discount allowance target
-  const discountPct = Math.round((totalDiscountValue / discountTarget) * 100);
-  const discountCount = discounts.length;
-
-  const calloutCount = staffPTO.filter((s) => s.used >= 6 && s.used > s.allowance * 0.5).length;
-  const classScoreAverage = 5.2;
-  const pastDuePercent = 8;
-
-  // ─── Pulse ───
-  const ownerPulse = useMemo(() =>
-    computeOwnerPulse({
-      complianceItems, totalEnrolled, totalCapacity, classAverage: classScoreAverage,
-      maintenanceItems: maintenanceRequests, calloutCount, totalStaff: staffPTO.length || 15,
-      directorSpent, directorBudget: DIRECTOR_BUDGET_TOTAL,
-      budgetSpent: budgetData.spent, budgetTotal: budgetData.total,
-      operatingMargin: 24, pastDuePct: pastDuePercent, monthsElapsed: 8,
-    }),
-    [complianceItems, totalEnrolled, totalCapacity, maintenanceRequests, directorSpent]
-  );
-
-  const pulseHistory = useMemo(() => [
+  const pulseHistory = [
     { date: "Aug", bpm: 78 }, { date: "Sep", bpm: 82 }, { date: "Oct", bpm: 85 },
     { date: "Nov", bpm: 79 }, { date: "Dec", bpm: 72 }, { date: "Jan", bpm: 68 },
     { date: "Feb", bpm: 74 }, { date: "Mar", bpm: 71 }, { date: "Apr", bpm: 76 },
     { date: "May", bpm: ownerPulse.bpm },
-  ], [ownerPulse.bpm]);
+  ];
 
-  // ─── KPI icon map ───
+  // KPI calculations
+  const enrolledData = kpiCards?.enrolled || { count: 621, capacity: 170, capacity_pct: 365.3, yoy_growth: "+12%" };
+  const revenueDataKpi = kpiCards?.revenue || { amount: 184200, formatted: "$184.2k", mom_growth: "+8.4%" };
+  const waitlistKpi = kpiCards?.waitlist || { count: 2, open_seats: 0, waitlist_ratio_pct: 1.2 };
+  const tasksKpi = kpiCards?.tasks_done || { completed: 0, total: 1, high_priority: 1 };
+  const maintKpi = kpiCards?.maintenance || { resolved: 0, total: 1, critical_count: 1 };
+  const atRiskKpi = kpiCards?.at_risk_students || { intervening: 1, total: 1 };
+  const ptoKpi = kpiCards?.pto_used || { days_used: 1, total_allowance: 3500, subs_count: 0, used_pct: 0 };
+  const checkinsKpi = kpiCards?.check_ins || { present: 565, absent: 56, attendance_pct: 91 };
+  const complianceKpi = kpiCards?.compliance || { compliant: 2, need_attention: 1, total: 3, compliant_pct: 66.7 };
+  const pettyCashKpi = kpiCards?.petty_cash || { spent: 801, remaining: 8199, budget: 9000, used_pct: 8.9 };
+  const discountsKpi = kpiCards?.discounts || { total_amount: 3063, active_discounts: 5, pct_share: 61 };
+  const payrollKpi = kpiCards?.payroll_cycles || { filed_count: 1, next_due_days: 6, progress_pct: 29 };
+
+  // Financial Chart formatting
+  const formattedFinancialData = financialData.map((f) => ({
+    name: f.month,
+    revenue: f.tuition + f.scholarships,
+    tuition: f.tuition,
+    scholarships: f.scholarships,
+    expenses: f.expenses,
+    net_margin: f.net_margin,
+  }));
+
+  // Enrollment Chart formatting
+  const formattedEnrollmentData = enrollmentByGrade.map((item) => ({
+    name: item.name,
+    students: item.enrolled,
+    capacity: item.capacity,
+    waitlist: item.waitlist || 0,
+  }));
+
+  // Budget Overview Data
+  const schoolBudget = budgetOverview?.school_budget || { total_budget: 1900000, total_spent: 1180000, remaining: 720000, used_pct: 62.1 };
+  const directorPettyCash = budgetOverview?.director_petty_cash || { total_budget: 9000, total_spent: 801, remaining: 8199, used_pct: 8.9, recent_expenses: [] };
+
+  const budgetDataForCard = {
+    total: schoolBudget.total_budget,
+    spent: schoolBudget.total_spent,
+    categories: [
+      { name: "Payroll & Benefits", spent: Math.round(schoolBudget.total_spent * 0.7), budget: Math.round(schoolBudget.total_budget * 0.7), percent: 70, color: "#1E3A5F" },
+      { name: "Facilities & Rent", spent: Math.round(schoolBudget.total_spent * 0.15), budget: Math.round(schoolBudget.total_budget * 0.15), percent: 15, color: "#2A4C7E" },
+      { name: "Curriculum & Supplies", spent: Math.round(schoolBudget.total_spent * 0.1), budget: Math.round(schoolBudget.total_budget * 0.1), percent: 10, color: "#4A6B96" },
+      { name: "Director Discretionary", spent: directorPettyCash.total_spent, budget: directorPettyCash.total_budget, percent: Math.round(directorPettyCash.used_pct), color: "#9DB8D9" },
+    ],
+  };
+
   const kpiIcon = { Users, DollarSign, ClipboardList, CheckCircle2, Wrench, AlertTriangle, Calendar, UserCheck, ShieldCheck, Wallet, Tag };
 
   return (
@@ -278,9 +149,9 @@ const OverviewPage = () => {
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
             Dashboard Overview
-            {criticalMaintenance > 0 && (
+            {maintKpi.critical_count > 0 && (
               <span className="ml-2 md:ml-3 inline-flex items-center gap-1 px-2 py-0.5 bg-[#AE4A3E]/10 text-[#8A362C] text-[10px] md:text-xs font-bold rounded-full align-middle">
-                {criticalMaintenance} critical
+                {maintKpi.critical_count} critical
               </span>
             )}
           </h1>
@@ -294,20 +165,44 @@ const OverviewPage = () => {
               <div className="w-4 h-4 bg-[#1E3A5F]/10 rounded flex items-center justify-center text-[8px] font-bold text-[#1E3A5F]">QB</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">QuickBooks</span>
             </div>
-            {quickbooksStatus.reconciled && (
-              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap">
+            {isQbStatusLoading ? (
+              <Skeleton className="h-4 w-16 rounded-full" />
+            ) : isQbConnected ? (
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium">
                 <CheckIcon size={10} /> Synced
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-gray-100 text-gray-500 text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium">
+                Not Connected
               </span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <Button 
-            onClick={() => toast.success("QuickBooks connected successfully!")}
-            className="bg-[#2CA01C] hover:bg-[#207514] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <Link2 size={14} /> Connect QuickBooks
-          </Button>
+          {isQbStatusLoading ? (
+            <Skeleton className="h-9 w-40 rounded-xl" />
+          ) : isQbConnected ? (
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2CA01C]/10 border border-[#2CA01C]/30 text-[#207514] text-xs md:text-sm font-semibold rounded-xl shadow-sm">
+              <CheckIcon size={14} className="text-[#207514]" /> Connected
+            </div>
+          ) : (
+            <Button 
+              onClick={() => getConnectUrl()}
+              disabled={isConnectingQb}
+              className="bg-[#2CA01C] hover:bg-[#207514] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            >
+              {isConnectingQb ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Link2 size={14} /> Connect QuickBooks
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </motion.div>
 
@@ -316,31 +211,31 @@ const OverviewPage = () => {
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Enrolled" value={totalEnrolled} pct={enrollPercent} color="#1E3A5F" sub="+12% y/y" subColor="text-[#2F6042]" icon={kpiIcon.Users} />
-        <DonutKpiCard label="Revenue" value="$184.2k" pct={revenuePct} color="#3E7A54" sub="+8.4% MoM" subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
-        <DonutKpiCard label="Waitlist" value={totalWaitlist} pct={waitlistPct} color="#1E3A5F" sub={`${openSeats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
-        <DonutKpiCard label="Tasks Done" value={`${tasksDone}/${totalTasks}`} pct={tasksPct} color="#B78A2F" sub={`${highPriorityTasks} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
+        <DonutKpiCard label="Enrolled" value={enrolledData.count} pct={Math.min(100, Math.round(enrolledData.capacity_pct))} color="#1E3A5F" sub={`${enrolledData.yoy_growth} y/y`} subColor="text-[#2F6042]" icon={kpiIcon.Users} />
+        <DonutKpiCard label="Revenue" value={revenueDataKpi.formatted} pct={85} color="#3E7A54" sub={`${revenueDataKpi.mom_growth} MoM`} subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
+        <DonutKpiCard label="Waitlist" value={waitlistKpi.count} pct={Math.round(waitlistKpi.waitlist_ratio_pct)} color="#1E3A5F" sub={`${waitlistKpi.open_seats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
+        <DonutKpiCard label="Tasks Done" value={`${tasksKpi.completed}/${tasksKpi.total}`} pct={tasksKpi.total ? Math.round((tasksKpi.completed / tasksKpi.total) * 100) : 0} color="#B78A2F" sub={`${tasksKpi.high_priority} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
       </div>
 
       {/* KPI Row 2 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Maintenance" value={`${maintenanceDone}/${maintenanceRequests.length}`} pct={maintenancePct} color="#AE4A3E" sub={`${criticalMaintenance} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
-        <DonutKpiCard label="At-Risk" value={`${activeAtRisk}/${atRiskStudents.length}`} pct={atRiskPct} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
-        <DonutKpiCard label="PTO Used" value={`${totalPTOUsed}/${totalPTOAllowance}`} pct={ptoPct} color="#1E3A5F" sub={`${substitutes.length} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
-        <DonutKpiCard label="Check-ins" value={procareData.dailyCheckIns} pct={checkinPct} color="#3E7A54" sub={`${procareData.absentToday} absent`} subColor="text-gray-400" icon={kpiIcon.UserCheck} />
+        <DonutKpiCard label="Maintenance" value={`${maintKpi.resolved}/${maintKpi.total}`} pct={maintKpi.total ? Math.round((maintKpi.resolved / maintKpi.total) * 100) : 0} color="#AE4A3E" sub={`${maintKpi.critical_count} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
+        <DonutKpiCard label="At-Risk" value={`${atRiskKpi.intervening}/${atRiskKpi.total}`} pct={atRiskKpi.total ? Math.round((atRiskKpi.intervening / atRiskKpi.total) * 100) : 0} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
+        <DonutKpiCard label="PTO Used" value={`${ptoKpi.days_used}/${ptoKpi.total_allowance}`} pct={Math.round(ptoKpi.used_pct)} color="#1E3A5F" sub={`${ptoKpi.subs_count} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
+        <DonutKpiCard label="Check-ins" value={checkinsKpi.present} pct={Math.round(checkinsKpi.attendance_pct)} color="#3E7A54" sub={`${checkinsKpi.absent} absent`} subColor="text-gray-400" icon={kpiIcon.UserCheck} />
       </div>
 
       {/* KPI Row 3 — Compliance, Petty Cash, Discounts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Compliance" value={`${compliantCount}/${complianceItems.length}`} pct={compliancePct} color={compliancePct >= 80 ? "#3E7A54" : compliancePct >= 50 ? "#B78A2F" : "#AE4A3E"} sub={`${complianceItems.length - compliantCount} need attention`} subColor={compliancePct >= 80 ? "text-[#2F6042]" : compliancePct >= 50 ? "text-[#8F6A1F]" : "text-[#8A362C]"} icon={kpiIcon.ShieldCheck} />
-        <DonutKpiCard label="Petty Cash" value={fmtMoney(directorSpent)} pct={pettyCashPercent} color="#1E3A5F" sub={`${fmtMoney(directorRemaining)} of ${fmtMoney(DIRECTOR_BUDGET_TOTAL)} left`} subColor={directorRemaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
-        <DonutKpiCard label="Discounts" value={fmtMoney(totalDiscountValue)} pct={discountPct} color="#1E3A5F" sub={`${discountCount} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
+        <DonutKpiCard label="Compliance" value={`${complianceKpi.compliant}/${complianceKpi.total}`} pct={Math.round(complianceKpi.compliant_pct)} color={complianceKpi.compliant_pct >= 80 ? "#3E7A54" : complianceKpi.compliant_pct >= 50 ? "#B78A2F" : "#AE4A3E"} sub={`${complianceKpi.need_attention} need attention`} subColor={complianceKpi.compliant_pct >= 80 ? "text-[#2F6042]" : complianceKpi.compliant_pct >= 50 ? "text-[#8F6A1F]" : "text-[#8A362C]"} icon={kpiIcon.ShieldCheck} />
+        <DonutKpiCard label="Petty Cash" value={fmtMoney(pettyCashKpi.spent)} pct={Math.round(pettyCashKpi.used_pct)} color="#1E3A5F" sub={`${fmtMoney(pettyCashKpi.remaining)} left`} subColor={pettyCashKpi.remaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
+        <DonutKpiCard label="Discounts" value={fmtMoney(discountsKpi.total_amount)} pct={Math.round(discountsKpi.pct_share)} color="#1E3A5F" sub={`${discountsKpi.active_discounts} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
         <DonutKpiCard 
           label="Payroll Cycles" 
-          value={`${payrollHistory.length} filed`} 
-          pct={nextPendingPeriod ? Math.max(0, Math.min(100, Math.round((daysRemaining / 14) * 100))) : 0} 
+          value={`${payrollKpi.filed_count} filed`} 
+          pct={Math.round(payrollKpi.progress_pct)} 
           color="#1E3A5F" 
-          sub={nextPendingPeriod ? `Next due in ${daysRemaining}d` : "No pending periods"} 
+          sub={`Next due in ${payrollKpi.next_due_days}d`} 
           subColor="text-gray-400" 
           icon={kpiIcon.ClipboardList}
           onClick={() => navigate("/owner/payroll")}
@@ -349,26 +244,26 @@ const OverviewPage = () => {
 
       {/* Financial Chart */}
       <div className="w-full">
-        <FinancialChart data={revenueData} />
+        <FinancialChart data={formattedFinancialData} />
       </div>
 
       {/* Middle Row — At-Risk + Maintenance + Tasks */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <AtRiskStudentsCard students={atRiskStudents} activeAtRisk={activeAtRisk} fmtDate={fmtDate} onNavigate={go} />
-        <MaintenanceCard requests={maintenanceRequests} openCount={openMaintenance} criticalCount={criticalMaintenance} onNavigate={go} />
-        <TasksCard tasks={tasks} highPriorityCount={highPriorityTasks} fmtDate={fmtDate} daysUntil={daysUntil} onNavigate={go} />
+        <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} fmtDate={fmtDate} onNavigate={go} />
+        <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} onNavigate={go} />
+        <TasksCard tasks={activeTaskList} highPriorityCount={tasksKpi.high_priority} fmtDate={fmtDate} daysUntil={daysUntil} onNavigate={go} />
       </div>
 
       {/* Bottom Section — Budget + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <BudgetOverviewCard
-          budgetData={budgetData} budgetPercent={budgetPercent} schoolBudgetRemaining={schoolBudgetRemaining}
-          DIRECTOR_BUDGET_TOTAL={DIRECTOR_BUDGET_TOTAL} directorSpent={directorSpent} directorRemaining={directorRemaining}
-          pettyCashPercent={pettyCashPercent} recentExpenses={recentExpenses} expenseByReason={expenseByReason}
+          budgetData={budgetDataForCard} budgetPercent={Math.round(schoolBudget.used_pct)} schoolBudgetRemaining={schoolBudget.remaining}
+          DIRECTOR_BUDGET_TOTAL={directorPettyCash.total_budget} directorSpent={directorPettyCash.total_spent} directorRemaining={directorPettyCash.remaining}
+          pettyCashPercent={Math.round(directorPettyCash.used_pct)} recentExpenses={directorPettyCash.recent_expenses || []} expenseByReason={[]}
           fmtMoney={fmtMoney} fmtDate={fmtDate} onNavigate={go}
         />
-        <EnrollmentChart data={enrollmentData} totalEnrolled={totalEnrolled} totalWaitlist={totalWaitlist} openSeats={openSeats} />
-        <UpcomingEventsCard />
+        <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrolledData.open_spots || 0} />
+        <UpcomingEventsCard events={upcomingEvents} />
       </div>
     </motion.div>
   );

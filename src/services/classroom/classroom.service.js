@@ -1,5 +1,5 @@
 export const classroomService = {
-    getClassroom: async (axiosInstance, { filter, per_page = 10, page = 1 } = {}) => {
+    getClassroom: async (axiosInstance, { filter, per_page = 50, page = 1 } = {}) => {
         try {
             const params = new URLSearchParams();
             if (filter && filter !== "All Classrooms") {
@@ -16,6 +16,45 @@ export const classroomService = {
             console.error("Error fetching classroom dashboard:", error);
             throw error;
         }
-    }
-};
+    },
 
+    getSingleClassroom: async (axiosInstance, id) => {
+        try {
+            const response = await axiosInstance.get(`/procare/dashboard/classroom-economics/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error getting classroom:", error);
+            throw error;
+        }
+    },
+
+    addClassroom: async (axiosInstance, data) => {
+        try {
+            const response = await axiosInstance.post(`/owner/classroom/store`, data);
+            return response.data;
+        } catch (error) {
+            console.error("Error adding classroom:", error);
+            throw error;
+        }
+    },
+
+    updateClassroom: async (axiosInstance, data, id) => {
+        try {
+            const response = await axiosInstance.post(`/owner/classroom/update/${id}`, data);
+            return response.data;
+        } catch (error) {
+            console.error("Error updating classroom:", error);
+            throw error;
+        }
+    },
+
+    deleteClassroom: async (axiosInstance, id) => {
+        try {
+            const response = await axiosInstance.delete(`/owner/classroom/delete/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting classroom:", error);
+            throw error;
+        }
+    },
+};

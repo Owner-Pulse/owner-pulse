@@ -4,7 +4,7 @@ import { X, Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const LogTourModal = ({ isOpen, onClose, entry, onLogTour }) => {
+const LogTourModal = ({ isOpen, onClose, entry, onLogTour, isPending = false }) => {
   const [tourDate, setTourDate] = useState("");
   const [tourTime, setTourTime] = useState("");
   const [showedUp, setShowedUp] = useState("yes");
@@ -19,15 +19,19 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour }) => {
 
   if (!isOpen || !entry) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogTour(entry.id, {
-      tourDate,
-      tourTime,
-      showedUp,
-      tourNotes: tourNotes.trim(),
-    });
-    onClose();
+    try {
+      await onLogTour(entry.id, {
+        tourDate,
+        tourTime,
+        showedUp,
+        tourNotes: tourNotes.trim(),
+      });
+      onClose();
+    } catch (err) {
+      // Error handled by mutation toast notification
+    }
   };
 
   return (
@@ -45,7 +49,7 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour }) => {
               <Calendar size={18} className="text-[#9DB8D9]" />
               <h2 className="text-base font-bold">Log Tour: {entry.childName}</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} disabled={isPending} className="p-1 text-white/80 hover:text-white rounded-lg disabled:opacity-50">
               <X size={18} />
             </button>
           </div>
@@ -111,11 +115,12 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+              <Button type="button" variant="outline" onClick={onClose} className="text-xs" disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
-                Save Tour Log
+              <Button type="submit" disabled={isPending} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs font-bold flex items-center gap-1.5">
+                {isPending && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>}
+                {isPending ? "Logging..." : "Save Tour Log"}
               </Button>
             </div>
           </form>

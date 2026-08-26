@@ -27,6 +27,8 @@ import AtRiskCard from "./components/AtRiskCard";
 import IncidentForm from "./components/IncidentForm";
 import RemovalForm from "./components/RemovalForm";
 import AtRiskForm from "./components/AtRiskForm";
+import EnrollStudentForm from "./components/EnrollStudentForm";
+import StudentDetailsModal from "./components/StudentDetailsModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import {
@@ -48,31 +50,13 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_AT_RISK = [
-  { id: 1, student: "J. Martinez", grade: "5th — Pine", reason: "financial", detail: "Lost job · asking about payment plan", flagged: "2026-05-04", status: "intervening" },
-  { id: 2, student: "A. Choi", grade: "7th — Birch", reason: "transferring", detail: "Touring private school in Tampa", flagged: "2026-05-06", status: "intervening" },
-  { id: 3, student: "R. Hassan", grade: "3rd — Oak", reason: "financial", detail: "Asked about scholarship eligibility", flagged: "2026-05-08", status: "intervening" },
-  { id: 4, student: "M. Webb", grade: "8th — Aspen", reason: "moving", detail: "Family relocating out of state", flagged: "2026-04-18", status: "lost" },
-];
-
-const INITIAL_INCIDENTS = [
-  { id: 101, date: "2026-05-07", student: "Student A.", severity: "minor", classroom: "PreK3 — Caterpillars", area: "Playground", description: "Pushed another student on slide", loggedBy: "Director" },
-  { id: 102, date: "2026-05-03", student: "Student C.", severity: "moderate", classroom: "1st — Redwood", area: "Classroom", description: "Refused to follow instructions, disruptive behavior", loggedBy: "Director" },
-  { id: 103, date: "2026-04-22", student: "Student D.", severity: "major", classroom: "2nd — Willow", area: "Playground", description: "Physical altercation with peer", loggedBy: "Director" },
-];
-
-const INITIAL_REMOVALS = [
-  { id: 201, date: "2026-05-04", student: "Student B.", reason: "behavioral", classroom: "3rd — Oak", detail: "Repeated behavioral issues after multiple interventions", parentNotified: "Yes" },
-  { id: 202, date: "2026-04-15", student: "Student E.", reason: "transferring", classroom: "5th — Pine", detail: "Family relocating out of state", parentNotified: "Yes" },
-];
-
 const StudentManagementPage = () => {
   const { classrooms: allClassrooms } = useGetAllClassrooms();
   const [activeTab, setActiveTab] = useState("enrollment");
   const [searchQuery, setSearchQuery] = useState("");
-  const [incidents, setIncidents] = useState(INITIAL_INCIDENTS);
-  const [removals, setRemovals] = useState(INITIAL_REMOVALS);
-  const [atRiskList, setAtRiskList] = useState(INITIAL_AT_RISK);
+  const [incidents, setIncidents] = useState([]);
+  const [removals, setRemovals] = useState([]);
+  const [atRiskList, setAtRiskList] = useState([]);
   const [showForm, setShowForm] = useState(null);
 
   // TanStack Query Hooks for API synchronization
@@ -85,16 +69,17 @@ const StudentManagementPage = () => {
   const atRiskMutation = useAddAtRiskStudent();
   const withdrawMutation = useWithdrawAtRisk();
 
-  // Confirmation Modal states
+  // Confirmation Modal & View Details states
   const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
   const [pendingWithdrawStudent, setPendingWithdrawStudent] = useState(null);
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
 
   // Form inputs matching Procare schema for student enrollment
   const [formData, setFormData] = useState({
     childId: "",
     personId: "",
     name: "",
-    dob: "2022-01-01",
+    dob: "",
     gender: "Male",
     classroom: "",
     status: "Active",
@@ -111,22 +96,16 @@ const StudentManagementPage = () => {
     procare_classroom_id: c.procare_classroom_id,
     capacity: c.capacity || 20,
     enrolled: c.enrolled_students || 0
-  })) : [
-    { id: 1, name: "Age 1 — Bumblebees", capacity: 8, enrolled: 6 },
-    { id: 2, name: "Age 2 — Ladybugs", capacity: 12, enrolled: 10 },
-    { id: 3, name: "PreK3 — Caterpillars", capacity: 16, enrolled: 14 },
-    { id: 4, name: "PreK4 — Butterflies", capacity: 18, enrolled: 16 },
-    { id: 5, name: "VPK — Fireflies", capacity: 12, enrolled: 11 },
-  ];
+  })) : [];
 
   const totalEnrolled = displayClassrooms.reduce((a, c) => a + c.enrolled, 0);
   const totalCapacity = displayClassrooms.reduce((a, c) => a + c.capacity, 0);
   const openSeats = Math.max(0, totalCapacity - totalEnrolled);
   const enrollPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
-  // Derive API data if available, fallback to local state
+  // Derive API data directly
   const currentTabItems = useMemo(() => {
-    if (apiTabData?.data && Array.isArray(apiTabData.data) && apiTabData.data.length > 0) {
+    if (apiTabData?.data && Array.isArray(apiTabData.data)) {
       return apiTabData.data;
     }
     if (activeTab === "incidents") return incidents;
@@ -162,69 +141,59 @@ const StudentManagementPage = () => {
   }, [activeTab, currentTabItems, incidents]);
 
   const handleEnrollClick = () => {
-    setFormData({
-      childId: Math.floor(1000 + Math.random() * 9000).toString(),
-      personId: Math.floor(10000 + Math.random() * 90000).toString(),
-      name: "",
-      dob: "2022-01-01",
-      gender: "Male",
-      classroom: displayClassrooms[0]?.name || "",
-      status: "Active",
-      enrollmentDate: new Date().toISOString().split("T")[0],
-      allergies: "None",
-      parent: "",
-      phone: "",
-      email: ""
-    });
     setShowForm("enroll");
   };
 
-  const handleEnrollSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.classroom) return;
+  const handleEnrollSubmit = (submittedData) => {
+    if (!submittedData || !submittedData.name || !submittedData.classroom) return;
 
-    const matchedClassroom = displayClassrooms.find(c => c.name === formData.classroom);
+    const matchedClassroom = displayClassrooms.find((c) => c.name === submittedData.classroom);
 
-    enrollMutation.mutate({
-      procare_child_id: Number(formData.childId),
-      student_full_name: formData.name,
-      date_of_birth: formData.dob,
-      gender: formData.gender,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
-      enrollment_status: formData.status,
-      enrollment_date: formData.enrollmentDate,
-      medical_alerts: formData.allergies,
-      parent_name: formData.parent,
-      parent_phone: formData.phone,
-      parent_email: formData.email
-    }, {
-      onSuccess: () => {
-        toast.success(`Successfully enrolled ${formData.name}!`);
-        setShowForm(null);
+    enrollMutation.mutate(
+      {
+        procare_child_id: Number(submittedData.childId),
+        student_full_name: submittedData.name,
+        date_of_birth: submittedData.dob,
+        gender: submittedData.gender,
+        procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+        enrollment_status: submittedData.status,
+        enrollment_date: submittedData.enrollmentDate,
+        medical_alerts: submittedData.allergies,
+        parent_name: submittedData.parent,
+        parent_phone: submittedData.phone,
+        parent_email: submittedData.email,
       },
-      onError: () => {
-        toast.success(`Registered ${formData.name} in ${formData.classroom}`);
-        setShowForm(null);
+      {
+        onSuccess: () => {
+          toast.success(`Successfully enrolled ${submittedData.name}!`);
+          setShowForm(null);
+        },
+        onError: () => {
+          toast.success(`Registered ${submittedData.name} in ${submittedData.classroom}`);
+          setShowForm(null);
+        },
       }
-    });
+    );
   };
 
   const handleAddIncident = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.classroom);
     incidentMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       severity: record.severity,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       area: record.area,
       type: record.incidentType || "Behavior",
       description: record.description
     }, {
       onSuccess: () => {
         toast.success("Incident logged successfully");
+        setShowForm(null);
       },
       onError: () => {
         setIncidents(prev => [record, ...prev]);
         toast.success("Incident logged");
+        setShowForm(null);
       }
     });
   };
@@ -232,19 +201,21 @@ const StudentManagementPage = () => {
   const handleAddRemoval = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.classroom);
     removalMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       reason: record.reason,
       effective_date: record.date,
       parent_notification_received: record.parentNotified === "Yes" ? 1 : 0,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       details: record.detail
     }, {
       onSuccess: () => {
         toast.success("Removal recorded successfully");
+        setShowForm(null);
       },
       onError: () => {
         setRemovals(prev => [record, ...prev]);
         toast.success("Removal recorded");
+        setShowForm(null);
       }
     });
   };
@@ -252,18 +223,20 @@ const StudentManagementPage = () => {
   const handleAddAtRisk = (record) => {
     const matchedClassroom = displayClassrooms.find(c => c.name === record.grade);
     atRiskMutation.mutate({
-      procare_child_id: 3000,
+      procare_child_id: Number(record.procare_child_id || record.childId || 3000),
       risk_category: record.reason,
       flag_date: record.flagged,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      procare_classroom_id: Number(record.procare_classroom_id || record.classroomId || matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1),
       risk_details: record.detail
     }, {
       onSuccess: () => {
         toast.success("At-Risk student flagged successfully");
+        setShowForm(null);
       },
       onError: () => {
         setAtRiskList((prev) => [record, ...prev]);
         toast.success("At-Risk student flagged");
+        setShowForm(null);
       }
     });
   };
@@ -493,214 +466,23 @@ const StudentManagementPage = () => {
 
       {/* Modal Forms */}
       {showForm === "incident" && (
-        <IncidentForm onAdd={handleAddIncident} onClose={() => setShowForm(null)} />
+        <IncidentForm onAdd={handleAddIncident} onClose={() => setShowForm(null)} isLoading={incidentMutation.isPending} />
       )}
       {showForm === "removal" && (
-        <RemovalForm onAdd={handleAddRemoval} onClose={() => setShowForm(null)} />
+        <RemovalForm onAdd={handleAddRemoval} onClose={() => setShowForm(null)} isLoading={removalMutation.isPending} />
       )}
       {showForm === "at-risk" && (
-        <AtRiskForm onAdd={handleAddAtRisk} onClose={() => setShowForm(null)} />
+        <AtRiskForm onAdd={handleAddAtRisk} onClose={() => setShowForm(null)} isLoading={atRiskMutation.isPending} />
       )}
 
-      {/* Enroll Student Slide-over Modal */}
-      <AnimatePresence>
-        {showForm === "enroll" && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex justify-end" onClick={() => setShowForm(null)}>
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-white w-full max-w-md h-full shadow-2xl overflow-y-auto flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 z-10">
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm md:text-base">Procare Student Registration</h3>
-                  <p className="text-[11px] text-slate-400">Enroll new child & attach guardian record</p>
-                </div>
-                <button onClick={() => setShowForm(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={handleEnrollSubmit} className="p-5 space-y-4 text-xs flex-1">
-                {/* ID Fields */}
-                <div className="grid grid-cols-2 gap-3 bg-blue-50/40 p-3 rounded-xl border border-blue-100/60">
-                  <div>
-                    <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Child ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.childId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, childId: e.target.value }))}
-                      className="w-full bg-white border border-blue-200 rounded-xl px-3 py-1.5 font-mono text-xs text-blue-900 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Person ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.personId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, personId: e.target.value }))}
-                      className="w-full bg-white border border-blue-200 rounded-xl px-3 py-1.5 font-mono text-xs text-blue-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Name */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Student Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Liam T. Miller"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                  />
-                </div>
-
-                {/* DOB & Gender */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Date of Birth</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.dob}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dob: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Gender</label>
-                    <select
-                      value={formData.gender}
-                      onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    >
-                      <option>Male</option>
-                      <option>Female</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Classroom Selector Dropdown & Enrollment Status */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Assign Classroom *</label>
-                    <select
-                      required
-                      value={formData.classroom}
-                      onChange={(e) => setFormData(prev => ({ ...prev, classroom: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none bg-white"
-                    >
-                      <option value="" disabled>Select Classroom</option>
-                      {displayClassrooms.map((cls) => (
-                        <option key={cls.id || cls.name} value={cls.name}>
-                          {cls.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    >
-                      <option>Active</option>
-                      <option>Enrolled</option>
-                      <option>Pre-Registered</option>
-                      <option>Withdrawn</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Enrollment date & Allergies */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.enrollmentDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, enrollmentDate: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Medical/Allergy Alerts</label>
-                    <input
-                      type="text"
-                      value={formData.allergies}
-                      onChange={(e) => setFormData(prev => ({ ...prev, allergies: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      placeholder="e.g. Peanuts, None"
-                    />
-                  </div>
-                </div>
-
-                {/* Contact parent section */}
-                <div className="border-t border-slate-100 pt-3">
-                  <h4 className="text-[10px] font-extrabold text-blue-650 uppercase tracking-wider mb-2">Primary Parent Contact</h4>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Parent Name"
-                      required
-                      value={formData.parent}
-                      onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        placeholder="Phone Number"
-                        required
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowForm(null)}
-                    className="h-9 text-xs rounded-xl border-slate-200 text-gray-655"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={enrollMutation.isPending}
-                    className="h-9 text-xs bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl font-bold"
-                  >
-                    {enrollMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                    Register & Enroll
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {showForm === "enroll" && (
+        <EnrollStudentForm
+          onAdd={handleEnrollSubmit}
+          onClose={() => setShowForm(null)}
+          displayClassrooms={displayClassrooms}
+          isLoading={enrollMutation.isPending}
+        />
+      )}
 
       {/* Confirmation Dialog for At-Risk Student Withdrawal */}
       <ConfirmationModal
@@ -716,6 +498,17 @@ const StudentManagementPage = () => {
         cancelText="Keep Student"
         type="danger"
       />
+
+      {/* Student Details Modal */}
+      <AnimatePresence>
+        {selectedStudentForModal && (
+          <StudentDetailsModal 
+            studentId={selectedStudentForModal.id || selectedStudentForModal.child_id || selectedStudentForModal.procare_child_id}
+            fallbackStudent={selectedStudentForModal}
+            onClose={() => setSelectedStudentForModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

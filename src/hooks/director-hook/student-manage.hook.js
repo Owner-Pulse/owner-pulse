@@ -1,6 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { axiosPrivate } from "@/lib/axios.private";
 import { directorStudentManageService } from "@/services/director-service/student-manage.service";
+import { GetAllStudentsService } from "@/services/all-students.service";
+
+// Hook: Get Students by Procare Classroom ID
+export const useGetStudentsByProcareClassroom = (classroomId) => {
+  const axiosInstance = axiosPrivate();
+
+  return useQuery({
+    queryKey: ["procare-students-by-classroom", classroomId],
+    queryFn: () => GetAllStudentsService.getAllStudents(axiosInstance, { classroom_id: classroomId, per_page: 200 }),
+    enabled: !!classroomId,
+    staleTime: 5 * 60 * 1000,
+  });
+};
 
 // Hook: Get Student Data by Tab Type (enrollment, incidents, removals, at_risk)
 export const useGetStudentDataByType = (params = { type: "enrollment", page: 1, per_page: 10 }) => {
@@ -14,13 +27,34 @@ export const useGetStudentDataByType = (params = { type: "enrollment", page: 1, 
   });
 };
 
-// Hook: Get Students by Classroom
+// Hook: Get Students by Classroom (Single Query)
 export const useGetStudentsByClass = (params = { id: null }) => {
   const axiosInstance = axiosPrivate();
 
   return useQuery({
     queryKey: ["director-students-by-class", params?.id],
     queryFn: () => directorStudentManageService.getStudentsByClass(axiosInstance, params),
+    enabled: !!params?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook: Get Students by Classroom (Infinite Scroll)
+export const useInfiniteStudentsByClass = (params = { id: null, per_page: 10 }) => {
+  const axiosInstance = axiosPrivate();
+
+  return useInfiniteQuery({
+    queryKey: ["director-students-by-class", params?.id],
+    queryFn: ({ pageParam = 1 }) =>
+      directorStudentManageService.getStudentsByClass(axiosInstance, { ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.pagination;
+      if (!pagination) return undefined;
+      const current = Number(pagination.current_page);
+      const last = Number(pagination.last_page);
+      return current < last ? current + 1 : undefined;
+    },
     enabled: !!params?.id,
     staleTime: 5 * 60 * 1000,
   });
@@ -61,6 +95,7 @@ export const useUpdateStudent = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["director-students-by-type"] });
       queryClient.invalidateQueries({ queryKey: ["director-single-student"] });
+      queryClient.invalidateQueries({ queryKey: ["director-students-by-class"] });
     },
   });
 };
@@ -152,6 +187,21 @@ export const useWithdrawAtRisk = () => {
     mutationFn: (payload) => directorStudentManageService.withdrawAtRisk(axiosInstance, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["director-students-by-type"] });
+    },
+  });
+};
+
+// Mutation: Withdraw Student from Class
+export const useWithdrawFromClass = () => {
+  const axiosInstance = axiosPrivate();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params) => directorStudentManageService.withdrawFromClass(axiosInstance, params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["director-students-by-class"] });
+      queryClient.invalidateQueries({ queryKey: ["director-students-by-type"] });
+      queryClient.invalidateQueries({ queryKey: ["procare-students-by-classroom"] });
     },
   });
 };

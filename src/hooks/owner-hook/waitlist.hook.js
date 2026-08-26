@@ -17,7 +17,7 @@ export const useGetOwnerWaitlistList = (params) => {
     } = useInfiniteQuery({
         queryKey: ["owner-waitlist-list", params],
         queryFn: ({ pageParam }) =>
-            ownerWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: 10 }),
+            ownerWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const pagination = lastPage?.pagination || lastPage?.data?.pagination;
@@ -33,7 +33,7 @@ export const useGetOwnerWaitlistList = (params) => {
     const firstPage = data?.pages?.[0]?.data;
     const allWaitlists = data?.pages?.flatMap((page) => page?.data?.waitlists || []) || [];
     const waitlistData = firstPage
-        ? { summary: firstPage.summary, waitlists: allWaitlists }
+        ? { ...firstPage, waitlists: allWaitlists }
         : undefined;
 
     return {

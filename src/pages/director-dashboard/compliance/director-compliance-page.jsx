@@ -18,17 +18,28 @@ import {
   ShieldAlert,
   ArrowRight,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useCompliance, daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import {
+  useGetDirectorComplianceOverview,
+  useGetDirectorComplianceItems,
+  useAddDirectorComplianceItem,
+  useUpdateDirectorComplianceItem,
+  useDeleteDirectorComplianceItem,
+  useAddDirectorComplianceLogNote,
+  useToggleDirectorComplianceChecklist,
+} from "@/hooks/director-hook/compliance.hook";
 import AddEditComplianceModal from "@/pages/owner-dashboard/compliance/components/AddEditComplianceModal";
 import LogActionModal from "@/pages/owner-dashboard/compliance/components/LogActionModal";
 import PulseImpactModal from "@/pages/owner-dashboard/compliance/components/PulseImpactModal";
 import StatusPill from "@/pages/owner-dashboard/compliance/components/StatusPill";
 import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryTag";
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
+import DeleteConfirmationModal from "@/pages/owner-dashboard/compliance/components/DeleteConfirmationModal";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,15 +54,15 @@ const itemVariants = {
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
 const DirectorCompliancePage = () => {
-  const {
-    items,
-    addItem,
-    updateItem,
-    deleteItem,
-    toggleChecklistItem,
-    addProgressLog,
-    stats,
-  } = useCompliance();
+  // API Hooks
+  const { overviewData, isLoading: isOverviewLoading } = useGetDirectorComplianceOverview();
+  const { complianceItems, isLoading: isItemsLoading } = useGetDirectorComplianceItems();
+
+  const { addComplianceItem, isPending: isAdding } = useAddDirectorComplianceItem();
+  const { updateComplianceItem, isPending: isUpdating } = useUpdateDirectorComplianceItem();
+  const { deleteComplianceItem, isPending: isDeleting } = useDeleteDirectorComplianceItem();
+  const { addLogNote, isPending: isAddingLog } = useAddDirectorComplianceLogNote();
+  const { toggleChecklist, isPending: isToggling } = useToggleDirectorComplianceChecklist();
 
   const [categoryFilter, setCategoryFilter] = useState("director"); // default to director items
   const [statusFilter, setStatusFilter] = useState("all");
@@ -60,7 +71,58 @@ const DirectorCompliancePage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [logModalItem, setLogModalItem] = useState(null);
+  const [deleteModalItem, setDeleteModalItem] = useState(null);
+  const [togglingChecklistId, setTogglingChecklistId] = useState(null);
   const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
+
+  // Normalize API compliance items
+  const items = useMemo(() => {
+    return (complianceItems || []).map((c) => ({
+      id: c.id,
+      item: c.name || c.item || "",
+      authority: c.authority_agency || c.authority || "",
+      expires: c.expiration_date ? c.expiration_date.slice(0, 10) : c.expires || "",
+      category: c.category || "regulatory",
+      ownerRole: c.responsible_role || c.ownerRole || "director",
+      notes: c.renewal_notes || c.notes || "",
+      status: c.status || "compliant",
+      days_left: c.days_left ?? 0,
+      days_overdue: c.days_overdue ?? 0,
+      progress_percentage: c.progress_percentage ?? 0,
+      docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
+        id: ch.id,
+        text: ch.title || ch.text || "",
+        checked: ch.is_completed ?? ch.checked ?? false,
+      })),
+      logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
+        id: l.id,
+        date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
+        author: l.user_name || l.author || "User",
+        text: l.note || l.text || "",
+      })),
+      raw: c,
+    }));
+  }, [complianceItems]);
+
+  // Compute stats from Director Overview API
+  const stats = useMemo(() => {
+    const pulse = overviewData?.pulse_health || {};
+    const directorCount = overviewData?.director_assigned_count ?? items.filter(i => i.ownerRole === "director").length;
+    const ownerCount = items.filter(i => i.ownerRole === "owner").length;
+    return {
+      compliant: (items.length - (overviewData?.expiring_soon_count ?? 0) - (overviewData?.urgent_expired_count ?? 0)),
+      expiring: overviewData?.expiring_soon_count ?? 0,
+      expired: overviewData?.urgent_expired_count ?? 0,
+      total: items.length,
+      nextDeadline: overviewData?.next_deadline?.days_left ?? 0,
+      nextDeadlineItem: overviewData?.next_deadline,
+      complianceScore: pulse.score ?? 100,
+      pulseBpmPenalty: pulse.bpm_penalty ?? 0,
+      scoreReason: pulse.status_label ? `Status: ${pulse.status_label}` : "Director compliance status ok",
+      ownerCount,
+      directorCount,
+    };
+  }, [overviewData, items]);
 
   const filtered = useMemo(() => {
     return items.filter((c) => {
@@ -95,14 +157,50 @@ const DirectorCompliancePage = () => {
     return items.filter((i) => i.status === "expiring" && i.ownerRole === "director");
   }, [items]);
 
-  const handleSaveItem = (formData) => {
+  const handleSaveItem = async (formData) => {
+    const payload = {
+      name: formData.item,
+      authority_agency: formData.authority,
+      category: formData.category,
+      responsible_role: formData.ownerRole,
+      expiration_date: formData.expires,
+      reminder_window_date: formData.shopReminder || formData.expires,
+      renewal_notes: formData.notes,
+      checklist_items: (formData.docChecklist || []).map((c) => (typeof c === "string" ? c : c.text)),
+    };
+
     if (editItem) {
-      updateItem(editItem.id, formData, "Director");
+      await updateComplianceItem({ id: editItem.id, data: payload });
       setEditItem(null);
+      setIsAddModalOpen(false);
     } else {
-      addItem({ ...formData, author: "Director" });
+      await addComplianceItem(payload);
+      setIsAddModalOpen(false);
     }
   };
+
+  const confirmDeleteItem = async () => {
+    if (!deleteModalItem) return;
+    await deleteComplianceItem(deleteModalItem.id);
+    setDeleteModalItem(null);
+  };
+
+  const handleToggleChecklist = async (itemId, checkObj) => {
+    if (checkObj && checkObj.id) {
+      setTogglingChecklistId(checkObj.id);
+      try {
+        await toggleChecklist({ checklist_id: checkObj.id });
+      } finally {
+        setTogglingChecklistId(null);
+      }
+    }
+  };
+
+  const handleAddLog = async (itemId, text) => {
+    await addLogNote({ item_id: itemId, note: text });
+    setLogModalItem(null);
+  };
+
 
   return (
     <motion.div
@@ -411,6 +509,14 @@ const DirectorCompliancePage = () => {
                         >
                           <Edit size={12} />
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteModalItem(item)}
+                          className="h-7 px-2 text-[11px] text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 size={12} />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -456,22 +562,28 @@ const DirectorCompliancePage = () => {
                         {item.docChecklist.map((docObj, idx) => {
                           const docText = typeof docObj === "string" ? docObj : docObj.text;
                           const isChecked = typeof docObj === "string" ? true : !!docObj.checked;
+                          const isThisToggling = docObj && docObj.id && togglingChecklistId === docObj.id;
                           return (
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => toggleChecklistItem(item.id, idx)}
+                              disabled={isThisToggling || isToggling}
+                              onClick={() => handleToggleChecklist(item.id, docObj, idx)}
                               className={`flex items-center gap-2 text-[11px] p-1.5 rounded text-left transition-colors ${
                                 isChecked
                                   ? "bg-white text-emerald-800 font-medium shadow-2xs border border-emerald-200"
                                   : "bg-white/60 text-gray-600 hover:bg-white border border-gray-100"
-                              }`}
+                              } disabled:opacity-60`}
                             >
-                              <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                isChecked ? "bg-emerald-600 text-white" : "border border-gray-300 bg-white"
-                              }`}>
-                                {isChecked && "✓"}
-                              </span>
+                              {isThisToggling ? (
+                                <Loader2 size={14} className="animate-spin text-[#1E3A5F] shrink-0" />
+                              ) : (
+                                <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                  isChecked ? "bg-emerald-600 text-white" : "border border-gray-300 bg-white"
+                                }`}>
+                                  {isChecked && "✓"}
+                                </span>
+                              )}
                               <span className="truncate">{docText}</span>
                             </button>
                           );
@@ -514,14 +626,24 @@ const DirectorCompliancePage = () => {
         onSave={handleSaveItem}
         editItem={editItem}
         userRole="director"
+        isLoading={isAdding || isUpdating}
       />
 
       <LogActionModal
         isOpen={!!logModalItem}
         onClose={() => setLogModalItem(null)}
         item={logModalItem}
-        onAddLog={addProgressLog}
+        onAddLog={handleAddLog}
         userRole="director"
+        isLoading={isAddingLog}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={!!deleteModalItem}
+        onClose={() => setDeleteModalItem(null)}
+        onConfirm={confirmDeleteItem}
+        itemTitle={deleteModalItem?.item || deleteModalItem?.name || ""}
+        isLoading={isDeleting}
       />
 
       <PulseImpactModal

@@ -189,10 +189,6 @@ export const router = createBrowserRouter([
                 element: <PayrollPage />
               },
               {
-                path: 'billing',
-                element: <BillingPage />
-              },
-              {
                 path: 'compliance',
                 element: <DirectorCompliancePage />
               },

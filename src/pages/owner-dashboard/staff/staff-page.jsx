@@ -8,7 +8,7 @@ import StaffRosterTable from "./components/StaffRosterTable";
 import StaffFormModal from "./components/StaffFormModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { Button } from "@/components/ui/button";
-import { useGetStaff } from "@/hooks/owner-hook/staff.hook";
+import { useGetOwnerStaff, useAddStaff, useUpdateStaff, useDeleteStaff } from "@/hooks/owner-hook/staff.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,10 +34,17 @@ const StaffPage = () => {
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-  const { data, isLoading, isFetching } = useGetStaff({
+  // Queries & Mutations
+  const { data, isLoading, isFetching } = useGetOwnerStaff({
     roster_page: rosterPage,
+    roster_per_page: 50,
     pto_page: ptoPage,
+    pto_per_page: 50,
   });
+
+  const { addStaff, isPending: isAdding } = useAddStaff();
+  const { updateStaff, isPending: isUpdating } = useUpdateStaff();
+  const { deleteStaff, isPending: isDeleting } = useDeleteStaff();
 
   const staffDashboard = data?.staff_dashboard || {};
   const summary = staffDashboard.summary || {};
@@ -56,8 +63,8 @@ const StaffPage = () => {
         setAllPtoStaff(ptoItems);
       } else {
         setAllPtoStaff((prev) => {
-          const existingIds = new Set(prev.map((item) => item.employee_id || item.name));
-          const newUnique = ptoItems.filter((item) => !existingIds.has(item.employee_id || item.name));
+          const existingIds = new Set(prev.map((item) => item.employee_id || item.id || item.name));
+          const newUnique = ptoItems.filter((item) => !existingIds.has(item.employee_id || item.id || item.name));
           return [...prev, ...newUnique];
         });
       }
@@ -91,7 +98,7 @@ const StaffPage = () => {
     }
   };
 
-  // Staff CRUD logic
+  // Staff CRUD logic with unified API hooks
   const handleAddStaffClick = () => {
     setEditingStaff(null);
     setIsStaffModalOpen(true);
@@ -107,56 +114,36 @@ const StaffPage = () => {
     setIsConfirmDeleteOpen(true);
   };
 
-  const confirmDeleteStaff = () => {
-    setAllStaffRoster((prev) => prev.filter((s) => (s.employee_id || s.id) !== pendingDeleteId));
-    setIsConfirmDeleteOpen(false);
-    setPendingDeleteId(null);
+  const confirmDeleteStaff = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      await deleteStaff(pendingDeleteId);
+      setAllStaffRoster((prev) => prev.filter((s) => (s.procare_employee_id || s.employee_id || s.id) !== pendingDeleteId));
+    } catch {
+      // Toast handled by hook
+    } finally {
+      setIsConfirmDeleteOpen(false);
+      setPendingDeleteId(null);
+    }
   };
 
-  const handleSaveStaff = (form) => {
-    if (editingStaff) {
-      setAllStaffRoster((prev) =>
-        prev.map((s) =>
-          (s.employee_id || s.id) === (editingStaff.employee_id || editingStaff.id)
-            ? {
-                ...s,
-                name: form.name,
-                role: form.role,
-                classroom: form.classroom,
-                status: form.status,
-                ptoAllowance: form.ptoAllowance,
-                pto_used: form.pto_used,
-                hireDate: form.hireDate,
-                phone: form.phone,
-                email: form.email,
-                remaining: form.ptoAllowance - form.pto_used,
-                usage_percentage: Math.round((form.pto_used / form.ptoAllowance) * 100)
-              }
-            : s
-        )
-      );
-    } else {
-      const newStaff = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        employee_id: form.employee_id,
-        name: form.name,
-        role: form.role,
-        classroom: form.classroom,
-        status: form.status,
-        ptoAllowance: form.ptoAllowance,
-        pto_used: form.pto_used,
-        hireDate: form.hireDate,
-        phone: form.phone,
-        email: form.email,
-        remaining: form.ptoAllowance - form.pto_used,
-        usage_percentage: Math.round((form.pto_used / form.ptoAllowance) * 100)
-      };
-      setAllStaffRoster((prev) => [newStaff, ...prev]);
+  const handleSaveStaff = async (form) => {
+    try {
+      if (editingStaff) {
+        const staffId = editingStaff.procare_employee_id || editingStaff.employee_id || editingStaff.id;
+        await updateStaff({ staffId, body: form });
+      } else {
+        await addStaff(form);
+      }
+      setIsStaffModalOpen(false);
+      setEditingStaff(null);
+    } catch {
+      // Toast handled by hook
     }
   };
 
   // KPI Metrics
-  const totalStaff = allStaffRoster.length || summary.total_staff || metrics.total_staff?.count || 0;
+  const totalStaff = rosterPagination?.total || summary.total_staff || metrics.total_staff?.count || allStaffRoster.length || 0;
   const presentToday = summary.present_today ?? todaysAttendance.present ?? 0;
   const lateToday = summary.late_today ?? todaysAttendance.late ?? 0;
   const outToday = summary.out_today ?? todaysAttendance.call_out ?? 0;
@@ -272,6 +259,7 @@ const StaffPage = () => {
         isOpen={isStaffModalOpen}
         staff={editingStaff}
         onSave={handleSaveStaff}
+        isSubmitting={isAdding || isUpdating}
         onClose={() => {
           setIsStaffModalOpen(false);
           setEditingStaff(null);
@@ -288,7 +276,7 @@ const StaffPage = () => {
         onConfirm={confirmDeleteStaff}
         title="Remove Staff Member"
         message="Are you sure you want to remove this employee? This will immediately disable their time clock, remove active schedules, and archive their Procare profile history."
-        confirmText="Remove Staff"
+        confirmText={isDeleting ? "Removing..." : "Remove Staff"}
         cancelText="Cancel"
         type="danger"
       />

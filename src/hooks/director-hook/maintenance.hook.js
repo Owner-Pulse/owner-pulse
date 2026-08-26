@@ -16,7 +16,7 @@ export const useGetDirectorMaintenanceList = (params) => {
     } = useInfiniteQuery({
         queryKey: ["director-maintenance-list", params],
         queryFn: ({ pageParam }) =>
-            directorMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 10 }),
+            directorMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const pagination = lastPage?.pagination || lastPage?.data?.pagination;

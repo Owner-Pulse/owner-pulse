@@ -4,7 +4,7 @@ import { X, Send, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot }) => {
+const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, isPending = false }) => {
   const [offerDate, setOfferDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [offerNotes, setOfferNotes] = useState("");
@@ -17,14 +17,18 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot }) => {
 
   if (!isOpen || !entry) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onOfferSpot(entry.id, {
-      offerDate,
-      startDate,
-      offerNotes: offerNotes.trim(),
-    });
-    onClose();
+    try {
+      await onOfferSpot(entry.id, {
+        offerDate,
+        startDate,
+        offerNotes: offerNotes.trim(),
+      });
+      onClose();
+    } catch (err) {
+      // Error handled by mutation toast notification
+    }
   };
 
   return (
@@ -42,7 +46,7 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot }) => {
               <Send size={18} className="text-[#9DB8D9]" />
               <h2 className="text-base font-bold">Offer Spot: {entry.childName}</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} disabled={isPending} className="p-1 text-white/80 hover:text-white rounded-lg disabled:opacity-50">
               <X size={18} />
             </button>
           </div>
@@ -89,11 +93,12 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot }) => {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs">
+              <Button type="button" variant="outline" onClick={onClose} className="text-xs" disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs">
-                Send Offer
+              <Button type="submit" disabled={isPending} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs font-bold flex items-center gap-1.5">
+                {isPending && <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>}
+                {isPending ? "Sending..." : "Send Offer"}
               </Button>
             </div>
           </form>

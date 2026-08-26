@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -11,32 +11,22 @@ import {
   Mail, 
   ClipboardList,
   Search,
-  X
+  X,
+  Loader2,
+  AlertCircle,
+  Eye
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { useInfiniteStudentsByClass, useUpdateStudent, useWithdrawFromClass } from "@/hooks/director-hook/student-manage.hook";
+import StudentDetailsModal from "../components/StudentDetailsModal";
+import toast from "react-hot-toast";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 15 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
-
-// Seed student data mapped to classrooms
-const INITIAL_STUDENTS_LIST = [
-  { id: 101, childId: "2941", personId: "19280", name: "Zain Abdelhade", dob: "2021-06-27", gender: "Male", status: "Active", parent: "Zed Abdelhade", phone: "(813) 555-0199", email: "zed.a@example.com", allergies: "Peanuts", classroom: "VPK B", enrollmentDate: "2024-09-01" },
-  { id: 102, childId: "2942", personId: "19281", name: "Ny Troutma", dob: "2022-03-10", gender: "Female", status: "Active", parent: "Brit Davis", phone: "(813) 555-0144", email: "bdavis@example.com", allergies: "None", classroom: "VPK B", enrollmentDate: "2025-01-05" },
-  { id: 103, childId: "2943", personId: "19281", name: "Zy Troutma", dob: "2022-03-10", gender: "Female", status: "Active", parent: "Brit Davis", phone: "(813) 555-0144", email: "bdavis@example.com", allergies: "None", classroom: "VPK B", enrollmentDate: "2025-01-05" },
-  { id: 104, childId: "2944", personId: "19282", name: "Sarah Connor", dob: "2021-09-12", gender: "Female", status: "Active", parent: "John Connor", phone: "(813) 555-0210", email: "j.connor@example.com", allergies: "Dairy", classroom: "VPK B", enrollmentDate: "2024-09-03" },
-  { id: 105, childId: "2945", personId: "19283", name: "Caleb Antoine", dob: "2022-03-23", gender: "Male", status: "Active", parent: "Cal Antoine", phone: "(813) 555-0182", email: "cal.antoine@example.com", allergies: "None", classroom: "VPK B", enrollmentDate: "2025-02-14" },
-  { id: 106, childId: "2946", personId: "19284", name: "Liam Miller", dob: "2021-11-05", gender: "Male", status: "Active", parent: "Mollie Miller", phone: "(813) 555-0105", email: "miller.m@example.com", allergies: "Tree Nuts", classroom: "VPK B", enrollmentDate: "2024-09-01" },
-  { id: 107, childId: "2947", personId: "19285", name: "Chloe Lee", dob: "2022-01-14", gender: "Female", status: "Active", parent: "Seon Lee", phone: "(813) 555-0311", email: "slee@example.com", allergies: "None", classroom: "VPK B", enrollmentDate: "2025-03-01" }
-];
-
-const INITIAL_INCIDENTS = [
-  { id: 101, date: "2026-05-07", severity: "Minor", studentName: "Caleb Antoine", details: "Scraped knee on playground slide, ice pack applied." },
-  { id: 102, date: "2026-05-01", severity: "Moderate", studentName: "Liam Miller", details: "Disobedient during lunch period, warning issued." }
-];
 
 const CLASSROOM_NAMES = {
   1: "Age 1 — Bumblebees",
@@ -58,18 +48,28 @@ const CLASSROOM_NAMES = {
 const DirectorClassroomDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const classroomId = Number(id) || 5;
-  const classroomName = CLASSROOM_NAMES[classroomId] || "VPK B (Mrs.Johnson)";
 
-  const [students, setStudents] = useState(INITIAL_STUDENTS_LIST);
-  const [incidents, setIncidents] = useState(INITIAL_INCIDENTS);
+  // Fetch Classroom operations & students from API with Infinite Scroll
+  const {
+    data: apiInfiniteData,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteStudentsByClass({ id, per_page: 50 });
+
+  const updateStudentMutation = useUpdateStudent();
+  const withdrawFromClassMutation = useWithdrawFromClass();
+
+  const [incidents] = useState([]);
   const [activeTab, setActiveTab] = useState("roster");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Form / Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
 
   // Withdraw confirmation modal state
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -91,33 +91,132 @@ const DirectorClassroomDetailPage = () => {
     email: ""
   });
 
-  const activeCount = students.filter(s => s.status === "Active" || s.status === "Enrolled").length;
-  const capacity = 15;
+  // Extract first page for header metrics & classroom metadata
+  const firstPage = apiInfiniteData?.pages?.[0];
+  const headerSummary = firstPage?.header_summary;
+  const studentsSummary = firstPage?.students_summary;
+
+  const classroomName = 
+    firstPage?.classroom_name || 
+    headerSummary?.classroom_name || 
+    CLASSROOM_NAMES[Number(id)] || 
+    `Classroom #${id}`;
+
+  // Flatten infinite pages into a single students array
+  const rawStudents = useMemo(() => {
+    if (apiInfiniteData?.pages && apiInfiniteData.pages.length > 0) {
+      return apiInfiniteData.pages.flatMap((page) => page?.data || []);
+    }
+    return [];
+  }, [apiInfiniteData]);
+
+  // Derived KPI metrics
+  const totalRegistered = headerSummary?.total_students_registered ?? studentsSummary?.total_students ?? rawStudents.length;
+  const activeLabel = headerSummary?.total_students_label ?? `${totalRegistered} Active Profiles`;
+  const spaceUtilization = headerSummary?.classroom_space_utilization ?? (
+    headerSummary?.capacity 
+      ? `${headerSummary.utilization_percentage}% (${headerSummary.open_seats} open seats)` 
+      : `${Math.round((rawStudents.length / 15) * 100)}% (${15 - rawStudents.length} open seats)`
+  );
+
+  const activeAllergiesCount = headerSummary?.active_allergy_warnings ?? studentsSummary?.allergy_warnings ?? rawStudents.filter(s => {
+    const allergyStr = s.allergy_warning || s.allergies || "None";
+    return allergyStr && allergyStr !== "None";
+  }).length;
+
+  const incidentsCount = headerSummary?.incidents_count ?? incidents.length;
+
+  // Infinite Scroll Intersection Observer
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "150px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Filter students based on search query
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) return rawStudents;
+    const query = searchQuery.toLowerCase().trim();
+    return rawStudents.filter((student) => {
+      const name = (student.student_name || student.name || "").toLowerCase();
+      const childId = String(student.child_id || student.procare_child_id || student.childId || "").toLowerCase();
+      const personId = String(student.person_id || student.personId || "").toLowerCase();
+      const parentContact = student.emergency_parent_contact || {};
+      const parentName = (parentContact.parent_name || student.parent || "").toLowerCase();
+      const allergy = (student.allergy_warning || student.allergies || "").toLowerCase();
+      const status = (student.status || "").toLowerCase();
+
+      return (
+        name.includes(query) ||
+        childId.includes(query) ||
+        personId.includes(query) ||
+        parentName.includes(query) ||
+        allergy.includes(query) ||
+        status.includes(query)
+      );
+    });
+  }, [rawStudents, searchQuery]);
 
   const handleEditClick = (student) => {
     setCurrentStudent(student);
+    const parentContact = student.emergency_parent_contact || {};
     setFormData({
-      childId: student.childId || student.id.toString(),
-      personId: student.personId || "",
-      name: student.name,
-      dob: student.dob,
-      gender: student.gender,
-      classroom: student.classroom || classroomName,
-      status: student.status,
-      enrollmentDate: student.enrollmentDate || new Date().toISOString().split("T")[0],
-      parent: student.parent,
-      phone: student.phone,
-      email: student.email,
-      allergies: student.allergies
+      childId: String(student.child_id || student.procare_child_id || student.childId || student.id || ""),
+      personId: String(student.person_id || student.personId || ""),
+      name: student.student_name || student.name || "",
+      dob: student.dob || student.date_of_birth || "",
+      gender: student.gender || "Male",
+      classroom: classroomName,
+      status: student.status || "Active",
+      enrollmentDate: student.started || student.start_date || student.enrollmentDate || new Date().toISOString().split("T")[0],
+      parent: parentContact.parent_name || student.parent || "",
+      phone: parentContact.phone || student.phone || "",
+      email: parentContact.email || student.email || "",
+      allergies: student.allergy_warning || student.allergies || "None"
     });
     setIsEditModalOpen(true);
   };
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
-    setStudents(prev => prev.map(s => s.id === currentStudent.id ? { ...s, ...formData } : s));
-    setIsEditModalOpen(false);
-    setCurrentStudent(null);
+    const enrolmentId = currentStudent?.child_id || currentStudent?.id;
+
+    updateStudentMutation.mutate({
+      enrolment_id: enrolmentId,
+      procare_child_id: Number(formData.childId),
+      student_full_name: formData.name,
+      date_of_birth: formData.dob,
+      gender: formData.gender,
+      enrollment_status: formData.status,
+      enrollment_date: formData.enrollmentDate,
+      medical_alerts: formData.allergies,
+      parent_name: formData.parent,
+      parent_phone: formData.phone,
+      parent_email: formData.email
+    }, {
+      onSuccess: () => {
+        toast.success(`Successfully updated ${formData.name}!`);
+        setIsEditModalOpen(false);
+        setCurrentStudent(null);
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.message || "Updated student record successfully");
+        setIsEditModalOpen(false);
+        setCurrentStudent(null);
+      }
+    });
   };
 
   const handleWithdraw = (studentId) => {
@@ -126,26 +225,37 @@ const DirectorClassroomDetailPage = () => {
   };
 
   const confirmWithdraw = () => {
-    setStudents(prev => prev.filter(s => s.id !== pendingWithdrawId));
-    setIsConfirmOpen(false);
-    setPendingWithdrawId(null);
+    if (!pendingWithdrawId) return;
+    const targetStudent = rawStudents.find(s => (s.child_id || s.procare_child_id || s.id) === pendingWithdrawId);
+    const childId = targetStudent?.procare_child_id || targetStudent?.child_id || pendingWithdrawId;
+
+    withdrawFromClassMutation.mutate({ procare_child_id: childId }, {
+      onSuccess: (res) => {
+        toast.success(res?.message || "Student successfully withdrawn from classroom");
+        setIsConfirmOpen(false);
+        setPendingWithdrawId(null);
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.message || "Error withdrawing student");
+        setIsConfirmOpen(false);
+        setPendingWithdrawId(null);
+      }
+    });
   };
 
   const getPendingStudentName = () => {
-    const s = students.find(s => s.id === pendingWithdrawId);
-    return s ? s.name : "this student";
+    const s = rawStudents.find(s => (s.child_id || s.id) === pendingWithdrawId);
+    return s ? (s.student_name || s.name) : "this student";
   };
 
-  // Filter students based on search query (name or childId)
-  const filteredStudents = students.filter(student => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
+  if (isLoading) {
     return (
-      student.name.toLowerCase().includes(query) ||
-      (student.childId && student.childId.toLowerCase().includes(query)) ||
-      (student.id && student.id.toString().includes(query))
+      <div className="flex flex-col items-center justify-center min-h-[420px] gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+        <p className="text-sm font-medium text-gray-500">Loading classroom student operations...</p>
+      </div>
     );
-  });
+  }
 
   return (
     <motion.div 
@@ -171,13 +281,13 @@ const DirectorClassroomDetailPage = () => {
         </div>
       </div>
 
-      {/* KPI stats */}
+      {/* KPI stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-white border-none shadow-sm">
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Total Students Registered</span>
             <span className="text-xl font-extrabold text-gray-900 mt-1.5 block">
-              {activeCount} <span className="text-xs text-gray-400 font-normal">Active Profiles</span>
+              {totalRegistered} <span className="text-xs text-gray-400 font-normal">({activeLabel})</span>
             </span>
           </CardContent>
         </Card>
@@ -186,7 +296,7 @@ const DirectorClassroomDetailPage = () => {
           <CardContent className="p-4">
             <span className="text-xs text-gray-400 block font-semibold">Classroom Space Utilization</span>
             <span className="text-xl font-extrabold text-gray-900 mt-1.5 block">
-              {Math.round((activeCount / capacity) * 100)}% <span className="text-xs text-gray-400 font-normal">({capacity - activeCount} open seats)</span>
+              {spaceUtilization}
             </span>
           </CardContent>
         </Card>
@@ -196,7 +306,7 @@ const DirectorClassroomDetailPage = () => {
             <span className="text-xs text-gray-400 block font-semibold">Active Allergy Warnings</span>
             <div className="flex items-center justify-between mt-1.5">
               <span className="text-xl font-extrabold text-[#8A362C]">
-                {students.filter(s => s.allergies !== "None" && s.status === "Active").length}
+                {activeAllergiesCount}
               </span>
               <span className="p-1 bg-[#AE4A3E]/10 rounded-lg">
                 <ShieldAlert size={14} className="text-[#8A362C]" />
@@ -206,7 +316,7 @@ const DirectorClassroomDetailPage = () => {
         </Card>
       </div>
 
-      {/* Tabs */}
+      {/* Navigation Tabs */}
       <div className="flex items-center gap-1.5 border-b border-slate-200">
         <button
           onClick={() => setActiveTab("roster")}
@@ -214,7 +324,7 @@ const DirectorClassroomDetailPage = () => {
             activeTab === "roster" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
-          Student Profiles
+          Student Profiles ({rawStudents.length})
         </button>
         <button
           onClick={() => setActiveTab("logs")}
@@ -222,7 +332,7 @@ const DirectorClassroomDetailPage = () => {
             activeTab === "logs" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
-          Incident Logs ({incidents.length})
+          Incident Logs ({incidentsCount})
         </button>
       </div>
 
@@ -233,7 +343,7 @@ const DirectorClassroomDetailPage = () => {
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-50">
               <div>
                 <CardTitle className="text-sm">Student Demographics & Profiles</CardTitle>
-                <CardDescription>View and manage all registered student profiles</CardDescription>
+                <CardDescription>View and manage all registered student profiles in {classroomName}</CardDescription>
               </div>
               
               {/* Roster Search Bar */}
@@ -241,7 +351,7 @@ const DirectorClassroomDetailPage = () => {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by name or Child ID..."
+                  placeholder="Search by name, ID, parent, allergy..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
@@ -262,77 +372,147 @@ const DirectorClassroomDetailPage = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filteredStudents.length > 0 ? (
-                      filteredStudents.map((student) => (
-                        <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="py-3 px-2">
-                            <span className="font-semibold text-gray-900 block">{student.name}</span>
-                            <span className="text-[10px] text-gray-455 block font-medium">Child ID: {student.childId || student.id} · Person ID: {student.personId}</span>
-                            <span className="text-[10px] text-gray-400">DOB: {student.dob} · Started: {student.enrollmentDate || "—"}</span>
-                          </td>
-                          <td className="py-3 px-2 text-center">
-                            {student.allergies !== "None" ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-[#8A362C] border border-red-100">
-                                {student.allergies}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-405">None</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-2">
-                            <div className="flex flex-col">
-                              <span className="font-medium text-gray-800">{student.parent}</span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <a href={`tel:${student.phone}`} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
-                                  <Phone size={10} /> Call
-                                </a>
-                                <span className="text-gray-300">|</span>
-                                <a href={`mailto:${student.email}`} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
-                                  <Mail size={10} /> Email
-                                </a>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2 text-center">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                              student.status === "Active" || student.status === "Enrolled" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
-                            }`}>
-                              {student.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <Button 
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditClick(student)}
-                                className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 text-gray-500"
+                      filteredStudents.map((student, idx) => {
+                        const studentName = student.student_name || student.name || "Unknown";
+                        const childId = student.child_id || student.procare_child_id || student.childId || "—";
+                        const personId = student.person_id || student.personId || "—";
+                        const dob = student.dob || student.date_of_birth || "—";
+                        const startDate = student.started || student.start_date || student.enrollmentDate || "—";
+                        const allergy = student.allergy_warning || student.allergies || "None";
+                        const hasAllergy = allergy && allergy !== "None";
+                        
+                        const parentContact = student.emergency_parent_contact || {};
+                        const parentName = parentContact.parent_name || student.parent || "—";
+                        const phone = parentContact.phone || student.phone || "";
+                        const email = parentContact.email || student.email || "";
+                        const callAction = parentContact.call_action || (phone ? `tel:${phone}` : null);
+                        const emailAction = parentContact.email_action || (email ? `mailto:${email}` : null);
+
+                        const status = student.status || "Active";
+                        const studentKey = student.child_id || student.procare_child_id || student.id || idx;
+
+                        return (
+                          <tr key={studentKey} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="py-3 px-2">
+                              <span 
+                                onClick={() => setSelectedStudentForModal(student)} 
+                                className="font-semibold text-gray-900 block hover:text-blue-600 cursor-pointer transition-colors"
                               >
-                                <Edit2 size={12} />
-                              </Button>
-                              {(student.status === "Active" || student.status === "Enrolled") && (
+                                {studentName}
+                              </span>
+                              <span className="text-[10px] text-gray-455 block font-medium">
+                                Child ID: {childId} {personId !== "—" ? `· Person ID: ${personId}` : ""}
+                              </span>
+                              <span className="text-[10px] text-gray-400">DOB: {dob} · Started: {startDate}</span>
+                            </td>
+                            <td className="py-3 px-2 text-center">
+                              {hasAllergy ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-[#8A362C] border border-red-100">
+                                  {allergy}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-405">None</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-2">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-800">{parentName}</span>
+                                {(phone || email) ? (
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    {phone && (
+                                      <a href={callAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
+                                        <Phone size={10} /> Call ({phone})
+                                      </a>
+                                    )}
+                                    {phone && email && <span className="text-gray-300">|</span>}
+                                    {email && (
+                                      <a href={emailAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
+                                        <Mail size={10} /> Email
+                                      </a>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-gray-400">No contact details provided</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 text-center">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                status === "Active" || status === "Enrolled" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
+                              }`}>
+                                {status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
                                 <Button 
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => handleWithdraw(student.id)}
-                                  className="h-7 w-7 p-0 rounded-lg hover:bg-red-50 text-red-655"
-                                  title="Withdraw and remove student"
+                                  onClick={() => setSelectedStudentForModal(student)}
+                                  className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 text-blue-600"
+                                  title="View full student details"
                                 >
-                                  <UserMinus size={12} />
+                                  <Eye size={13} />
                                 </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                                <Button 
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditClick(student)}
+                                  className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 text-gray-500"
+                                  title="Edit student profile"
+                                >
+                                  <Edit2 size={12} />
+                                </Button>
+                                {(status === "Active" || status === "Enrolled") && (
+                                  <Button 
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleWithdraw(studentKey)}
+                                    className="h-7 w-7 p-0 rounded-lg hover:bg-red-50 text-red-655"
+                                    title="Withdraw and remove student"
+                                  >
+                                    <UserMinus size={12} />
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td colSpan="5" className="py-8 text-center text-xs text-gray-400">
-                          No student matching "{searchQuery}" was found.
+                          {searchQuery ? `No student matching "${searchQuery}" was found.` : "No student profiles found for this classroom."}
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Sentinel target element for Infinite Scroll */}
+              <div ref={sentinelRef} className="flex justify-center items-center py-4 mt-2 border-t border-slate-50">
+                {isFetchingNextPage ? (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#1E3A5F]" />
+                    Loading more student profiles…
+                  </div>
+                ) : hasNextPage ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => fetchNextPage()}
+                    className="text-xs text-blue-650 hover:text-blue-700 font-semibold"
+                  >
+                    Load more student profiles
+                  </Button>
+                ) : (
+                  filteredStudents.length > 0 && (
+                    <span className="text-[11px] text-gray-400 font-medium">
+                      Showing all {filteredStudents.length} loaded student profiles
+                    </span>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -548,8 +728,10 @@ const DirectorClassroomDetailPage = () => {
                   </Button>
                   <Button 
                     type="submit"
+                    disabled={updateStudentMutation.isPending}
                     className="h-9 text-xs bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl font-bold"
                   >
+                    {updateStudentMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
                     Save Changes
                   </Button>
                 </div>
@@ -570,6 +752,17 @@ const DirectorClassroomDetailPage = () => {
         cancelText="Keep Student"
         type="danger"
       />
+
+      {/* Student Details Modal */}
+      <AnimatePresence>
+        {selectedStudentForModal && (
+          <StudentDetailsModal 
+            studentId={selectedStudentForModal.id || selectedStudentForModal.child_id || selectedStudentForModal.procare_child_id}
+            fallbackStudent={selectedStudentForModal}
+            onClose={() => setSelectedStudentForModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

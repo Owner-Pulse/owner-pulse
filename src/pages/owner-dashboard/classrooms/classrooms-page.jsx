@@ -11,7 +11,12 @@ import AddClassroomModal from "./components/AddClassroomModal";
 import Pagination from "./components/Pagination";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { ClassroomCardSkeleton, PnLChartSkeleton } from "./components/Skeleton";
-import { useGetClassroom } from "@/hooks/classroom/classroom.hook";
+import {
+  useGetClassroom,
+  useAddClassroom,
+  useUpdateClassroom,
+  useDeleteClassroom,
+} from "@/hooks/classroom/classroom.hook";
 
 // ─── Motion Variants ──────────────────────────────────────────────
 const containerVariants = {
@@ -23,9 +28,9 @@ const containerVariants = {
 const EMPTY_CLASSROOM_FORM = {
   name: "",
   program: "",
-  tier: "preschool",
+  tier: "Tier 1",
   capacity: "",
-  teacher: "",
+  teacherId: "",
   tuitionPerSeat: "",
   monthlyCost: "",
   procareClassroomId: "",
@@ -38,20 +43,24 @@ const ClassroomsPage = () => {
   const [classroomForm, setClassroomForm] = useState(EMPTY_CLASSROOM_FORM);
   const [editingClassroom, setEditingClassroom] = useState(null);
 
-  // Local state for classrooms so edit/delete changes update instantly in the UI
+  // Local state for classrooms fallback
   const [localClassrooms, setLocalClassrooms] = useState([]);
-  
+
   // Confirmation Modal state for deletion
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-  const PER_PAGE = 10;
+  const PER_PAGE = 50;
 
   const { data, isLoading, isFetching } = useGetClassroom({
     filter: activeFilter,
     per_page: PER_PAGE,
     page: currentPage,
   });
+
+  const { addClassroom, isPending: isAdding } = useAddClassroom();
+  const { updateClassroom, isPending: isUpdating } = useUpdateClassroom();
+  const { deleteClassroom, isPending: isDeleting } = useDeleteClassroom();
 
   const pnl = data?.classroom_pnl;
   const metrics = pnl?.metrics;
@@ -68,20 +77,14 @@ const ClassroomsPage = () => {
     }
   }, [classroomsList]);
 
-  // Local classroom IDs used as a reference set to filter the API chart data
-  const localClassroomIds = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-
-  // Filter API chart entries to only those matching the local classroom IDs,
-  // then normalise the shape to { name, profit } that ProfitChart expects.
-  const profitChartData = apiChartData
-    .filter((item) => localClassroomIds.has(item.classroom_id))
-    .map((item) => ({
-      id: item.classroom_id,
-      name: item.classroom_name,
-      profit: item.profit,
-      marginPercentage: item.margin_percentage,
-      enrolledStudents: item.enrolled_students,
-    }));
+  // Normalize apiChartData shape to { name, profit } that ProfitChart expects.
+  const profitChartData = apiChartData.map((item) => ({
+    id: item.classroom_id,
+    name: item.classroom_name,
+    profit: item.profit,
+    marginPercentage: item.margin_percentage,
+    enrolledStudents: item.enrolled_students,
+  }));
 
   const handleFilterChange = (f) => {
     setActiveFilter(f);
@@ -106,13 +109,13 @@ const ClassroomsPage = () => {
   const handleEditClassroom = (classroom) => {
     setEditingClassroom(classroom);
     setClassroomForm({
-      name: classroom.name || "",
+      name: classroom.name || classroom.classroom_name || "",
       program: classroom.program || classroom.category_group || "",
-      tier: (classroom.category_group || "").toLowerCase() === "preschool" ? "preschool" : "k8",
-      capacity: classroom.enrollment?.capacity || "",
-      teacher: classroom.teacher || "",
-      tuitionPerSeat: classroom.revenue?.per_seat || "",
-      monthlyCost: classroom.cost?.total || "",
+      tier: classroom.tier || (classroom.category_group === "Preschool" ? "Tier 1" : "Tier 2"),
+      capacity: classroom.enrollment?.capacity || classroom.capacity || "",
+      teacherId: classroom.teacher_id || "",
+      tuitionPerSeat: classroom.revenue?.per_seat || classroom.tuition_per_seat || "",
+      monthlyCost: classroom.cost?.total || classroom.monthly_operating_cost || "",
       procareClassroomId: classroom.procare_classroom_id || classroom.id || "",
     });
     setIsAddModalOpen(true);
@@ -123,82 +126,42 @@ const ClassroomsPage = () => {
     setIsConfirmDeleteOpen(true);
   };
 
-  const confirmDeleteClassroom = () => {
-    setLocalClassrooms((prev) => prev.filter((c) => c.id !== pendingDeleteId));
-    setIsConfirmDeleteOpen(false);
-    setPendingDeleteId(null);
+  const confirmDeleteClassroom = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      await deleteClassroom(pendingDeleteId);
+      setIsConfirmDeleteOpen(false);
+      setPendingDeleteId(null);
+    } catch (err) {
+      console.error("Failed to delete classroom:", err);
+    }
   };
 
-  const handleSaveClassroom = () => {
-    if (editingClassroom) {
-      setLocalClassrooms((prev) =>
-        prev.map((c) =>
-          c.id === editingClassroom.id
-            ? {
-                ...c,
-                name: classroomForm.name,
-                category_group: classroomForm.tier === "preschool" ? "Preschool" : "K-8",
-                teacher: classroomForm.teacher,
-                enrollment: {
-                  ...c.enrollment,
-                  capacity: Number(classroomForm.capacity) || c.enrollment?.capacity || 20,
-                },
-                revenue: {
-                  ...c.revenue,
-                  per_seat: Number(classroomForm.tuitionPerSeat) || c.revenue?.per_seat || 950,
-                  total: (Number(classroomForm.tuitionPerSeat) || 950) * (c.enrollment?.current || 10),
-                },
-                cost: {
-                  ...c.cost,
-                  total: Number(classroomForm.monthlyCost) || c.cost?.total || 8000,
-                  per_seat: (Number(classroomForm.monthlyCost) || 8000) / (c.enrollment?.capacity || 20),
-                },
-                procare_classroom_id: classroomForm.procareClassroomId,
-              }
-            : c
-        )
-      );
-    } else {
-      const newClassroom = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        procare_classroom_id: classroomForm.procareClassroomId,
-        name: classroomForm.name,
-        category_group: classroomForm.tier === "preschool" ? "Preschool" : "K-8",
-        teacher: classroomForm.teacher,
-        net_monthly_profit: (Number(classroomForm.tuitionPerSeat) || 950) * 10 - (Number(classroomForm.monthlyCost) || 8000),
-        profit_change: 0,
-        enrollment: {
-          current: 0,
-          capacity: Number(classroomForm.capacity) || 20,
-          fill_rate_percentage: 0,
-          empty_seats: Number(classroomForm.capacity) || 20,
-          is_low_enrollment: true,
-          change: 0,
-        },
-        revenue: {
-          total: 0,
-          per_seat: Number(classroomForm.tuitionPerSeat) || 950,
-        },
-        cost: {
-          total: Number(classroomForm.monthlyCost) || 8000,
-          per_seat: (Number(classroomForm.monthlyCost) || 8000) / (Number(classroomForm.capacity) || 20),
-        },
-        margin: {
-          percentage: 0,
-          status: "Critical",
-        },
-        nwea_map: {
-          score: 0,
-          benchmark: 200,
-        },
-        incidents: {
-          count: 0,
-        },
-      };
-      setLocalClassrooms((prev) => [newClassroom, ...prev]);
+  const handleSaveClassroom = async () => {
+    const payload = {
+      classroom_name: classroomForm.name,
+      procare_classroom_id: Number(classroomForm.procareClassroomId),
+      program: classroomForm.program || "Preschool",
+      tier: classroomForm.tier || "Tier 1",
+      capacity: Number(classroomForm.capacity),
+      teacher_id: classroomForm.teacherId ? Number(classroomForm.teacherId) : null,
+      tuition_per_seat: Number(classroomForm.tuitionPerSeat),
+      monthly_operating_cost: Number(classroomForm.monthlyCost),
+    };
+
+    try {
+      if (editingClassroom) {
+        await updateClassroom({ data: payload, id: editingClassroom.id });
+      } else {
+        await addClassroom(payload);
+      }
+      closeAddModal();
+    } catch (err) {
+      console.error("Failed to save classroom:", err);
     }
-    closeAddModal();
   };
+
+  const displayedClassrooms = classroomsList.length > 0 ? classroomsList : localClassrooms;
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -229,7 +192,7 @@ const ClassroomsPage = () => {
           activeFilter={activeFilter}
           filters={filters}
           onFilterChange={handleFilterChange}
-          count={pagination?.total ?? localClassrooms.length}
+          count={pagination?.total ?? displayedClassrooms.length}
         />
       )}
 
@@ -237,16 +200,16 @@ const ClassroomsPage = () => {
       <div className="space-y-3">
         {isFetching ? (
           Array.from({ length: PER_PAGE }).map((_, i) => <ClassroomCardSkeleton key={i} />)
-        ) : localClassrooms.length === 0 ? (
+        ) : displayedClassrooms.length === 0 ? (
           <div className="py-12 text-center">
             <BookOpen size={32} className="mx-auto text-gray-300 mb-2" />
             <p className="text-sm text-gray-500">No classrooms match this filter.</p>
           </div>
         ) : (
-          localClassrooms.map((classroom) => (
-            <ClassroomDetailCard 
-              key={classroom.id} 
-              classroom={classroom} 
+          displayedClassrooms.map((classroom) => (
+            <ClassroomDetailCard
+              key={classroom.id}
+              classroom={classroom}
               onEdit={handleEditClassroom}
               onDelete={triggerDeleteClassroom}
             />
@@ -273,6 +236,7 @@ const ClassroomsPage = () => {
         onSave={handleSaveClassroom}
         onClose={closeAddModal}
         isEdit={!!editingClassroom}
+        isLoading={isAdding || isUpdating}
       />
 
       {/* Delete Confirmation Modal */}
@@ -285,6 +249,7 @@ const ClassroomsPage = () => {
         confirmText="Delete Classroom"
         cancelText="Keep Classroom"
         type="danger"
+        isLoading={isDeleting}
       />
     </motion.div>
   );

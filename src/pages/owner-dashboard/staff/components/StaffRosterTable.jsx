@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Users, Edit2, Trash2 } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Users, Edit2, Trash2, Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const RosterSkeletonRow = () => (
@@ -37,10 +37,13 @@ const StaffRosterTable = ({
   onSortChange,
   pagination,
   onLoadMore,
+  isLoading = false,
   isLoadingMore,
   onEdit,
   onDelete
 }) => {
+  const [search, setSearch] = useState("");
+
   const hasMore = pagination ? Number(pagination.current_page) < Number(pagination.last_page) : false;
   const listContainerRef = useRef(null);
 
@@ -53,31 +56,83 @@ const StaffRosterTable = ({
     }
   };
 
-  const sorted = React.useMemo(() => {
-    return [...staffRoster].sort((a, b) => {
+  const filtered = useMemo(() => {
+    let list = staffRoster;
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      list = list.filter((s) => {
+        const name = (s.name || "").toLowerCase();
+        const role = (s.role || "").toLowerCase();
+        const empId = String(s.employee_id || s.procare_employee_id || s.id || "").toLowerCase();
+        return name.includes(q) || role.includes(q) || empId.includes(q);
+      });
+    }
+    return [...list].sort((a, b) => {
       if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
       if (sortBy === "ptoUsed") return (b.pto_used ?? 0) - (a.pto_used ?? 0);
       if (sortBy === "ptoRemaining") return (a.remaining ?? 0) - (b.remaining ?? 0);
       return 0;
     });
-  }, [staffRoster, sortBy]);
+  }, [staffRoster, search, sortBy]);
 
   return (
     <Card className="bg-white border-none shadow-sm">
       <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
             <Users size={16} /> Staff Roster
           </CardTitle>
-          {pagination?.total && (
-            <span className="text-xs text-gray-500 font-medium">
-              Showing {staffRoster.length} of {pagination.total} staff members
-            </span>
-          )}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search staff by name, ID, role..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-8 pr-8 py-1.5 text-xs rounded-xl border border-gray-200 bg-gray-50/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+            {pagination?.total && (
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                {filtered.length} of {pagination.total}
+              </span>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {sorted.length > 0 ? (
+        {isLoading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">PTO Used</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Remaining</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Usage</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+              </tbody>
+            </table>
+          </div>
+        ) : filtered.length > 0 ? (
           <div
             ref={listContainerRef}
             onScroll={handleScroll}
@@ -110,7 +165,7 @@ const StaffRosterTable = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {sorted.map((s, idx) => {
+                {filtered.map((s, idx) => {
                   const ptoUsed = s.pto_used ?? s.ptoUsed ?? 0;
                   const remaining = s.remaining ?? (s.ptoAllowance ? s.ptoAllowance - ptoUsed : s.remaining_pto ?? 0);
                   const usagePct = s.usage_percentage ?? (s.ptoAllowance ? Math.round((ptoUsed / s.ptoAllowance) * 100) : 0);
@@ -118,6 +173,7 @@ const StaffRosterTable = ({
                   const name = s.name || "Staff Member";
                   const initials = name
                     .split(" ")
+                    .filter(Boolean)
                     .map((n) => n[0])
                     .join("")
                     .slice(0, 2)
@@ -128,10 +184,15 @@ const StaffRosterTable = ({
                     <tr key={key} className="hover:bg-gray-50 transition-colors">
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-[#1E3A5F] flex items-center justify-center text-xs font-bold text-white">
+                          <div className="w-7 h-7 rounded-full bg-[#1E3A5F] flex items-center justify-center text-xs font-bold text-white shrink-0">
                             {initials}
                           </div>
-                          <span className="font-medium text-gray-900">{name}</span>
+                          <div>
+                            <span className="font-medium text-gray-900 block">{name}</span>
+                            {(s.employee_id || s.procare_employee_id) && (
+                              <span className="text-[10px] text-gray-400 font-mono">ID: {s.employee_id || s.procare_employee_id}</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-2 text-gray-500">{s.role || "Teacher"}</td>
@@ -155,7 +216,7 @@ const StaffRosterTable = ({
                             <Edit2 size={13} />
                           </button>
                           <button
-                            onClick={() => onDelete(s.employee_id || s.id)}
+                            onClick={() => onDelete(s.procare_employee_id || s.employee_id || s.id)}
                             className="p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-650 transition-colors"
                             title="Remove Staff"
                           >
@@ -178,7 +239,9 @@ const StaffRosterTable = ({
             </table>
           </div>
         ) : (
-          <div className="py-8 text-center text-sm text-gray-500">No staff found in roster.</div>
+          <div className="py-8 text-center text-sm text-gray-500">
+            {search ? `No staff roster records matching "${search}"` : "No staff found in roster."}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -186,4 +249,3 @@ const StaffRosterTable = ({
 };
 
 export default StaffRosterTable;
-

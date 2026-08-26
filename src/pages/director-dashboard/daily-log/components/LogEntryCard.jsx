@@ -55,10 +55,13 @@ const LOG_TYPE_CONFIG = {
   }
 };
 
-const fmtRelative = (d) => {
+const fmtRelative = (d, dateGroup) => {
+  if (dateGroup) return dateGroup;
   if (!d) return "Today";
-  const TODAY = new Date("2026-05-11");
-  const diff = Math.ceil((new Date(d) - TODAY) / 86400000);
+  const dateObj = new Date(d);
+  if (isNaN(dateObj.getTime())) return d;
+  const TODAY = new Date();
+  const diff = Math.round((dateObj - TODAY) / 86400000);
   if (diff === 0) return "Today";
   if (diff === -1) return "Yesterday";
   if (diff > 0) return `In ${diff} days`;
@@ -66,95 +69,90 @@ const fmtRelative = (d) => {
 };
 
 const LogEntryCard = ({ entry, index }) => {
-  const config = LOG_TYPE_CONFIG[entry.type] || LOG_TYPE_CONFIG.incident;
+  const typeKey = (entry.category || entry.type || "incident").toLowerCase();
+  const config = LOG_TYPE_CONFIG[typeKey] || LOG_TYPE_CONFIG.incident;
   const Icon = config.icon;
 
   const renderTitleAndSubtitle = () => {
-    switch (entry.type) {
-      case "incident":
-        return {
-          title: `Incident: ${entry.student}`,
-          sub: `${entry.classroom || "General"} · Area: ${entry.area || "Classroom"}`,
-          extraTag: entry.severity ? (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-              entry.severity === "minor" ? "bg-amber-100 text-amber-800" :
-              entry.severity === "moderate" ? "bg-orange-100 text-orange-800" : "bg-red-100 text-red-800"
-            }`}>
-              {entry.severity} severity
-            </span>
-          ) : null
-        };
-      case "removal":
-        return {
-          title: `Removal: ${entry.student}`,
-          sub: `${entry.classroom || "General"} · Reason: ${entry.reason?.replace("_", " ") || "Other"}`,
-          extraTag: (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
-              Withdrawn
-            </span>
-          )
-        };
-      case "pto":
-        return {
-          title: `PTO Request: ${entry.staffName}`,
-          sub: `${entry.role || "Staff"} · ${entry.ptoType || "Leave"}${entry.notes ? ` (${entry.notes})` : ""}`,
-          extraTag: (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-              {entry.ptoType || "PTO"}
-            </span>
-          )
-        };
-      case "substitute":
-        return {
-          title: `Sub Coverage: ${entry.substituteName}`,
-          sub: `Covering for ${entry.coveredStaff} in ${entry.classroom || "Classroom"}${entry.notes ? ` · ${entry.notes}` : ""}`,
-          extraTag: (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">
-              Active Shift
-            </span>
-          )
-        };
-      case "waitlist":
-        return {
-          title: `Waitlist Inquiry: ${entry.childName}`,
-          sub: `Parent: ${entry.parentName} · Desired Class: ${entry.classroom || "PreK"}${entry.phone ? ` · ${entry.phone}` : ""}`,
-          extraTag: (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
-              Lead ({entry.source || "Inquiry"})
-            </span>
-          )
-        };
-      case "maintenance":
-        return {
-          title: `Maintenance: ${entry.title}`,
-          sub: `Location: ${entry.location || "Facility"} · ${entry.details || "Ticket logged"}`,
-          extraTag: (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-              entry.priority === "Emergency" || entry.priority === "High" 
-                ? "bg-red-100 text-red-800" 
-                : "bg-amber-100 text-amber-800"
-            }`}>
-              {entry.priority || "Medium"} Priority
-            </span>
-          )
-        };
-      case "at_risk":
-        return {
-          title: `At-Risk Flag: ${entry.student}`,
-          sub: `${entry.classroom || "General"} · Reason: ${entry.riskCategory || "Retention Concern"}`,
-          extraTag: (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
-              Flagged Student
-            </span>
-          )
-        };
-      default:
-        return {
-          title: `Log Entry: ${entry.student || entry.title || "Record"}`,
-          sub: "Operational Note",
-          extraTag: null
-        };
+    // If backend provided pre-formatted title and details
+    let title = entry.title;
+    let sub = entry.details || entry.subtitle;
+    let extraTag = null;
+
+    if (typeKey === "incident") {
+      if (!title) title = `Incident: ${entry.student_name || entry.student || "Student"}`;
+      if (!sub) sub = `${entry.classroom_name || entry.classroom || "General"} · Area: ${entry.area || "Classroom"}`;
+      const severity = entry.severity || (entry.subtitle?.includes("severity") ? entry.subtitle.split(" ")[0] : null);
+      if (severity) {
+        extraTag = (
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+            severity === "minor" ? "bg-amber-100 text-amber-800" :
+            severity === "moderate" ? "bg-orange-100 text-orange-800" : "bg-red-100 text-red-800"
+          }`}>
+            {severity} severity
+          </span>
+        );
+      }
+    } else if (typeKey === "removal") {
+      if (!title) title = `Removal: ${entry.student_name || entry.student || "Student"}`;
+      if (!sub) sub = `${entry.classroom_name || entry.classroom || "General"} · Reason: ${entry.reason?.replace("_", " ") || "Withdrawn"}`;
+      extraTag = (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+          Withdrawn
+        </span>
+      );
+    } else if (typeKey === "pto") {
+      if (!title) title = `PTO Request: ${entry.staff_name || entry.staffName || "Staff"}`;
+      if (!sub) sub = `${entry.role || "Staff"} · ${entry.ptoType || "Leave"}${entry.notes ? ` (${entry.notes})` : ""}`;
+      extraTag = (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+          {entry.ptoType || "PTO"}
+        </span>
+      );
+    } else if (typeKey === "substitute") {
+      if (!title) title = `Sub Coverage: ${entry.substituteName || entry.staff_name || "Substitute"}`;
+      if (!sub) sub = `Covering in ${entry.classroom_name || entry.classroom || "Classroom"}${entry.notes ? ` · ${entry.notes}` : ""}`;
+      extraTag = (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">
+          Active Shift
+        </span>
+      );
+    } else if (typeKey === "waitlist") {
+      if (!title) title = `Waitlist Inquiry: ${entry.childName || entry.student_name || "Prospect"}`;
+      if (!sub) sub = `Desired Class: ${entry.classroom_name || entry.classroom || "PreK"}${entry.phone ? ` · ${entry.phone}` : ""}`;
+      extraTag = (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
+          Inquiry
+        </span>
+      );
+    } else if (typeKey === "maintenance") {
+      if (!title) title = `Maintenance: ${entry.title || "Facility Ticket"}`;
+      if (!sub) sub = `Location: ${entry.location || "Facility"}${entry.details ? ` · ${entry.details}` : ""}`;
+      const priority = entry.priority || "Medium";
+      extraTag = (
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+          priority === "Emergency" || priority === "High" 
+            ? "bg-red-100 text-red-800" 
+            : "bg-amber-100 text-amber-800"
+        }`}>
+          {priority} Priority
+        </span>
+      );
+    } else if (typeKey === "at_risk") {
+      if (!title) title = `At-Risk Flag: ${entry.student_name || entry.student || "Student"}`;
+      if (!sub) sub = `${entry.classroom_name || entry.classroom || "General"} · Reason: ${entry.riskCategory || entry.subtitle || "Retention Concern"}`;
+      extraTag = (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+          Flagged Student
+        </span>
+      );
     }
+
+    return {
+      title: title || `Log Entry: ${entry.category_label || "Record"}`,
+      sub: sub || "Operational Record",
+      extraTag
+    };
   };
 
   const { title, sub, extraTag } = renderTitleAndSubtitle();
@@ -180,7 +178,7 @@ const LogEntryCard = ({ entry, index }) => {
             {extraTag}
           </div>
           <span className="text-[10px] text-gray-400 font-semibold shrink-0">
-            {fmtRelative(entry.date)}
+            {fmtRelative(entry.date || entry.created_at, entry.date_group)}
           </span>
         </div>
         <p className="text-[11px] text-gray-500 mt-1 leading-normal font-medium">

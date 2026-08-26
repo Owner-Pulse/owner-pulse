@@ -113,11 +113,14 @@ const UrgencyTimelineCard = ({ items }) => {
                             <ClipboardList size={10} /> Document Checklist
                           </p>
                           <ul className="space-y-0.5">
-                            {item.docChecklist.map((doc, i) => (
-                              <li key={i} className="text-[10px] text-[#1E3A5F]/75 flex items-center gap-1">
-                                <CheckCircle2 size={8} /> {doc}
-                              </li>
-                            ))}
+                            {item.docChecklist.map((doc, i) => {
+                              const text = typeof doc === "string" ? doc : (doc?.text || doc?.title || "");
+                              return (
+                                <li key={i} className="text-[10px] text-[#1E3A5F]/75 flex items-center gap-1">
+                                  <CheckCircle2 size={8} /> {text}
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}
