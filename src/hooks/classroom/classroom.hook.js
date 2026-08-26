@@ -1,7 +1,9 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { classroomService } from "@/services/classroom/classroom.service";
 import { GetAllClassroom } from "@/services/all-classroom.service";
-import { useQuery } from "@tanstack/react-query";
+import { allStaffsService } from "@/services/all-stuffs.service";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const DEFAULT_CLASSROOMS = [
     { id: 1, classroom_name: "Ones", capacity: 20 },
@@ -15,6 +17,37 @@ const DEFAULT_CLASSROOMS = [
     { id: 9, classroom_name: "3rd/4th Grade", capacity: 20 },
     { id: 10, classroom_name: "5th/6th Grade (Ms.Stinson)", capacity: 20 }
 ];
+
+// Fetch all staff / employees to assign as classroom teachers
+export const useGetAllStaffs = (params = {}) => {
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useQuery({
+        queryKey: ["all-staffs-list", params],
+        queryFn: () => {
+            const axiosInstance = axiosPrivate();
+            return allStaffsService.get_all_staffs(axiosInstance, params);
+        },
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+    });
+
+    const staffsList = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
+
+    return {
+        staffs: staffsList,
+        isLoading,
+        isError,
+        error
+    };
+};
 
 // Fetch all classrooms from procare endpoint
 export const useGetAllClassrooms = () => {
@@ -59,9 +92,7 @@ export const useGetClassroom = ({ filter = "All Classrooms", per_page = 50, page
     } = useQuery({
         queryKey: ["classroom", filter, per_page, page],
         queryFn: ({ queryKey }) => {
-            // Destructure directly from queryKey to avoid stale closure issues
             const [, qFilter, qPerPage, qPage] = queryKey;
-            // Create a fresh axios instance at fetch time (axiosPrivate is a plain fn, not a hook)
             const axiosInstance = axiosPrivate();
             return classroomService.getClassroom(axiosInstance, {
                 filter: qFilter,
@@ -72,7 +103,6 @@ export const useGetClassroom = ({ filter = "All Classrooms", per_page = 50, page
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
         placeholderData: (previousData) => previousData,
-
     });
 
     return {
@@ -82,4 +112,102 @@ export const useGetClassroom = ({ filter = "All Classrooms", per_page = 50, page
         isError,
         error,
     };
+};
+
+// Fetch single classroom economics / detail data
+export const useGetSingleClassroom = (id) => {
+    const {
+        data,
+        isLoading,
+        isFetching,
+        isError,
+        error
+    } = useQuery({
+        queryKey: ["single-classroom", id],
+        queryFn: () => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.getSingleClassroom(axiosInstance, id);
+        },
+        enabled: !!id,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+    });
+
+    const classroomData = data?.data ?? data;
+
+    return {
+        data: classroomData,
+        isLoading,
+        isFetching,
+        isError,
+        error
+    };
+};
+
+// ─── Classroom Mutations ───
+
+export const useAddClassroom = () => {
+    const queryClient = useQueryClient();
+
+    const { mutateAsync: addClassroom, isPending, isError, error } = useMutation({
+        mutationKey: ["add-classroom"],
+        mutationFn: (body) => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.addClassroom(axiosInstance, body);
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["classroom"] });
+            queryClient.invalidateQueries({ queryKey: ["all-procare-classrooms"] });
+            toast.success(data?.message ?? "Classroom created successfully.");
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message ?? "Failed to create classroom.");
+        },
+    });
+
+    return { addClassroom, isPending, isError, error };
+};
+
+export const useUpdateClassroom = () => {
+    const queryClient = useQueryClient();
+
+    const { mutateAsync: updateClassroom, isPending, isError, error } = useMutation({
+        mutationKey: ["update-classroom"],
+        mutationFn: ({ data, id }) => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.updateClassroom(axiosInstance, data, id);
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["classroom"] });
+            queryClient.invalidateQueries({ queryKey: ["all-procare-classrooms"] });
+            toast.success(data?.message ?? "Classroom updated successfully.");
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message ?? "Failed to update classroom.");
+        },
+    });
+
+    return { updateClassroom, isPending, isError, error };
+};
+
+export const useDeleteClassroom = () => {
+    const queryClient = useQueryClient();
+
+    const { mutateAsync: deleteClassroom, isPending, isError, error } = useMutation({
+        mutationKey: ["delete-classroom"],
+        mutationFn: (id) => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.deleteClassroom(axiosInstance, id);
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["classroom"] });
+            queryClient.invalidateQueries({ queryKey: ["all-procare-classrooms"] });
+            toast.success(data?.message ?? "Classroom deleted successfully.");
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message ?? "Failed to delete classroom.");
+        },
+    });
+
+    return { deleteClassroom, isPending, isError, error };
 };

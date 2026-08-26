@@ -27,6 +27,7 @@ import AtRiskCard from "./components/AtRiskCard";
 import IncidentForm from "./components/IncidentForm";
 import RemovalForm from "./components/RemovalForm";
 import AtRiskForm from "./components/AtRiskForm";
+import EnrollStudentForm from "./components/EnrollStudentForm";
 import StudentDetailsModal from "./components/StudentDetailsModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
@@ -140,51 +141,39 @@ const StudentManagementPage = () => {
   }, [activeTab, currentTabItems, incidents]);
 
   const handleEnrollClick = () => {
-    setFormData({
-      childId: Math.floor(1000 + Math.random() * 9000).toString(),
-      personId: Math.floor(10000 + Math.random() * 90000).toString(),
-      name: "",
-      dob: "2022-01-01",
-      gender: "Male",
-      classroom: displayClassrooms[0]?.name || "",
-      status: "Active",
-      enrollmentDate: new Date().toISOString().split("T")[0],
-      allergies: "None",
-      parent: "",
-      phone: "",
-      email: ""
-    });
     setShowForm("enroll");
   };
 
-  const handleEnrollSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.classroom) return;
+  const handleEnrollSubmit = (submittedData) => {
+    if (!submittedData || !submittedData.name || !submittedData.classroom) return;
 
-    const matchedClassroom = displayClassrooms.find(c => c.name === formData.classroom);
+    const matchedClassroom = displayClassrooms.find((c) => c.name === submittedData.classroom);
 
-    enrollMutation.mutate({
-      procare_child_id: Number(formData.childId),
-      student_full_name: formData.name,
-      date_of_birth: formData.dob,
-      gender: formData.gender,
-      procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
-      enrollment_status: formData.status,
-      enrollment_date: formData.enrollmentDate,
-      medical_alerts: formData.allergies,
-      parent_name: formData.parent,
-      parent_phone: formData.phone,
-      parent_email: formData.email
-    }, {
-      onSuccess: () => {
-        toast.success(`Successfully enrolled ${formData.name}!`);
-        setShowForm(null);
+    enrollMutation.mutate(
+      {
+        procare_child_id: Number(submittedData.childId),
+        student_full_name: submittedData.name,
+        date_of_birth: submittedData.dob,
+        gender: submittedData.gender,
+        procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+        enrollment_status: submittedData.status,
+        enrollment_date: submittedData.enrollmentDate,
+        medical_alerts: submittedData.allergies,
+        parent_name: submittedData.parent,
+        parent_phone: submittedData.phone,
+        parent_email: submittedData.email,
       },
-      onError: () => {
-        toast.success(`Registered ${formData.name} in ${formData.classroom}`);
-        setShowForm(null);
+      {
+        onSuccess: () => {
+          toast.success(`Successfully enrolled ${submittedData.name}!`);
+          setShowForm(null);
+        },
+        onError: () => {
+          toast.success(`Registered ${submittedData.name} in ${submittedData.classroom}`);
+          setShowForm(null);
+        },
       }
-    });
+    );
   };
 
   const handleAddIncident = (record) => {
@@ -486,205 +475,14 @@ const StudentManagementPage = () => {
         <AtRiskForm onAdd={handleAddAtRisk} onClose={() => setShowForm(null)} isLoading={atRiskMutation.isPending} />
       )}
 
-      {/* Enroll Student Slide-over Modal */}
-      <AnimatePresence>
-        {showForm === "enroll" && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex justify-end" onClick={() => setShowForm(null)}>
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-white w-full max-w-md h-full shadow-2xl overflow-y-auto flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 z-10">
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm md:text-base">Procare Student Registration</h3>
-                  <p className="text-[11px] text-slate-400">Enroll new child & attach guardian record</p>
-                </div>
-                <button onClick={() => setShowForm(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={handleEnrollSubmit} className="p-5 space-y-4 text-xs flex-1">
-                {/* ID Fields */}
-                <div className="grid grid-cols-2 gap-3 bg-blue-50/40 p-3 rounded-xl border border-blue-100/60">
-                  <div>
-                    <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Child ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.childId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, childId: e.target.value }))}
-                      className="w-full bg-white border border-blue-200 rounded-xl px-3 py-1.5 font-mono text-xs text-blue-900 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1">Procare Person ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.personId}
-                      onChange={(e) => setFormData(prev => ({ ...prev, personId: e.target.value }))}
-                      className="w-full bg-white border border-blue-200 rounded-xl px-3 py-1.5 font-mono text-xs text-blue-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Name */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Student Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Liam T. Miller"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                  />
-                </div>
-
-                {/* DOB & Gender */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Date of Birth</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.dob}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dob: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Gender</label>
-                    <select
-                      value={formData.gender}
-                      onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    >
-                      <option>Male</option>
-                      <option>Female</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Classroom Selector Dropdown & Enrollment Status */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Assign Classroom *</label>
-                    <select
-                      required
-                      value={formData.classroom}
-                      onChange={(e) => setFormData(prev => ({ ...prev, classroom: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none bg-white"
-                    >
-                      <option value="" disabled>Select Classroom</option>
-                      {displayClassrooms.map((cls) => (
-                        <option key={cls.id || cls.name} value={cls.name}>
-                          {cls.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    >
-                      <option>Active</option>
-                      <option>Enrolled</option>
-                      <option>Pre-Registered</option>
-                      <option>Withdrawn</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Enrollment date & Allergies */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Enrollment Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.enrollmentDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, enrollmentDate: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Medical/Allergy Alerts</label>
-                    <input
-                      type="text"
-                      value={formData.allergies}
-                      onChange={(e) => setFormData(prev => ({ ...prev, allergies: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      placeholder="e.g. Peanuts, None"
-                    />
-                  </div>
-                </div>
-
-                {/* Contact parent section */}
-                <div className="border-t border-slate-100 pt-3">
-                  <h4 className="text-[10px] font-extrabold text-blue-650 uppercase tracking-wider mb-2">Primary Parent Contact</h4>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Parent Name"
-                      required
-                      value={formData.parent}
-                      onChange={(e) => setFormData(prev => ({ ...prev, parent: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        placeholder="Phone Number"
-                        required
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowForm(null)}
-                    className="h-9 text-xs rounded-xl border-slate-200 text-gray-655"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={enrollMutation.isPending}
-                    className="h-9 text-xs bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl font-bold"
-                  >
-                    {enrollMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                    Register & Enroll
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {showForm === "enroll" && (
+        <EnrollStudentForm
+          onAdd={handleEnrollSubmit}
+          onClose={() => setShowForm(null)}
+          displayClassrooms={displayClassrooms}
+          isLoading={enrollMutation.isPending}
+        />
+      )}
 
       {/* Confirmation Dialog for At-Risk Student Withdrawal */}
       <ConfirmationModal

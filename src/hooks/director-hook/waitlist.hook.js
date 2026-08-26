@@ -1,5 +1,5 @@
 import { axiosPrivate } from "@/lib/axios.private";
-import { directorWaitlistService } from "@/services/director-service/waitlist.service";
+import { directorWaitlistService } from "@/services/waitlist.service";
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -15,10 +15,11 @@ export const useGetDirectorWaitlistList = (params) => {
         isFetchingNextPage,
         isError,
         error,
+        refetch,
     } = useInfiniteQuery({
         queryKey: ["director-waitlist-list", params],
         queryFn: ({ pageParam }) =>
-            directorWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
+            directorWaitlistService.get_all_waitlist(axiosInstance, { ...params, page: pageParam, per_page: params?.per_page || 15 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const pagination = lastPage?.pagination;
@@ -34,7 +35,7 @@ export const useGetDirectorWaitlistList = (params) => {
     const firstPage = data?.pages?.[0]?.data;
     const allWaitlists = data?.pages?.flatMap((page) => page?.data?.waitlists || []) || [];
     const waitlistData = firstPage
-        ? { summary: firstPage.summary, waitlists: allWaitlists }
+        ? { ...firstPage, waitlists: allWaitlists }
         : undefined;
 
     return {
@@ -45,6 +46,7 @@ export const useGetDirectorWaitlistList = (params) => {
         isFetchingNextPage,
         isError,
         error,
+        refetch,
     };
 };
 
@@ -60,7 +62,7 @@ export const useGetSingleDirectorWaitlist = (id) => {
         refetch: refetchWaitlist,
     } = useQuery({
         queryKey: ["single-director-waitlist", id],
-        queryFn: () => directorWaitlistService.get_single_waitlist(id, axiosInstance),
+        queryFn: () => directorWaitlistService.get_single_waitlist(axiosInstance, id), // Align with standard axiosInstance first signature
         enabled: !!id,
     });
 
@@ -118,11 +120,10 @@ export const useUpdateDirectorWaitlist = () => {
         isError,
     } = useMutation({
         mutationKey: ["update-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.update_waitlist(id, payload, axiosInstance),
+        mutationFn: ({ id, payload }) => directorWaitlistService.update_waitlist(axiosInstance, id, payload),
         onSuccess: (data) => {
             toast.success(data?.message || "Waitlist entry updated successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
-            queryClient.invalidateQueries({ queryKey: ["single-director-waitlist"] });
         },
         onError: (error) => {
             toast.error(error?.response?.data?.message || "Failed to update waitlist entry");
@@ -138,35 +139,140 @@ export const useUpdateDirectorWaitlist = () => {
     };
 };
 
-// POST Status Change
-export const useChangeDirectorWaitlistStatus = () => {
+// POST Log Tour
+export const useLogTourDirectorWaitlist = () => {
     const axiosInstance = axiosPrivate();
     const queryClient = useQueryClient();
 
     const {
-        mutateAsync: changeStatus,
+        mutateAsync: logTour,
         isPending,
-        error: apiError,
-        isSuccess,
-        isError,
     } = useMutation({
-        mutationKey: ["change-director-waitlist-status"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.change_status(id, payload, axiosInstance),
+        mutationKey: ["log-tour-director-waitlist"],
+        mutationFn: ({ id, payload }) => directorWaitlistService.inquiryToTour(axiosInstance, id, payload),
         onSuccess: (data) => {
-            toast.success(data?.message || "Waitlist status changed successfully");
+            toast.success(data?.message || "Tour logged successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
-            queryClient.invalidateQueries({ queryKey: ["single-director-waitlist"] });
         },
         onError: (error) => {
-            toast.error(error?.response?.data?.message || "Failed to change status");
+            toast.error(error?.response?.data?.message || "Failed to log tour");
         },
     });
 
-    return {
-        changeStatus,
+    return { logTour, isPending };
+};
+
+// POST Move to Applied
+export const useMoveAppliedDirectorWaitlist = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: moveToApplied,
         isPending,
-        apiError,
-        isSuccess,
-        isError,
-    };
+    } = useMutation({
+        mutationKey: ["move-applied-director-waitlist"],
+        mutationFn: ({ id, payload }) => directorWaitlistService.tourToAppled(axiosInstance, id, payload),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Moved to applied successfully");
+            queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to move to applied");
+        },
+    });
+
+    return { moveToApplied, isPending };
+};
+
+// POST Offer Spot
+export const useOfferSpotDirectorWaitlist = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: offerSpot,
+        isPending,
+    } = useMutation({
+        mutationKey: ["offer-spot-director-waitlist"],
+        mutationFn: ({ id, payload }) => directorWaitlistService.appledToOffered(axiosInstance, id, payload),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Spot offered successfully");
+            queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to offer spot");
+        },
+    });
+
+    return { offerSpot, isPending };
+};
+
+// POST Confirm Enrollment
+export const useConfirmEnrollmentDirectorWaitlist = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: confirmEnrollment,
+        isPending,
+    } = useMutation({
+        mutationKey: ["confirm-enrollment-director-waitlist"],
+        mutationFn: ({ id, payload }) => directorWaitlistService.offeredToEnrolled(axiosInstance, id, payload),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Enrollment confirmed successfully");
+            queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to confirm enrollment");
+        },
+    });
+
+    return { confirmEnrollment, isPending };
+};
+
+// POST Mark Lost
+export const useMarkLostDirectorWaitlist = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: markLost,
+        isPending,
+    } = useMutation({
+        mutationKey: ["mark-lost-director-waitlist"],
+        mutationFn: ({ id, payload }) => directorWaitlistService.lostStudent(axiosInstance, id, payload),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Waitlist entry marked as lost");
+            queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to mark as lost");
+        },
+    });
+
+    return { markLost, isPending };
+};
+
+// DELETE Delete waitlist
+export const useDeleteDirectorWaitlist = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: deleteEntry,
+        isPending,
+    } = useMutation({
+        mutationKey: ["delete-director-waitlist"],
+        mutationFn: (id) => directorWaitlistService.deletefromWaitlist(axiosInstance, id),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Deleted from waitlist successfully");
+            queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to delete waitlist entry");
+        },
+    });
+
+    return { deleteEntry, isPending };
 };

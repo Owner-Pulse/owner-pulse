@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Calendar, ShieldCheck, Building2, User, FileText, CheckSquare } from "lucide-react";
+import { X, Plus, Trash2, Calendar, ShieldCheck, Building2, User, FileText, CheckSquare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const AddEditComplianceModal = ({ isOpen, onClose, onSave, editItem = null, userRole = "owner" }) => {
+const AddEditComplianceModal = ({ isOpen, onClose, onSave, editItem = null, userRole = "owner", isLoading = false }) => {
   const [formData, setFormData] = useState({
     item: "",
     authority: "",
@@ -21,16 +21,18 @@ const AddEditComplianceModal = ({ isOpen, onClose, onSave, editItem = null, user
   useEffect(() => {
     if (editItem) {
       setFormData({
-        item: editItem.item || "",
-        authority: editItem.authority || "",
-        expires: editItem.expires || "",
+        item: editItem.item || editItem.name || "",
+        authority: editItem.authority || editItem.authority_agency || "",
+        expires: editItem.expires || (editItem.expiration_date ? editItem.expiration_date.slice(0, 10) : "") || "",
         category: editItem.category || "regulatory",
-        ownerRole: editItem.ownerRole || "director",
-        notes: editItem.notes || "",
+        ownerRole: editItem.ownerRole || editItem.responsible_role || (userRole === "director" ? "director" : "owner"),
+        notes: editItem.notes || editItem.renewal_notes || "",
         docChecklist: editItem.docChecklist
           ? editItem.docChecklist.map((c) => (typeof c === "string" ? { text: c, checked: false } : c))
+          : editItem.checklists
+          ? editItem.checklists.map((c) => ({ id: c.id, text: c.title || c.text || "", checked: c.is_completed ?? c.checked ?? false }))
           : [],
-        shopReminder: editItem.shopReminder || "",
+        shopReminder: editItem.shopReminder || (editItem.reminder_window_date ? editItem.reminder_window_date.slice(0, 10) : "") || "",
       });
     } else {
       setFormData({
@@ -252,11 +254,20 @@ const AddEditComplianceModal = ({ isOpen, onClose, onSave, editItem = null, user
 
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-              <Button type="button" variant="outline" onClick={onClose} className="text-xs md:text-sm">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="text-xs md:text-sm">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm">
-                {editItem ? "Save Changes" : "Create Item"}
+              <Button type="submit" disabled={isLoading} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm font-semibold">
+                {isLoading ? (
+                  <>
+                    <Loader2 size={14} className="mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : editItem ? (
+                  "Save Changes"
+                ) : (
+                  "Create Item"
+                )}
               </Button>
             </div>
           </form>

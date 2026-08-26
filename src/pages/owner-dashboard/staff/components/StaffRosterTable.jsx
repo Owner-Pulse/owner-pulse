@@ -37,6 +37,7 @@ const StaffRosterTable = ({
   onSortChange,
   pagination,
   onLoadMore,
+  isLoading = false,
   isLoadingMore,
   onEdit,
   onDelete
@@ -109,7 +110,29 @@ const StaffRosterTable = ({
         </div>
       </CardHeader>
       <CardContent>
-        {filtered.length > 0 ? (
+        {isLoading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+                  <th className="text-left py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">PTO Used</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Remaining</th>
+                  <th className="text-center py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Usage</th>
+                  <th className="text-right py-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+                <RosterSkeletonRow />
+              </tbody>
+            </table>
+          </div>
+        ) : filtered.length > 0 ? (
           <div
             ref={listContainerRef}
             onScroll={handleScroll}

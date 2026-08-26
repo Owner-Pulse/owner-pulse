@@ -39,23 +39,10 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const INITIAL_PTO_LOG = [
-  { id: 1, staffId: 1, dayType: "sick", days: 1, date: "2026-05-08" },
-  { id: 2, staffId: 7, dayType: "personal", days: 1, date: "2026-05-06" },
-  { id: 3, staffId: 7, dayType: "personal", days: 1, date: "2026-05-02" },
-  { id: 4, staffId: 8, dayType: "vacation", days: 2, date: "2026-04-25" },
-];
-
-const INITIAL_SUBSTITUTES = [
-  { id: 1, date: "2026-05-11", coveringFor: "Ms. Cohen", subName: "Ms. Hart", calledBy: "Director" },
-  { id: 2, date: "2026-05-05", coveringFor: "Mr. Levine", subName: "Mr. Owens", calledBy: "Director" },
-  { id: 3, date: "2026-04-28", coveringFor: "Ms. Diaz", subName: "Ms. Hart", calledBy: "Director" },
-];
-
 const DirectorStaffManagement = () => {
   const [activeTab, setActiveTab] = useState("roster");
-  const [ptoLog, setPtoLog] = useState(INITIAL_PTO_LOG);
-  const [substitutes, setSubstitutes] = useState(INITIAL_SUBSTITUTES);
+  const [ptoLog, setPtoLog] = useState([]);
+  const [substitutes, setSubstitutes] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
   // Pagination states
@@ -313,6 +300,7 @@ const DirectorStaffManagement = () => {
                 value={rosterStats.total} 
                 sub="Active staff" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -323,6 +311,7 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#2F6042]" 
                 sub="Classroom leads" 
                 iconBg="bg-[#3E7A54]/10 text-[#2F6042]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -333,6 +322,7 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#1E3A5F]" 
                 sub="Co-teachers & helpers" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -342,6 +332,7 @@ const DirectorStaffManagement = () => {
                 value={rosterStats.support} 
                 sub="Chef, admins & floaters" 
                 iconBg="bg-gray-50 text-gray-600" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
           </div>
@@ -353,6 +344,7 @@ const DirectorStaffManagement = () => {
               onSortChange={setSortBy}
               pagination={rosterPagination}
               onLoadMore={handleLoadMoreRoster}
+              isLoading={isDirectorLoading || (isDirectorFetching && allStaffRoster.length === 0)}
               isLoadingMore={isDirectorFetching && rosterPage > 1}
               onEdit={handleEditStaffClick}
               onDelete={handleDeleteStaffClick}
@@ -372,6 +364,7 @@ const DirectorStaffManagement = () => {
                 value={ptoStats.totalDays} 
                 sub="Logged requests" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -382,6 +375,7 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#8F6A1F]" 
                 sub="Medical call-outs" 
                 iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -392,6 +386,7 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#1E3A5F]" 
                 sub="Personal leave" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -401,6 +396,7 @@ const DirectorStaffManagement = () => {
                 value={ptoStats.uniqueStaff} 
                 sub="Distinct members" 
                 iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
           </div>
@@ -410,17 +406,19 @@ const DirectorStaffManagement = () => {
               <PTOHistoryCard
                 ptoLog={activePtoHistory}
                 staff={allStaffRoster.length > 0 ? allStaffRoster : staffList}
+                isLoading={isDirectorLoading || (isDirectorFetching && activePtoHistory.length === 0)}
               />
             </motion.div>
 
             {/* PTO Summary Card for Staff List & Balances */}
-            {allPtoStaff.length > 0 && (
+            {(allPtoStaff.length > 0 || isDirectorLoading || isDirectorFetching) && (
               <motion.div variants={itemVariants}>
                 <PTOSummaryCard
                   ptoSummary={directorDataContent.summary || directorDataContent.pto_metrics || {}}
                   staffList={allPtoStaff}
                   pagination={ptoPaginationFromApi}
                   onLoadMore={handleLoadMorePto}
+                  isLoading={isDirectorLoading || (isDirectorFetching && allPtoStaff.length === 0)}
                   isLoadingMore={isDirectorFetching && ptoPage > 1}
                 />
               </motion.div>
@@ -440,6 +438,7 @@ const DirectorStaffManagement = () => {
                 value={subStats.total} 
                 sub="Coverages filled" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -450,6 +449,7 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#1E3A5F]" 
                 sub="Active substitute needs" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -459,6 +459,7 @@ const DirectorStaffManagement = () => {
                 value={subStats.uniqueSubs} 
                 sub="Sub Pool size" 
                 iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
@@ -469,12 +470,16 @@ const DirectorStaffManagement = () => {
                 valueColor="text-[#2F6042]" 
                 sub="Fill rate percentage" 
                 iconBg="bg-[#3E7A54]/10 text-[#2F6042]" 
+                isLoading={isDirectorLoading || isDirectorFetching}
               />
             </motion.div>
           </div>
 
           <motion.div variants={itemVariants} className="mt-6">
-            <SubstituteHistoryCard substitutes={activeSubstitutesHistory} />
+            <SubstituteHistoryCard 
+              substitutes={activeSubstitutesHistory} 
+              isLoading={isDirectorLoading || (isDirectorFetching && activeSubstitutesHistory.length === 0)}
+            />
           </motion.div>
         </>
       )}

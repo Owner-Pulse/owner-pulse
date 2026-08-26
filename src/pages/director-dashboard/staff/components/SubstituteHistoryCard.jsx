@@ -24,7 +24,7 @@ const fmtRelative = (d) => {
   }
 };
 
-const SubstituteHistoryCard = ({ substitutes = [] }) => {
+const SubstituteHistoryCard = ({ substitutes = [], isLoading = false }) => {
   const [search, setSearch] = useState("");
 
   const filteredSubs = useMemo(() => {
@@ -65,7 +65,20 @@ const SubstituteHistoryCard = ({ substitutes = [] }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {filteredSubs && filteredSubs.length > 0 ? (
+          {isLoading ? (
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50/80 rounded-xl animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gray-200 shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="w-36 h-3.5 bg-gray-200 rounded" />
+                    <div className="w-24 h-3 bg-gray-100 rounded" />
+                  </div>
+                </div>
+                <div className="w-16 h-3 bg-gray-200 rounded" />
+              </div>
+            ))
+          ) : filteredSubs && filteredSubs.length > 0 ? (
             filteredSubs.map((entry, idx) => {
               const subName = entry.sub_name || entry.subName || entry.substitute_name || "Substitute";
               const coveringFor = entry.covered_teacher || entry.absent_employee_name || entry.coveringFor || entry.covering_for || entry.covered_teacher_name || "Staff Member";
