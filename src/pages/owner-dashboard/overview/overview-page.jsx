@@ -17,9 +17,11 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router";
 import { computeOwnerPulse } from "@/lib/pulse-engine";
 import { useGetOwnerOverview } from "@/hooks/owner-hook/overview.hook";
+import { useConnectQuickBooks, useGetQuickbookStatus } from "@/hooks/owner-hook/quickbookConnect.hook";
 import OwnerOverviewSkeleton from "./components/OwnerOverviewSkeleton";
 
 // ─── Extracted Components ─────────────────────────────────────
@@ -54,6 +56,8 @@ const OverviewPage = () => {
 
   // Fetch API data
   const { ownerOverviewData, isLoading } = useGetOwnerOverview();
+  const { isConnected: isQbConnected, isLoading: isQbStatusLoading } = useGetQuickbookStatus();
+  const { getConnectUrl, isPending: isConnectingQb } = useConnectQuickBooks();
 
   // If fetching, render Skeleton Loader
   if (isLoading) {
@@ -161,18 +165,44 @@ const OverviewPage = () => {
               <div className="w-4 h-4 bg-[#1E3A5F]/10 rounded flex items-center justify-center text-[8px] font-bold text-[#1E3A5F]">QB</div>
               <span className="text-[10px] md:text-xs font-medium text-gray-600">QuickBooks</span>
             </div>
-            <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap">
-              <CheckIcon size={10} /> Synced
-            </span>
+            {isQbStatusLoading ? (
+              <Skeleton className="h-4 w-16 rounded-full" />
+            ) : isQbConnected ? (
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium">
+                <CheckIcon size={10} /> Synced
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-gray-100 text-gray-500 text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium">
+                Not Connected
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <Button 
-            onClick={() => toast.success("QuickBooks connected successfully!")}
-            className="bg-[#2CA01C] hover:bg-[#207514] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all"
-          >
-            <Link2 size={14} /> Connect QuickBooks
-          </Button>
+          {isQbStatusLoading ? (
+            <Skeleton className="h-9 w-40 rounded-xl" />
+          ) : isQbConnected ? (
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2CA01C]/10 border border-[#2CA01C]/30 text-[#207514] text-xs md:text-sm font-semibold rounded-xl shadow-sm">
+              <CheckIcon size={14} className="text-[#207514]" /> Connected
+            </div>
+          ) : (
+            <Button 
+              onClick={() => getConnectUrl()}
+              disabled={isConnectingQb}
+              className="bg-[#2CA01C] hover:bg-[#207514] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-60"
+            >
+              {isConnectingQb ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Link2 size={14} /> Connect QuickBooks
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </motion.div>
 

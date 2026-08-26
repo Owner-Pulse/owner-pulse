@@ -13,7 +13,6 @@ import KpiMetricCard from "./components/KpiMetricCard";
 import EnrollmentCard from "./components/EnrollmentCard";
 import CoverageCard from "./components/CoverageCard";
 import ComplianceCard from "./components/ComplianceCard";
-import BillingCard from "./components/BillingCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import ExpensesCard from "./components/ExpensesCard";
 import TasksCard from "./components/TasksCard";
@@ -45,7 +44,6 @@ const DirectorOverviewPage = () => {
   const enrollmentBreakdown = directorOverviewData?.enrollment_breakdown;
   const todayCoverage = directorOverviewData?.today_coverage;
   const upcomingCompliance = directorOverviewData?.upcoming_compliance || [];
-  const billingLatePayments = directorOverviewData?.billing_late_payments;
   const pettyCashData = directorOverviewData?.recent_expenses_petty_cash;
   const pendingTasksData = directorOverviewData?.pending_tasks_and_escalation;
 
@@ -75,7 +73,6 @@ const DirectorOverviewPage = () => {
 
   // Top KPI Metrics
   const enrollmentKpi = topKpis?.enrollment || { total_enrolled: 621, total_capacity: 170, capacity_pct: 365.3, open_spots: 0 };
-  const latePaymentsKpi = topKpis?.late_payments || { past_due_amount: 30693, families_count: 250, formatted: "$30,693.00" };
   const maintKpi = topKpis?.maintenance || { open_tickets: 1, critical_count: 1 };
   const tasksKpi = topKpis?.open_tasks || { total_open: 2, high_priority_count: 2 };
 
@@ -102,7 +99,7 @@ const DirectorOverviewPage = () => {
       <PulseSection directorPulse={directorPulse} ownerPulseSnapshot={ownerPulseSnapshot} />
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <KpiMetricCard 
           label="Enrollment" 
           value={enrollmentKpi.total_enrolled} 
@@ -110,15 +107,6 @@ const DirectorOverviewPage = () => {
           icon={Users} 
           color="#1E3A5F" 
           onClick={() => go("/director/enrollment")} 
-        />
-        <KpiMetricCard 
-          label="Late Payments" 
-          value={latePaymentsKpi.formatted} 
-          sub={`${latePaymentsKpi.families_count} families need follow-up`} 
-          icon={DollarSign} 
-          color="#AE4A3E" 
-          subColor="text-[#8A362C]" 
-          onClick={() => go("/director/billing")} 
         />
         <KpiMetricCard 
           label="Maintenance" 
@@ -146,10 +134,9 @@ const DirectorOverviewPage = () => {
         <CoverageCard coverage={todayCoverage} />
       </div>
 
-      {/* Sections 5, 6, 7: Compliance + Billing + Maintenance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Sections 5, 6: Compliance + Maintenance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ComplianceCard items={upcomingCompliance} onNavigate={go} />
-        <BillingCard data={billingLatePayments} onNavigate={go} />
         <MaintenanceCard items={[]} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} onNavigate={go} />
       </div>
 

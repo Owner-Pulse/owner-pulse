@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HeartPulse,
@@ -27,7 +27,6 @@ const ICON_MAP = {
   Timer,
   CreditCard,
 };
-import { AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
 import PulseGauge from "@/components/PulseGauge";
 import PulseRecommendations from "@/components/PulseRecommendations";
@@ -42,10 +41,136 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
+// ─── Slow factors ────────────────────────────────────────────────
+const ANIM_SLOW_FACTOR = 8;    // Pulse beat animation (2x slower)
+const CHART_SLOW_FACTOR = 1;   // ECG waveform scroll
+
+// ─── ECG Constants ────────────────────────────────────────────────
+const ECG_HISTORY_LENGTH = 220;
+
+function ecgSample(phase) {
+  if (phase === undefined) return 0;
+  const t = phase % (Math.PI * 2);
+  const norm = t / (Math.PI * 2);
+  let v = 0;
+  // P wave — bigger bump
+  if (norm < 0.10) v = 0.28 * Math.sin((norm / 0.10) * Math.PI);
+  // Short flat
+  else if (norm < 0.12) v = 0;
+  // QRS complex — taller, sharper zigzag
+  else if (norm < 0.14) v = -0.15 * Math.sin(((norm - 0.12) / 0.02) * Math.PI);
+  else if (norm < 0.17) v = 1.3 * Math.sin(((norm - 0.14) / 0.03) * Math.PI);
+  else if (norm < 0.20) v = -0.35 * Math.sin(((norm - 0.17) / 0.03) * Math.PI);
+  else if (norm < 0.22) v = 0.15 * Math.sin(((norm - 0.20) / 0.02) * Math.PI);
+  // T wave — bigger
+  else if (norm < 0.40) v = 0.45 * Math.sin(((norm - 0.22) / 0.18) * Math.PI);
+  // Extra zigzag ripple between beats
+  else if (norm < 0.50) v = 0.06 * Math.sin(((norm - 0.40) / 0.10) * Math.PI * 3);
+  else if (norm < 0.70) v = 0.04 * Math.sin(((norm - 0.50) / 0.20) * Math.PI * 4);
+  else if (norm < 0.85) v = 0.05 * Math.sin(((norm - 0.70) / 0.15) * Math.PI * 2);
+  else v = 0;
+  // More noise for organic feel
+  v += (Math.random() - 0.5) * 0.025;
+  return v;
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// ─── ECG Canvas Component ─────────────────────────────────────────
+function ECGCanvas({ color, bpm, baseBg }) {
+  const canvasRef = useRef(null);
+  const historyRef = useRef(new Array(ECG_HISTORY_LENGTH).fill(0));
+  const phaseRef = useRef(0);
+  const animRef = useRef(null);
+  const currentBpmRef = useRef(bpm);
+
+  const drawECG = useCallback((ctx, history, w, h, col, bg) => {
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.8;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = col;
+    ctx.beginPath();
+    const step = w / (ECG_HISTORY_LENGTH - 1);
+    for (let i = 0; i < history.length; i++) {
+      const x = i * step;
+      const y = h / 2 - history[i] * (h / 2 - 4);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Fading tail effect
+    const grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, bg + "f2");
+    grad.addColorStop(0.15, bg + "00");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+    };
+    resize();
+
+    let running = true;
+
+    const tick = () => {
+      if (!running) return;
+
+      currentBpmRef.current = lerp(currentBpmRef.current, bpm, 0.04);
+
+      const speed =
+        currentBpmRef.current === 0
+          ? 0
+          : ((currentBpmRef.current / 60) * (Math.PI * 2)) / (60 * CHART_SLOW_FACTOR);
+      phaseRef.current += speed;
+
+      const history = historyRef.current;
+      history.shift();
+      history.push(ecgSample(phaseRef.current));
+
+      const ctx = canvas.getContext("2d");
+      drawECG(ctx, history, canvas.width, canvas.height, color, baseBg);
+
+      animRef.current = requestAnimationFrame(tick);
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+
+    window.addEventListener("resize", resize);
+    return () => {
+      running = false;
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, [color, bpm, drawECG, baseBg]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full block"
+      style={{ height: "60px" }}
+      role="img"
+      aria-label="ECG live waveform"
+    />
+  );
+}
+
 const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const beatDuration = 60 / Math.max(directorPulse.bpm, 55);
+  const pulseColor = directorPulse.state?.color || MONITOR_GREEN;
+  const beatDuration = (60 / Math.max(directorPulse.bpm, 55)) * ANIM_SLOW_FACTOR;
 
   return (
     <motion.div variants={itemVariants}>
@@ -53,7 +178,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
         className="relative border-none shadow-2xl overflow-hidden"
         style={{
           background: DARK_NAVY,
-          border: "1px solid rgba(62, 155, 103, 0.15)",
+          border: `1px solid ${pulseColor}26`,
         }}
       >
         {/* Scan line effect */}
@@ -76,24 +201,24 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
           <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="flex items-center gap-2">
               <div className="relative">
-                <HeartPulse size={18} color={MONITOR_GREEN} />
+                <HeartPulse size={18} color={pulseColor} />
                 <motion.div
                   className="absolute inset-0"
                   animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
                   transition={{ duration: beatDuration, repeat: Infinity, ease: "easeOut" }}
                 >
-                  <HeartPulse size={18} color={MONITOR_GREEN} />
+                  <HeartPulse size={18} color={pulseColor} />
                 </motion.div>
               </div>
               <span
                 className="text-xs font-bold uppercase tracking-[0.2em]"
-                style={{ color: MONITOR_GREEN }}
+                style={{ color: pulseColor }}
               >
                 Pulse Monitor
               </span>
               <span
                 className="text-[9px] font-mono px-1.5 py-0.5 rounded"
-                style={{ background: "rgba(62,155,103,0.1)", color: MONITOR_GREEN }}
+                style={{ background: `${pulseColor}1a`, color: pulseColor }}
               >
                 ● LIVE
               </span>
@@ -105,7 +230,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                   className="text-[10px] font-mono flex items-center gap-1"
                   style={{ color: TEXT_DIM }}
                 >
-                  <HeartPulse size={10} color={MONITOR_GREEN} />
+                  <HeartPulse size={10} color={pulseColor} />
                   Owner: {ownerPulseSnapshot.bpm}
                 </div>
               )}
@@ -124,7 +249,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
             >
               <span
                 className="text-7xl md:text-8xl font-black leading-none tracking-tighter tabular-nums"
-                style={{ color: MONITOR_GREEN }}
+                style={{ color: pulseColor }}
               >
                 {directorPulse.bpm}
               </span>
@@ -143,7 +268,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                 style={{
                   width: 80,
                   background: `linear-gradient(to right, 
-                    ${directorPulse.composite >= 80 ? MONITOR_GREEN : directorPulse.composite >= 60 ? "#C89B3C" : "#C33B2E"} 
+                    ${directorPulse.composite >= 80 ? pulseColor : directorPulse.composite >= 60 ? "#C89B3C" : "#C33B2E"} 
                     ${directorPulse.composite}%, 
                     rgba(255,255,255,0.08) ${directorPulse.composite}%)`,
                 }}
@@ -154,76 +279,13 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
             </div>
           </div>
 
-          {/* ═══════ SPARKLINE / ECG CHART ═══════ */}
+          {/* ═══════ ANIMATED ECG WAVEFORM ═══════ */}
           <div className="relative mt-2 mb-1 z-10">
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="border-t" style={{ borderColor: "rgba(148,163,184,0.06)", height: 0 }} />
-              ))}
-            </div>
-
-            <div className="h-20 md:h-24 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={[
-                    { date: "Aug", bpm: 72 },
-                    { date: "Sep", bpm: 78 },
-                    { date: "Oct", bpm: 82 },
-                    { date: "Nov", bpm: 76 },
-                    { date: "Dec", bpm: 70 },
-                    { date: "Jan", bpm: 65 },
-                    { date: "Feb", bpm: 71 },
-                    { date: "Mar", bpm: 68 },
-                    { date: "Apr", bpm: 74 },
-                    { date: "May", bpm: directorPulse.bpm },
-                  ]}
-                  margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="dirEcgGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={MONITOR_GREEN} stopOpacity={0.35} />
-                      <stop offset="60%" stopColor={MONITOR_GREEN} stopOpacity={0.08} />
-                      <stop offset="100%" stopColor={MONITOR_GREEN} stopOpacity={0} />
-                    </linearGradient>
-                    <filter id="dirEcgFilter">
-                      <feGaussianBlur stdDeviation="2" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="bpm"
-                    stroke={MONITOR_GREEN}
-                    strokeWidth={2.5}
-                    fill="url(#dirEcgGlow)"
-                    dot={false}
-                    activeDot={{
-                      r: 3,
-                      fill: MONITOR_GREEN,
-                      stroke: DARK_NAVY,
-                      strokeWidth: 2,
-                    }}
-                    filter="url(#dirEcgFilter)"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#1E293B",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(62,155,103,0.2)",
-                      fontSize: "11px",
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-                      color: "#E2E8F0",
-                    }}
-                    formatter={(value) => [`${value} BPM`, "Pulse"]}
-                    labelStyle={{ color: "#94A3B8" }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <ECGCanvas
+              color={pulseColor}
+              bpm={directorPulse.bpm}
+              baseBg={DARK_NAVY}
+            />
           </div>
 
           {/* ═══════ VIEW DETAIL TOGGLE ═══════ */}
