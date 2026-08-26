@@ -23,7 +23,7 @@ const TasksCard = ({ tasks, highPriorityCount, fmtDate, daysUntil, onNavigate })
       </CardHeader>
       <CardContent className="space-y-2.5">
         {tasks.filter(t => t.status !== "done").slice(0, 4).map((t) => {
-          const d = daysUntil(t.due);
+          const d = daysUntil(t.due_date);
           return (
             <div key={t.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50">
               <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.priority === "high" ? "bg-[#B78A2F]" : t.priority === "medium" ? "bg-[#1E3A5F]" : "bg-gray-400"}`} />
@@ -35,11 +35,11 @@ const TasksCard = ({ tasks, highPriorityCount, fmtDate, daysUntil, onNavigate })
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[9px] text-gray-400 mt-0.5">
-                  <span className="capitalize">{t.assignee}</span>
+                  <span className="capitalize">{t.assigned_role}</span>
                   <span>·</span>
                   <span className="capitalize">{t.status.replace("_", " ")}</span>
                   <span>·</span>
-                  <span>Due {fmtDate(t.due)}</span>
+                  <span>Due {fmtDate(t.due_date)}</span>
                 </div>
               </div>
             </div>
