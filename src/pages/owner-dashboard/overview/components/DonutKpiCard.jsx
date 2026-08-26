@@ -8,9 +8,9 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0 }) => {
+const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0, onClick }) => {
   return (
-    <motion.div variants={itemVariants} key={index}>
+    <motion.div variants={itemVariants} key={index} onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
       <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
