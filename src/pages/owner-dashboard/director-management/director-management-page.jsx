@@ -54,8 +54,9 @@ const DirectorManagementPage = () => {
   }, [allDirector]);
 
   const handleUpdateStatus = (directorId, status) => {
-    console.log("Update status:", directorId, status);
+    // Status update logic
   };
+
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">

@@ -4,7 +4,6 @@ export const ownerScholarshipService = {
             const response = await axiosInstance.get("/procare/dashboard/scholarships", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching all scholarships:", error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const ownerScholarshipService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error adding scholarship:", error);
             throw error;
         }
     },
@@ -35,7 +33,6 @@ export const ownerScholarshipService = {
             const response = await axiosInstance.get("/procare/scholarship-programs");
             return response.data;
         } catch (error) {
-            console.error("Error fetching scholarship programs:", error);
             throw error;
         }
     },
@@ -49,7 +46,6 @@ export const ownerScholarshipService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error updating status:", error);
             throw error;
         }
     },

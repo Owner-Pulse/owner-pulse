@@ -12,8 +12,10 @@ import FilterBar from "./components/FilterBar";
 import CostSummaryCard from "./components/CostSummaryCard";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 
+import { toast } from "react-hot-toast";
 
 const containerVariants = {
+
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
@@ -53,8 +55,9 @@ const MaintenancePage = () => {
   const updateStatus = async (id, status) => {
     try {
       await updateOwnerMaintenanceStatus({ maintenance_id: id, data: { status } });
+      toast.success("Maintenance status updated!");
     } catch (err) {
-      console.error("Failed to update maintenance status:", err);
+      toast.error(err?.response?.data?.message || "Failed to update maintenance status");
     }
   };
 
@@ -62,11 +65,13 @@ const MaintenancePage = () => {
     if (!deleteItem) return;
     try {
       await deleteMaintenance(deleteItem.id);
+      toast.success("Maintenance request deleted!");
       setDeleteItem(null);
     } catch (err) {
-      console.error("Failed to delete maintenance request:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete maintenance request");
     }
   };
+
 
   // Infinite-scroll observer
   const sentinelRef = useRef(null);

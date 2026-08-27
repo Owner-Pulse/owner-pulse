@@ -4,7 +4,6 @@ export const ownerMaintenanceService = {
             const response = await axiosInstance.get("/owner/maintenance", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner maintenance list:", error);
             throw error;
         }
     },
@@ -14,8 +13,8 @@ export const ownerMaintenanceService = {
             const response = await axiosInstance.post(`/owner/maintenance/status/${maintenance_id}`, data);
             return response.data;
         } catch (error) {
-            console.error("Error changing owner maintenance status:", error);
             throw error;
         }
     }
 };
+

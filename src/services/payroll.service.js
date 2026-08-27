@@ -4,7 +4,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/director/payroll/overview", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching director payroll overview:", error);
             throw error;
         }
     },
@@ -17,7 +16,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/owner/payroll/overview", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner payroll overview:", error);
             throw error;
         }
     },
@@ -30,7 +28,6 @@ export const payrollService = {
             const response = await axiosInstance.post("/payroll/schedules", params);
             return response.data;
         } catch (error) {
-            console.error("Error generating schedule:", error);
             throw error;
         }
     },
@@ -43,7 +40,6 @@ export const payrollService = {
             const response = await axiosInstance.delete(`/payroll/schedules/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting schedule:", error);
             throw error;
         }
     },
@@ -56,7 +52,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/director/payroll/history", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching director payroll history:", error);
             throw error;
         }
     },
@@ -69,7 +64,6 @@ export const payrollService = {
             const response = await axiosInstance.get(`/director/payroll/history/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching director payroll history details:", error);
             throw error;
         }
     },
@@ -82,7 +76,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/director/payroll/schedules");
             return response.data;
         } catch (error) {
-            console.error("Error fetching director schedule list:", error);
             throw error;
         }
     },
@@ -92,7 +85,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/owner/payroll/schedules");
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner schedule list:", error);
             throw error;
         }
     },
@@ -102,7 +94,6 @@ export const payrollService = {
             const response = await axiosInstance.get("/owner/payroll/submissions", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner payroll submission list:", error);
             throw error;
         }
     },
@@ -112,7 +103,6 @@ export const payrollService = {
             const response = await axiosInstance.get(`/owner/payroll/submissions/${payroll_id}/audit`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner payroll submission details:", error);
             throw error;
         }
     },
@@ -122,7 +112,6 @@ export const payrollService = {
             const response = await axiosInstance.post("/director/payroll/submit", data);
             return response.data;
         } catch (error) {
-            console.error("Error submitting payroll:", error);
             throw error;
         }
     },

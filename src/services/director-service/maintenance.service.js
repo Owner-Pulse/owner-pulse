@@ -4,7 +4,6 @@ export const directorMaintenanceService = {
             const response = await axiosInstance.get("/director/maintenance", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching director maintenance list:", error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const directorMaintenanceService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error creating director maintenance:", error);
             throw error;
         }
     },
@@ -28,7 +26,6 @@ export const directorMaintenanceService = {
             const response = await axiosInstance.get(`/director/maintenance/show/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching single director maintenance:", error);
             throw error;
         }
     },
@@ -42,7 +39,6 @@ export const directorMaintenanceService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error updating director maintenance:", error);
             throw error;
         }
     },
@@ -52,8 +48,8 @@ export const directorMaintenanceService = {
             const response = await axiosInstance.delete(`/director/maintenance/delete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting director maintenance:", error);
             throw error;
         }
     },
 };
+

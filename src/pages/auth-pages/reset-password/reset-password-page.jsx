@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import logo from '../../../assets/Logo.png';
 import { useNavigate } from 'react-router';
 
+import toast from 'react-hot-toast';
+
 const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -16,13 +18,13 @@ const ResetPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
@@ -30,12 +32,13 @@ const ResetPasswordPage = () => {
 
     //TODO Simulate API call
     setTimeout(() => {
-      console.log('Password reset successful');
+      toast.success("Password reset successful!");
       setIsLoading(false);
       setSuccess(true);
-      navigate('/')
+      navigate('/');
     }, 1800);
   };
+
 
   const handleBack = () => {
    navigate('/')

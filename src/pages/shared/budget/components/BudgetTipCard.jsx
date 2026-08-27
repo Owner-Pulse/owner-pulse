@@ -3,10 +3,18 @@ import { Wallet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-const fmtMoneyShort = (n) => n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$" + Math.round(n);
+const fmtMoneyShort = (n) => {
+  if (typeof n === "string") return n;
+  if (n === undefined || n === null) return "$0";
+  return n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$" + Math.round(n);
+};
 
-const BudgetTipCard = ({ remaining, total, expenseByReason }) => {
-  const hasFunds = remaining > 0;
+const BudgetTipCard = ({ remaining = 0, total = 0, expenseByReason = [], fundInfo = null }) => {
+  const title = fundInfo?.remaining_text || (remaining > 0 ? `${fmtMoney(remaining)} remaining in discretionary fund` : "Budget exhausted");
+  const notice = fundInfo?.notice || (remaining > 0
+    ? `Director's discretionary budget runs Jan through end of Dec. ${fmtMoney(remaining)} left for the rest of the school year.`
+    : `Director's discretionary budget of ${fmtMoney(total)} has been fully spent. No more discretionary funds available until next school year.`);
+  const hasFunds = fundInfo ? (!notice.includes("$0.00 left") && !title.includes("$0.00 remaining")) : remaining > 0;
 
   return (
     <Card className="bg-white border-none shadow-sm">
@@ -16,19 +24,13 @@ const BudgetTipCard = ({ remaining, total, expenseByReason }) => {
             <Wallet size={18} className={hasFunds ? "text-[#8F6A1F]" : "text-[#8A362C]"} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">
-              {hasFunds ? `${fmtMoney(remaining)} remaining in discretionary fund` : "Budget exhausted"}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {hasFunds
-                ? `Director's discretionary budget runs Aug through end of May. ${fmtMoney(remaining)} left for the rest of the school year.`
-                : `Director's discretionary budget of ${fmtMoney(total)} has been fully spent. No more discretionary funds available until next school year.`}
-            </p>
+            <p className="text-sm font-semibold text-gray-900">{title}</p>
+            <p className="text-xs text-gray-500 mt-0.5 whitespace-pre-line">{notice}</p>
             {expenseByReason.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {expenseByReason.slice(0, 4).map((cat) => (
                   <span key={cat.name} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600">
-                    {cat.name}: {fmtMoneyShort(Math.round(cat.total))}
+                    {cat.name}: {cat.amount || fmtMoneyShort(Math.round(cat.total || cat.numeric_amount || 0))}
                   </span>
                 ))}
               </div>
@@ -41,3 +43,4 @@ const BudgetTipCard = ({ remaining, total, expenseByReason }) => {
 };
 
 export default BudgetTipCard;
+

@@ -191,7 +191,7 @@ export function useCompliance() {
         return JSON.parse(stored);
       }
     } catch (e) {
-      console.error("Failed to parse stored compliance items", e);
+      // Ignore storage error
     }
     return INITIAL_COMPLIANCE_ITEMS;
   });
@@ -200,9 +200,10 @@ export function useCompliance() {
     try {
       localStorage.setItem(COMPLIANCE_STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
-      console.error("Failed to save compliance items", e);
+      // Ignore storage error
     }
   }, [items]);
+
 
   // Recalculate status based on expiry dates automatically
   const autoCalculatedItems = useMemo(() => {
@@ -359,8 +360,9 @@ export function useCompliance() {
     try {
       localStorage.setItem(COMPLIANCE_STORAGE_KEY, JSON.stringify(INITIAL_COMPLIANCE_ITEMS));
     } catch (e) {
-      console.error(e);
+      // Ignore storage error
     }
+
   };
 
   return {

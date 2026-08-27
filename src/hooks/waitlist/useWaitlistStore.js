@@ -152,7 +152,7 @@ export function useWaitlistStore() {
         return JSON.parse(stored);
       }
     } catch (e) {
-      console.error("Failed to load waitlist from storage", e);
+      // Ignore localStorage error
     }
     return INITIAL_WAITLIST;
   });
@@ -161,9 +161,10 @@ export function useWaitlistStore() {
     try {
       localStorage.setItem(WAITLIST_STORAGE_KEY, JSON.stringify(waitlist));
     } catch (e) {
-      console.error("Failed to save waitlist to storage", e);
+      // Ignore localStorage error
     }
   }, [waitlist]);
+
 
   // Actions
   const addInquiry = (newItem) => {

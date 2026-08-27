@@ -1,11 +1,27 @@
 // Shared formatting + motion helpers for the Cash Flow dashboard.
 
-export const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+export const fmtMoney = (n) => {
+  if (n === null || n === undefined || isNaN(n)) return "$0";
+  const isNeg = n < 0;
+  const abs = Math.abs(n);
+  const formatted = "$" + Math.round(abs).toLocaleString();
+  return isNeg ? `-${formatted}` : formatted;
+};
 
-export const fmtMoneyShort = (n) =>
-  n >= 1000000 ? "$" + (n / 1000000).toFixed(1) + "M"
-    : n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K"
-      : "$" + Math.round(n);
+export const fmtMoneyShort = (n) => {
+  if (n === null || n === undefined || isNaN(n)) return "$0";
+  const isNeg = n < 0;
+  const abs = Math.abs(n);
+  let formatted = "";
+  if (abs >= 1000000) {
+    formatted = "$" + (abs / 1000000).toFixed(1) + "M";
+  } else if (abs >= 1000) {
+    formatted = "$" + (abs / 1000).toFixed(1) + "K";
+  } else {
+    formatted = "$" + (abs % 1 === 0 ? abs : abs.toFixed(2));
+  }
+  return isNeg ? `-${formatted}` : formatted;
+};
 
 export const containerVariants = {
   hidden: { opacity: 0 },
