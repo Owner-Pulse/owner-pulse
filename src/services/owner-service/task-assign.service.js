@@ -4,7 +4,6 @@ export const ownerTaskAssignService = {
             const response = await axiosInstance.get("/owner/task");
             return response.data;
         } catch (error) {
-            console.error("Error fetching task list:", error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const ownerTaskAssignService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error creating task:", error);
             throw error;
         }
     },
@@ -28,7 +26,6 @@ export const ownerTaskAssignService = {
             const response = await axiosInstance.post(`/owner/task/in-progress/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error setting task to in-progress:", error);
             throw error;
         }
     },
@@ -38,7 +35,6 @@ export const ownerTaskAssignService = {
             const response = await axiosInstance.post(`/owner/task/complete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error completing task:", error);
             throw error;
         }
     },
@@ -48,7 +44,6 @@ export const ownerTaskAssignService = {
             const response = await axiosInstance.get(`/owner/task/show/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching single task:", error);
             throw error;
         }
     },
@@ -62,7 +57,6 @@ export const ownerTaskAssignService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error updating task:", error);
             throw error;
         }
     },
@@ -72,8 +66,8 @@ export const ownerTaskAssignService = {
             const response = await axiosInstance.delete(`/owner/task/delete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting task:", error);
             throw error;
         }
     },
 };
+

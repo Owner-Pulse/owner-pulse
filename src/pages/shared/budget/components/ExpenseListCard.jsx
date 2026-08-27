@@ -1,36 +1,27 @@
 import React from "react";
-import { Receipt, Trash2 } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+const fmtDate = (dateStr) => {
+  if (!dateStr) return "";
+  if (typeof dateStr === "string" && (dateStr.includes("Jan") || dateStr.includes("Feb") || dateStr.includes("Mar") || dateStr.includes("Apr") || dateStr.includes("May") || dateStr.includes("Jun") || dateStr.includes("Jul") || dateStr.includes("Aug") || dateStr.includes("Sep") || dateStr.includes("Oct") || dateStr.includes("Nov") || dateStr.includes("Dec"))) {
+    return dateStr;
+  }
+  try {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch (e) {
+    return dateStr;
+  }
+};
 
-// const CATEGORY_COLORS = {
-//   "Classroom Supplies": "#1E3A5F",
-//   "Events & Food": "#2A4C7E",
-//   "Cleaning & Sanitation": "#4A6B96",
-//   "Office Supplies": "#5B7FA6",
-//   "Faculty Appreciation": "#9DB8D9",
-//   "Uncategorized": "#94A0B5",
-// };
+const fmtMoney = (n) => {
+  if (typeof n === "string") return n;
+  if (n === undefined || n === null) return "$0";
+  return "$" + Math.round(n).toLocaleString();
+};
 
-// const categorize = (description) => {
-//   const CATEGORIES = {
-//     "Classroom Supplies": ["pencil", "crayon", "paper", "glue", "scissor", "book", "art", "craft", "marker", "construction"],
-//     "Events & Food": ["pizza", "cake", "food", "snack", "coffee", "donut", "party", "celebration", "birthday"],
-//     "Cleaning & Sanitation": ["cleaning", "wipe", "soap", "sanitizer", "disinfectant"],
-//     "Office Supplies": ["printer", "ink", "cartridge", "stapler", "tape", "pen"],
-//     "Faculty Appreciation": ["gift card", "teacher appreciation", "flowers"],
-//     "Uncategorized": [],
-//   };
-//   const desc = (description || "").toLowerCase();
-//   for (const [cat, keywords] of Object.entries(CATEGORIES)) {
-//     if (keywords.some((k) => desc.includes(k))) return cat;
-//   }
-//   return "Uncategorized";
-// };
-
-const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
+const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd }) => (
   <Card className="bg-white border-none shadow-sm h-full">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -40,29 +31,36 @@ const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
       {isDirector && <CardDescription>Track what you've spent</CardDescription>}
     </CardHeader>
     <CardContent>
-      <div className="space-y-1">
+      <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1.5">
+
         {expenses.length > 0 ? (
-          [...expenses].reverse().map((exp) => {
-            const reason = exp.category
-            const color = exp.color
+          expenses.map((exp, idx) => {
+            const rawCategory = exp.category || exp.reason || "";
+            const hasColon = rawCategory.includes(":");
+            const categoryBadge = hasColon ? rawCategory.split(":").pop().trim() : rawCategory;
+            const amountDisplay = exp.amount ?? (exp.numeric_amount !== undefined ? fmtMoney(exp.numeric_amount) : "$0");
+            const color = exp.color || "#1E3A5F";
+
             return (
-              <div key={exp.id} className="group flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={exp.id || idx} className="group flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-900 truncate font-medium">{exp.description}</p>
-                      {exp.reason && (
-                        <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">
-                          {exp.reason}
+                      <p className="text-xs md:text-sm text-gray-900 truncate font-medium">
+                        {exp.description || exp.title || "Expense"}
+                      </p>
+                      {categoryBadge && (
+                        <span className="text-[10px] font-medium text-[#1E3A5F] bg-[#1E3A5F]/10 px-1.5 py-0.5 rounded-full shrink-0 truncate max-w-[120px]">
+                          {categoryBadge}
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] text-gray-400">{fmtDate(exp.date)}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{fmtDate(exp.date)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <span className="text-sm font-semibold text-gray-900">{fmtMoney(exp.amount)}</span>
+                  <span className="text-xs md:text-sm font-semibold text-gray-900">{amountDisplay}</span>
                 </div>
               </div>
             );
@@ -84,3 +82,4 @@ const ExpenseListCard = ({ expenses, isDirector, onShowAdd }) => (
 );
 
 export default ExpenseListCard;
+

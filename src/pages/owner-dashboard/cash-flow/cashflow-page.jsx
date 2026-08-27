@@ -5,7 +5,6 @@ import CashFlowSkeleton from "./components/CashFlowSkeleton";
 import CashFlowHeader from "./components/CashFlowHeader";
 import KpiRow from "./components/KpiRow";
 import YearOverYearCard from "./components/YearOverYearCard";
-import AiInsightsCard from "./components/AiInsightsCard";
 import BudgetVsActualCard from "./components/BudgetVsActualCard";
 import FullYearTable from "./components/FullYearTable";
 import { useGetCashflow } from "@/hooks/owner-hook/cashflow.hook";
@@ -19,7 +18,6 @@ const CashFlowPage = () => {
   // ── Derived values from API 
   const metrics = cf?.metrics || {};
   const yoyData = cf?.year_over_year_comparison || {};
-  const aiObservations = cf?.ai_generated_observations || {};
   const budgetVsActual = cf?.annual_budget_vs_actual || {};
   const fullYearTrend = cf?.full_year_comparison_trend?.categories || [];
 
@@ -81,20 +79,15 @@ const CashFlowPage = () => {
     },
   ];
 
-  // AI insights mapping
-  const insights = (aiObservations.insights || []).map((text) => ({
-    tone: "amber",
-    icon: "ArrowRight",
-    text,
-  }));
-
-  // Budget vs Actual
+  // Budget vs Actual categories
   const budgetCategories = (budgetVsActual.categories || []).map((c) => ({
     name: c.name,
     spent: c.spent_numeric,
     budget: c.budgeted_numeric,
   }));
   const budgetPct = budgetVsActual.consumed_percentage || 0;
+  const totalSpentNumeric = metrics.expenses_ytd?.amount_numeric || budgetCategories.reduce((a, c) => a + c.spent, 0);
+  const totalBudgetNumeric = budgetCategories.reduce((a, c) => a + c.budget, 0);
 
   // Full Year Table
   const fullYearTableData = fullYearTrend.map((cat) => ({
@@ -140,17 +133,11 @@ const CashFlowPage = () => {
         currentYear={currentYear}
       />
 
-      <AiInsightsCard
-        title={aiObservations.title}
-        subtitle={aiObservations.subtitle}
-        insights={insights}
-      />
-
       {budgetCategories.length > 0 && (
         <BudgetVsActualCard
           categories={budgetCategories}
-          totalSpent={budgetCategories.reduce((a, c) => a + c.spent, 0)}
-          totalBudget={budgetCategories.reduce((a, c) => a + c.budget, 0)}
+          totalSpent={totalSpentNumeric}
+          totalBudget={totalBudgetNumeric}
           budgetPct={budgetPct}
         />
       )}

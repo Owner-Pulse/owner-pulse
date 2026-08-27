@@ -6,7 +6,9 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
 import { useSignout } from '@/hooks/auth/auth.hook';
 import { useGetNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/hooks/notification.hook';
+import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { useQueryClient } from '@tanstack/react-query';
 
 const ownerTabs = [
@@ -98,7 +100,6 @@ const DashboardLayout = () => {
   const { notifications: apiNotifications } = useGetNotifications();
   const { markAsRead } = useMarkNotificationAsRead();
   const { markAllAsRead } = useMarkAllNotificationsAsRead();
-  console.log("User data", user);
 
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -165,8 +166,9 @@ const DashboardLayout = () => {
     try {
       await signout();
     } catch (e) {
-      console.error("Logout API failed", e);
+      toast.error(e?.response?.data?.message || "Logout failed");
     } finally {
+
       const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
       localStorage.removeItem(tokenName);
       queryClient.clear();
@@ -272,7 +274,7 @@ const DashboardLayout = () => {
                   onClick={() => setNotifOpen(!notifOpen)}
                   className="p-3 hover:bg-gray-100 rounded-xl transition-colors relative text-gray-600"
                 >
-                  <Bell size={24}/>
+                  <Bell size={24} />
                   {notifStats.unread > 0 && (
                     <span className="absolute top-2 right-2 min-w-4.5 h-4.5 flex items-center justify-center bg-[#AE4A3E] rounded-full ring-2 text-white ring-white text-[9px] font-bold px-1">
                       {notifStats.unread > 9 ? "9+" : notifStats.unread}
@@ -282,119 +284,119 @@ const DashboardLayout = () => {
 
                 {/* Dropdown Panel */}
                 <AnimatePresence>
-                {notifOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-100 md:max-h-130 bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-100 flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}
-                  >
-                    {/* Header — navy gradient */}
-                    <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#1E3A5F] to-[#2A4C7E] shrink-0">
-                      <div>
-                        <h3 className="text-sm font-bold text-white">Notifications</h3>
-                        <p className="text-[10px] text-white/60 mt-0.5">
-                          {notifStats.unread > 0
-                            ? `${notifStats.unread} unread${notifStats.critical > 0 ? ` · ${notifStats.critical} critical` : ""}`
-                            : "All caught up!"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {notifStats.unread > 0 && (
-                          <button
-                            onClick={markAllRead}
-                            className="text-[10px] font-semibold text-white/80 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-white/70">
-                          <X size={20} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Filter Chips */}
-                    <div className="flex items-center gap-1.5 px-5 py-3 border-b border-gray-50 shrink-0">
-                      {[
-                        { key: "all", label: "All" },
-                        { key: "unread", label: "Unread" },
-                        { key: "critical", label: "Critical" },
-                      ].map((f) => (
-                        <button
-                          key={f.key}
-                          onClick={() => setNotifFilter(f.key)}
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${notifFilter === f.key
-                            ? "bg-[#1E3A5F] text-white shadow-sm"
-                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                            }`}
-                        >
-                          {f.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Notifications List (scrollable) */}
-                    <div className="overflow-y-auto flex-1">
-                      {filteredNotifs.length === 0 ? (
-                        <div className="p-6 text-center">
-                          <div className="mx-auto w-10 h-10 bg-[#1E3A5F]/10 rounded-full flex items-center justify-center mb-2">
-                            <Bell size={20} className="text-[#1E3A5F]" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-900">All clear!</p>
-                          <p className="text-xs text-gray-400 mt-0.5">No notifications to show.</p>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="fixed inset-0 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-100 md:max-h-130 bg-white md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 overflow-hidden z-100 flex flex-col" style={{ boxShadow: "0 20px 60px -12px rgba(0,0,0,0.25)" }}
+                    >
+                      {/* Header — navy gradient */}
+                      <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#1E3A5F] to-[#2A4C7E] shrink-0">
+                        <div>
+                          <h3 className="text-sm font-bold text-white">Notifications</h3>
+                          <p className="text-[10px] text-white/60 mt-0.5">
+                            {notifStats.unread > 0
+                              ? `${notifStats.unread} unread${notifStats.critical > 0 ? ` · ${notifStats.critical} critical` : ""}`
+                              : "All caught up!"}
+                          </p>
                         </div>
-                      ) : (
-                        filteredNotifs.map((notif) => {
-                          const Icon = NOTIF_ICONS[notif.type] || NOTIF_ICONS.general;
-                          // Severity-driven tint — brick = critical, navy = unread, gray = read
-                          const tint = notif.critical
-                            ? { bg: "bg-[#AE4A3E]/10", text: "text-[#8A362C]" }
-                            : !notif.read
-                              ? { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]" }
-                              : { bg: "bg-gray-100", text: "text-gray-400" };
-                          return (
-                            <div
-                              key={notif.id}
-                              onClick={() => {
-                                toggleNotifRead(notif.id);
-                                if (notif.path) navigate(basePath + notif.path);
-                                setNotifOpen(false);
-                              }}
-                              className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${notif.critical
+                        <div className="flex items-center gap-2">
+                          {notifStats.unread > 0 && (
+                            <button
+                              onClick={markAllRead}
+                              className="text-[10px] font-semibold text-white/80 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                            >
+                              Mark all read
+                            </button>
+                          )}
+                          <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-white/70">
+                            <X size={20} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filter Chips */}
+                      <div className="flex items-center gap-1.5 px-5 py-3 border-b border-gray-50 shrink-0">
+                        {[
+                          { key: "all", label: "All" },
+                          { key: "unread", label: "Unread" },
+                          { key: "critical", label: "Critical" },
+                        ].map((f) => (
+                          <button
+                            key={f.key}
+                            onClick={() => setNotifFilter(f.key)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${notifFilter === f.key
+                              ? "bg-[#1E3A5F] text-white shadow-sm"
+                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Notifications List (scrollable) */}
+                      <div className="overflow-y-auto flex-1">
+                        {filteredNotifs.length === 0 ? (
+                          <div className="p-6 text-center">
+                            <div className="mx-auto w-10 h-10 bg-[#1E3A5F]/10 rounded-full flex items-center justify-center mb-2">
+                              <Bell size={20} className="text-[#1E3A5F]" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">All clear!</p>
+                            <p className="text-xs text-gray-400 mt-0.5">No notifications to show.</p>
+                          </div>
+                        ) : (
+                          filteredNotifs.map((notif) => {
+                            const Icon = NOTIF_ICONS[notif.type] || NOTIF_ICONS.general;
+                            // Severity-driven tint — brick = critical, navy = unread, gray = read
+                            const tint = notif.critical
+                              ? { bg: "bg-[#AE4A3E]/10", text: "text-[#8A362C]" }
+                              : !notif.read
+                                ? { bg: "bg-[#1E3A5F]/10", text: "text-[#1E3A5F]" }
+                                : { bg: "bg-gray-100", text: "text-gray-400" };
+                            return (
+                              <div
+                                key={notif.id}
+                                onClick={() => {
+                                  toggleNotifRead(notif.id);
+                                  if (notif.path) navigate(basePath + notif.path);
+                                  setNotifOpen(false);
+                                }}
+                                className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${notif.critical
                                   ? "bg-[#AE4A3E]/[0.05]"
                                   : !notif.read
                                     ? "bg-[#1E3A5F]/[0.04]"
                                     : ""
-                                } ${notif.critical ? "border-l-2 border-l-[#AE4A3E]" : ""
-                                } border-b border-gray-50 last:border-b-0`}
-                            >
-                              {/* Icon — tinted by severity */}
-                              <div className={`w-9 h-9 rounded-xl ${tint.bg} flex items-center justify-center shrink-0`}>
-                                <Icon size={18} className={tint.text} />
-                              </div>
-
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2">
-                                  <p className={`text-xs ${notif.read ? "font-medium" : "font-semibold"} text-gray-900 line-clamp-1`}>
-                                    {notif.title}
-                                  </p>
-                                  <span className="text-[9px] text-gray-400 whitespace-nowrap shrink-0 leading-4">{timeAgo(notif.time)}</span>
+                                  } ${notif.critical ? "border-l-2 border-l-[#AE4A3E]" : ""
+                                  } border-b border-gray-50 last:border-b-0`}
+                              >
+                                {/* Icon — tinted by severity */}
+                                <div className={`w-9 h-9 rounded-xl ${tint.bg} flex items-center justify-center shrink-0`}>
+                                  <Icon size={18} className={tint.text} />
                                 </div>
-                                <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1 leading-normal">{notif.description}</p>
-                              </div>
 
-                              {/* Unread indicator */}
-                              {!notif.read && <span className="w-1.5 h-1.5 rounded-full bg-[#1E3A5F] shrink-0 mt-1" />}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </motion.div>
-                )}
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className={`text-xs ${notif.read ? "font-medium" : "font-semibold"} text-gray-900 line-clamp-1`}>
+                                      {notif.title}
+                                    </p>
+                                    <span className="text-[9px] text-gray-400 whitespace-nowrap shrink-0 leading-4">{timeAgo(notif.time)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1 leading-normal">{notif.description}</p>
+                                </div>
+
+                                {/* Unread indicator */}
+                                {!notif.read && <span className="w-1.5 h-1.5 rounded-full bg-[#1E3A5F] shrink-0 mt-1" />}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
 
@@ -404,7 +406,7 @@ const DashboardLayout = () => {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-3 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
                 >
-                  
+
                   <img src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name}&background=random`} alt="Logo" className="h-9 w-9 rounded-full" />
                   <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-gray-800">{user?.name || "John Doe"}</p>
@@ -435,13 +437,13 @@ const DashboardLayout = () => {
       {/* Logout Confirmation Modal */}
       <AnimatePresence>
         {showLogoutModal && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 z-100 flex items-center justify-center p-4"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -452,16 +454,16 @@ const DashboardLayout = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Logout</h3>
                 <p className="text-sm text-gray-500">Are you sure you want to log out of your account?</p>
               </div>
-              
+
               <div className="flex items-center gap-3 w-full">
-                <button 
+                <button
                   onClick={() => setShowLogoutModal(false)}
                   className="cursor-pointer flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
                   disabled={isPendingSignout}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={confirmLogout}
                   className="cursor-pointer flex-1 flex justify-center items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
                   disabled={isPendingSignout}

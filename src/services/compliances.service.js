@@ -5,7 +5,6 @@ export const compliancesService = {
             const response = await axiosInstance.post("/compliance/items", data);
             return response.data;
         } catch (error) {
-            console.error("Error adding compliance item:", error);
             throw error;
         }
     },
@@ -17,7 +16,6 @@ export const compliancesService = {
             const response = await axiosInstance.put(`/compliance/items/${id}`, data);
             return response.data;
         } catch (error) {
-            console.error("Error updating compliance item:", error);
             throw error;
         }
     },
@@ -27,7 +25,6 @@ export const compliancesService = {
             const response = await axiosInstance.delete(`/compliance/items/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting compliance item:", error);
             throw error;
         }
     },
@@ -39,7 +36,6 @@ export const compliancesService = {
             const response = await axiosInstance.post(`/compliance/items/${itemId}/logs`, data);
             return response.data;
         } catch (error) {
-            console.error("Error logging note for compliance:", error);
             throw error;
         }
     },
@@ -51,7 +47,6 @@ export const compliancesService = {
             const response = await axiosInstance.patch(`/compliance/checklists/${itemId}/toggle`, data || {});
             return response.data;
         } catch (error) {
-            console.error("Error toggling checklist for compliance:", error);
             throw error;
         }
     },
@@ -62,7 +57,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/owner/compliance/overview", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner compliances:", error);
             throw error;
         }
     },
@@ -72,7 +66,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/owner/compliance/items", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner compliance items:", error);
             throw error;
         }
     },
@@ -82,7 +75,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/owner/compliance/pulse-impact", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner pulse impact:", error);
             throw error;
         }
     },
@@ -92,7 +84,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/owner/compliance/insurance-shopping");
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner insurance shopping:", error);
             throw error;
         }
     },
@@ -111,7 +102,6 @@ export const compliancesService = {
             const response = await axiosInstance.post("/owner/compliance/insurance-shopping/quotes", body);
             return response.data;
         } catch (error) {
-            console.error("Error adding quotes for owner insurance shopping:", error);
             throw error;
         }
     },
@@ -121,7 +111,6 @@ export const compliancesService = {
             const response = await axiosInstance.post(`/owner/compliance/insurance-shopping/quotes/${quote_id}/select`);
             return response.data;
         } catch (error) {
-            console.error("Error selecting quotes for owner insurance shopping:", error);
             throw error;
         }
     },
@@ -140,7 +129,6 @@ export const compliancesService = {
             const response = await axiosInstance.post("/owner/compliance/insurance-shopping/complete", body);
             return response.data;
         } catch (error) {
-            console.error("Error completing insurance shopping for owner:", error);
             throw error;
         }
     },
@@ -151,7 +139,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/director/compliance/overview", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching director compliances:", error);
             throw error;
         }
     },
@@ -161,7 +148,6 @@ export const compliancesService = {
             const response = await axiosInstance.get("/director/compliance/items", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching director compliance items:", error);
             throw error;
         }
     },

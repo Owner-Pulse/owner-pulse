@@ -1,5 +1,5 @@
-import axios from "axios"
-
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -29,19 +29,21 @@ export const axiosPrivate = () => {
         (response) => response,
         (error) => {
             const status = error?.response?.status;
+            const message = error?.response?.data?.message;
+
             if (status === 401) {
-                console.log("Unauthorized");
-                // toast show here
+                toast.error(message || "Unauthorized access. Please log in again.");
             } else if (status === 404) {
-                console.log("Not Found");
+                // Ignore silent 404s if handled by UI, or show toast when message provided
+                if (message) toast.error(message);
             } else if (status === 500) {
-                console.log("Internal Server Error");
+                toast.error(message || "Internal Server Error");
             } else if (status === 502) {
-                console.log("Bad Gateway");
+                toast.error(message || "Bad Gateway");
             } else if (status === 503) {
-                console.log("Service Unavailable");
+                toast.error(message || "Service Unavailable");
             } else if (status === 504) {
-                console.log("Gateway Timeout");
+                toast.error(message || "Gateway Timeout");
             }
             return Promise.reject(error);
         }
