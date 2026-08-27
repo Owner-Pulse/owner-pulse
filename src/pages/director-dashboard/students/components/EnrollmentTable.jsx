@@ -49,9 +49,10 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
               filteredClassrooms.map((c, i) => {
                 const cap = c.capacity || 0;
                 const enr = c.enrolled || 0;
-                const open = Math.max(0, cap - enr);
-                const pct = cap > 0 ? Math.round((enr / cap) * 100) : (c.fill_percentage || 0);
-                const incCount = (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
+                const open = c.open_seats !== undefined ? c.open_seats : Math.max(0, cap - enr);
+                const pct = c.fill_percentage !== undefined ? c.fill_percentage : (cap > 0 ? Math.round((enr / cap) * 100) : 0);
+                const pctLabel = c.fill_percentage_label || `${pct}%`;
+                const incCount = c.incidents_count !== undefined ? c.incidents_count : (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
                 return (
                   <div 
                     key={i} 
@@ -107,7 +108,7 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
                           style={{ width: `${Math.min(pct, 100)}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-black text-gray-500">{pct}% Filled</span>
+                      <span className="text-[10px] font-black text-gray-500">{pctLabel}</span>
                     </div>
                   </div>
                 );
@@ -136,9 +137,10 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
                   filteredClassrooms.map((c, i) => {
                     const cap = c.capacity || 0;
                     const enr = c.enrolled || 0;
-                    const open = Math.max(0, cap - enr);
-                    const pct = cap > 0 ? Math.round((enr / cap) * 100) : (c.fill_percentage || 0);
-                    const incCount = (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
+                    const open = c.open_seats !== undefined ? c.open_seats : Math.max(0, cap - enr);
+                    const pct = c.fill_percentage !== undefined ? c.fill_percentage : (cap > 0 ? Math.round((enr / cap) * 100) : 0);
+                    const pctLabel = c.fill_percentage_label || `${pct}%`;
+                    const incCount = c.incidents_count !== undefined ? c.incidents_count : (incidents || []).filter((inc) => inc && (inc.classroom === c.name || inc.procare_classroom_id === c.procare_classroom_id)).length;
                     return (
                       <tr 
                         key={i} 
@@ -161,7 +163,7 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
                                 style={{ width: `${Math.min(pct, 100)}%` }}
                               />
                             </div>
-                            <span className="text-[10px] font-bold text-gray-500">{pct}%</span>
+                            <span className="text-[10px] font-bold text-gray-500">{pctLabel}</span>
                           </div>
                         </td>
                         <td className="py-3.5 px-2 text-center">

@@ -90,18 +90,44 @@ const StudentManagementPage = () => {
     email: ""
   });
 
-  const displayClassrooms = allClassrooms.length > 0 ? allClassrooms.map(c => ({
-    id: c.id,
-    name: c.classroom_name || `Classroom ${c.id}`,
-    procare_classroom_id: c.procare_classroom_id,
-    capacity: c.capacity || 20,
-    enrolled: c.enrolled_students || 0
-  })) : [];
+  const displayClassrooms = useMemo(() => {
+    if (activeTab === "enrollment" && Array.isArray(apiTabData?.data) && apiTabData.data.length > 0) {
+      return apiTabData.data.map((c) => ({
+        id: c.classroom_id || c.id,
+        name: c.classroom_name || c.name || `Classroom ${c.classroom_id}`,
+        procare_classroom_id: c.procare_classroom_id,
+        capacity: c.capacity ?? 16,
+        enrolled: c.enrolled ?? 0,
+        open_seats: c.open_seats ?? 0,
+        fill_percentage: c.fill_percentage ?? 0,
+        fill_percentage_label: c.fill_percentage_label || `${c.fill_percentage}%`,
+        incidents_count: c.incidents_count ?? 0,
+      }));
+    }
+    if (allClassrooms && allClassrooms.length > 0) {
+      return allClassrooms.map((c) => ({
+        id: c.id,
+        name: c.classroom_name || `Classroom ${c.id}`,
+        procare_classroom_id: c.procare_classroom_id,
+        capacity: c.capacity || 20,
+        enrolled: c.enrolled_students || 0,
+        open_seats: c.open_seats || Math.max(0, (c.capacity || 20) - (c.enrolled_students || 0)),
+        fill_percentage: c.fill_percentage || (c.capacity ? Math.round(((c.enrolled_students || 0) / c.capacity) * 100) : 0),
+        incidents_count: 0,
+      }));
+    }
+    return [];
+  }, [activeTab, apiTabData, allClassrooms]);
 
-  const totalEnrolled = displayClassrooms.reduce((a, c) => a + c.enrolled, 0);
-  const totalCapacity = displayClassrooms.reduce((a, c) => a + c.capacity, 0);
-  const openSeats = Math.max(0, totalCapacity - totalEnrolled);
-  const enrollPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+  const enrollmentSummary = apiTabData?.type === "enrollment" ? (apiTabData.summary || {}) : {};
+  const headerSummary = apiTabData?.type === "enrollment" ? (apiTabData.header_summary || {}) : {};
+
+  const totalEnrolled = enrollmentSummary.total_enrollment ?? headerSummary.total_enrolled ?? displayClassrooms.reduce((a, c) => a + c.enrolled, 0);
+  const capacityPctLabel = enrollmentSummary.capacity_label || `${enrollmentSummary.capacity_percentage || 0}% of capacity`;
+  const openSeats = enrollmentSummary.open_seats ?? Math.max(0, displayClassrooms.reduce((a, c) => a + c.capacity, 0) - totalEnrolled);
+  const openSeatsSub = enrollmentSummary.open_seats_breakdown || "available";
+  const classroomsCount = enrollmentSummary.classrooms_count ?? displayClassrooms.length;
+  const atRiskWatchCount = headerSummary.total_at_risk ?? atRiskList.filter((r) => r.status === "intervening").length;
 
   // Derive API data directly
   const currentTabItems = useMemo(() => {
@@ -283,7 +309,7 @@ const StudentManagementPage = () => {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Student Management</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {totalEnrolled} enrolled · {displayClassrooms.length} classrooms
+            {totalEnrolled} enrolled · {classroomsCount} classrooms
           </p>
         </div>
 
@@ -315,24 +341,33 @@ const StudentManagementPage = () => {
       {/* ─── ENROLLMENT TAB ─── */}
       {activeTab === "enrollment" && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <motion.div variants={itemVariants}>
-              <KpiCard icon={Users} label="Total Enrollment" value={totalEnrolled} sub={`${enrollPct}% of capacity`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <KpiCard icon={TrendingUp} label="Open Seats" value={openSeats} sub={`available`} valueColor="text-[#2F6042]" iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <KpiCard icon={GraduationCap} label="Classrooms" value={displayClassrooms.length} sub={`synced`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <KpiCard icon={AlertTriangle} label="At-Risk Watch" value={atRiskList.filter(r => r.status === "intervening").length} sub="interventions active" valueColor="text-[#8A362C]" iconBg="bg-[#AE4A3E]/10 text-[#8A362C]" />
-            </motion.div>
-          </div>
+          {isTabLoading ? (
+            <div className="flex items-center justify-center py-12 text-gray-500">
+              <Loader2 className="w-6 h-6 animate-spin text-[#1E3A5F] mr-2" />
+              <span className="text-sm">Loading Enrollment Data...</span>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <motion.div variants={itemVariants}>
+                  <KpiCard icon={Users} label="Total Enrollment" value={totalEnrolled} sub={capacityPctLabel} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <KpiCard icon={TrendingUp} label="Open Seats" value={openSeats} sub={openSeatsSub} valueColor="text-[#2F6042]" iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <KpiCard icon={GraduationCap} label="Classrooms" value={classroomsCount} sub={`synced`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <KpiCard icon={AlertTriangle} label="At-Risk Watch" value={atRiskWatchCount} sub="interventions active" valueColor="text-[#8A362C]" iconBg="bg-[#AE4A3E]/10 text-[#8A362C]" />
+                </motion.div>
+              </div>
 
-          <motion.div variants={itemVariants}>
-            <EnrollmentTable classrooms={displayClassrooms} incidents={incidents} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-          </motion.div>
+              <motion.div variants={itemVariants}>
+                <EnrollmentTable classrooms={displayClassrooms} incidents={incidents} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+              </motion.div>
+            </>
+          )}
         </>
       )}
 

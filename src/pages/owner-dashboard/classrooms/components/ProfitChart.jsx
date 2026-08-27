@@ -9,7 +9,24 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
+const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
+
+const CustomTooltip = ({ active, payload }) => {
+  if (!active || !payload || !payload.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100 text-xs space-y-1">
+      <p className="font-bold text-gray-900">{data.name}</p>
+      <p className="text-[#3E7A54] font-extrabold">Net Profit: {fmtMoney(data.profit)}/mo</p>
+      {data.marginPercentage !== undefined && (
+        <p className="text-gray-500">Margin: {data.marginPercentage}%</p>
+      )}
+      {data.enrolledStudents !== undefined && (
+        <p className="text-gray-500">Enrolled: {data.enrolledStudents} students</p>
+      )}
+    </div>
+  );
+};
 
 const ProfitChart = ({ data = [] }) => (
   <motion.div variants={itemVariants} className="lg:col-span-2">
@@ -32,11 +49,13 @@ const ProfitChart = ({ data = [] }) => (
               <BarChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} dy={4} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip
-                  contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", fontSize: 12 }}
-                  formatter={(value) => [fmtMoney(value), ""]}
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#6B7280", fontSize: 10 }} 
+                  tickFormatter={(v) => v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`} 
                 />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="profit" radius={[4, 4, 0, 0]} barSize={22} name="Monthly Profit">
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? "#3E7A54" : "#AE4A3E"} />
