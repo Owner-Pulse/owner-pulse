@@ -17,8 +17,10 @@ import {
   useUpdateClassroom,
   useDeleteClassroom,
 } from "@/hooks/classroom/classroom.hook";
+import toast from "react-hot-toast";
 
 // ─── Motion Variants ──────────────────────────────────────────────
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -130,10 +132,11 @@ const ClassroomsPage = () => {
     if (!pendingDeleteId) return;
     try {
       await deleteClassroom(pendingDeleteId);
+      toast.success("Classroom deleted!");
       setIsConfirmDeleteOpen(false);
       setPendingDeleteId(null);
     } catch (err) {
-      console.error("Failed to delete classroom:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete classroom");
     }
   };
 
@@ -152,14 +155,17 @@ const ClassroomsPage = () => {
     try {
       if (editingClassroom) {
         await updateClassroom({ data: payload, id: editingClassroom.id });
+        toast.success("Classroom updated!");
       } else {
         await addClassroom(payload);
+        toast.success("Classroom created!");
       }
       closeAddModal();
     } catch (err) {
-      console.error("Failed to save classroom:", err);
+      toast.error(err?.response?.data?.message || "Failed to save classroom");
     }
   };
+
 
   const displayedClassrooms = classroomsList.length > 0 ? classroomsList : localClassrooms;
 

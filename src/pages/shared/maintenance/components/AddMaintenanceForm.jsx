@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
 
+import toast from "react-hot-toast";
+
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },
   { value: "handyman", label: "Handyman" },
@@ -115,9 +117,10 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
         
         onClose();
     } catch (err) {
-        console.error("Maintenance request processing failed:", err);
+        toast.error(err?.response?.data?.message || "Maintenance request processing failed");
     }
   };
+
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>

@@ -33,12 +33,30 @@ const ICON_MAP = {
 const MONITOR_GREEN = "#22C55E";
 const TEXT_DIM = "#94A3B8";
 
+// ─── Default icon mapping by issue key ─────────────────────────────
+const DEFAULT_ICON_MAP = {
+  late_payments_ar: "DollarSign",
+  latePayments: "DollarSign",
+  compliance: "ShieldCheck",
+  class_score: "Star",
+  classScore: "Star",
+  maintenance: "Wrench",
+  enrollment_health: "Users",
+  enrollment: "Users",
+  enrollmentHealth: "Users",
+  petty_cash_pace: "CreditCard",
+  petty_cash: "CreditCard",
+  discretionaryBudget: "CreditCard",
+  staff_callouts: "Users",
+  staffCallouts: "Users",
+  incidentTrend: "FileText",
+};
+
 /**
  * PulseRecommendations — Top 3 ranked recommendations from the pipeline
  *
  * Props:
- * - recommendations: array of { key, title, action, icon, impact, delta, fromBPM, toBPM, priority }
- *   where `icon` is a Lucide icon name string (e.g. "DollarSign")
+ * - recommendations: array of recommendations from API or local engine
  */
 const PulseRecommendations = ({ recommendations = [] }) => {
   if (!recommendations.length) {
@@ -88,8 +106,16 @@ const PulseRecommendations = ({ recommendations = [] }) => {
       </div>
 
       {recommendations.map((rec, i) => {
-        const isHigh = rec.priority === "high";
-        const RecIcon = ICON_MAP[rec.icon];
+        const itemKey = rec.issue_key || rec.key || `rec-${i}`;
+        const title = rec.title || "Recommendation";
+        const actionText = rec.action || rec.description || "";
+        const fromBPM = rec.fromBPM ?? rec.current_bpm;
+        const toBPM = rec.toBPM ?? rec.projected_bpm;
+        const delta = rec.delta ?? rec.bpm_delta ?? (fromBPM != null && toBPM != null ? fromBPM - toBPM : 0);
+        const isHigh = rec.priority === "high" || delta >= 4;
+
+        const iconName = rec.icon || DEFAULT_ICON_MAP[rec.issue_key] || DEFAULT_ICON_MAP[rec.key] || "Lightbulb";
+        const RecIcon = ICON_MAP[iconName] || Lightbulb;
 
         // Dark-theme colors
         const borderColor = isHigh
@@ -104,7 +130,7 @@ const PulseRecommendations = ({ recommendations = [] }) => {
 
         return (
           <motion.div
-            key={rec.key}
+            key={itemKey}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
@@ -124,16 +150,12 @@ const PulseRecommendations = ({ recommendations = [] }) => {
                     : "rgba(34,197,94,0.1)",
                 }}
               >
-                {RecIcon ? (
-                  <RecIcon
-                    size={14}
-                    style={{
-                      color: isHigh ? "#EF4444" : MONITOR_GREEN,
-                    }}
-                  />
-                ) : (
-                  <span className="text-sm">{rec.icon}</span>
-                )}
+                <RecIcon
+                  size={14}
+                  style={{
+                    color: isHigh ? "#EF4444" : MONITOR_GREEN,
+                  }}
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -141,7 +163,7 @@ const PulseRecommendations = ({ recommendations = [] }) => {
                     className="text-sm font-bold"
                     style={{ color: "#E2E8F0" }}
                   >
-                    {rec.title}
+                    {title}
                   </span>
                   {isHigh && (
                     <span
@@ -155,37 +177,41 @@ const PulseRecommendations = ({ recommendations = [] }) => {
                     </span>
                   )}
                 </div>
-                <p
-                  className="text-xs mt-1 leading-relaxed"
-                  style={{ color: TEXT_DIM }}
-                >
-                  {rec.action}
-                </p>
+                {actionText && (
+                  <p
+                    className="text-xs mt-1 leading-relaxed"
+                    style={{ color: TEXT_DIM }}
+                  >
+                    {actionText}
+                  </p>
+                )}
 
                 {/* BPM impact visualization */}
-                {rec.delta > 0 && (
+                {delta > 0 && (
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="flex items-center gap-1 text-xs font-semibold">
-                      <span style={{ color: "#F87171" }}>
-                        {rec.fromBPM}
-                      </span>
-                      <ArrowRight size={10} style={{ color: "#64748B" }} />
-                      <span style={{ color: MONITOR_GREEN }}>
-                        {rec.toBPM}
-                      </span>
-                      <span
-                        className="text-[10px] ml-0.5"
-                        style={{ color: "#64748B" }}
-                      >
-                        bpm
-                      </span>
-                    </div>
+                    {fromBPM != null && toBPM != null && (
+                      <div className="flex items-center gap-1 text-xs font-semibold">
+                        <span style={{ color: "#F87171" }}>
+                          {fromBPM}
+                        </span>
+                        <ArrowRight size={10} style={{ color: "#64748B" }} />
+                        <span style={{ color: MONITOR_GREEN }}>
+                          {toBPM}
+                        </span>
+                        <span
+                          className="text-[10px] ml-0.5"
+                          style={{ color: "#64748B" }}
+                        >
+                          bpm
+                        </span>
+                      </div>
+                    )}
                     <div
                       className="flex items-center gap-1 text-[10px] font-bold"
                       style={{ color: MONITOR_GREEN }}
                     >
                       <TrendingDown size={10} />
-                      -{rec.delta} bpm
+                      -{delta} bpm
                     </div>
                   </div>
                 )}

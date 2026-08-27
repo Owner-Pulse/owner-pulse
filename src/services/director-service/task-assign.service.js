@@ -4,7 +4,6 @@ export const directorTaskAssignService = {
             const response = await axiosInstance.get("/director/task");
             return response.data;
         } catch (error) {
-            console.error("Error fetching director task list:", error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const directorTaskAssignService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error creating director task:", error);
             throw error;
         }
     },
@@ -28,7 +26,6 @@ export const directorTaskAssignService = {
             const response = await axiosInstance.post(`/director/task/in-progress/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error setting director task to in-progress:", error);
             throw error;
         }
     },
@@ -38,7 +35,6 @@ export const directorTaskAssignService = {
             const response = await axiosInstance.post(`/director/task/complete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error completing director task:", error);
             throw error;
         }
     },
@@ -48,7 +44,6 @@ export const directorTaskAssignService = {
             const response = await axiosInstance.get(`/director/task/show/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching single director task:", error);
             throw error;
         }
     },
@@ -62,7 +57,6 @@ export const directorTaskAssignService = {
             });
             return response.data;
         } catch (error) {
-            console.error("Error updating director task:", error);
             throw error;
         }
     },
@@ -72,8 +66,8 @@ export const directorTaskAssignService = {
             const response = await axiosInstance.delete(`/director/task/delete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting director task:", error);
             throw error;
         }
     },
 };
+

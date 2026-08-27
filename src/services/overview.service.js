@@ -4,7 +4,6 @@ export const overviewService = {
             const response = await axiosInstance.get("/owner/overview");
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner overview:", error);
             throw error;
         }
     },
@@ -14,7 +13,6 @@ export const overviewService = {
             const response = await axiosInstance.get("/director/overview");
             return response.data;
         } catch (error) {
-            console.error("Error fetching director overview:", error);
             throw error;
         }
     },

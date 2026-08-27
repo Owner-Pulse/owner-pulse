@@ -13,7 +13,6 @@ export const classroomService = {
             const response = await axiosInstance.get(`/procare/dashboard/classroom-pnl?${params.toString()}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching classroom dashboard:", error);
             throw error;
         }
     },
@@ -23,7 +22,6 @@ export const classroomService = {
             const response = await axiosInstance.get(`/procare/dashboard/classroom-economics/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error getting classroom:", error);
             throw error;
         }
     },
@@ -33,7 +31,6 @@ export const classroomService = {
             const response = await axiosInstance.post(`/owner/classroom/store`, data);
             return response.data;
         } catch (error) {
-            console.error("Error adding classroom:", error);
             throw error;
         }
     },
@@ -43,7 +40,6 @@ export const classroomService = {
             const response = await axiosInstance.post(`/owner/classroom/update/${id}`, data);
             return response.data;
         } catch (error) {
-            console.error("Error updating classroom:", error);
             throw error;
         }
     },
@@ -53,8 +49,8 @@ export const classroomService = {
             const response = await axiosInstance.delete(`/owner/classroom/delete/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error deleting classroom:", error);
             throw error;
         }
     },
 };
+

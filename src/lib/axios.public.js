@@ -1,7 +1,8 @@
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const TIME_OUT = import.meta.env.VITE_TIME_OUT
+const TIME_OUT = import.meta.env.VITE_TIME_OUT;
 
 export const axiosPublic = () => {
     const instance = axios.create({
@@ -18,21 +19,22 @@ export const axiosPublic = () => {
         (response) => response,
         (error) => {
             const status = error?.response?.status;
+            const message = error?.response?.data?.message;
+
             if (status === 404) {
-                console.log('Not Found');
+                if (message) toast.error(message);
             } else if (status === 500) {
-                console.log('Internal Server Error');
+                toast.error(message || "Internal Server Error");
             } else if (status === 502) {
-                console.log('Bad Gateway');
+                toast.error(message || "Bad Gateway");
             } else if (status === 503) {
-                console.log('Service Unavailable');
+                toast.error(message || "Service Unavailable");
             } else if (status === 504) {
-                console.log('Gateway Timeout');
+                toast.error(message || "Gateway Timeout");
             } else if (!error?.response) {
-                console.log('Network or connection error:', error?.message);
+                toast.error(error?.message || "Network or connection error");
             }
 
-            console.log('Public Axios Error:', error);
             return Promise.reject(error);
         }
     );

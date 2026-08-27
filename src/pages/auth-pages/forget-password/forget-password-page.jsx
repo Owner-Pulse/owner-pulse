@@ -8,11 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import logo from '../../../assets/Logo.png';
 import { useNavigate } from 'react-router';
 
+import toast from 'react-hot-toast';
+
 const ForgetPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,12 +22,13 @@ const ForgetPasswordPage = () => {
 
     // Simulate API call
     setTimeout(() => {
-      console.log('Password reset requested for:', email);
+      toast.success("Password reset link sent!");
       setIsLoading(false);
       setEmailSent(true);
-      navigate('/reset-password')
+      navigate('/reset-password');
     }, 1500);
   };
+
 
   const handleBack = () => {
     window.history.back();

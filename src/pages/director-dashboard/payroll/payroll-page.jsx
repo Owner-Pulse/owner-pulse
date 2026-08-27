@@ -305,8 +305,9 @@ const PayrollPage = () => {
     try {
       await apiSubmitPayroll(formData);
     } catch (err) {
-      console.warn("API submission fallback to local storage mode");
+      // API submission fallback to local storage mode
     }
+
 
     const updatedHistory = [{ ...localPayload, id: Date.now() }, ...localHistory];
     setLocalHistory(updatedHistory);

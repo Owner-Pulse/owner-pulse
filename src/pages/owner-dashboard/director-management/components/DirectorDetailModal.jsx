@@ -7,7 +7,7 @@ const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 const DirectorDetailModal = ({ director, isLoading, onClose, onUpdateStatus }) => {
-  console.log("director", director)
+
   if (!director) return null;
   const name = director?.name || "Unknown";
   const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();

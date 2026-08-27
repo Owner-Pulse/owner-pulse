@@ -4,7 +4,6 @@ export const ownerWaitlistService = {
             const response = await axiosInstance.get("/owner/waitlist", { params });
             return response.data;
         } catch (error) {
-            console.error("Error fetching owner waitlist:", error);
             throw error;
         }
     },
@@ -14,7 +13,6 @@ export const ownerWaitlistService = {
             const response = await axiosInstance.get(`/owner/waitlist/show/${id}`);
             return response.data;
         } catch (error) {
-            console.error("Error fetching single owner waitlist entry:", error);
             throw error;
         }
     },
