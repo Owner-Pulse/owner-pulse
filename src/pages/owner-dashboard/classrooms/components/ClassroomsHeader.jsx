@@ -1,10 +1,10 @@
 import React from "react";
-import { BarChart3, School } from "lucide-react";
+import { School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Skeleton from "./Skeleton";
 import { fmtMoneyShort } from "./format";
 
-const ClassroomsHeader = ({ isLoading, metrics, onAddClick }) => (
+const ClassroomsHeader = ({ isLoading, metrics, summaryHeading, onAddClick }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
     <div className="min-w-0">
       <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
@@ -13,6 +13,8 @@ const ClassroomsHeader = ({ isLoading, metrics, onAddClick }) => (
       <p className="text-xs md:text-sm text-gray-500 mt-1">
         {isLoading ? (
           <Skeleton className="h-3.5 w-48 inline-block" />
+        ) : summaryHeading ? (
+          summaryHeading
         ) : (
           <>
             {metrics?.total_classrooms ?? 0} classrooms ·{" "}

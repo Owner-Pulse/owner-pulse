@@ -61,23 +61,21 @@ const EnrollmentPage = () => {
     fillPercentage: cls.fill_percentage || 0,
   }));
 
-  // Map targets
-  const targetsData = {
-    total: { 
-      label: "Total Enrollment", 
-      actual: annualTargetsRaw[0]?.current || totalEnrolledObj.count || 0, 
-      target: annualTargetsRaw[0]?.target || 650 
-    },
-    preschool: { 
-      label: "Preschool (Age 1–VPK)", 
-      actual: annualTargetsRaw[1]?.current || 301, 
-      target: annualTargetsRaw[1]?.target || 320 
-    },
-    k8: { 
-      label: "K–8", 
-      actual: annualTargetsRaw[2]?.current || 319, 
-      target: annualTargetsRaw[2]?.target || 330 
-    },
+  // Map targets dynamically from API
+  const targetsData = annualTargetsRaw.length > 0 ? annualTargetsRaw.reduce((acc, t, idx) => {
+    const key = t.category.toLowerCase().includes("preschool") ? "preschool"
+      : t.category.toLowerCase().includes("k–8") || t.category.toLowerCase().includes("k-8") ? "k8"
+      : "total";
+    acc[key] = {
+      label: t.category,
+      actual: t.current || 0,
+      target: t.target || 0,
+    };
+    return acc;
+  }, {}) : {
+    total: { label: "Total Enrollment", actual: totalEnrolledObj.count || 620, target: 0 },
+    preschool: { label: "Preschool (Age 1–VPK)", actual: 301, target: 0 },
+    k8: { label: "K–8", actual: 319, target: 0 },
   };
 
   // Map at risk students
@@ -92,11 +90,12 @@ const EnrollmentPage = () => {
     status: s.status === "withdrawn" ? "lost" : (s.status || "intervening"),
   }));
 
-  // Map discounts
+  // Map discount categories
   const discountCategories = (discountsObj.categories || []).map((c) => ({
     type: c.category,
     count: c.students_count,
     monthlyValue: c.monthly_amount,
+    formattedAmount: c.formatted_amount,
   }));
 
   const totalEnrolledCount = totalEnrolledObj.count || header.students_count || 620;
@@ -104,6 +103,7 @@ const EnrollmentPage = () => {
   const totalWaitlistCount = waitlistObj.count || 0;
   const activeRiskCount = atRiskObj.active_count ?? atRiskStudents.filter((r) => (activeRiskStatus[r.id] || r.status) === "intervening").length;
   const discountTotalMonthly = discountsObj.monthly_amount || 0;
+  const hasTotalCapacity = (totalEnrolledObj.capacity || 0) > 0;
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -114,7 +114,8 @@ const EnrollmentPage = () => {
             Enrollment Overview
           </h1>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            {totalEnrolledCount} students · {header.programs_count || classroomsRaw.length} classrooms · {header.overall_capacity_percentage || 0}% capacity
+            {totalEnrolledCount} students · {header.programs_count || classroomsRaw.length} classrooms
+            {header.overall_capacity_percentage > 0 ? ` · ${header.overall_capacity_percentage}% capacity` : ""}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="self-start md:self-auto">
@@ -129,9 +130,9 @@ const EnrollmentPage = () => {
             icon={Users} 
             label="Total Enrolled" 
             value={totalEnrolledCount} 
-            sub={`capacity ${totalEnrolledObj.capacity || 0}`} 
+            sub={hasTotalCapacity ? `capacity ${totalEnrolledObj.capacity}` : "Active enrollment"} 
             accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
-            trend={`${totalEnrolledObj.yoy_growth_percentage || 0}% YoY`} 
+            trend={(totalEnrolledObj.yoy_growth_percentage ?? 0) !== 0 ? `${totalEnrolledObj.yoy_growth_percentage}% YoY` : null} 
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -139,7 +140,7 @@ const EnrollmentPage = () => {
             icon={Building2} 
             label="Open Seats" 
             value={openSeatsCount} 
-            sub={`${openSeatsObj.availability_percentage || 0}% availability`} 
+            sub={openSeatsObj.availability_percentage > 0 ? `${openSeatsObj.availability_percentage}% availability` : "Full capacity"} 
             accent="bg-[#3E7A54]/10 text-[#2F6042]" 
           />
         </motion.div>
@@ -150,7 +151,7 @@ const EnrollmentPage = () => {
             value={totalWaitlistCount} 
             sub={`${waitlistObj.families_waiting || 0} families waiting`} 
             accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
-            trend={`+${waitlistObj.mom_growth_percentage || 0}% MoM`} 
+            trend={(waitlistObj.mom_growth_percentage ?? 0) !== 0 ? `+${waitlistObj.mom_growth_percentage}% MoM` : null} 
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -167,7 +168,7 @@ const EnrollmentPage = () => {
             icon={Award} 
             label="Discounts" 
             value={discountsObj.count || 0} 
-            sub={`${discountsObj.student_percentage || 0}% of students · ${fmtMoneyShort(discountTotalMonthly)}/mo`} 
+            sub={`${discountsObj.student_percentage || 0}% of students · ${discountsObj.formatted_monthly_amount || fmtMoneyShort(discountTotalMonthly)}/mo`} 
             accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
           />
         </motion.div>
@@ -198,7 +199,7 @@ const EnrollmentPage = () => {
           <WaitlistCard entries={[]} />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <DiscountsCard discounts={discountCategories} />
+          <DiscountsCard discountsObj={discountsObj} categories={discountCategories} />
         </motion.div>
       </div>
 

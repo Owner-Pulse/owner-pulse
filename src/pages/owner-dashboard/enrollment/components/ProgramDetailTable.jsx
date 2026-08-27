@@ -26,19 +26,25 @@ const ProgramDetailTable = ({ programs }) => (
           </thead>
           <tbody>
             {programs.map((p) => {
-              const fillPct = Math.round((p.enrolled / p.capacity) * 100);
-              const isFull = p.enrolled >= p.capacity;
-              const nearFull = fillPct >= 90 && !isFull;
+              const hasCapacity = p.capacity > 0;
+              const fillPct = hasCapacity ? Math.min(Math.round((p.enrolled / p.capacity) * 100), 100) : 100;
+              const openSeats = hasCapacity ? p.capacity - p.enrolled : (p.openSeats ?? 0);
+              const isFull = hasCapacity && p.enrolled >= p.capacity;
+              const nearFull = hasCapacity && fillPct >= 90 && !isFull;
 
               return (
                 <tr key={p.name} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                   <td className="py-2.5 font-medium text-gray-900">{p.name}</td>
                   <td className="py-2.5 text-right font-semibold text-gray-900">{p.enrolled}</td>
-                  <td className="py-2.5 text-right text-gray-500">{p.capacity}</td>
+                  <td className="py-2.5 text-right text-gray-500">{hasCapacity ? p.capacity : <span className="text-gray-300">—</span>}</td>
                   <td className="py-2.5 text-right">
-                    <span className={`font-semibold ${p.capacity - p.enrolled === 0 ? "text-[#8A362C]" : nearFull ? "text-[#8F6A1F]" : "text-[#2F6042]"}`}>
-                      {p.capacity - p.enrolled}
-                    </span>
+                    {!hasCapacity ? (
+                      <span className="text-gray-300">—</span>
+                    ) : (
+                      <span className={`font-semibold ${openSeats <= 0 ? "text-[#8A362C]" : nearFull ? "text-[#8F6A1F]" : "text-[#2F6042]"}`}>
+                        {openSeats}
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5 text-right text-gray-500 hidden md:table-cell">
                     {p.waitlist > 0 ? <span className="font-semibold text-[#1E3A5F]">{p.waitlist}</span> : <span className="text-gray-300">—</span>}
@@ -46,9 +52,14 @@ const ProgramDetailTable = ({ programs }) => (
                   <td className="py-2.5 text-right hidden md:table-cell">
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${isFull ? "bg-[#B78A2F]" : nearFull ? "bg-[#3E7A54]" : "bg-[#1E3A5F]"}`} style={{ width: `${fillPct}%` }} />
+                        <div 
+                          className={`h-full rounded-full ${!hasCapacity ? "bg-[#1E3A5F]" : isFull ? "bg-[#B78A2F]" : nearFull ? "bg-[#3E7A54]" : "bg-[#1E3A5F]"}`} 
+                          style={{ width: `${fillPct}%` }} 
+                        />
                       </div>
-                      <span className={`text-xs font-semibold ${isFull ? "text-[#8F6A1F]" : "text-gray-500"}`}>{fillPct}%</span>
+                      <span className={`text-xs font-semibold ${hasCapacity && isFull ? "text-[#8F6A1F]" : "text-gray-500"}`}>
+                        {hasCapacity ? `${fillPct}%` : "100%"}
+                      </span>
                     </div>
                   </td>
                 </tr>
