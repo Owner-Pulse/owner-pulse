@@ -171,7 +171,12 @@ const ClassroomsPage = () => {
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
-      <ClassroomsHeader isLoading={isLoading} metrics={metrics} onAddClick={() => setIsAddModalOpen(true)} />
+      <ClassroomsHeader 
+        isLoading={isLoading} 
+        metrics={metrics} 
+        summaryHeading={pnl?.summary_heading} 
+        onAddClick={() => setIsAddModalOpen(true)} 
+      />
 
       <ClassroomKpis isLoading={isLoading} metrics={metrics} />
 
@@ -186,6 +191,10 @@ const ClassroomsPage = () => {
               totalCost={pnlSummary?.monthly_operating_costs ?? 0}
               totalProfit={pnlSummary?.net_monthly_profit ?? 0}
               overallMargin={pnlSummary?.gross_margin_percentage ?? 0}
+              formattedRevenue={pnlSummary?.formatted_monthly_tuition_revenue}
+              formattedCost={pnlSummary?.formatted_monthly_operating_costs}
+              formattedMargin={pnlSummary?.formatted_gross_margin}
+              formattedProfit={pnlSummary?.formatted_net_monthly_profit}
             />
             <ProfitChart data={profitChartData} />
           </>

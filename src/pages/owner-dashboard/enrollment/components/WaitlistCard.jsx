@@ -19,30 +19,36 @@ const WaitlistCard = ({ entries }) => {
         <CardDescription>{entries.length} families waiting for spots</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Child</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Parent</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="py-2.5 font-medium text-gray-900">{entry.child}</td>
-                  <td className="py-2.5 text-gray-600">{entry.program}</td>
-                  <td className="py-2.5 text-gray-500 hidden md:table-cell">{entry.parent}</td>
-                  <td className="py-2.5"><StatusPill status={entry.status}>{entry.status}</StatusPill></td>
-                  <td className="py-2.5 hidden md:table-cell"><StatusPill status={entry.source}>{entry.source}</StatusPill></td>
+        {entries.length === 0 ? (
+          <div className="py-8 text-center border-b border-gray-100">
+            <p className="text-xs text-gray-400">No active waitlist records found.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Child</th>
+                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
+                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Parent</th>
+                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Source</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="py-2.5 font-medium text-gray-900">{entry.child}</td>
+                    <td className="py-2.5 text-gray-600">{entry.program}</td>
+                    <td className="py-2.5 text-gray-500 hidden md:table-cell">{entry.parent}</td>
+                    <td className="py-2.5"><StatusPill status={entry.status}>{entry.status}</StatusPill></td>
+                    <td className="py-2.5 hidden md:table-cell"><StatusPill status={entry.source}>{entry.source}</StatusPill></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
           <div className="text-center">

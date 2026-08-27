@@ -9,7 +9,6 @@ import {
   UserMinus, 
   Phone, 
   Mail, 
-  ClipboardList,
   Search,
   X,
   Loader2,
@@ -62,8 +61,6 @@ const DirectorClassroomDetailPage = () => {
   const updateStudentMutation = useUpdateStudent();
   const withdrawFromClassMutation = useWithdrawFromClass();
 
-  const [incidents] = useState([]);
-  const [activeTab, setActiveTab] = useState("roster");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Form / Modal State
@@ -123,8 +120,6 @@ const DirectorClassroomDetailPage = () => {
     const allergyStr = s.allergy_warning || s.allergies || "None";
     return allergyStr && allergyStr !== "None";
   }).length;
-
-  const incidentsCount = headerSummary?.incidents_count ?? incidents.length;
 
   // Infinite Scroll Intersection Observer
   const sentinelRef = useRef(null);
@@ -316,239 +311,185 @@ const DirectorClassroomDetailPage = () => {
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab("roster")}
-          className={`px-4 py-2.5 text-xs font-bold transition-all relative ${
-            activeTab === "roster" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          Student Profiles ({rawStudents.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("logs")}
-          className={`px-4 py-2.5 text-xs font-bold transition-all relative ${
-            activeTab === "logs" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          Incident Logs ({incidentsCount})
-        </button>
-      </div>
-
-      {/* Tab content */}
+      {/* Tab content - Student Profiles */}
       <div className="space-y-6">
-        {activeTab === "roster" && (
-          <Card className="bg-white border-none shadow-sm">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-50">
-              <div>
-                <CardTitle className="text-sm">Student Demographics & Profiles</CardTitle>
-                <CardDescription>View and manage all registered student profiles in {classroomName}</CardDescription>
-              </div>
-              
-              {/* Roster Search Bar */}
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by name, ID, parent, allergy..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Student Name</th>
-                      <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Allergy Warn</th>
-                      <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Emergency Parent Contact</th>
-                      <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Status</th>
-                      <th className="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredStudents.length > 0 ? (
-                      filteredStudents.map((student, idx) => {
-                        const studentName = student.student_name || student.name || "Unknown";
-                        const childId = student.child_id || student.procare_child_id || student.childId || "—";
-                        const personId = student.person_id || student.personId || "—";
-                        const dob = student.dob || student.date_of_birth || "—";
-                        const startDate = student.started || student.start_date || student.enrollmentDate || "—";
-                        const allergy = student.allergy_warning || student.allergies || "None";
-                        const hasAllergy = allergy && allergy !== "None";
-                        
-                        const parentContact = student.emergency_parent_contact || {};
-                        const parentName = parentContact.parent_name || student.parent || "—";
-                        const phone = parentContact.phone || student.phone || "";
-                        const email = parentContact.email || student.email || "";
-                        const callAction = parentContact.call_action || (phone ? `tel:${phone}` : null);
-                        const emailAction = parentContact.email_action || (email ? `mailto:${email}` : null);
+        <Card className="bg-white border-none shadow-sm">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-50">
+            <div>
+              <CardTitle className="text-sm">Student Demographics & Profiles</CardTitle>
+              <CardDescription>View and manage all registered student profiles in {classroomName}</CardDescription>
+            </div>
+            
+            {/* Roster Search Bar */}
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by name, ID, parent, allergy..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Student Name</th>
+                    <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Allergy Warn</th>
+                    <th className="text-left py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Emergency Parent Contact</th>
+                    <th className="text-center py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Status</th>
+                    <th className="text-right py-2 px-2 text-[10px] font-semibold text-gray-400 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredStudents.length > 0 ? (
+                    filteredStudents.map((student, idx) => {
+                      const studentName = student.student_name || student.name || "Unknown";
+                      const childId = student.child_id || student.procare_child_id || student.childId || "—";
+                      const personId = student.person_id || student.personId || "—";
+                      const dob = student.dob || student.date_of_birth || "—";
+                      const startDate = student.started || student.start_date || student.enrollmentDate || "—";
+                      const allergy = student.allergy_warning || student.allergies || "None";
+                      const hasAllergy = allergy && allergy !== "None";
+                      
+                      const parentContact = student.emergency_parent_contact || {};
+                      const parentName = parentContact.parent_name || student.parent || "—";
+                      const phone = parentContact.phone || student.phone || "";
+                      const email = parentContact.email || student.email || "";
+                      const callAction = parentContact.call_action || (phone ? `tel:${phone}` : null);
+                      const emailAction = parentContact.email_action || (email ? `mailto:${email}` : null);
 
-                        const status = student.status || "Active";
-                        const studentKey = student.child_id || student.procare_child_id || student.id || idx;
+                      const status = student.status || "Active";
+                      const studentKey = student.child_id || student.procare_child_id || student.id || idx;
 
-                        return (
-                          <tr key={studentKey} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-3 px-2">
-                              <span 
-                                onClick={() => setSelectedStudentForModal(student)} 
-                                className="font-semibold text-gray-900 block hover:text-blue-600 cursor-pointer transition-colors"
-                              >
-                                {studentName}
+                      return (
+                        <tr key={studentKey} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="py-3 px-2">
+                            <span 
+                              onClick={() => setSelectedStudentForModal(student)} 
+                              className="font-semibold text-gray-900 block hover:text-blue-600 cursor-pointer transition-colors"
+                            >
+                              {studentName}
+                            </span>
+                            <span className="text-[10px] text-gray-455 block font-medium">
+                              Child ID: {childId} {personId !== "—" ? `· Person ID: ${personId}` : ""}
+                            </span>
+                            <span className="text-[10px] text-gray-400">DOB: {dob} · Started: {startDate}</span>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            {hasAllergy ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-[#8A362C] border border-red-100">
+                                {allergy}
                               </span>
-                              <span className="text-[10px] text-gray-455 block font-medium">
-                                Child ID: {childId} {personId !== "—" ? `· Person ID: ${personId}` : ""}
-                              </span>
-                              <span className="text-[10px] text-gray-400">DOB: {dob} · Started: {startDate}</span>
-                            </td>
-                            <td className="py-3 px-2 text-center">
-                              {hasAllergy ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-[#8A362C] border border-red-100">
-                                  {allergy}
-                                </span>
+                            ) : (
+                              <span className="text-xs text-gray-405">None</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-800">{parentName}</span>
+                              {(phone || email) ? (
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {phone && (
+                                    <a href={callAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
+                                      <Phone size={10} /> Call ({phone})
+                                    </a>
+                                  )}
+                                  {phone && email && <span className="text-gray-300">|</span>}
+                                  {email && (
+                                    <a href={emailAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
+                                      <Mail size={10} /> Email
+                                    </a>
+                                  )}
+                                </div>
                               ) : (
-                                <span className="text-xs text-gray-405">None</span>
+                                <span className="text-[10px] text-gray-400">No contact details provided</span>
                               )}
-                            </td>
-                            <td className="py-3 px-2">
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-800">{parentName}</span>
-                                {(phone || email) ? (
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    {phone && (
-                                      <a href={callAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
-                                        <Phone size={10} /> Call ({phone})
-                                      </a>
-                                    )}
-                                    {phone && email && <span className="text-gray-300">|</span>}
-                                    {email && (
-                                      <a href={emailAction} className="text-blue-650 hover:underline text-[10px] flex items-center gap-0.5 font-semibold">
-                                        <Mail size={10} /> Email
-                                      </a>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-[10px] text-gray-400">No contact details provided</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-2 text-center">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                status === "Active" || status === "Enrolled" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
-                              }`}>
-                                {status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-2 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                              status === "Active" || status === "Enrolled" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
+                            }`}>
+                              {status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button 
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedStudentForModal(student)}
+                                className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 text-blue-600"
+                                title="View full student details"
+                              >
+                                <Eye size={13} />
+                              </Button>
+                              <Button 
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditClick(student)}
+                                className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 text-gray-500"
+                                title="Edit student profile"
+                              >
+                                <Edit2 size={12} />
+                              </Button>
+                              {(status === "Active" || status === "Enrolled") && (
                                 <Button 
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => setSelectedStudentForModal(student)}
-                                  className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 text-blue-600"
-                                  title="View full student details"
+                                  onClick={() => handleWithdraw(studentKey)}
+                                  className="h-7 w-7 p-0 rounded-lg hover:bg-red-50 text-red-655"
+                                  title="Withdraw and remove student"
                                 >
-                                  <Eye size={13} />
+                                  <UserMinus size={12} />
                                 </Button>
-                                <Button 
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleEditClick(student)}
-                                  className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 text-gray-500"
-                                  title="Edit student profile"
-                                >
-                                  <Edit2 size={12} />
-                                </Button>
-                                {(status === "Active" || status === "Enrolled") && (
-                                  <Button 
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleWithdraw(studentKey)}
-                                    className="h-7 w-7 p-0 rounded-lg hover:bg-red-50 text-red-655"
-                                    title="Withdraw and remove student"
-                                  >
-                                    <UserMinus size={12} />
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className="py-8 text-center text-xs text-gray-400">
-                          {searchQuery ? `No student matching "${searchQuery}" was found.` : "No student profiles found for this classroom."}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-xs text-gray-400">
+                        {searchQuery ? `No student matching "${searchQuery}" was found.` : "No student profiles found for this classroom."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              {/* Sentinel target element for Infinite Scroll */}
-              <div ref={sentinelRef} className="flex justify-center items-center py-4 mt-2 border-t border-slate-50">
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#1E3A5F]" />
-                    Loading more student profiles…
-                  </div>
-                ) : hasNextPage ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => fetchNextPage()}
-                    className="text-xs text-blue-650 hover:text-blue-700 font-semibold"
-                  >
-                    Load more student profiles
-                  </Button>
-                ) : (
-                  filteredStudents.length > 0 && (
-                    <span className="text-[11px] text-gray-400 font-medium">
-                      Showing all {filteredStudents.length} loaded student profiles
-                    </span>
-                  )
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "logs" && (
-          <Card className="bg-white border-none shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-sm">Incident Reports & Behavioral Alerts</CardTitle>
-              <CardDescription>Official notes filed by lead instructors regarding child behaviors or minor injuries</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {incidents.map((inc) => (
-                <div key={inc.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
-                  <div className={`p-2 rounded-lg shrink-0 ${
-                    inc.severity === "Minor" ? "bg-blue-50 text-blue-605" : "bg-orange-50 text-orange-605"
-                  }`}>
-                    <ClipboardList size={16} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <strong className="text-xs text-gray-800">{inc.studentName}</strong>
-                      <span className="text-[10px] text-gray-400">{inc.date}</span>
-                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                        inc.severity === "Minor" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
-                      }`}>
-                        {inc.severity}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">{inc.details}</p>
-                  </div>
+            {/* Sentinel target element for Infinite Scroll */}
+            <div ref={sentinelRef} className="flex justify-center items-center py-4 mt-2 border-t border-slate-50">
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#1E3A5F]" />
+                  Loading more student profiles…
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+              ) : hasNextPage ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fetchNextPage()}
+                  className="text-xs text-blue-650 hover:text-blue-700 font-semibold"
+                >
+                  Load more student profiles
+                </Button>
+              ) : (
+                filteredStudents.length > 0 && (
+                  <span className="text-[11px] text-gray-400 font-medium">
+                    Showing all {filteredStudents.length} loaded student profiles
+                  </span>
+                )
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Edit Student Dialog Sheet */}

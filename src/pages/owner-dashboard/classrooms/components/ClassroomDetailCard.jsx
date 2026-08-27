@@ -2,7 +2,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, AlertTriangle, TrendingDown, Baby, Edit2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { useNavigate } from "react-router";
 
 const itemVariants = {
@@ -22,18 +21,6 @@ const fmtMoneyShort = (n) => {
 
 const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
 
-// ── API shape from classrooms_list ──────────────────────────────
-// {
-//   id, name, category_group, teacher,
-//   net_monthly_profit, profit_change,
-//   enrollment: { current, capacity, fill_rate_percentage, empty_seats, is_low_enrollment, change },
-//   revenue: { total, per_seat },
-//   cost: { total, per_seat },
-//   margin: { percentage, status },
-//   nwea_map: { score, benchmark },
-//   incidents: { count }
-// }
-
 const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const profit = classroom.net_monthly_profit ?? 0;
@@ -46,9 +33,11 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
   const nweaMap = classroom.nwea_map;
   const incidents = classroom.incidents ?? {};
 
+  const capacity = enrollment.capacity ?? 0;
+  const hasCapacity = capacity > 0;
   const fillRate = enrollment.fill_rate_percentage ?? 0;
-  const isFull = enrollment.current >= enrollment.capacity;
-  const isLowFill = enrollment.is_low_enrollment ?? fillRate < 70;
+  const isFull = hasCapacity && enrollment.current >= capacity;
+  const isLowFill = hasCapacity && (enrollment.is_low_enrollment ?? fillRate < 70);
 
   const isPreschool = (classroom.category_group ?? "").toLowerCase() === "preschool";
 
@@ -67,6 +56,12 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
       ? "text-[#2F6042]"
       : "text-[#8F6A1F]"
     : "text-gray-900";
+
+  const profitDisplay = classroom.formatted_net_monthly_profit || `${fmtMoneyShort(profit)}/mo`;
+  const revTotalDisplay = revenue.formatted_total || fmtMoneyShort(revenue.total ?? 0);
+  const revPerSeatDisplay = revenue.formatted_per_seat || `${fmtMoney(revenue.per_seat ?? 0)}/seat`;
+  const costTotalDisplay = cost.formatted_total || fmtMoneyShort(cost.total ?? 0);
+  const costPerSeatDisplay = cost.formatted_per_seat || `${fmtMoney(cost.per_seat ?? 0)}/seat`;
 
   return (
     <motion.div variants={itemVariants}>
@@ -100,7 +95,7 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={`text-lg font-extrabold ${isProfit ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
-                {fmtMoneyShort(profit)}/mo
+                {profitDisplay}
               </span>
               {(classroom.profit_change ?? 0) !== 0 && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
@@ -146,12 +141,14 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-base font-extrabold text-gray-900">{enrollment.current ?? 0}</span>
-                <span className="text-xs text-gray-400">/ {enrollment.capacity ?? 0}</span>
+                <span className="text-xs text-gray-400">
+                  {hasCapacity ? `/ ${capacity}` : "students"}
+                </span>
               </div>
               <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${isFull ? "bg-[#B78A2F]" : isLowFill ? "bg-[#AE4A3E]" : "bg-[#3E7A54]"}`}
-                  style={{ width: `${Math.min(fillRate, 100)}%` }}
+                  className={`h-full rounded-full ${!hasCapacity ? "bg-[#1E3A5F]" : isFull ? "bg-[#B78A2F]" : isLowFill ? "bg-[#AE4A3E]" : "bg-[#3E7A54]"}`}
+                  style={{ width: hasCapacity ? `${Math.min(fillRate, 100)}%` : "100%" }}
                 />
               </div>
             </div>
@@ -159,22 +156,22 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
             {/* Revenue */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Revenue</span>
-              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(revenue.total ?? 0)}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{fmtMoney(revenue.per_seat ?? 0)}/seat</p>
+              <span className="text-base font-extrabold text-gray-900">{revTotalDisplay}</span>
+              <p className="text-[10px] text-gray-400 mt-0.5">{revPerSeatDisplay}</p>
             </div>
 
             {/* Cost */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Cost</span>
-              <span className="text-base font-extrabold text-gray-900">{fmtMoneyShort(cost.total ?? 0)}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{fmtMoney(Math.round(cost.per_seat ?? 0))}/seat</p>
+              <span className="text-base font-extrabold text-gray-900">{costTotalDisplay}</span>
+              <p className="text-[10px] text-gray-400 mt-0.5">{costPerSeatDisplay}</p>
             </div>
 
             {/* Margin */}
             <div className="p-2.5 rounded-lg bg-gray-50">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Margin</span>
               <span className={`text-base font-extrabold ${marginColor}`}>
-                {margin.percentage ?? 0}%
+                {margin.formatted_percentage || `${margin.percentage ?? 0}%`}
               </span>
               <p className="text-[10px] text-gray-400 mt-0.5">{marginStatus}</p>
             </div>
@@ -201,15 +198,15 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               </div>
             )}
 
-            {/* Fill Rate (Preschool) */}
+            {/* Fill Rate (Preschool with capacity > 0) */}
             {isPreschool && (
               <div className="p-2.5 rounded-lg bg-gray-50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Fill Rate</span>
-                <span className={`text-base font-extrabold ${isFull ? "text-[#8F6A1F]" : isLowFill ? "text-[#8A362C]" : "text-[#2F6042]"}`}>
-                  {fillRate}%
+                <span className={`text-base font-extrabold ${!hasCapacity ? "text-gray-700" : isFull ? "text-[#8F6A1F]" : isLowFill ? "text-[#8A362C]" : "text-[#2F6042]"}`}>
+                  {hasCapacity ? `${fillRate}%` : "100%"}
                 </span>
                 <p className="text-[10px] text-gray-400 mt-0.5">
-                  {isFull ? "At capacity" : `${enrollment.empty_seats ?? 0} open`}
+                  {!hasCapacity ? "Active" : isFull ? "At capacity" : `${enrollment.empty_seats ?? 0} open`}
                 </p>
               </div>
             )}
@@ -221,7 +218,7 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               <AlertTriangle size={14} className="text-[#8A362C] shrink-0" />
               <p className="text-xs text-[#8A362C]">
                 <span className="font-bold">Loss-making classroom.</span>{" "}
-                Operating costs of {fmtMoneyShort(cost.total ?? 0)} exceed revenue of {fmtMoneyShort(revenue.total ?? 0)}. Review pricing or enrollment strategy.
+                Operating costs of {costTotalDisplay} exceed revenue of {revTotalDisplay}. Review pricing or enrollment strategy.
               </p>
             </div>
           )}
@@ -230,7 +227,7 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               <TrendingDown size={14} className="text-[#8F6A1F] shrink-0" />
               <p className="text-xs text-[#8F6A1F]">
                 <span className="font-bold">Low enrollment.</span>{" "}
-                {enrollment.current}/{enrollment.capacity} enrolled ({fillRate}% fill rate). {enrollment.empty_seats ?? 0} empty seat{(enrollment.empty_seats ?? 0) !== 1 ? "s" : ""}.
+                {enrollment.current}/{capacity} enrolled ({fillRate}% fill rate). {enrollment.empty_seats ?? 0} empty seat{(enrollment.empty_seats ?? 0) !== 1 ? "s" : ""}.
               </p>
             </div>
           )}
