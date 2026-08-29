@@ -7,7 +7,8 @@ import {
   TrendingDown, 
   Search, 
   Loader2,
-  Users
+  Users,
+  Filter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const OwnerClassroomDetailPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("financials");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "enrolled" | "withdrawn"
 
   // 1. Fetch single classroom detail from /procare/dashboard/classroom-economics/{id}
   const { data: singleData, isLoading: isSingleLoading } = useGetSingleClassroom(id);
@@ -115,9 +117,32 @@ const OwnerClassroomDetailPage = () => {
     };
   });
 
-  // Filter students by query
+  // Calculate status counts
+  const enrolledCount = displayRoster.filter(s => {
+    const st = (s.status || "").toLowerCase();
+    return st.includes("enrolled") || st.includes("active");
+  }).length;
+
+  const withdrawnCount = displayRoster.filter(s => {
+    const st = (s.status || "").toLowerCase();
+    return st.includes("withdraw") || st.includes("inactive");
+  }).length;
+
+  // Filter students by status and query
   const filteredRoster = displayRoster.filter(student => {
     const query = searchQuery.toLowerCase().trim();
+    const status = (student.status || "").toLowerCase();
+
+    // Status filter
+    if (statusFilter === "enrolled") {
+      const isEnrolled = status.includes("enrolled") || status.includes("active");
+      if (!isEnrolled) return false;
+    } else if (statusFilter === "withdrawn") {
+      const isWithdrawn = status.includes("withdraw") || status.includes("inactive");
+      if (!isWithdrawn) return false;
+    }
+
+    // Text search query filter
     if (!query) return true;
     return (
       student.name.toLowerCase().includes(query) ||
@@ -221,7 +246,7 @@ const OwnerClassroomDetailPage = () => {
             activeTab === "roster" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
-          Class Roster ({totalRosterCount})
+          Class Roster ({displayRoster.length || totalRosterCount})
         </button>
       </div>
 
@@ -295,22 +320,79 @@ const OwnerClassroomDetailPage = () => {
 
         {activeTab === "roster" && (
           <Card className="bg-white border-none shadow-sm">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-slate-50">
+            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-50">
               <div>
-                <CardTitle className="text-sm">Student Demographics & Profiles ({totalRosterCount})</CardTitle>
-                <CardDescription>View all registered children in this classroom</CardDescription>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Users size={16} className="text-[#1E3A5F]" /> Student Demographics & Profiles
+                </CardTitle>
+                <CardDescription>
+                  Showing {filteredRoster.length} of {displayRoster.length || totalRosterCount} registered children
+                </CardDescription>
               </div>
 
-              {/* Roster Search Bar */}
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by name, Child ID, or status..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
-                />
+              {/* Roster Controls: Status Pill Filter & Search Bar */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Interactive Status Pill Filter */}
+                <div className="flex bg-slate-100/80 p-1 rounded-xl gap-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter("all")}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      statusFilter === "all"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    All ({displayRoster.length || totalRosterCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter("enrolled")}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      statusFilter === "enrolled"
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-emerald-700 hover:bg-emerald-50"
+                    }`}
+                  >
+                    Enrolled ({enrolledCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter("withdrawn")}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      statusFilter === "withdrawn"
+                        ? "bg-amber-600 text-white shadow-sm"
+                        : "text-amber-800 hover:bg-amber-50"
+                    }`}
+                  >
+                    Withdrawn ({withdrawnCount})
+                  </button>
+                </div>
+
+                {/* Dropdown Select Filter (for mobile or compact screens) */}
+                <div className="relative md:hidden">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Statuses ({displayRoster.length})</option>
+                    <option value="enrolled">Enrolled Only ({enrolledCount})</option>
+                    <option value="withdrawn">Withdrawn Only ({withdrawnCount})</option>
+                  </select>
+                </div>
+
+                {/* Roster Search Bar */}
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name, ID or status..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
+                  />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-4">
@@ -359,7 +441,11 @@ const OwnerClassroomDetailPage = () => {
                       ) : (
                         <tr>
                           <td colSpan="4" className="py-8 text-center text-xs text-gray-400">
-                            {apiRoster.length === 0 ? "No students currently assigned to this classroom roster." : `No student matching "${searchQuery}" was found.`}
+                            {apiRoster.length === 0
+                              ? "No students currently assigned to this classroom roster."
+                              : statusFilter !== "all"
+                              ? `No ${statusFilter} students match your search criteria.`
+                              : `No student matching "${searchQuery}" was found.`}
                           </td>
                         </tr>
                       )}

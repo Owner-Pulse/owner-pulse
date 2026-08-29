@@ -4,6 +4,22 @@ export const getBudgetService = {
         const queryParams = typeof params === "object" ? params : params ? { type: params } : undefined;
         const response = await axiosInstance.get(`/qb/dashboard/reports/budget-vs-actual`, { params: queryParams });
         return response.data;
-    }
+    },
+
+    setBudgetLimit: async (axiosInstance, payload) => {
+        const response = await axiosInstance.post(`/settings/budget`, payload);
+        return response.data;
+    },
+
+    getBudgetLimit: async (axiosInstance) => {
+        const response = await axiosInstance.get(`/settings/budget`);
+        return response.data;
+    },
+
+
+    logExpensesDirector: async (axiosInstance, payload) => {
+        const response = await axiosInstance.post(`/director/expense/store`, payload);
+        return response.data;
+    },
 };
 
