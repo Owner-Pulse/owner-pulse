@@ -11,7 +11,7 @@ const containerVariants = {
 };
 
 const SettingsPage = () => {
-  const { user, refetch } = useGetUser();
+  const { user } = useGetUser();
   const navigate = useNavigate();
   const role = user?.role || "owner";
 

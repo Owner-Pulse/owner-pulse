@@ -19,13 +19,11 @@ const ClassroomKpis = ({ isLoading, metrics }) => {
     ? (metrics?.students_summary || `out of ${metrics?.total_capacity} capacity`)
     : "Total enrolled students";
   const fillRateSub = metrics?.open_seats_summary || `${metrics?.open_seats ?? 0} open seats`;
-  const revValue = fmtMoneyShort(metrics?.total_monthly_revenue ?? 0);
-  const revSub = metrics?.revenue_cost_summary || `vs ${fmtMoneyShort(metrics?.total_monthly_costs ?? 0)} costs`;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {isLoading ? (
-        Array.from({ length: 5 }).map((_, i) => <KpiSkeleton key={i} />)
+        Array.from({ length: 4 }).map((_, i) => <KpiSkeleton key={i} />)
       ) : (
         <>
           <motion.div variants={itemVariants}>
@@ -62,15 +60,6 @@ const ClassroomKpis = ({ isLoading, metrics }) => {
               value={hasCapacity ? `${metrics?.avg_fill_rate_percentage ?? 0}%` : "100%"}
               sub={hasCapacity ? fillRateSub : "Active enrollment"}
               iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <KpiCard
-              icon={TrendingUp}
-              label="Monthly Revenue"
-              value={revValue}
-              sub={revSub}
-              iconBg="bg-[#3E7A54]/10 text-[#2F6042]"
             />
           </motion.div>
         </>

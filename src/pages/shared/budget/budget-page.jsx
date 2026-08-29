@@ -1,17 +1,18 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, PiggyBank, Wallet, TrendingUp, Plus } from "lucide-react";
+import { DollarSign, PiggyBank, Wallet, TrendingUp, Plus, Settings } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
 import CategoryBreakdownCard from "./components/CategoryBreakdownCard";
 import ExpenseListCard from "./components/ExpenseListCard";
 import BudgetTipCard from "./components/BudgetTipCard";
 import DirectorInsightsCard from "./components/DirectorInsightsCard";
-import DeclareBudgetModal from "./components/DeclareBudgetModal";
 import AddExpenseModal from "./components/AddExpenseModal";
+import BudgetSettingsModal from "./components/BudgetSettingsModal";
 import { Button } from "@/components/ui/button";
-import { useGetBudget } from "@/hooks/owner-hook/budget.hook";
+import { useGetBudget, useLogDirectorExpense } from "@/hooks/owner-hook/budget.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import toast from "react-hot-toast";
 
 // ─── Helpers ──────────────────────────────────────────────────────
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
@@ -38,7 +39,6 @@ const BudgetPage = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(50);
 
-
   // Local state for School and Director budget categories fallback
   const [localSchoolCategories, setLocalSchoolCategories] = useState([]);
   const [localDirectorCategories, setLocalDirectorCategories] = useState([
@@ -51,15 +51,13 @@ const BudgetPage = () => {
   const [localDirectorExpenses, setLocalDirectorExpenses] = useState([]);
 
   // Modals state
-  const [isDeclareSchoolBudgetOpen, setIsDeclareSchoolBudgetOpen] = useState(false);
-  const [isDeclareDirectorBudgetOpen, setIsDeclareDirectorBudgetOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const activeType = isDirector ? "director" : view;
   const isDirectorView = view === "director" || isDirector;
 
-
-  // Memoized query parameters object (matching screenshot: type, page, per_page)
+  // Memoized query parameters object
   const queryParams = useMemo(
     () => ({
       type: activeType,
@@ -69,7 +67,8 @@ const BudgetPage = () => {
     [activeType, page, perPage]
   );
 
-  const { isLoading, isFetching, isError, data } = useGetBudget(queryParams);
+  const { isLoading, isFetching, isError, data, refetch } = useGetBudget(queryParams);
+  const { logExpense, isPending: isLoggingExpense } = useLogDirectorExpense();
 
   const budgetData = data?.budget_vs_actual;
 
@@ -91,21 +90,13 @@ const BudgetPage = () => {
     ? (budgetData?.spending_by_reason?.pagination || budgetData?.budget_categories?.pagination || budgetData?.pagination || null)
     : (budgetData?.budget_categories?.pagination || budgetData?.pagination || null);
 
-  // Sync School Budget from API when available & merge declared budgets from localStorage
+  // Sync School Budget from API when available
   useEffect(() => {
     if (rawCategories.length > 0 && !isDirectorView) {
-      let savedBudgets = {};
-      try {
-        savedBudgets = JSON.parse(localStorage.getItem("declared_school_budgets") || "{}");
-      } catch (e) {
-        savedBudgets = {};
-      }
-
       const mapped = rawCategories.map((c) => {
         const catName = c.name || c.category || c.reason;
         const apiBudget = c.budgeted_numeric ?? c.budget_limit_numeric ?? 0;
-        const declaredBudget = savedBudgets[catName] || 0;
-        const finalBudget = apiBudget > 0 ? apiBudget : (declaredBudget > 0 ? declaredBudget : (c.budget || 0));
+        const finalBudget = apiBudget > 0 ? apiBudget : (c.budget || 0);
         const spentVal = c.spent_numeric ?? c.numeric_amount ?? (typeof c.spent === "number" ? c.spent : 0);
 
         return {
@@ -153,7 +144,7 @@ const BudgetPage = () => {
     }
   }, [budgetData]);
 
-  // Calculated School Totals (fallback if top level numeric fields missing)
+  // Calculated School Totals
   const schoolBudgetTotal = localSchoolCategories.reduce((sum, c) => sum + c.budget, 0);
   const schoolSpent = localSchoolCategories.reduce((sum, c) => sum + c.spent, 0);
   const schoolRemaining = schoolBudgetTotal - schoolSpent;
@@ -188,7 +179,6 @@ const BudgetPage = () => {
   const directorAvgExpenseSub = budgetData?.avg_per_expense_subtitle || `${localDirectorExpenses.length} expenses`;
   const directorFormattedSummary = budgetData?.director_formatted_summary || budgetData?.formatted_summary;
 
-
   // Pie chart mappings
   const expenseByReason = useMemo(() => {
     return localDirectorCategories
@@ -199,52 +189,18 @@ const BudgetPage = () => {
       .sort((a, b) => b.total - a.total);
   }, [localDirectorCategories]);
 
-  // Save budget handlers
-  const handleSaveSchoolBudget = (updatedCategories) => {
-    setLocalSchoolCategories(updatedCategories);
-    try {
-      const budgetMap = {};
-      updatedCategories.forEach((cat) => {
-        if (cat.budget > 0) {
-          budgetMap[cat.name] = cat.budget;
-        }
-      });
-      localStorage.setItem("declared_school_budgets", JSON.stringify(budgetMap));
-    } catch (e) {
-      // Ignore storage write error
-    }
-
-  };
-
-  const handleSaveDirectorBudget = (updatedCategories) => {
-    setLocalDirectorCategories(updatedCategories);
-  };
-
   // Add director expense handler
-  const handleAddExpense = (expense) => {
-    const categoryColors = {
-      Discretionary: "#1E3A5F",
-      "Curriculum & Supplies": "#2A4C7E",
-      "Minor Repairs": "#4A6B96",
-      "Staff Appreciation": "#5B7FA6",
-      "Office Supplies": "#9DB8D9",
-    };
-
-    const newExpense = {
-      id: Math.floor(Math.random() * 1000) + 500,
-      category: expense.reason,
-      description: expense.description,
-      date: expense.date,
-      amount: fmtMoney(expense.amount),
-      numeric_amount: expense.amount,
-      color: categoryColors[expense.reason] || "#94A0B5",
-    };
-
-    setLocalDirectorExpenses((prev) => [...prev, newExpense]);
-
-    setLocalDirectorCategories((prev) =>
-      prev.map((c) => (c.name === expense.reason ? { ...c, spent: c.spent + expense.amount } : c))
-    );
+  const handleAddExpense = async (expensePayload) => {
+    try {
+      const res = await logExpense(expensePayload);
+      toast.success(res?.message || "Expense logged successfully!");
+      refetch();
+      return true;
+    } catch (err) {
+      const errorMsg = err?.response?.data?.message || "Failed to log expense.";
+      toast.error(errorMsg);
+      return false;
+    }
   };
 
   return (
@@ -300,22 +256,19 @@ const BudgetPage = () => {
               </button>
             </div>
           )}
-          {!isDirector && view === "school" && (
+
+          {!isDirector && (
             <Button
-              onClick={() => setIsDeclareSchoolBudgetOpen(true)}
-              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
+              onClick={() => setIsSettingsOpen(true)}
+              variant="outline"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm font-semibold transition-all px-3 py-2 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
+              title="Budget Settings"
             >
-              Declare School Budget
+              <Settings size={16} className="text-[#1E3A5F]" />
+              <span>Budget Settings</span>
             </Button>
           )}
-          {!isDirector && view === "director" && (
-            <Button
-              onClick={() => setIsDeclareDirectorBudgetOpen(true)}
-              className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
-            >
-              Declare Director Budget
-            </Button>
-          )}
+
           {isDirector && (
             <Button
               onClick={() => setIsAddExpenseOpen(true)}
@@ -536,33 +489,19 @@ const BudgetPage = () => {
         </>
       )}
 
-
-      {/* Declare School Budget Modal */}
-      <DeclareBudgetModal
-        isOpen={isDeclareSchoolBudgetOpen}
-        onClose={() => setIsDeclareSchoolBudgetOpen(false)}
-        categories={localSchoolCategories}
-        onSave={handleSaveSchoolBudget}
-        title="Declare School Budget"
-        subtitle="Specify the annual spending targets for all major operations categories."
-      />
-
-      {/* Declare Director Budget Modal */}
-      <DeclareBudgetModal
-        isOpen={isDeclareDirectorBudgetOpen}
-        onClose={() => setIsDeclareDirectorBudgetOpen(false)}
-        categories={localDirectorCategories}
-        onSave={handleSaveDirectorBudget}
-        title="Declare Director Budget Categories"
-        subtitle="Allocate specific budget portions for each director-managed category."
-      />
-
       {/* Add Expense Modal */}
       <AddExpenseModal
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
         onAdd={handleAddExpense}
-        categories={localDirectorCategories}
+        isPending={isLoggingExpense}
+      />
+
+      {/* Budget Settings Modal */}
+      <BudgetSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSuccessRefetch={refetch}
       />
     </motion.div>
   );
