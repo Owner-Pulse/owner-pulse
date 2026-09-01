@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Wallet, DollarSign } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const itemVariants = {
@@ -11,7 +11,6 @@ const itemVariants = {
 const ExpensesCard = ({ pettyCashData, onNavigate }) => {
   const gauge = pettyCashData?.budget_gauge || { total_budget: 9000, total_spent: 801, remaining: 8199, used_pct: 8.9 };
   const transactions = pettyCashData?.recent_transactions || [];
-  const spendingByReason = pettyCashData?.spending_by_reason || [];
 
   const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
 
@@ -30,7 +29,7 @@ const ExpensesCard = ({ pettyCashData, onNavigate }) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Gauge */}
             <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-between">
               <div>
@@ -49,23 +48,6 @@ const ExpensesCard = ({ pettyCashData, onNavigate }) => {
               <p className="text-[10px] text-gray-500 mt-2">
                 {fmtMoney(gauge.remaining)} remaining ({Math.round(gauge.used_pct)}% used)
               </p>
-            </div>
-
-            {/* Spending Breakdown */}
-            <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Spending by Category</p>
-              <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                {spendingByReason.length > 0 ? (
-                  spendingByReason.map((cat, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600 truncate">{cat.category}</span>
-                      <span className="font-semibold text-gray-900 ml-2 shrink-0">{cat.formatted || fmtMoney(cat.amount)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[10px] text-gray-400 italic">No categorized expenses yet.</p>
-                )}
-              </div>
             </div>
 
             {/* Recent Transactions */}

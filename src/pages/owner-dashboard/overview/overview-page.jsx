@@ -218,11 +218,10 @@ const OverviewPage = () => {
       </div>
 
       {/* KPI Row 2 — Donut Charts */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <DonutKpiCard label="Maintenance" value={`${maintKpi.resolved}/${maintKpi.total}`} pct={maintKpi.total ? Math.round((maintKpi.resolved / maintKpi.total) * 100) : 0} color="#AE4A3E" sub={`${maintKpi.critical_count} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
         <DonutKpiCard label="At-Risk" value={`${atRiskKpi.intervening}/${atRiskKpi.total}`} pct={atRiskKpi.total ? Math.round((atRiskKpi.intervening / atRiskKpi.total) * 100) : 0} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
         <DonutKpiCard label="PTO Used" value={`${ptoKpi.days_used}/${ptoKpi.total_allowance}`} pct={Math.round(ptoKpi.used_pct)} color="#1E3A5F" sub={`${ptoKpi.subs_count} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
-        <DonutKpiCard label="Check-ins" value={checkinsKpi.present} pct={Math.round(checkinsKpi.attendance_pct)} color="#3E7A54" sub={`${checkinsKpi.absent} absent`} subColor="text-gray-400" icon={kpiIcon.UserCheck} />
       </div>
 
       {/* KPI Row 3 — Compliance, Petty Cash, Discounts */}

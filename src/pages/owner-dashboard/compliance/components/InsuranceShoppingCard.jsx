@@ -2,9 +2,7 @@ import React from "react";
 import { RefreshCw, Lightbulb, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-const TODAY = new Date("2026-05-11");
-const daysUntil = (dateStr) => Math.ceil((new Date(dateStr) - TODAY) / 86400000);
+import { daysUntil } from "@/hooks/compliance/useCompliance";
 
 const InsuranceShoppingCard = ({ onOpenWorkflow }) => {
   const shopDays = daysUntil("2026-09-19");

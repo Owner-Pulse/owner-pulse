@@ -3,72 +3,89 @@ import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StatusPill from "./StatusPill";
+import { Link } from "react-router";
 
-const WaitlistCard = ({ entries }) => {
+const WaitlistCard = ({ entries = [], totalWaitlist = 0, waitlistObj = {} }) => {
+  const count = entries.length || totalWaitlist || waitlistObj.count || 0;
   const activeCount = entries.filter((e) => e.status === "inquiry" || e.status === "applied").length;
   const touredCount = entries.filter((e) => e.status === "toured" || e.status === "offered").length;
   const offeredCount = entries.filter((e) => e.status === "offered").length;
 
   return (
-    <Card className="bg-white border-none shadow-sm h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar size={18} className="text-[#1E3A5F]" />
-          Waitlist
-        </CardTitle>
-        <CardDescription>{entries.length} families waiting for spots</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {entries.length === 0 ? (
-          <div className="py-8 text-center border-b border-gray-100">
-            <p className="text-xs text-gray-400">No active waitlist records found.</p>
+    <Card className="bg-white border-none shadow-sm h-full flex flex-col justify-between">
+      <div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar size={18} className="text-[#1E3A5F]" />
+              Waitlist
+            </CardTitle>
+            <CardDescription className="mt-1">{count} families waiting for spots</CardDescription>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Child</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Parent</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Source</th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((entry) => (
-                  <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="py-2.5 font-medium text-gray-900">{entry.child}</td>
-                    <td className="py-2.5 text-gray-600">{entry.program}</td>
-                    <td className="py-2.5 text-gray-500 hidden md:table-cell">{entry.parent}</td>
-                    <td className="py-2.5"><StatusPill status={entry.status}>{entry.status}</StatusPill></td>
-                    <td className="py-2.5 hidden md:table-cell"><StatusPill status={entry.source}>{entry.source}</StatusPill></td>
+          <Link
+            to="/owner/waitlist"
+            className="text-xs font-semibold text-[#1E3A5F] hover:text-[#15294A] hover:underline flex items-center gap-1 shrink-0"
+          >
+            View full waitlist →
+          </Link>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {entries.length === 0 ? (
+            <div className="py-8 text-center border-b border-gray-100">
+              <p className="text-xs text-gray-400">No active waitlist records found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Child</th>
+                    <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
+                    <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Parent</th>
+                    <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="text-left pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Source</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="py-2.5 font-medium text-gray-900">{entry.child}</td>
+                      <td className="py-2.5 text-gray-600">{entry.program}</td>
+                      <td className="py-2.5 text-gray-500 hidden md:table-cell">{entry.parent}</td>
+                      <td className="py-2.5"><StatusPill status={entry.status}>{entry.status}</StatusPill></td>
+                      <td className="py-2.5 hidden md:table-cell"><StatusPill status={entry.source}>{entry.source}</StatusPill></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        <div className="mt-4 grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
-          <div className="text-center">
-            <p className="text-lg font-bold text-[#1E3A5F]">{activeCount}</p>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Active</p>
+          <div className="mt-4 grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+            <div className="text-center">
+              <p className="text-lg font-bold text-[#1E3A5F]">{activeCount}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Active</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-[#2F6042]">{touredCount}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Toured</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-gray-900">{offeredCount}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Offered</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-[#2F6042]">{touredCount}</p>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Toured</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-gray-900">{offeredCount}</p>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">Offered</p>
-          </div>
-        </div>
+        </CardContent>
+      </div>
 
-        <Button variant="ghost" className="w-full mt-3 text-sm text-[#1E3A5F]">
+      <div className="p-4 pt-0">
+        <Link
+          to="/owner/waitlist"
+          className="block w-full text-center py-2 px-3 text-xs font-semibold text-[#1E3A5F] bg-[#1E3A5F]/5 hover:bg-[#1E3A5F]/10 rounded-xl transition-colors"
+        >
           View full waitlist →
-        </Button>
-      </CardContent>
+        </Link>
+      </div>
     </Card>
   );
 };

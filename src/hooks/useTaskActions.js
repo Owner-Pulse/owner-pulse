@@ -1,5 +1,5 @@
-import { useInProgressTask, useCompleteTask, useDeleteTask } from "@/hooks/owner-hook/task-assign.hook";
-import { useInProgressDirectorTask, useCompleteDirectorTask, useDeleteDirectorTask } from "@/hooks/director-hook/task-assign.hook";
+import { useInProgressTask, useCompleteTask, useDeleteTask, useUpdateTask } from "@/hooks/owner-hook/task-assign.hook";
+import { useInProgressDirectorTask, useCompleteDirectorTask, useDeleteDirectorTask, useUpdateDirectorTask } from "@/hooks/director-hook/task-assign.hook";
 
 /**
  * Returns the correct task action hooks based on the user's role.
@@ -9,12 +9,14 @@ export const useOwnerTaskActions = () => {
   const { inProgressTask, isPending: isInProgressPending } = useInProgressTask();
   const { completeTask, isPending: isCompleting } = useCompleteTask();
   const { deleteTask, isPending: isDeleting } = useDeleteTask();
-  return { inProgressTask, isInProgressPending, completeTask, isCompleting, deleteTask, isDeleting };
+  const { updateTask, isPending: isUpdating } = useUpdateTask();
+  return { inProgressTask, isInProgressPending, completeTask, isCompleting, deleteTask, isDeleting, updateTask, isUpdating };
 };
 
 export const useDirectorTaskActions = () => {
   const { inProgressTask, isPending: isInProgressPending } = useInProgressDirectorTask();
   const { completeTask, isPending: isCompleting } = useCompleteDirectorTask();
   const { deleteTask, isPending: isDeleting } = useDeleteDirectorTask();
-  return { inProgressTask, isInProgressPending, completeTask, isCompleting, deleteTask, isDeleting };
+  const { updateTask, isPending: isUpdating } = useUpdateDirectorTask();
+  return { inProgressTask, isInProgressPending, completeTask, isCompleting, deleteTask, isDeleting, updateTask, isUpdating };
 };

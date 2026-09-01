@@ -3,10 +3,7 @@ import { AlertTriangle, CheckCircle2, ShoppingCart, ClipboardList } from "lucide
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
-
-const TODAY = new Date("2026-05-11");
-const daysUntil = (dateStr) => Math.ceil((new Date(dateStr) - TODAY) / 86400000);
-const daysSince = (dateStr) => -daysUntil(dateStr);
+import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
 
 // Harmonized status tokens — muted tones that sit well with the navy theme
 const statusOf = (isExpired, isUrgent) => {
@@ -40,8 +37,8 @@ const statusOf = (isExpired, isUrgent) => {
 const UrgencyTimelineCard = ({ items }) => {
   const nonCompliant = items.filter((c) => c.status !== "compliant");
   const sorted = [...nonCompliant].sort((a, b) => {
-    const aDays = a.status === "expired" ? -999 : daysUntil(a.expires);
-    const bDays = b.status === "expired" ? -999 : daysUntil(b.expires);
+    const aDays = a.status === "expired" ? -999 : (a.days_left ?? daysUntil(a.expires));
+    const bDays = b.status === "expired" ? -999 : (b.days_left ?? daysUntil(b.expires));
     return aDays - bDays;
   });
 
@@ -67,7 +64,9 @@ const UrgencyTimelineCard = ({ items }) => {
             <div className="absolute left-[6px] top-1 bottom-1 w-0.5 bg-[#1E3A5F]/10 rounded-full" />
             <div className="space-y-2.5">
               {sorted.map((item) => {
-                const d = item.status === "expired" ? daysSince(item.expires) : daysUntil(item.expires);
+                const d = item.status === "expired"
+                  ? (item.days_overdue ?? daysSince(item.expires))
+                  : (item.days_left ?? daysUntil(item.expires));
                 const isExpired = item.status === "expired";
                 const isUrgent = !isExpired && d <= 30;
                 const s = statusOf(isExpired, isUrgent);
