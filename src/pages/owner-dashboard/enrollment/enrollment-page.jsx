@@ -54,29 +54,22 @@ const EnrollmentPage = () => {
   const programsData = classroomsRaw.map((cls) => ({
     id: cls.id,
     name: cls.program || cls.classroom_name || `Room ${cls.id}`,
-    enrolled: cls.enrolled || 0,
-    capacity: cls.capacity || 0,
-    openSeats: cls.open_seats || 0,
-    waitlist: cls.waitlist || 0,
-    fillPercentage: cls.fill_percentage || 0,
+    programCategory: cls.program_category,
+    enrolled: cls.enrolled ?? 0,
+    capacity: cls.capacity ?? 0,
+    openSeats: cls.open_seats ?? (cls.capacity > 0 ? cls.capacity - cls.enrolled : 0),
+    waitlist: cls.waitlist ?? 0,
+    fillPercentage: cls.fill_percentage ?? (cls.capacity > 0 ? Math.round((cls.enrolled / cls.capacity) * 100) : 0),
   }));
 
   // Map targets dynamically from API
-  const targetsData = annualTargetsRaw.length > 0 ? annualTargetsRaw.reduce((acc, t, idx) => {
-    const key = t.category.toLowerCase().includes("preschool") ? "preschool"
-      : t.category.toLowerCase().includes("k–8") || t.category.toLowerCase().includes("k-8") ? "k8"
-      : "total";
-    acc[key] = {
-      label: t.category,
-      actual: t.current || 0,
-      target: t.target || 0,
-    };
-    return acc;
-  }, {}) : {
-    total: { label: "Total Enrollment", actual: totalEnrolledObj.count || 620, target: 0 },
-    preschool: { label: "Preschool (Age 1–VPK)", actual: 301, target: 0 },
-    k8: { label: "K–8", actual: 319, target: 0 },
-  };
+  const targetsData = annualTargetsRaw.map((t) => ({
+    category: t.category,
+    current: t.current ?? 0,
+    target: t.target ?? 0,
+    percentage: t.percentage ?? 0,
+    to_go_percentage: t.to_go_percentage ?? 0,
+  }));
 
   // Map at risk students
   const atRiskStudents = atRiskListRaw.map((s) => ({
@@ -98,9 +91,9 @@ const EnrollmentPage = () => {
     formattedAmount: c.formatted_amount,
   }));
 
-  const totalEnrolledCount = totalEnrolledObj.count || header.students_count || 620;
-  const openSeatsCount = openSeatsObj.count || 0;
-  const totalWaitlistCount = waitlistObj.count || 0;
+  const totalEnrolledCount = totalEnrolledObj.count ?? header.students_count ?? 0;
+  const openSeatsCount = openSeatsObj.count ?? 0;
+  const totalWaitlistCount = waitlistObj.count ?? 0;
   const activeRiskCount = atRiskObj.active_count ?? atRiskStudents.filter((r) => (activeRiskStatus[r.id] || r.status) === "intervening").length;
   const discountTotalMonthly = discountsObj.monthly_amount || 0;
   const hasTotalCapacity = (totalEnrolledObj.capacity || 0) > 0;
@@ -196,7 +189,7 @@ const EnrollmentPage = () => {
       {/* ── Waitlist + Discounts ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div variants={itemVariants}>
-          <WaitlistCard entries={[]} />
+          <WaitlistCard entries={[]} totalWaitlist={totalWaitlistCount} waitlistObj={waitlistObj} />
         </motion.div>
         <motion.div variants={itemVariants}>
           <DiscountsCard discountsObj={discountsObj} categories={discountCategories} />

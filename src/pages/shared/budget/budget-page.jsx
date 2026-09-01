@@ -118,11 +118,13 @@ const BudgetPage = () => {
 
   // Sync Director Expenses from API
   useEffect(() => {
-    if (budgetData?.recent_expenses) {
-      const mapped = budgetData.recent_expenses.map((e, index) => ({
-        id: index,
+    const expensesList = budgetData?.all_expenses || budgetData?.recent_expenses;
+    if (expensesList) {
+      const mapped = expensesList.map((e, index) => ({
+        id: e.id || index,
         category: e.category || "Discretionary",
         description: e.description || e.title,
+        title: e.title || e.description,
         date: e.date,
         amount: e.amount || (e.numeric_amount !== undefined ? fmtMoney(e.numeric_amount) : "$0"),
         numeric_amount: e.numeric_amount || 0,
@@ -437,31 +439,14 @@ const BudgetPage = () => {
                 />
               </motion.div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <motion.div variants={itemVariants}>
-                  <CategoryBreakdownCard
-                    categories={rawCategories.length > 0 ? rawCategories : localDirectorCategories}
-                    pagination={paginationInfo}
-                    page={page}
-                    perPage={perPage}
-                    onPageChange={setPage}
-                    onPerPageChange={(newPerPage) => {
-                      setPerPage(newPerPage);
-                      setPage(1);
-                    }}
-                    isFetching={isFetching}
-                    title={budgetData?.spending_by_reason?.title || "Spending by Reason"}
-                    subtitle={budgetData?.spending_by_reason?.subtitle || "How the discretionary fund is being used"}
-                  />
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <ExpenseListCard
-                    expenses={budgetData?.recent_expenses?.length > 0 ? budgetData.recent_expenses : localDirectorExpenses}
-                    isDirector={isDirector}
-                    onShowAdd={() => setIsAddExpenseOpen(true)}
-                  />
-                </motion.div>
-              </div>
+              <motion.div variants={itemVariants}>
+                <ExpenseListCard
+                  expenses={budgetData?.all_expenses?.length > 0 ? budgetData.all_expenses : (budgetData?.recent_expenses?.length > 0 ? budgetData.recent_expenses : localDirectorExpenses)}
+                  isDirector={isDirector}
+                  onShowAdd={() => setIsAddExpenseOpen(true)}
+                  title={budgetData?.all_expenses ? "All Expenses" : "Recent Expenses"}
+                />
+              </motion.div>
 
               <motion.div variants={itemVariants}>
                 <BudgetTipCard

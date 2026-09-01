@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 
 const COMPLIANCE_STORAGE_KEY = "ownerpulse_compliance_items_v1";
 
-const TODAY = new Date("2026-05-11");
-
 export const INITIAL_COMPLIANCE_ITEMS = [
   {
     id: 1,
@@ -180,8 +178,19 @@ export const INITIAL_COMPLIANCE_ITEMS = [
   },
 ];
 
-export const daysUntil = (dateStr) => Math.ceil((new Date(dateStr) - TODAY) / 86400000);
-export const daysSince = (dateStr) => -daysUntil(dateStr);
+export const daysUntil = (dateStr) => {
+  if (!dateStr) return 0;
+  const target = new Date(dateStr);
+  const today = new Date();
+  target.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((target - today) / 86400000);
+};
+
+export const daysSince = (dateStr) => {
+  if (!dateStr) return 0;
+  return -daysUntil(dateStr);
+};
 
 export function useCompliance() {
   const [items, setItems] = useState(() => {

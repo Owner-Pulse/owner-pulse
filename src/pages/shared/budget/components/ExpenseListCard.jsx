@@ -21,12 +21,12 @@ const fmtMoney = (n) => {
   return "$" + Math.round(n).toLocaleString();
 };
 
-const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd }) => (
+const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, title = "Recent Expenses" }) => (
   <Card className="bg-white border-none shadow-sm h-full">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <Receipt size={16} className="text-[#1E3A5F]" />
-        Recent Expenses
+        {title}
       </CardTitle>
       {isDirector && <CardDescription>Track what you've spent</CardDescription>}
     </CardHeader>

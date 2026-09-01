@@ -9,23 +9,25 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const AtRiskStudentsCard = ({ atRiskStudents, activeRiskStatus, onUpdateRiskStatus }) => {
-  const activeRisk = atRiskStudents.filter(
-    (r) => (activeRiskStatus[r.id] || r.status) === "intervening"
-  );
-  const retainedRisk = atRiskStudents.filter(
-    (r) => (activeRiskStatus[r.id] || r.status) === "retained"
-  );
-  const lostRisk = atRiskStudents.filter(
-    (r) => (activeRiskStatus[r.id] || r.status) === "lost"
-  );
+const AtRiskStudentsCard = ({ atRiskStudents = [], activeRiskStatus = {}, onUpdateRiskStatus }) => {
+  const getStatus = (r) => {
+    const raw = activeRiskStatus?.[r.id] || r.status;
+    if (!raw) return "intervening";
+    const st = String(raw).toLowerCase();
+    if (st === "retained") return "retained";
+    if (st === "lost" || st === "withdrawn") return "lost";
+    return "intervening";
+  };
+
+  const activeRisk = atRiskStudents.filter((r) => getStatus(r) === "intervening");
+  const retainedRisk = atRiskStudents.filter((r) => getStatus(r) === "retained");
+  const lostRisk = atRiskStudents.filter((r) => getStatus(r) === "lost");
   const staleCases = atRiskStudents.filter(
-    (r) => r.daysActive > 14 && (activeRiskStatus[r.id] || r.status) === "intervening"
+    (r) => r.daysActive > 14 && getStatus(r) === "intervening"
   );
 
   const visibleStudents = atRiskStudents.filter(
-    (r) => (activeRiskStatus[r.id] || r.status) !== "lost" &&
-           (activeRiskStatus[r.id] || r.status) !== "retained"
+    (r) => getStatus(r) !== "lost" && getStatus(r) !== "retained"
   );
 
   return (
@@ -66,7 +68,7 @@ const AtRiskStudentsCard = ({ atRiskStudents, activeRiskStatus, onUpdateRiskStat
 
           <div className="space-y-3">
             {visibleStudents.map((student) => {
-              const currentStatus = activeRiskStatus[student.id] || student.status;
+              const currentStatus = getStatus(student);
               const isActive = currentStatus === "intervening";
               const isStale = student.daysActive > 14 && isActive;
 
@@ -97,7 +99,7 @@ const AtRiskStudentsCard = ({ atRiskStudents, activeRiskStatus, onUpdateRiskStat
                         <button
                           key={status}
                           onClick={() => onUpdateRiskStatus(student.id, status)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize ${
                             currentStatus === status
                               ? "bg-[#AE4A3E] text-white shadow-sm"
                               : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -108,7 +110,11 @@ const AtRiskStudentsCard = ({ atRiskStudents, activeRiskStatus, onUpdateRiskStat
                       ))}
                       <button
                         onClick={() => onUpdateRiskStatus(student.id, "lost")}
-                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-white text-[#8A362C] border border-[#AE4A3E]/25 hover:bg-[#AE4A3E]/10"
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize ${
+                          currentStatus === "lost"
+                            ? "bg-[#8A362C] text-white shadow-sm"
+                            : "bg-white text-[#8A362C] border border-[#AE4A3E]/25 hover:bg-[#AE4A3E]/10"
+                        }`}
                       >
                         lost
                       </button>
@@ -118,7 +124,7 @@ const AtRiskStudentsCard = ({ atRiskStudents, activeRiskStatus, onUpdateRiskStat
               );
             })}
 
-            {activeRisk.length === 0 && (
+            {visibleStudents.length === 0 && (
               <div className="py-8 text-center">
                 <CheckCircle2 size={32} className="mx-auto text-[#3E7A54] mb-2" />
                 <p className="text-sm text-gray-500">No active at-risk students. All families current.</p>

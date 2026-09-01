@@ -14,8 +14,11 @@ export const useGetTaskList = () => {
         queryFn: () => ownerTaskAssignService.get_task_list(axiosInstance),
     });
 
+    const rawData = data?.data;
+    const taskList = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData?.data : []);
+
     return {
-        taskList: data?.data,
+        taskList,
         isTaskListLoading,
         refetchTaskList
     };

@@ -77,32 +77,40 @@ const DirectorCompliancePage = () => {
 
   // Normalize API compliance items
   const items = useMemo(() => {
-    return (complianceItems || []).map((c) => ({
-      id: c.id,
-      item: c.name || c.item || "",
-      authority: c.authority_agency || c.authority || "",
-      expires: c.expiration_date ? c.expiration_date.slice(0, 10) : c.expires || "",
-      category: c.category || "regulatory",
-      ownerRole: c.responsible_role || c.ownerRole || "director",
-      notes: c.renewal_notes || c.notes || "",
-      status: c.status || "compliant",
-      days_left: c.days_left ?? 0,
-      days_overdue: c.days_overdue ?? 0,
-      progress_percentage: c.progress_percentage ?? 0,
-      docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
-        id: ch.id,
-        text: ch.title || ch.text || "",
-        checked: ch.is_completed ?? ch.checked ?? false,
-      })),
-      logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
-        id: l.id,
-        date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
-        author: l.user_name || l.author || "User",
-        text: l.note || l.text || "",
-      })),
-      raw: c,
-    }));
-  }, [complianceItems]);
+    const rawItems = (complianceItems && complianceItems.length > 0)
+      ? complianceItems
+      : (overviewData?.urgency_timeline || []);
+    return rawItems.map((c) => {
+      const exp = c.expiration_date ? c.expiration_date.slice(0, 10) : c.expires || "";
+      const dLeft = c.days_left !== undefined && c.days_left !== null ? c.days_left : daysUntil(exp);
+      const dOverdue = c.days_overdue !== undefined && c.days_overdue !== null ? c.days_overdue : daysSince(exp);
+      return {
+        id: c.id,
+        item: c.name || c.item || "",
+        authority: c.authority_agency || c.authority || "",
+        expires: exp,
+        category: c.category || "regulatory",
+        ownerRole: c.responsible_role || c.ownerRole || "director",
+        notes: c.renewal_notes || c.notes || "",
+        status: c.status || "compliant",
+        days_left: dLeft,
+        days_overdue: dOverdue,
+        progress_percentage: c.progress_percentage ?? null,
+        docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
+          id: ch.id,
+          text: ch.title || ch.text || "",
+          checked: ch.is_completed ?? ch.checked ?? false,
+        })),
+        logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
+          id: l.id,
+          date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
+          author: l.user_name || l.author || "User",
+          text: l.note || l.text || "",
+        })),
+        raw: c,
+      };
+    });
+  }, [complianceItems, overviewData]);
 
   // Compute stats from Director Overview API
   const stats = useMemo(() => {
@@ -143,8 +151,8 @@ const DirectorCompliancePage = () => {
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const urgencyA = a.status === "expired" ? -999 : daysUntil(a.expires);
-      const urgencyB = b.status === "expired" ? -999 : daysUntil(b.expires);
+      const urgencyA = a.status === "expired" ? -999 : (a.days_left ?? daysUntil(a.expires));
+      const urgencyB = b.status === "expired" ? -999 : (b.days_left ?? daysUntil(b.expires));
       return urgencyA - urgencyB;
     });
   }, [filtered]);
@@ -462,10 +470,14 @@ const DirectorCompliancePage = () => {
       {/* ── Compliance Items List ──────────────────────────────── */}
       <div className="space-y-3">
         {sorted.map((item) => {
-          const d = item.status === "expired" ? daysSince(item.expires) : daysUntil(item.expires);
+          const d = item.status === "expired"
+            ? (item.days_overdue ?? daysSince(item.expires))
+            : (item.days_left ?? daysUntil(item.expires));
           const isExpired = item.status === "expired";
           const isUrgent = !isExpired && d <= 30;
-          const progressPct = isExpired ? 100 : Math.min(100, Math.round((1 - d / 365) * 100));
+          const progressPct = item.progress_percentage !== undefined && item.progress_percentage !== null
+            ? item.progress_percentage
+            : (isExpired ? 100 : Math.min(100, Math.round((1 - d / 365) * 100)));
           const pct = clamp(progressPct, 0, 100);
 
           return (
