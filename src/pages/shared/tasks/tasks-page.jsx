@@ -53,22 +53,26 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
   const [filterPriority, setFilterPriority] = useState("all");
 
   useEffect(() => {
-    if (Array.isArray(taskList)) {
-      const mappedTasks = taskList.map((t) => ({
+    const rawList = Array.isArray(taskList)
+      ? taskList
+      : (Array.isArray(taskList?.data) ? taskList.data : []);
+
+    if (rawList && rawList.length > 0) {
+      const mappedTasks = rawList.map((t) => ({
         id: t.id,
         title: t.title,
         description: t.description,
-        assignee: t.assignee?.role || "unassigned",
-        assignedBy: t.creator?.role || "unknown",
+        assignee: t.assignee?.role || (t.assigned_to === 1 ? "director" : "owner"),
+        assignedBy: t.creator?.role || (t.created_by === 2 ? "owner" : "director"),
         priority: t.priority || "medium",
         status: t.status === "pending" ? "open" : t.status,
         due: t.due_date,
         createdAt: t.created_at,
+        raw: t,
       }));
       setTasks(mappedTasks);
     }
   }, [taskList]);
-
 
   const updateStatus = (id, newStatus) => {
     setTaskStatuses((prev) => ({ ...prev, [id]: newStatus }));
@@ -78,7 +82,9 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
     setTasks((prev) => [...prev, newTask]);
   };
 
-  const myTasks = useMemo(() => tasks.filter((t) => t.assignee === currentRole), [tasks, currentRole]);
+  const myTasks = useMemo(() => {
+    return tasks.filter((t) => t.assignee === currentRole || t.assignedBy === currentRole);
+  }, [tasks, currentRole]);
   const visibleTasks = activeTab === "my" ? myTasks : tasks;
 
   const filtered = useMemo(() => {

@@ -100,31 +100,31 @@ const DirectorOverviewPage = () => {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <KpiMetricCard 
-          label="Enrollment" 
-          value={enrollmentKpi.total_enrolled} 
-          sub={`${enrollmentKpi.capacity_pct}% of ${enrollmentKpi.total_capacity} capacity · ${enrollmentKpi.open_spots} open spots`} 
-          icon={Users} 
-          color="#1E3A5F" 
-          onClick={() => go("/director/enrollment")} 
+        <KpiMetricCard
+          label="Enrollment"
+          value={enrollmentKpi.total_enrolled}
+          sub={`${enrollmentKpi.capacity_pct}% of ${enrollmentKpi.total_capacity} capacity · ${enrollmentKpi.open_spots} open spots`}
+          icon={Users}
+          color="#1E3A5F"
+          onClick={() => go("/director/students")}
         />
-        <KpiMetricCard 
-          label="Maintenance" 
-          value={maintKpi.open_tickets} 
-          sub={`${maintKpi.critical_count} critical items`} 
-          icon={Wrench} 
-          color="#B78A2F" 
-          subColor="text-[#8F6A1F]" 
-          onClick={() => go("/director/maintenance")} 
+        <KpiMetricCard
+          label="Maintenance"
+          value={maintKpi.open_tickets}
+          sub={`${maintKpi.critical_count} critical items`}
+          icon={Wrench}
+          color="#B78A2F"
+          subColor="text-[#8F6A1F]"
+          onClick={() => go("/director/maintenance")}
         />
-        <KpiMetricCard 
-          label="Open Tasks" 
-          value={tasksKpi.total_open} 
-          sub={`${tasksKpi.high_priority_count} high priority`} 
-          icon={ClipboardList} 
-          color="#1E3A5F" 
-          subColor="text-[#8F6A1F]" 
-          onClick={() => go("/director/tasks")} 
+        <KpiMetricCard
+          label="Open Tasks"
+          value={tasksKpi.total_open}
+          sub={`${tasksKpi.high_priority_count} high priority`}
+          icon={ClipboardList}
+          color="#1E3A5F"
+          subColor="text-[#8F6A1F]"
+          onClick={() => go("/director/tasks")}
         />
       </div>
 

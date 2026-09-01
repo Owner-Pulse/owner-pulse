@@ -5,10 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import StatusPill from "./StatusPill";
 import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
-
-const TODAY = new Date("2026-05-11");
-const daysUntil = (dateStr) => Math.ceil((new Date(dateStr) - TODAY) / 86400000);
-const daysSince = (dateStr) => -daysUntil(dateStr);
+import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
 
 const fmtDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -21,12 +18,14 @@ const itemVariants = {
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const ComplianceItemCard = ({ item, preWarningDays = 60 }) => {
-  const d = item.status === "expired" ? daysSince(item.expires) : daysUntil(item.expires);
+  const d = item.status === "expired"
+    ? (item.days_overdue ?? daysSince(item.expires))
+    : (item.days_left ?? daysUntil(item.expires));
   const isExpired = item.status === "expired";
   const isUrgent = !isExpired && d <= 30;
-  const progressPct = item.status === "expired"
-    ? 100
-    : Math.min(100, Math.round((1 - d / 365) * 100));
+  const progressPct = item.progress_percentage !== undefined && item.progress_percentage !== null
+    ? item.progress_percentage
+    : (item.status === "expired" ? 100 : Math.min(100, Math.round((1 - d / 365) * 100)));
   // Single source of truth — number, fill width and globe position all use the same value
   const pct = clamp(progressPct, 0, 100);
 

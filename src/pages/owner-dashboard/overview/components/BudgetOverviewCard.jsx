@@ -65,21 +65,21 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
             <div className="mt-3 pt-2 border-t border-[#B78A2F]/20">
               <p className="text-[9px] font-semibold text-[#8F6A1F] uppercase tracking-wider mb-1.5">Recent Expenses</p>
               <div className="space-y-1.5">
-                {recentExpenses.slice(0, 3).map((exp) => (
-                  <div key={exp.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.category] || "#94A0B5" }} />
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-gray-700 truncate">{exp.category}</p>
-                        <div className="flex items-center gap-1">
-                          <span className="text-[8px] font-medium text-gray-400">{exp.reason}</span>
-                          <span className="text-[8px] text-gray-400">· {fmtDate(exp.date)}</span>
+                {recentExpenses.slice(0, 3).map((exp) => {
+                  const title = exp.reason || exp.title || exp.description || exp.category || "Expense";
+                  return (
+                    <div key={exp.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: EXPENSE_REASON_COLORS[exp.category] || "#94A0B5" }} />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-medium text-gray-700 truncate">{title}</p>
+                          <p className="text-[8px] text-gray-400">{fmtDate(exp.date)}</p>
                         </div>
                       </div>
+                      <span className="text-[10px] font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-gray-800 shrink-0 ml-2">{fmtMoney(exp.amount)}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               {expenseByReason.length > 0 && (
                 <div className="mt-2 pt-1">

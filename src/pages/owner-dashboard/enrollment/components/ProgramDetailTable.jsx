@@ -27,21 +27,31 @@ const ProgramDetailTable = ({ programs }) => (
           <tbody>
             {programs.map((p) => {
               const hasCapacity = p.capacity > 0;
-              const fillPct = hasCapacity ? Math.min(Math.round((p.enrolled / p.capacity) * 100), 100) : 100;
-              const openSeats = hasCapacity ? p.capacity - p.enrolled : (p.openSeats ?? 0);
+              const fillPct = p.fillPercentage ?? (hasCapacity ? Math.round((p.enrolled / p.capacity) * 100) : 0);
+              const openSeats = p.openSeats ?? (hasCapacity ? p.capacity - p.enrolled : 0);
+              const isOverCapacity = hasCapacity && p.enrolled > p.capacity;
               const isFull = hasCapacity && p.enrolled >= p.capacity;
               const nearFull = hasCapacity && fillPct >= 90 && !isFull;
 
               return (
-                <tr key={p.name} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="py-2.5 font-medium text-gray-900">{p.name}</td>
+                <tr key={p.id || p.name} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <td className="py-2.5 font-medium text-gray-900">
+                    <div className="flex items-center gap-2">
+                      <span>{p.name}</span>
+                      {p.programCategory && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F]">
+                          {p.programCategory}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-2.5 text-right font-semibold text-gray-900">{p.enrolled}</td>
                   <td className="py-2.5 text-right text-gray-500">{hasCapacity ? p.capacity : <span className="text-gray-300">—</span>}</td>
                   <td className="py-2.5 text-right">
                     {!hasCapacity ? (
                       <span className="text-gray-300">—</span>
                     ) : (
-                      <span className={`font-semibold ${openSeats <= 0 ? "text-[#8A362C]" : nearFull ? "text-[#8F6A1F]" : "text-[#2F6042]"}`}>
+                      <span className={`font-semibold ${isOverCapacity ? "text-[#8A362C]" : openSeats === 0 ? "text-[#8F6A1F]" : "text-[#2F6042]"}`}>
                         {openSeats}
                       </span>
                     )}
@@ -53,12 +63,14 @@ const ProgramDetailTable = ({ programs }) => (
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full rounded-full ${!hasCapacity ? "bg-[#1E3A5F]" : isFull ? "bg-[#B78A2F]" : nearFull ? "bg-[#3E7A54]" : "bg-[#1E3A5F]"}`} 
-                          style={{ width: `${fillPct}%` }} 
+                          className={`h-full rounded-full ${
+                            fillPct > 100 ? "bg-[#B78A2F]" : isFull ? "bg-[#B78A2F]" : nearFull ? "bg-[#3E7A54]" : fillPct > 0 ? "bg-[#1E3A5F]" : "bg-gray-200"
+                          }`} 
+                          style={{ width: `${Math.min(fillPct, 100)}%` }} 
                         />
                       </div>
-                      <span className={`text-xs font-semibold ${hasCapacity && isFull ? "text-[#8F6A1F]" : "text-gray-500"}`}>
-                        {hasCapacity ? `${fillPct}%` : "100%"}
+                      <span className={`text-xs font-semibold ${fillPct > 100 ? "text-[#8F6A1F]" : hasCapacity && isFull ? "text-[#8F6A1F]" : fillPct > 0 ? "text-gray-700" : "text-gray-400"}`}>
+                        {hasCapacity || fillPct > 0 ? `${fillPct}%` : "—"}
                       </span>
                     </div>
                   </td>
