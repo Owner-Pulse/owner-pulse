@@ -39,13 +39,11 @@ const TasksPage = () => {
   const { user } = useGetUser();
   const currentRole = user?.role;
 
-  if (currentRole === "director") return <DirectorTasksLoader currentRole={currentRole} />;
-  return <OwnerTasksLoader currentRole={currentRole} />;
+  if (currentRole === "director") return <DirectorTasksLoader currentRole={currentRole} user={user} />;
+  return <OwnerTasksLoader currentRole={currentRole} user={user} />;
 };
 
-const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
-
-
+const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const [tasks, setTasks] = useState([]);
   const [taskStatuses, setTaskStatuses] = useState({});
   const [activeTab, setActiveTab] = useState("my");
@@ -63,6 +61,8 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
         title: t.title,
         description: t.description,
         assignee: t.assignee?.role || (t.assigned_to === 1 ? "director" : "owner"),
+        assignedToId: t.assigned_to,
+        creatorId: t.created_by,
         assignedBy: t.creator?.role || (t.created_by === 2 ? "owner" : "director"),
         priority: t.priority || "medium",
         status: t.status === "pending" ? "open" : t.status,
@@ -71,6 +71,8 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
         raw: t,
       }));
       setTasks(mappedTasks);
+    } else {
+      setTasks([]);
     }
   }, [taskList]);
 
@@ -83,8 +85,14 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
   };
 
   const myTasks = useMemo(() => {
-    return tasks.filter((t) => t.assignee === currentRole || t.assignedBy === currentRole);
-  }, [tasks, currentRole]);
+    return tasks.filter((t) => {
+      if (user?.id && t.assignedToId !== undefined && t.assignedToId !== null) {
+        return Number(t.assignedToId) === Number(user.id);
+      }
+      return t.assignee === currentRole;
+    });
+  }, [tasks, currentRole, user]);
+
   const visibleTasks = activeTab === "my" ? myTasks : tasks;
 
   const filtered = useMemo(() => {
@@ -96,16 +104,17 @@ const TasksPageInner = ({ currentRole, taskList, isTaskListLoading }) => {
 
   const sorted = useMemo(() => {
     const order = { high: 0, medium: 1, low: 2 };
-    return [...filtered].sort((a, b) => order[a.priority] - order[b.priority]);
+    return [...filtered].sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
   }, [filtered]);
 
   const stats = useMemo(() => {
     const getStatus = (t) => taskStatuses[t.id] || t.status;
-    const open = tasks.filter((t) => getStatus(t) !== "done").length;
-    const high = tasks.filter((t) => t.priority === "high" && getStatus(t) !== "done").length;
-    const myOpen = myTasks.filter((t) => getStatus(t) !== "done").length;
-    const overdue = tasks.filter((t) => daysUntil(t.due) < 0 && getStatus(t) !== "done").length;
-    const myOverdue = myTasks.filter((t) => daysUntil(t.due) < 0 && getStatus(t) !== "done").length;
+    const isDone = (status) => status === "done" || status === "completed";
+    const open = tasks.filter((t) => !isDone(getStatus(t))).length;
+    const high = tasks.filter((t) => t.priority === "high" && !isDone(getStatus(t))).length;
+    const myOpen = myTasks.filter((t) => !isDone(getStatus(t))).length;
+    const overdue = tasks.filter((t) => daysUntil(t.due) < 0 && !isDone(getStatus(t))).length;
+    const myOverdue = myTasks.filter((t) => daysUntil(t.due) < 0 && !isDone(getStatus(t))).length;
     return { open, high, myOpen, overdue, myOverdue, total: tasks.length };
   }, [tasks, taskStatuses, myTasks]);
 
