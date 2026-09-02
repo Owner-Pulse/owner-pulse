@@ -41,7 +41,7 @@ const IncidentForm = ({ onAdd, onClose, isLoading = false }) => {
     const classId = e.target.value;
     setSelectedClassroomId(classId);
 
-    const foundClass = classrooms.find((c) => String(c.id || c.procare_classroom_id) === String(classId));
+    const foundClass = classrooms.find((c) => String(c.procare_classroom_id || c.id) === String(classId));
     const className = foundClass ? (foundClass.classroom_name || foundClass.name) : "";
     setSelectedClassroomName(className);
 
@@ -113,7 +113,7 @@ const IncidentForm = ({ onAdd, onClose, isLoading = false }) => {
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white font-medium disabled:bg-gray-50">
                 <option value="">Select classroom...</option>
                 {classrooms.map((c) => {
-                  const cId = c.id || c.procare_classroom_id;
+                  const cId = c.procare_classroom_id || c.id;
                   const cName = c.classroom_name || c.name;
                   return (
                     <option key={cId || cName} value={cId}>

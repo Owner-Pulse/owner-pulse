@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { PieChart, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -16,15 +16,24 @@ const CategoryBreakdownCard = ({
   onPageChange,
   onPerPageChange,
   isFetching = false,
-  title = "Budget Categories",
-  subtitle = "Annual budget vs. actual spend",
+  title = "Spending by Category",
+  subtitle = "Plain spending list by category, sorted high to low",
 }) => {
+  // Sort categories high to low by spent amount
+  const sortedCategories = useMemo(() => {
+    return [...categories].sort((a, b) => {
+      const spentA = a.spent_numeric ?? (typeof a.spent === "number" ? a.spent : 0);
+      const spentB = b.spent_numeric ?? (typeof b.spent === "number" ? b.spent : 0);
+      return spentB - spentA;
+    });
+  }, [categories]);
+
   return (
     <Card className="bg-white border-none shadow-sm relative overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
               <PieChart size={18} className="text-[#1E3A5F]" />
               {title}
             </CardTitle>
@@ -41,9 +50,8 @@ const CategoryBreakdownCard = ({
 
       <CardContent>
         <div className={`space-y-3 max-h-[500px] overflow-y-auto pr-1.5 transition-opacity duration-200 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
-
-          {categories.length > 0 ? (
-            categories.map((cat, idx) => {
+          {sortedCategories.length > 0 ? (
+            sortedCategories.map((cat, idx) => {
               const fullName = cat.name || cat.category || `Category ${idx + 1}`;
               const hasColon = fullName.includes(":");
               let parentName = "";
@@ -60,7 +68,7 @@ const CategoryBreakdownCard = ({
 
               const spentFormatted = cat.spent ?? cat.spent_formatted ?? fmtMoneyShort(spentNumeric);
               const budgetedFormatted = cat.budgeted ?? cat.budget_limit ?? fmtMoneyShort(budgetedNumeric);
-              const spentVsBudget = cat.spent_vs_budget || `${spentFormatted} / ${budgetedFormatted}`;
+              const spentVsBudget = budgetedNumeric > 0 ? `${spentFormatted} / ${budgetedFormatted}` : `${spentFormatted} spent`;
 
               // Determine used percentage safely
               let pct = 0;
@@ -72,10 +80,9 @@ const CategoryBreakdownCard = ({
                 pct = 100;
               }
 
-              const overspent = budgetedNumeric > 0 ? spentNumeric > budgetedNumeric : spentNumeric > 0;
-              const usedText = cat.used_percentage_text || `${pct}% used`;
+              const overspent = budgetedNumeric > 0 && spentNumeric > budgetedNumeric;
+              const usedText = budgetedNumeric > 0 ? `${pct}% of budget used` : `${spentFormatted} total spend`;
 
-              const remainingFormatted = cat.remaining ?? cat.remaining_formatted;
               const remainingNumeric = cat.remaining_numeric ?? (budgetedNumeric - spentNumeric);
 
               const barColor = overspent ? "bg-[#AE4A3E]" : pct > 85 ? "bg-[#B78A2F]" : "bg-[#1E3A5F]";
@@ -89,10 +96,10 @@ const CategoryBreakdownCard = ({
                           {parentName}
                         </span>
                       )}
-                      <p className="text-xs md:text-sm font-semibold text-gray-800 truncate">{childName}</p>
+                      <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{childName}</p>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-                      <span className={`text-xs font-bold ${overspent ? "text-[#8A362C]" : "text-gray-600"}`}>
+                      <span className={`text-xs font-extrabold ${overspent ? "text-[#8A362C]" : "text-[#1E3A5F]"}`}>
                         {spentVsBudget}
                       </span>
                     </div>
@@ -104,15 +111,17 @@ const CategoryBreakdownCard = ({
                   </div>
 
                   <div className="flex items-center justify-between mt-1.5 text-[11px]">
-                    <span className="text-gray-400 font-medium">{usedText}</span>
+                    <span className="text-gray-500 font-medium">{usedText}</span>
                     {overspent ? (
                       <span className="text-[#8A362C] font-semibold">
-                        {budgetedNumeric > 0 ? `Overspent by ${fmtMoneyShort(spentNumeric - budgetedNumeric)}` : "Unbudgeted Spend"}
+                        Overspent by {fmtMoneyShort(spentNumeric - budgetedNumeric)}
+                      </span>
+                    ) : budgetedNumeric > 0 ? (
+                      <span className="text-[#2F6042] font-semibold">
+                        {fmtMoneyShort(Math.max(0, remainingNumeric))} remaining
                       </span>
                     ) : (
-                      <span className="text-[#2F6042] font-semibold">
-                        {remainingFormatted ? `${remainingFormatted} remaining` : `${fmtMoneyShort(Math.max(0, remainingNumeric))} remaining`}
-                      </span>
+                      <span className="text-gray-400 font-medium">Standard Expense</span>
                     )}
                   </div>
                 </div>
@@ -188,4 +197,3 @@ const CategoryBreakdownCard = ({
 };
 
 export default CategoryBreakdownCard;
-

@@ -15,7 +15,15 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const isPending = isDirector ? directorPending : ownerPending;
   
   const [title, setTitle] = useState("");
-  const [assignee, setAssignee] = useState(currentRole === "owner" ? "" : "owner");
+  const targetDirectorId = allDirector?.[0]?.id || "1";
+  const [assignee, setAssignee] = useState(currentRole === "owner" ? targetDirectorId : "owner");
+
+  React.useEffect(() => {
+    if (currentRole === "owner" && allDirector?.[0]?.id) {
+      setAssignee(allDirector[0].id);
+    }
+  }, [allDirector, currentRole]);
+
   const [priority, setPriority] = useState("medium");
   const [due, setDue] = useState("");
   const [description, setDescription] = useState("");
@@ -39,7 +47,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
             id: Date.now(),
             title: title.trim(),
             description: description.trim(),
-            assignee: assignee,
+            assignee: currentRole === "owner" ? "director" : "owner",
             assignedBy: currentRole,
             priority,
             status: "open",
@@ -81,16 +89,9 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Assign To</label>
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white">
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium">
                   {currentRole === "owner" ? (
-                    <>
-                      <option value="" disabled>Select a director</option>
-                      {allDirector?.map((director) => (
-                        <option key={director?.id} value={director?.id} className="capitalize">
-                          {director?.name}
-                        </option>
-                      ))}
-                    </>
+                    <option value={targetDirectorId}>Director</option>
                   ) : (
                     <option value="owner">Owner</option>
                   )}

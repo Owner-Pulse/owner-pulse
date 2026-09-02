@@ -19,7 +19,7 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
           <Landmark size={16} className="text-[#1E3A5F]" />
           Budget Overview
         </CardTitle>
-        <CardDescription className="text-[10px]">School budget &amp; Director's discretionary</CardDescription>
+        <CardDescription className="text-[10px]">School budget &amp; Director's discretionary budget</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="p-3 rounded-xl bg-[#1E3A5F]/[0.05] border border-[#1E3A5F]/15">
@@ -33,7 +33,7 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
             <span className="text-xs font-bold text-[#1E3A5F]">${(budgetData.total / 1000000).toFixed(1)}M</span>
           </div>
           <div className="h-2 bg-[#1E3A5F]/10 rounded-full overflow-hidden mb-1.5">
-            <div className="h-full bg-[#1E3A5F] rounded-full" style={{ width: `${budgetPercent}%` }} />
+            <div className="h-full bg-[#1E3A5F]" style={{ width: `${budgetPercent}%` }} />
           </div>
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-gray-500">{budgetPercent}% used</span>
@@ -47,7 +47,7 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
               <div className="w-7 h-7 rounded-lg bg-[#B78A2F]/10 flex items-center justify-center">
                 <Wallet size={14} className="text-[#8F6A1F]" />
               </div>
-              <span className="text-xs font-bold text-gray-800">Director's Petty Cash</span>
+              <span className="text-xs font-bold text-gray-800">Director Discretionary Budget</span>
             </div>
             <span className="text-xs font-bold text-[#8F6A1F]">${DIRECTOR_BUDGET_TOTAL.toLocaleString()}</span>
           </div>
@@ -99,7 +99,7 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
           )}
         </div>
 
-        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-8 hover:bg-[#1E3A5F]/5" onClick={() => onNavigate("/owner/budget")}>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-8 hover:bg-[#1E3A5F]/5 cursor-pointer" onClick={() => onNavigate("/owner/budget")}>
           View full budget →
         </Button>
       </CardContent>

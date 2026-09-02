@@ -9,7 +9,7 @@ const itemVariants = {
 };
 
 const ExpensesCard = ({ pettyCashData, onNavigate }) => {
-  const gauge = pettyCashData?.budget_gauge || { total_budget: 9000, total_spent: 801, remaining: 8199, used_pct: 8.9 };
+  const gauge = pettyCashData?.budget_gauge || { total_budget: 0, total_spent: 0, remaining: 0, used_pct: 0 };
   const transactions = pettyCashData?.recent_transactions || [];
 
   const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -19,11 +19,11 @@ const ExpensesCard = ({ pettyCashData, onNavigate }) => {
       <Card className="bg-white border-none shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">
+            <CardTitle className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <Wallet size={16} className="text-[#1E3A5F]" />
-              Expenses & Petty Cash
+              Expenses &amp; Director Discretionary Budget
             </CardTitle>
-            <span className="text-xs text-[#1E3A5F] cursor-pointer hover:underline" onClick={() => onNavigate("/director/expenses")}>
+            <span className="text-xs text-[#1E3A5F] cursor-pointer hover:underline font-semibold" onClick={() => onNavigate("/director/expenses")}>
               Manage expenses
             </span>
           </div>

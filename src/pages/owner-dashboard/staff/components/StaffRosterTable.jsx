@@ -33,7 +33,7 @@ const RosterSkeletonRow = () => (
 
 const StaffRosterTable = ({
   staffRoster = [],
-  sortBy,
+  sortBy = "ptoUsed",
   onSortChange,
   pagination,
   onLoadMore,
@@ -69,9 +69,11 @@ const StaffRosterTable = ({
     }
     return [...list].sort((a, b) => {
       if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
-      if (sortBy === "ptoUsed") return (b.pto_used ?? 0) - (a.pto_used ?? 0);
       if (sortBy === "ptoRemaining") return (a.remaining ?? 0) - (b.remaining ?? 0);
-      return 0;
+      // Default: sort by PTO usage, highest first per D-11
+      const ptoA = a.pto_used ?? a.ptoUsed ?? 0;
+      const ptoB = b.pto_used ?? b.ptoUsed ?? 0;
+      return ptoB - ptoA;
     });
   }, [staffRoster, search, sortBy]);
 

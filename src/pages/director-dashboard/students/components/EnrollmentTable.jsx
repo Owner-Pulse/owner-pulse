@@ -56,7 +56,7 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
                 return (
                   <div 
                     key={i} 
-                    onClick={() => navigate(`/director/students/${c.id}`)}
+                    onClick={() => navigate(`/director/students/${c.procare_classroom_id || c.id}`)}
                     className="bg-white hover:bg-gray-50/80 active:bg-gray-100 rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer flex flex-col gap-3 transition-all"
                   >
                     <div className="flex justify-between items-start">
@@ -144,7 +144,7 @@ const EnrollmentTable = ({ classrooms = [], incidents = [], searchQuery = "", on
                     return (
                       <tr 
                         key={i} 
-                        onClick={() => navigate(`/director/students/${c.id}`)}
+                        onClick={() => navigate(`/director/students/${c.procare_classroom_id || c.id}`)}
                         className="hover:bg-slate-50/70 active:bg-slate-100/50 transition-all cursor-pointer group"
                       >
                         <td className="py-3.5 px-4 font-semibold text-gray-900 group-hover:text-[#1E3A5F] transition-colors">

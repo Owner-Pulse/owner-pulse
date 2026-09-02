@@ -1,78 +1,119 @@
 import React from "react";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, UserCheck, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-const OverviewCard = ({ complianceScore, totalItems, ownerCount, directorCount }) => {
-  const categories = [
-    { label: "All Items", count: totalItems, dot: "bg-[#1E3A5F]" },
-    { label: "Owner-owned", count: ownerCount, dot: "bg-[#2A4C7E]" },
-    { label: "Director-owned", count: directorCount, dot: "bg-[#1E3A5F]/25" },
-  ];
+const SegmentedBarRow = ({ title, icon: Icon, stats }) => {
+  const total = stats.total > 0 ? stats.total : 1;
+  const compliantPct = Math.round((stats.compliant / total) * 100);
+  const expiringPct = Math.round((stats.expiring / total) * 100);
+  const expiredPct = Math.min(100 - compliantPct - expiringPct, Math.round((stats.expired / total) * 100));
 
-  // Tip of the ring arc, measured clockwise from 12 o'clock (matches the -rotate-90 dash)
-  const angle = (complianceScore / 100) * 2 * Math.PI;
-  const markerX = 50 + 42 * Math.sin(angle);
-  const markerY = 50 - 42 * Math.cos(angle);
+  return (
+    <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center text-[#1E3A5F]">
+            <Icon size={14} />
+          </div>
+          <span className="text-xs font-bold text-gray-900">{title}</span>
+        </div>
+        <span className="text-xs font-extrabold text-gray-700">{stats.total} items</span>
+      </div>
+
+      {/* Segmented Horizontal Bar */}
+      <div className="h-3 bg-gray-200/80 rounded-full overflow-hidden flex w-full">
+        {stats.compliant > 0 && (
+          <div
+            className="h-full bg-[#3E7A54] transition-all duration-300"
+            style={{ width: `${compliantPct}%` }}
+            title={`Compliant: ${stats.compliant}`}
+          />
+        )}
+        {stats.expiring > 0 && (
+          <div
+            className="h-full bg-[#7C3AED] transition-all duration-300"
+            style={{ width: `${expiringPct}%` }}
+            title={`Expiring Soon: ${stats.expiring}`}
+          />
+        )}
+        {stats.expired > 0 && (
+          <div
+            className="h-full bg-[#AE4A3E] transition-all duration-300"
+            style={{ width: `${expiredPct}%` }}
+            title={`Expired: ${stats.expired}`}
+          />
+        )}
+      </div>
+
+      {/* Legend & Count Badges */}
+      <div className="flex flex-wrap items-center justify-between text-[11px] pt-0.5">
+        <div className="flex items-center gap-1.5 text-[#2F6042] font-semibold">
+          <span className="w-2 h-2 rounded-full bg-[#3E7A54]" />
+          <span>{stats.compliant} Compliant</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[#6D28D9] font-semibold">
+          <span className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+          <span>{stats.expiring} Expiring</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[#8A362C] font-semibold">
+          <span className="w-2 h-2 rounded-full bg-[#AE4A3E]" />
+          <span>{stats.expired} Expired</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OverviewCard = ({ items = [] }) => {
+  // Compute Owner-owned vs Director-owned status breakdowns
+  const ownerStats = items
+    .filter((i) => (i.ownerRole || i.responsible_role || "").toLowerCase() === "owner")
+    .reduce(
+      (acc, i) => {
+        acc.total += 1;
+        if (i.status === "expired" || (i.days_left !== undefined && i.days_left <= 0)) acc.expired += 1;
+        else if (i.status === "expiring" || (i.days_left !== undefined && i.days_left <= 60)) acc.expiring += 1;
+        else acc.compliant += 1;
+        return acc;
+      },
+      { total: 0, compliant: 0, expiring: 0, expired: 0 }
+    );
+
+  const directorStats = items
+    .filter((i) => (i.ownerRole || i.responsible_role || "").toLowerCase() !== "owner")
+    .reduce(
+      (acc, i) => {
+        acc.total += 1;
+        if (i.status === "expired" || (i.days_left !== undefined && i.days_left <= 0)) acc.expired += 1;
+        else if (i.status === "expiring" || (i.days_left !== undefined && i.days_left <= 60)) acc.expiring += 1;
+        else acc.compliant += 1;
+        return acc;
+      },
+      { total: 0, compliant: 0, expiring: 0, expired: 0 }
+    );
 
   return (
     <Card className="bg-white border-none shadow-sm h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm font-bold text-gray-900">
           <ShieldCheck size={16} className="text-[#1E3A5F]" />
-          Overview
+          Ownership Breakdown ("Who Owns What")
         </CardTitle>
-        <CardDescription>Status breakdown</CardDescription>
+        <CardDescription className="text-xs">
+          Segmented compliance status for Owner &amp; Director responsibilities
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {/* Visual progress ring — globe marks the peak of the arc */}
-        <div className="flex justify-center mb-4">
-          <div className="relative w-28 h-28">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <defs>
-                <linearGradient id="complianceScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#1E3A5F" />
-                  <stop offset="100%" stopColor="#9DB8D9" />
-                </linearGradient>
-              </defs>
-              <circle cx="50" cy="50" r="42" fill="none" stroke="#1E3A5F" strokeOpacity="0.08" strokeWidth="8" />
-              <circle
-                cx="50" cy="50" r="42" fill="none"
-                stroke="url(#complianceScoreGradient)"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={`${(complianceScore / 100) * 264} 264`}
-              />
-            </svg>
-            <div
-              className="absolute"
-              style={{ left: `${markerX}%`, top: `${markerY}%`, transform: "translate(-50%, -50%)" }}
-            >
-              <img
-                src="/world.png"
-                alt="World"
-                draggable={false}
-                className="w-7 h-7 rounded-full object-cover shadow-[0_1px_5px_rgba(30,58,95,0.35)]"
-              />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] bg-clip-text text-transparent">
-                {complianceScore}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {categories.map((cat) => (
-            <div key={cat.label} className="flex items-center justify-between p-2.5 rounded-lg bg-[#1E3A5F]/[0.04]">
-              <div className="flex items-center gap-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${cat.dot}`} />
-                <span className="text-sm text-gray-600">{cat.label}</span>
-              </div>
-              <span className="text-sm font-semibold text-gray-900">{cat.count}</span>
-            </div>
-          ))}
-        </div>
+      <CardContent className="space-y-3">
+        <SegmentedBarRow
+          title="Owner-owned Items"
+          icon={Building2}
+          stats={ownerStats}
+        />
+        <SegmentedBarRow
+          title="Director-owned Items"
+          icon={UserCheck}
+          stats={directorStats}
+        />
       </CardContent>
     </Card>
   );
