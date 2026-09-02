@@ -57,9 +57,11 @@ const TaskCardInner = ({
   const isOverdue = days < 0 && !isDone;
   const isDueSoon = days >= 0 && days <= 3 && !isDone;
 
-  const isForMe = task.assignee === currentRole;
-  const isCreator = task.assignedBy === currentRole;
-  const canEditOrDelete = isCreator || currentRole === "owner" || isForMe;
+  const assigneeRole = (typeof task.assignee === "string" ? task.assignee : task.assignee?.role || "").toLowerCase();
+  const userRole = (currentRole || "").toLowerCase();
+  const isForMe = assigneeRole === userRole;
+  const isCreator = (typeof task.assignedBy === "string" ? task.assignedBy : task.assignedBy?.role || "").toLowerCase() === userRole;
+  const canEditOrDelete = isCreator || userRole === "owner" || isForMe;
 
   const handleDelete = async () => {
     await deleteTask(task.id);
@@ -67,7 +69,7 @@ const TaskCardInner = ({
   };
 
   const handleToggleStatus = () => {
-    if (isInProgressPending || isCompleting) return;
+    if (!isForMe || isInProgressPending || isCompleting) return;
     if (isDone) {
       inProgressTask(task.id);
     } else {
@@ -90,8 +92,10 @@ const TaskCardInner = ({
                 <button
                   type="button"
                   onClick={handleToggleStatus}
-                  disabled={isInProgressPending || isCompleting}
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  disabled={!isForMe || isInProgressPending || isCompleting}
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                    isForMe ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+                  } ${
                     isDone
                       ? "bg-[#3E7A54] border-[#3E7A54]"
                       : isOverdue
@@ -100,7 +104,7 @@ const TaskCardInner = ({
                       ? "border-[#B78A2F] hover:bg-[#B78A2F]/10"
                       : "border-gray-300 hover:border-[#1E3A5F]"
                   }`}
-                  title={isDone ? "Re-open Task" : "Complete Task"}
+                  title={!isForMe ? "Only assigned role can update status" : isDone ? "Re-open Task" : "Complete Task"}
                 >
                   {isCompleting || isInProgressPending ? (
                     <div className="w-2.5 h-2.5 border border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -156,7 +160,7 @@ const TaskCardInner = ({
               {/* Actions */}
               <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-center">
                 {/* Status action buttons */}
-                {(status === "open" || status === "pending") && (
+                {isForMe && (status === "open" || status === "pending") && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -168,7 +172,7 @@ const TaskCardInner = ({
                     {isInProgressPending ? "Updating..." : "In Progress"}
                   </Button>
                 )}
-                {(status === "in_progress" || status === "delayed") && (
+                {isForMe && (status === "in_progress" || status === "delayed") && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -181,8 +185,8 @@ const TaskCardInner = ({
                   </Button>
                 )}
 
-                {/* Edit Task button */}
-                {canEditOrDelete && (
+                {/* Edit Task button - commented out */}
+                {/* {canEditOrDelete && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -192,7 +196,7 @@ const TaskCardInner = ({
                     <Pencil size={11} className="mr-1" />
                     Edit
                   </Button>
-                )}
+                )} */}
 
                 {/* Delete Task button */}
                 {canEditOrDelete && (

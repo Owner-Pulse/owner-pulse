@@ -29,8 +29,7 @@ const containerVariants = {
 // ─── Page ─────────────────────────────────────────────────────────
 const EMPTY_CLASSROOM_FORM = {
   name: "",
-  program: "",
-  tier: "Tier 1",
+  tier: "Preschool",
   capacity: "",
   teacherId: "",
   tuitionPerSeat: "",

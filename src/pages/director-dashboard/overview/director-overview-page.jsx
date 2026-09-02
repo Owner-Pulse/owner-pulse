@@ -44,37 +44,38 @@ const DirectorOverviewPage = () => {
   const enrollmentBreakdown = directorOverviewData?.enrollment_breakdown;
   const todayCoverage = directorOverviewData?.today_coverage;
   const upcomingCompliance = directorOverviewData?.upcoming_compliance || [];
+  const openMaintList = directorOverviewData?.open_maintenance || [];
   const pettyCashData = directorOverviewData?.recent_expenses_petty_cash;
   const pendingTasksData = directorOverviewData?.pending_tasks_and_escalation;
 
   // Formatted Pulse Object for Director
   const directorPulse = {
-    bpm: pulseApi?.bpm ?? 136,
-    composite: Math.round(pulseApi?.composite_score ?? 45.5),
+    bpm: pulseApi?.bpm ?? 0,
+    composite: Math.round(pulseApi?.composite_score ?? 0),
     state: {
-      state: pulseApi?.state || "Critical",
-      color: pulseApi?.color || "#EF4444",
+      state: pulseApi?.state || "Normal",
+      color: pulseApi?.color || "#3E7A54",
     },
     subscores: [
-      { key: "comp", label: "Compliance", score: pulseApi?.sub_scores?.compliance ?? 85, weight: 0.2, icon: "ShieldCheck" },
+      { key: "comp", label: "Compliance", score: pulseApi?.sub_scores?.compliance ?? 0, weight: 0.2, icon: "ShieldCheck" },
       { key: "enroll", label: "Enrollment", score: pulseApi?.sub_scores?.enrollment_health ?? 0, weight: 0.2, icon: "Users" },
       { key: "late", label: "Late AR", score: pulseApi?.sub_scores?.late_payments_ar ?? 0, weight: 0.2, icon: "DollarSign" },
-      { key: "class", label: "Class Score", score: pulseApi?.sub_scores?.class_score ?? 100, weight: 0.2, icon: "Star" },
-      { key: "cash", label: "Petty Cash", score: pulseApi?.sub_scores?.petty_cash_pace ?? 100, weight: 0.2, icon: "CreditCard" },
+      { key: "class", label: "Class Score", score: pulseApi?.sub_scores?.class_score ?? 0, weight: 0.2, icon: "Star" },
+      { key: "cash", label: "Petty Cash", score: pulseApi?.sub_scores?.petty_cash_pace ?? 0, weight: 0.2, icon: "CreditCard" },
     ],
     recommendations: pulseApi?.top_3_recommendations || [],
   };
 
   const ownerPulseSnapshot = {
-    bpm: pulseApi?.owner_macro_badge?.bpm ?? 117,
-    state: pulseApi?.owner_macro_badge?.state ?? "Stressed",
-    color: pulseApi?.owner_macro_badge?.color ?? "#F97316",
+    bpm: pulseApi?.owner_macro_badge?.bpm ?? 0,
+    state: pulseApi?.owner_macro_badge?.state ?? "Normal",
+    color: pulseApi?.owner_macro_badge?.color ?? "#3E7A54",
   };
 
   // Top KPI Metrics
-  const enrollmentKpi = topKpis?.enrollment || { total_enrolled: 621, total_capacity: 170, capacity_pct: 365.3, open_spots: 0 };
-  const maintKpi = topKpis?.maintenance || { open_tickets: 1, critical_count: 1 };
-  const tasksKpi = topKpis?.open_tasks || { total_open: 2, high_priority_count: 2 };
+  const enrollmentKpi = topKpis?.enrollment || { total_enrolled: 0, total_capacity: 0, capacity_pct: 0, open_spots: 0 };
+  const maintKpi = topKpis?.maintenance || { open_tickets: 0, critical_count: 0 };
+  const tasksKpi = topKpis?.open_tasks || { total_open: 0, high_priority_count: 0 };
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -83,11 +84,6 @@ const DirectorOverviewPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             30-Second View
-            {maintKpi.critical_count > 0 && (
-              <span className="ml-3 inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#AE4A3E]/10 text-[#8A362C] text-xs font-bold rounded-full">
-                {maintKpi.critical_count} critical
-              </span>
-            )}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
@@ -137,7 +133,7 @@ const DirectorOverviewPage = () => {
       {/* Sections 5, 6: Compliance + Maintenance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ComplianceCard items={upcomingCompliance} onNavigate={go} />
-        <MaintenanceCard items={[]} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} onNavigate={go} />
+        <MaintenanceCard items={openMaintList} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} onNavigate={go} />
       </div>
 
       {/* Expenses & Petty Cash */}

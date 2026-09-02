@@ -70,7 +70,7 @@ const NotFoundPage = () => {
           transition={{ delay: 0.6 }}
           className="mt-12 text-[10px] text-gray-300"
         >
-          OwnerPulse by HCLC
+          OwnerPulse
         </motion.p>
       </motion.div>
     </div>

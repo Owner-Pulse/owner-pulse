@@ -36,7 +36,9 @@ const TasksCard = ({ data, onNavigate }) => {
                   fromOwner.map((t, idx) => (
                     <div key={t.id || idx} className="flex items-center justify-between p-2 rounded-lg bg-[#1E3A5F]/[0.05]">
                       <p className="text-xs font-medium text-gray-900 truncate">{t.title}</p>
-                      <span className="text-[9px] font-bold text-[#8F6A1F] shrink-0 ml-1">{t.days_left}d left</span>
+                      <span className={`text-[9px] font-bold shrink-0 ml-1 ${t.days_left <= 0 ? "text-[#8A362C]" : "text-[#1E3A5F]"}`}>
+                        {t.days_left <= 0 ? "Overdue" : `${t.days_left}d left`}
+                      </span>
                     </div>
                   ))
                 ) : (

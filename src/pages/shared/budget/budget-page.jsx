@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { DollarSign, PiggyBank, Wallet, TrendingUp, Plus, Settings } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
+import BudgetPieChartsCard from "./components/BudgetPieChartsCard";
 import CategoryBreakdownCard from "./components/CategoryBreakdownCard";
 import ExpenseListCard from "./components/ExpenseListCard";
 import BudgetTipCard from "./components/BudgetTipCard";
@@ -362,6 +363,14 @@ const BudgetPage = () => {
                       ? "bg-[#B78A2F]"
                       : "bg-[#1E3A5F]"
                   }
+                />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <BudgetPieChartsCard
+                  schoolSpent={budgetData?.spent_ytd_numeric ?? schoolSpent}
+                  schoolBudgetTotal={budgetData?.annual_budget_numeric ?? schoolBudgetTotal}
+                  categories={rawCategories.length > 0 ? rawCategories : localSchoolCategories}
                 />
               </motion.div>
 

@@ -23,7 +23,7 @@ const itemVariants = {
 const StaffPage = () => {
   const [rosterPage, setRosterPage] = useState(1);
   const [ptoPage, setPtoPage] = useState(1);
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("ptoUsed");
   const [allPtoStaff, setAllPtoStaff] = useState([]);
   const [allStaffRoster, setAllStaffRoster] = useState([]);
 
@@ -153,12 +153,16 @@ const StaffPage = () => {
   const ptoUsedDays = ptoUsedMetric.used_days ?? ptoSummary.total_pto_used_days ?? 0;
   const ptoAllowanceDays = ptoUsedMetric.total_allowance_days ?? ptoSummary.total_pto_allowance_days ?? 0;
 
-  const GlenUsage = allStaffRoster.filter(s => {
+  const highPtoStaffList = allStaffRoster.filter(s => {
     const used = s.pto_used ?? s.ptoUsed ?? 0;
     const allowance = s.ptoAllowance || 10;
     return (used / allowance) >= 0.7;
-  }).length;
-  const highPtoCount = GlenUsage || (metrics.high_pto_usage?.count ?? ptoSummary.high_usage_count ?? 0);
+  });
+  const highPtoCount = highPtoStaffList.length || (metrics.high_pto_usage?.count ?? ptoSummary.high_usage_count ?? 0);
+  const highPtoNames = highPtoStaffList.map(s => s.name || s.full_name).filter(Boolean);
+  const highPtoSubText = highPtoNames.length > 0
+    ? `High: ${highPtoNames.slice(0, 2).join(", ")}${highPtoNames.length > 2 ? ` +${highPtoNames.length - 2}` : ""}`
+    : "All within healthy range";
 
   if (isLoading && !data) {
     return (
@@ -176,7 +180,7 @@ const StaffPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Staff</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[#1E3A5F]">Staff</h1>
           <p className="text-sm text-gray-500 mt-1">
             {totalStaff} total · {presentToday} present today
           </p>
@@ -217,7 +221,7 @@ const StaffPage = () => {
             icon={AlertTriangle}
             label="High PTO Usage"
             value={highPtoCount}
-            sub={highPtoCount > 0 ? "Staff using ≥70% allowance" : "All within healthy range"}
+            sub={highPtoSubText}
             iconBg={highPtoCount > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"}
             valueColor={highPtoCount > 0 ? "text-[#8A362C]" : "text-gray-900"}
           />

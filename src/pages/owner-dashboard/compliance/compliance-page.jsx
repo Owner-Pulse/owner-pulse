@@ -260,8 +260,12 @@ const CompliancePage = () => {
             icon={CheckCircle2}
             label="Compliant"
             value={stats.compliant}
-            sub={`${Math.round((stats.compliant / stats.total) * 100)}% of all items`}
-            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
+            pct={stats.total > 0 ? Math.round((stats.compliant / stats.total) * 100) : 100}
+            color="#3E7A54"
+            items={items.filter((i) => i.status === "compliant" || (i.days_left !== undefined && i.days_left > 60))}
+            sub={`${Math.round((stats.compliant / (stats.total || 1)) * 100)}% of all items`}
+            iconBg="bg-[#3E7A54]/10 text-[#2F6042]"
+            onMoreClick={() => setStatusFilter("compliant")}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -269,8 +273,12 @@ const CompliancePage = () => {
             icon={Clock}
             label="Expiring Soon"
             value={stats.expiring}
+            pct={stats.total > 0 ? Math.round((stats.expiring / stats.total) * 100) : 0}
+            color="#7C3AED"
+            items={items.filter((i) => i.status === "expiring" || (i.days_left !== undefined && i.days_left > 0 && i.days_left <= 60))}
             sub={stats.expiring > 0 ? `Next: ${stats.nextDeadline} days` : "No pending items"}
-            iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]"
+            iconBg="bg-[#7C3AED]/10 text-[#6D28D9]"
+            onMoreClick={() => setStatusFilter("expiring")}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -278,8 +286,12 @@ const CompliancePage = () => {
             icon={AlertCircle}
             label="Expired"
             value={stats.expired}
+            pct={stats.total > 0 ? Math.round((stats.expired / stats.total) * 100) : 0}
+            color="#AE4A3E"
+            items={items.filter((i) => i.status === "expired" || (i.days_left !== undefined && i.days_left <= 0))}
             sub={stats.expired > 0 ? "Action required" : "All current"}
             iconBg={stats.expired > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-gray-50 text-gray-400"}
+            onMoreClick={() => setStatusFilter("expired")}
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -287,22 +299,20 @@ const CompliancePage = () => {
             icon={Calendar}
             label="Next Deadline"
             value={stats.nextDeadline > 0 ? `${stats.nextDeadline}d` : "—"}
+            pct={stats.nextDeadline > 0 ? Math.max(10, Math.min(100, Math.round((stats.nextDeadline / 60) * 100))) : 0}
+            color="#1E3A5F"
+            items={items.filter((i) => i.days_left !== undefined && i.days_left > 0).sort((a, b) => a.days_left - b.days_left)}
             sub={stats.nextDeadline > 0 ? "until nearest expiration" : "No upcoming deadlines"}
             iconBg={stats.nextDeadline <= 14 && stats.nextDeadline > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"}
           />
         </motion.div>
       </div>
 
-      {/* ── Score Ring + Urgency Timeline ────────────────────────── */}
+      {/* ── Ownership Breakdown + Urgency Timeline ────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div variants={itemVariants}>
           <div className="h-full flex flex-col justify-between">
-            <OverviewCard
-              complianceScore={stats.complianceScore}
-              totalItems={stats.total}
-              ownerCount={stats.ownerCount}
-              directorCount={stats.directorCount}
-            />
+            <OverviewCard items={items} />
           </div>
         </motion.div>
         <motion.div variants={itemVariants} className="lg:col-span-2">

@@ -4,7 +4,7 @@ import { X, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const ROLES = ["Lead Teacher", "Assistant Teacher", "Floater", "Director", "Assistant Director", "Cook/Chef", "Admin"];
+const ROLES = ["Lead Teacher", "Assistant Teacher", "Floater", "Director", "Assistant Director", "Cook/Chef", "Admin", "Other"];
 
 const parseToYYYYMMDD = (dateStr) => {
   if (!dateStr) return "";
@@ -197,6 +197,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
                           </option>
                         );
                       })}
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                   <div>

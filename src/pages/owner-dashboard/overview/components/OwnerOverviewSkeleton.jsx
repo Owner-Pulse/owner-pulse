@@ -16,6 +16,16 @@ export const OwnerOverviewSkeleton = () => {
       {/* Pulse Card Skeleton */}
       <Skeleton className="h-44 w-full rounded-2xl bg-slate-900/60" />
 
+      {/* Cash Flow Metrics Skeleton */}
+      <div className="space-y-3">
+        <Skeleton className="h-6 w-48" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+
       {/* KPI Cards Row 1 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
@@ -36,9 +46,6 @@ export const OwnerOverviewSkeleton = () => {
           <Skeleton key={i} className="h-28 w-full rounded-xl" />
         ))}
       </div>
-
-      {/* Financial Chart Skeleton */}
-      <Skeleton className="h-72 w-full rounded-xl" />
 
       {/* Middle Row Skeletons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

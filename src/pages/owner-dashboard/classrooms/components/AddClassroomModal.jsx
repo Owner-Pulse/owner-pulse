@@ -4,6 +4,14 @@ import { Plus, X, Loader2 } from "lucide-react";
 import { useGetAllStaffs } from "@/hooks/classroom/classroom.hook";
 import SearchableStaffSelect from "./SearchableStaffSelect";
 
+const TIER_OPTIONS = [
+  "Preschool",
+  "VPK",
+  "K-8",
+  "After School",
+  "Summer Camp",
+];
+
 const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit, isLoading = false }) => {
   const { staffs, isLoading: isStaffsLoading } = useGetAllStaffs();
 
@@ -40,7 +48,7 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit
                     required
                     value={form.name}
                     onChange={(e) => onFormChange("name", e.target.value)}
-                    placeholder="e.g. Summit Preschool"
+                    placeholder="e.g. Summit Classroom"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
                   />
                 </div>
@@ -58,30 +66,19 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit
                   />
                 </div>
 
-                {/* Program */}
+                {/* Tier (Replaces Program per D-09) */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Program</label>
-                  <input
-                    type="text"
-                    value={form.program}
-                    onChange={(e) => onFormChange("program", e.target.value)}
-                    placeholder="e.g. Preschool"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
-                  />
-                </div>
-
-                {/* Tier */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tier</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tier *</label>
                   <select
-                    value={form.tier}
+                    value={form.tier || "Preschool"}
                     onChange={(e) => onFormChange("tier", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] bg-white font-medium text-gray-800"
                   >
-                    <option value="Tier 1">Tier 1</option>
-                    <option value="Tier 2">Tier 2</option>
-                    <option value="Preschool">Preschool</option>
-                    <option value="K-8">K-8</option>
+                    {TIER_OPTIONS.map((tier) => (
+                      <option key={tier} value={tier}>
+                        {tier}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -110,14 +107,14 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit
                   />
                 </div>
 
-                {/* Tuition per seat */}
+                {/* Tuition ($ per seat / week) per D-09 */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tuition / Seat ($)</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tuition ($ per seat / week)</label>
                   <input
                     type="number"
                     value={form.tuitionPerSeat}
                     onChange={(e) => onFormChange("tuitionPerSeat", e.target.value)}
-                    placeholder="e.g. 950.00"
+                    placeholder="e.g. 250.00"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
                   />
                 </div>
