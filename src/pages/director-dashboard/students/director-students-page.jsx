@@ -93,9 +93,10 @@ const StudentManagementPage = () => {
   const displayClassrooms = useMemo(() => {
     if (activeTab === "enrollment" && Array.isArray(apiTabData?.data) && apiTabData.data.length > 0) {
       return apiTabData.data.map((c) => ({
-        id: c.classroom_id || c.id,
+        id: c.procare_classroom_id || c.classroom_id || c.id,
+        classroom_id: c.classroom_id,
         name: c.classroom_name || c.name || `Classroom ${c.classroom_id}`,
-        procare_classroom_id: c.procare_classroom_id,
+        procare_classroom_id: c.procare_classroom_id || c.classroom_id || c.id,
         capacity: c.capacity ?? 16,
         enrolled: c.enrolled ?? 0,
         open_seats: c.open_seats ?? 0,
@@ -106,9 +107,10 @@ const StudentManagementPage = () => {
     }
     if (allClassrooms && allClassrooms.length > 0) {
       return allClassrooms.map((c) => ({
-        id: c.id,
+        id: c.procare_classroom_id || c.id,
+        classroom_id: c.id,
         name: c.classroom_name || `Classroom ${c.id}`,
-        procare_classroom_id: c.procare_classroom_id,
+        procare_classroom_id: c.procare_classroom_id || c.id,
         capacity: c.capacity || 20,
         enrolled: c.enrolled_students || 0,
         open_seats: c.open_seats || Math.max(0, (c.capacity || 20) - (c.enrolled_students || 0)),

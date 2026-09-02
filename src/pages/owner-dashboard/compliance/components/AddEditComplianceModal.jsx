@@ -139,8 +139,8 @@ const AddEditComplianceModal = ({ isOpen, onClose, onSave, editItem = null, user
                 >
                   <option value="regulatory">Regulatory</option>
                   <option value="operational">Operational</option>
-                  <option value="safety">Safety / Facility</option>
-                  <option value="academic">Academic / Testing</option>
+                  <option value="safety_facility">Safety / Facility</option>
+                  <option value="academic_testing">Academic / Testing</option>
                 </select>
               </div>
             </div>

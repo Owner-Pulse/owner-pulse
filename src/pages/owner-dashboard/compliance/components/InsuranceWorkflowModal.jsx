@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, CheckCircle2, Clock, DollarSign, ArrowRight, Lightbulb, ShieldCheck, Loader2 } from "lucide-react";
+import {
+  X,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  ArrowRight,
+  Lightbulb,
+  ShieldCheck,
+  Loader2,
+  Award,
+  Calendar,
+  FileCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +26,7 @@ import {
 const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
   const [carrierInput, setCarrierInput] = useState("");
   const [amountInput, setAmountInput] = useState("");
+  const [coverageInput, setCoverageInput] = useState("");
   const [newExpiryDate, setNewExpiryDate] = useState("2027-09-01");
   const [selectingQuoteId, setSelectingQuoteId] = useState(null);
 
@@ -41,6 +55,12 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
   const selectedQuoteId = insuranceData?.selected_quote_id;
   const policyExpiryDate = insuranceData?.policy_expiry_date || currentItem?.expires || "2026-10-07";
 
+  // Compute lowest quote premium among all valid quotes
+  const validPremiums = quotesList
+    .map((q) => Number(q.annual_premium ?? q.amount ?? 0))
+    .filter((p) => p > 0);
+  const lowestPremium = validPremiums.length > 0 ? Math.min(...validPremiums) : null;
+
   // Map API stage names to timeline stepper IDs
   const stageMap = {
     shopping: "collect_quotes",
@@ -60,9 +80,11 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
       insurance_renewal_id: renewalId,
       carrier_name: carrierInput.trim(),
       annual_premium: parseFloat(amountInput) || amountInput,
+      coverage: coverageInput.trim() || "$1M / $2M General Liability",
     });
     setCarrierInput("");
     setAmountInput("");
+    setCoverageInput("");
   };
 
   const handleSelectCarrier = async (quoteId) => {
@@ -96,7 +118,7 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden my-8 border border-gray-100"
+          className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden my-8 border border-gray-100"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 bg-[#1E3A5F] text-white">
@@ -104,12 +126,12 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
               <RefreshCw size={20} className="text-[#9DB8D9]" />
               <h2 className="text-base md:text-lg font-bold">Insurance Renewal & Shopping Workflow</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg">
+            <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg cursor-pointer">
               <X size={20} />
             </button>
           </div>
 
-          <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          <div className="p-6 space-y-6 max-h-[82vh] overflow-y-auto">
             {isFetchingData ? (
               <div className="py-12 flex flex-col items-center justify-center space-y-3">
                 <Loader2 size={32} className="animate-spin text-[#1E3A5F]" />
@@ -145,106 +167,157 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
                   })}
                 </div>
 
-                {/* Carrier Quotes Section */}
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                      <DollarSign size={14} className="text-[#1E3A5F]" /> Carrier Quotes & Comparison
-                    </h4>
-                    <span className="text-[10px] text-gray-500 font-medium">Target 3 Quotes</span>
+                {/* ── Carrier Quotes Section — Side-by-Side Cards (B-05) ── */}
+                <div className="p-4 rounded-xl bg-gray-50/80 border border-gray-200 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <div>
+                      <h4 className="text-xs font-extrabold text-gray-900 flex items-center gap-1.5 uppercase tracking-wider">
+                        <DollarSign size={14} className="text-[#1E3A5F]" /> Side-by-Side Carrier Quote Cards
+                      </h4>
+                      <p className="text-[11px] text-gray-500">Compare quotes directly with automatic lowest premium highlighting</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F]">
+                      {quotesList.length} Quotes Received
+                    </span>
                   </div>
 
-                  {/* Quotes List */}
-                  <div className="space-y-2">
-                    {quotesList.length > 0 ? (
-                      quotesList.map((q, idx) => {
+                  {/* Side-by-Side Cards Grid */}
+                  {quotesList.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {quotesList.map((q, idx) => {
                         const isSelected = q.is_selected || selectedQuoteId === q.id;
                         const isThisSelecting = selectingQuoteId === q.id;
-                        const carrierName = q.carrier_name || q.carrier;
-                        const premium = q.annual_premium ?? q.amount;
+                        const carrierName = q.carrier_name || q.carrier || `Carrier #${idx + 1}`;
+                        const premium = Number(q.annual_premium ?? q.amount ?? 0);
+                        const isLowest = lowestPremium !== null && premium === lowestPremium;
+                        const coverageText = q.coverage || "$1M / $2M General Liability";
+                        const expiryText = q.expiry_date || q.policy_expiry_date || policyExpiryDate;
 
                         return (
                           <div
                             key={q.id || idx}
-                            className={`p-3 rounded-lg border flex items-center justify-between text-xs transition-all ${
-                              isSelected
+                            className={`relative p-4 rounded-xl border flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
+                              isLowest
+                                ? "bg-[#3E7A54]/[0.06] border-[#3E7A54] ring-2 ring-[#3E7A54]/30 shadow-sm"
+                                : isSelected
                                 ? "bg-[#1E3A5F]/[0.08] border-[#1E3A5F] ring-1 ring-[#1E3A5F]/30"
                                 : "bg-white border-gray-200"
                             }`}
                           >
+                            {/* Lowest Highlight Badge */}
+                            {isLowest && (
+                              <div className="mb-2">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#3E7A54] text-white shadow-xs">
+                                  <Award size={10} /> Lowest Quote
+                                </span>
+                              </div>
+                            )}
+
                             <div>
-                              <p className="font-bold text-gray-900">{carrierName}</p>
-                              <p className="text-[10px] text-gray-500 capitalize">
-                                Status: {q.status || "Received"}
+                              <div className="flex items-start justify-between gap-1 mb-1">
+                                <h5 className="font-bold text-gray-900 text-sm">{carrierName}</h5>
+                                {isSelected && (
+                                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                    Active
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xl font-black text-[#1E3A5F] my-1">
+                                ${premium.toLocaleString()}<span className="text-xs font-normal text-gray-500">/yr</span>
                               </p>
+
+                              <div className="space-y-1.5 mt-3 text-[11px] text-gray-600">
+                                <div className="flex items-center gap-1.5 bg-gray-100/70 p-1.5 rounded-md">
+                                  <FileCheck size={12} className="text-[#1E3A5F] shrink-0" />
+                                  <span className="font-medium truncate" title={coverageText}>{coverageText}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-1.5 py-0.5">
+                                  <Calendar size={12} className="text-gray-400 shrink-0" />
+                                  <span>Expires: {expiryText}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-[#1E3A5F]">
-                                ${Number(premium).toLocaleString()}/yr
-                              </span>
+
+                            <div className="mt-4 pt-3 border-t border-gray-100">
                               <button
                                 type="button"
                                 disabled={isThisSelecting || isSelectingQuote}
                                 onClick={() => handleSelectCarrier(q.id)}
-                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 ${
+                                className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                                   isSelected
-                                    ? "bg-[#1E3A5F] text-white"
-                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                } disabled:opacity-60`}
+                                    ? "bg-[#1E3A5F] text-white shadow-xs"
+                                    : isLowest
+                                    ? "bg-[#3E7A54] hover:bg-[#2F6042] text-white shadow-xs"
+                                    : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                                } disabled:opacity-60 cursor-pointer`}
                               >
                                 {isThisSelecting ? (
                                   <>
                                     <Loader2 size={12} className="animate-spin text-white" /> Selecting...
                                   </>
                                 ) : isSelected ? (
-                                  "Selected ✓"
+                                  "Selected Carrier ✓"
                                 ) : (
-                                  "Select"
+                                  "Select Quote"
                                 )}
                               </button>
                             </div>
                           </div>
                         );
-                      })
-                    ) : (
-                      <p className="text-xs text-gray-400 italic text-center py-2">
-                        No quotes added yet. Use the form below to submit carrier quotes.
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center bg-white rounded-xl border border-dashed border-gray-200">
+                      <p className="text-xs text-gray-400 italic">
+                        No carrier quotes submitted yet. Use the form below to add carrier quotes for side-by-side comparison.
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Add Quote Form */}
-                  <form onSubmit={handleAddQuote} className="pt-2 flex items-center gap-2 border-t border-gray-200">
-                    <Input
-                      type="text"
-                      placeholder="Carrier Name (e.g. Travelers)"
-                      value={carrierInput}
-                      disabled={isAddingQuote}
-                      onChange={(e) => setCarrierInput(e.target.value)}
-                      className="text-xs h-8"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Annual Quote $"
-                      value={amountInput}
-                      disabled={isAddingQuote}
-                      onChange={(e) => setAmountInput(e.target.value)}
-                      className="text-xs h-8 w-28"
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={isAddingQuote || !carrierInput.trim() || !amountInput}
-                      className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs h-8 shrink-0 flex items-center gap-1"
-                    >
-                      {isAddingQuote ? (
-                        <>
-                          <Loader2 size={12} className="animate-spin text-white" /> Adding...
-                        </>
-                      ) : (
-                        "+ Quote"
-                      )}
-                    </Button>
+                  <form onSubmit={handleAddQuote} className="pt-3 border-t border-gray-200 space-y-2">
+                    <p className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">Add New Carrier Quote</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Carrier Name (e.g. Travelers)"
+                        value={carrierInput}
+                        disabled={isAddingQuote}
+                        onChange={(e) => setCarrierInput(e.target.value)}
+                        className="text-xs h-8 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Annual Premium $"
+                        value={amountInput}
+                        disabled={isAddingQuote}
+                        onChange={(e) => setAmountInput(e.target.value)}
+                        className="text-xs h-8 w-full sm:w-32"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Coverage (optional)"
+                        value={coverageInput}
+                        disabled={isAddingQuote}
+                        onChange={(e) => setCoverageInput(e.target.value)}
+                        className="text-xs h-8 flex-1"
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={isAddingQuote || !carrierInput.trim() || !amountInput}
+                        className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs h-8 shrink-0 flex items-center gap-1 w-full sm:w-auto"
+                      >
+                        {isAddingQuote ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin text-white" /> Adding...
+                          </>
+                        ) : (
+                          "+ Add Quote Card"
+                        )}
+                      </Button>
+                    </div>
                   </form>
                 </div>
 

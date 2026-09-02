@@ -101,16 +101,9 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium"
                 >
                   {currentRole === "owner" ? (
-                    <>
-                      <option value="" disabled>Select a director</option>
-                      {allDirector?.map((director) => (
-                        <option key={director?.id} value={director?.id} className="capitalize">
-                          {director?.name}
-                        </option>
-                      ))}
-                    </>
+                    <option value={allDirector?.[0]?.id || "1"}>Director</option>
                   ) : (
-                    <option value="1">Owner</option>
+                    <option value="owner">Owner</option>
                   )}
                 </select>
               </div>

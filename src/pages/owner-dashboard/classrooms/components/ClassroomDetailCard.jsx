@@ -59,7 +59,7 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
 
   const profitDisplay = classroom.formatted_net_monthly_profit || `${fmtMoneyShort(profit)}/mo`;
   const revTotalDisplay = revenue.formatted_total || fmtMoneyShort(revenue.total ?? 0);
-  const revPerSeatDisplay = revenue.formatted_per_seat || `${fmtMoney(revenue.per_seat ?? 0)}/seat`;
+  const revPerSeatDisplay = revenue.formatted_per_seat || `${fmtMoney(revenue.per_seat ?? 0)} per seat / week`;
   const costTotalDisplay = cost.formatted_total || fmtMoneyShort(cost.total ?? 0);
   const costPerSeatDisplay = cost.formatted_per_seat || `${fmtMoney(cost.per_seat ?? 0)}/seat`;
 
