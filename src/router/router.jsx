@@ -35,6 +35,7 @@ import TasksPage from "@/pages/shared/tasks/tasks-page";
 import MaintenancePage from "@/pages/shared/maintenance/maintenance-page";
 import BudgetPage from "@/pages/shared/budget/budget-page";
 import WaitlistPage from "@/pages/shared/waitlist/waitlist-page";
+import PtoPage from "@/pages/shared/pto/pto-page";
 import ProfilePage from "@/pages/shared/profile/profile-page";
 import SettingsPage from "@/pages/shared/settings/settings-page";
 import BillingPage from "@/pages/shared/billing/billing-page";
@@ -138,6 +139,10 @@ export const router = createBrowserRouter([
             element: <WaitlistPage />
           },
           {
+            path: 'pto',
+            element: <PtoPage />
+          },
+          {
             path: 'profile',
             element: <ProfilePage />
           },
@@ -210,6 +215,10 @@ export const router = createBrowserRouter([
           {
             path: 'waitlist',
             element: <WaitlistPage />
+          },
+          {
+            path: 'pto',
+            element: <PtoPage />
           },
           {
             path: 'profile',

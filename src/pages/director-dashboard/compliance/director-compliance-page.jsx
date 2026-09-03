@@ -93,9 +93,12 @@ const DirectorCompliancePage = () => {
         ownerRole: c.responsible_role || c.ownerRole || "director",
         notes: c.renewal_notes || c.notes || "",
         status: c.status || "compliant",
+        status_color: c.status_color || null,
+        status_badge: c.status_badge || null,
         days_left: dLeft,
         days_overdue: dOverdue,
         progress_percentage: c.progress_percentage ?? null,
+        time_progress_percentage: c.time_progress_percentage ?? null,
         docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
           id: ch.id,
           text: ch.title || ch.text || "",
@@ -500,7 +503,7 @@ const DirectorCompliancePage = () => {
                       {item.notes && <div className="mt-1 text-[11px] text-gray-500 italic">{item.notes}</div>}
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <StatusPill status={item.status} />
+                      <StatusPill status={item.status} statusColor={item.status_color} statusBadge={item.status_badge} />
                       <div className="flex items-center gap-1">
                         <Button
                           size="sm"
@@ -542,7 +545,7 @@ const DirectorCompliancePage = () => {
                           {pct}%
                         </span>
                         <span className={`font-semibold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-500"}`}>
-                          {isExpired ? `${d}d overdue` : `${d} days left`}
+                          {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
                         </span>
                       </span>
                     </div>

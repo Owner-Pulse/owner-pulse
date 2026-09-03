@@ -49,6 +49,7 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const [activeTab, setActiveTab] = useState("my");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
+  const [filterOrigin, setFilterOrigin] = useState("all");
 
   useEffect(() => {
     const rawList = Array.isArray(taskList)
@@ -98,9 +99,12 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const filtered = useMemo(() => {
     return visibleTasks.filter((t) => {
       if (filterPriority !== "all" && t.priority !== filterPriority) return false;
+      const isFromOwner = (t.assignedBy || "").toLowerCase().includes("owner") || t.creatorId === 2 || t.raw?.created_by === 2;
+      if (filterOrigin === "owner" && !isFromOwner) return false;
+      if (filterOrigin === "self" && isFromOwner) return false;
       return true;
     });
-  }, [visibleTasks, filterPriority]);
+  }, [visibleTasks, filterPriority, filterOrigin]);
 
   const sorted = useMemo(() => {
     const order = { high: 0, medium: 1, low: 2 };
@@ -147,6 +151,8 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         onTabChange={setActiveTab}
         filterPriority={filterPriority}
         onFilterChange={setFilterPriority}
+        filterOrigin={filterOrigin}
+        onOriginChange={setFilterOrigin}
         totalCount={sorted.length}
       />
 

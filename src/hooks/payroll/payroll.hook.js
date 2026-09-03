@@ -229,6 +229,30 @@ export const useDeletePayrollSchedule = () => {
   return { deleteSchedule, isPending, isError, error };
 };
 
+export const useUpdatePayrollSchedule = () => {
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: updateSchedule, isPending, isError, error } = useMutation({
+    mutationKey: ["update-payroll-schedule"],
+    mutationFn: ({ id, data }) => {
+      const axiosInstance = axiosPrivate();
+      return payrollService.updateSchedule(axiosInstance, id, data);
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["owner-payroll-schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["director-payroll-schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-payroll-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["director-payroll-overview"] });
+      toast.success(res?.message ?? "Payroll schedule updated successfully!");
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message ?? "Failed to update payroll schedule.");
+    },
+  });
+
+  return { updateSchedule, isPending, isError, error };
+};
+
 export const useSubmitPayroll = () => {
   const queryClient = useQueryClient();
 
