@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, PiggyBank, Wallet, TrendingUp, Plus, Settings } from "lucide-react";
+import { DollarSign, Wallet, TrendingUp, Plus, Settings, PieChart } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
 import BudgetPieChartsCard from "./components/BudgetPieChartsCard";
@@ -117,9 +117,14 @@ const BudgetPage = () => {
     }
   }, [rawCategories, isDirectorView]);
 
-  // Sync Director Expenses from API
+  // Sync Director Expenses from API (excluding quickbooks_expenses)
   useEffect(() => {
-    const expensesList = budgetData?.all_expenses || budgetData?.recent_expenses;
+    const expensesList = (budgetData?.all_expenses && budgetData.all_expenses.length > 0)
+      ? budgetData.all_expenses
+      : (budgetData?.recent_expenses && budgetData.recent_expenses.length > 0)
+      ? budgetData.recent_expenses
+      : null;
+
     if (expensesList) {
       const mapped = expensesList.map((e, index) => ({
         id: e.id || index,
@@ -144,6 +149,11 @@ const BudgetPage = () => {
           };
         });
       });
+    } else if (budgetData) {
+      setLocalDirectorExpenses([]);
+      setLocalDirectorCategories((prev) =>
+        prev.map((cat) => ({ ...cat, spent: 0 }))
+      );
     }
   }, [budgetData]);
 
@@ -212,7 +222,7 @@ const BudgetPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            {isDirector ? "My Budget" : (budgetData?.title || "Budget")}
+            {isDirector ? "Director Discretionary Budget" : (budgetData?.title || "Budget")}
           </h1>
           {isDirectorView ? (
             <p className="text-sm text-gray-500 mt-1">
@@ -319,7 +329,7 @@ const BudgetPage = () => {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                   <KpiCard
-                    icon={PiggyBank}
+                    icon={DollarSign}
                     label="Spent YTD"
                     value={spentYtdDisplay}
                     sub={consumedPctDisplay}
@@ -396,11 +406,11 @@ const BudgetPage = () => {
           {/* ── DIRECTOR BUDGET VIEW ────────────────────────────────── */}
           {(view === "director" || isDirector) && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <motion.div variants={itemVariants}>
                   <KpiCard
                     icon={Wallet}
-                    label={isDirector ? "My Budget" : "Director Budget"}
+                    label="Director Discretionary Budget"
                     value={directorBudgetDisplay}
                     sub={directorBudgetSub}
                     iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
@@ -408,7 +418,7 @@ const BudgetPage = () => {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                   <KpiCard
-                    icon={PiggyBank}
+                    icon={DollarSign}
                     label="Spent YTD"
                     value={directorSpentDisplay}
                     sub={directorSpentSub}
@@ -426,15 +436,6 @@ const BudgetPage = () => {
                         ? "bg-[#3E7A54]/10 text-[#2F6042]"
                         : "bg-[#AE4A3E]/10 text-[#8A362C]"
                     }
-                  />
-                </motion.div>
-                <motion.div variants={itemVariants}>
-                  <KpiCard
-                    icon={DollarSign}
-                    label="Avg per Expense"
-                    value={directorAvgExpenseDisplay}
-                    sub={directorAvgExpenseSub}
-                    iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
                   />
                 </motion.div>
               </div>

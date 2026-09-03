@@ -8,7 +8,7 @@ const StaleLeadAlertCard = ({ staleItems, onSelectLead }) => {
     return (
       <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
         <span className="font-semibold flex items-center gap-2">
-          ✓ All waitlist leads are active! No stale inquiries (30d+).
+          ✓ All waitlist leads are active! No leads requiring follow-up (30d+).
         </span>
         <span className="text-[10px] text-emerald-600 font-bold uppercase">Healthy Pipeline</span>
       </div>
@@ -22,7 +22,7 @@ const StaleLeadAlertCard = ({ staleItems, onSelectLead }) => {
           <div className="flex items-center gap-2 text-[#8A362C]">
             <AlertTriangle size={18} />
             <h3 className="font-bold text-sm">
-              Stale Waitlist Leads Warning ({staleItems.length} families waiting &gt;30 days)
+              Needs Follow-Up Warning ({staleItems.length} families waiting &gt;30 days)
             </h3>
           </div>
           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-[#AE4A3E]/15 text-[#8A362C]">
@@ -31,7 +31,7 @@ const StaleLeadAlertCard = ({ staleItems, onSelectLead }) => {
         </div>
 
         <p className="text-xs text-[#8A362C]/80 mb-3">
-          These leads have been in the pipeline over 30 days without advancing to enrollment or being resolved. Director follow-up recommended:
+          These leads have been in the pipeline over 30 days without advancing. Director follow-up recommended:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">

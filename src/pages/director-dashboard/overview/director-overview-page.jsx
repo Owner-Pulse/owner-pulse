@@ -83,7 +83,7 @@ const DirectorOverviewPage = () => {
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            30-Second View
+            Director Operational Dashboard
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
@@ -99,7 +99,11 @@ const DirectorOverviewPage = () => {
         <KpiMetricCard
           label="Enrollment"
           value={enrollmentKpi.total_enrolled}
-          sub={`${enrollmentKpi.capacity_pct}% of ${enrollmentKpi.total_capacity} capacity · ${enrollmentKpi.open_spots} open spots`}
+          sub={
+            enrollmentKpi.total_capacity > 0
+              ? `${enrollmentKpi.capacity_pct}% of ${enrollmentKpi.total_capacity} capacity · ${enrollmentKpi.open_spots} open spots`
+              : `${enrollmentKpi.total_enrolled} Enrolled Students`
+          }
           icon={Users}
           color="#1E3A5F"
           onClick={() => go("/director/students")}

@@ -153,6 +153,8 @@ const WaitlistPage = () => {
         notes: w.notes_and_history || w.notes || "",
         source: w.source || "Referral",
         addedDate: w.added_date || w.addedDate || new Date().toISOString(),
+        tourDate: w.tour_date || w.tourDate || null,
+        tourTime: w.tour_time || w.tourTime || null,
       };
     });
   }, [waitlists]);
@@ -160,7 +162,15 @@ const WaitlistPage = () => {
   // Local matching filters fallback (if anything slipped or needs safety local filter)
   const filtered = useMemo(() => {
     return mappedWaitlist.filter((w) => {
-      if (statusFilter !== "all" && w.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
+      if (statusFilter !== "all") {
+        const stLower = statusFilter.toLowerCase();
+        const wLower = (w.status || "").toLowerCase();
+        if (stLower === "applied") {
+          if (wLower !== "applied" && wLower !== "offered") return false;
+        } else if (wLower !== stLower) {
+          return false;
+        }
+      }
       if (programFilter !== "all" && w.program !== programFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -437,19 +447,19 @@ const WaitlistPage = () => {
 
           <motion.div variants={itemVariants}>
             <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Offered</p>
-              <p className="text-2xl font-extrabold text-teal-600 mt-1">{stats.offeredCount}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Spot offered</p>
+              <p className="text-xs font-semibold text-gray-500">Applied</p>
+              <p className="text-2xl font-extrabold text-teal-600 mt-1">{stats.appliedCount + stats.offeredCount}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Paperwork / Applied</p>
             </div>
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Stale (30d+)</p>
+              <p className="text-xs font-semibold text-gray-500">Needs Follow-Up</p>
               <p className={`text-2xl font-extrabold mt-1 ${stats.staleCount > 0 ? "text-[#8A362C]" : "text-gray-900"}`}>
                 {stats.staleCount}
               </p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Need follow-up</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">&gt;30 days waiting</p>
             </div>
           </motion.div>
         </div>
@@ -481,7 +491,7 @@ const WaitlistPage = () => {
           <div className="flex items-center gap-2 flex-wrap">
             {/* Filter buttons */}
             <div className="flex items-center bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
-              {["all", "Inquiry", "Toured", "Applied", "Offered", "Enrolled", "Lost"].map((st) => (
+              {["all", "Inquiry", "Toured", "Applied", "Enrolled", "Lost"].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}

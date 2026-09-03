@@ -20,7 +20,7 @@ const itemVariants = {
 const STAT_CONFIG = [
   { id: "all", label: "Total Logs Today", icon: ClipboardList, color: "text-[#1E3A5F]", bg: "bg-[#1E3A5F]/10" },
   { id: "incident", label: "Incidents", icon: AlertTriangle, color: "text-[#8A362C]", bg: "bg-[#AE4A3E]/10" },
-  { id: "removal", label: "Removals", icon: UserX, color: "text-[#8A362C]", bg: "bg-[#8A362C]/10" },
+  {id: "removal", label: "Withdrawn", icon: UserX, color: "text-[#8A362C]", bg: "bg-[#8A362C]/10" },
   { id: "pto", label: "PTO Entries", icon: Calendar, color: "text-blue-700", bg: "bg-blue-50" },
   { id: "substitute", label: "Substitutes", icon: UserCheck, color: "text-teal-700", bg: "bg-teal-50" },
   { id: "waitlist", label: "Waitlist Inquiries", icon: UserPlus, color: "text-purple-700", bg: "bg-purple-50" },
@@ -34,23 +34,23 @@ const DailyLogStatsCard = ({ type, count, filterType, onFilter }) => {
   const isSelected = filterType === type;
 
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={itemVariants} className="h-full">
       <Card
-        className={`bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer rounded-2xl ${
-          isSelected ? "ring-2 ring-[#1E3A5F] border-transparent" : ""
+        className={`bg-white border border-gray-100 shadow-xs hover:shadow-md transition-all cursor-pointer rounded-2xl h-full flex flex-col justify-between ${
+          isSelected ? "ring-2 ring-[#1E3A5F] border-transparent bg-slate-50/50" : ""
         }`}
         onClick={() => onFilter(isSelected ? "all" : type)}
       >
-        <CardContent className="p-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{cfg.label}</p>
-              <p className="text-xl font-black text-gray-900 mt-0.5">{count}</p>
-            </div>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${cfg.bg} ${cfg.color}`}>
-              <Icon size={18} />
+        <CardContent className="p-3.5 flex flex-col justify-between h-full min-h-[92px]">
+          <div className="flex items-start justify-between gap-1.5">
+            <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wide leading-tight line-clamp-2 min-h-[24px]">
+              {cfg.label}
+            </p>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg} ${cfg.color}`}>
+              <Icon size={16} />
             </div>
           </div>
+          <p className="text-2xl font-black text-gray-900 mt-1 leading-none">{count}</p>
         </CardContent>
       </Card>
     </motion.div>

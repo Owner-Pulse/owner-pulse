@@ -29,12 +29,19 @@ const OtherDeductionsSection = ({ rows, onAdd, onUpdate, onRemove }) => {
               <div
                 key={row.id}
                 className="grid gap-2 items-center relative z-20"
-                style={{ gridTemplateColumns: "1fr 120px 28px" }}
+                style={{ gridTemplateColumns: "1fr 1fr 120px 28px" }}
               >
                 <StaffSelect
                   value={row.staffId}
                   onChange={(v) => onUpdate(i, "staffId", v)}
                   placeholder="Select staff for deduction..."
+                />
+                <input
+                  type="text"
+                  value={row.description || ""}
+                  onChange={(e) => onUpdate(i, "description", e.target.value)}
+                  placeholder="Itemized reason (e.g. Uniform, Loan, Advance)..."
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
                 />
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Wallet } from "lucide-react";
+import { Wallet, PieChart as PieIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const itemVariants = {
@@ -9,10 +9,20 @@ const itemVariants = {
 };
 
 const ExpensesCard = ({ pettyCashData, onNavigate }) => {
-  const gauge = pettyCashData?.budget_gauge || { total_budget: 0, total_spent: 0, remaining: 0, used_pct: 0 };
+  const gauge = pettyCashData?.budget_gauge || { total_budget: 9000, total_spent: 0, remaining: 9000, used_pct: 0 };
   const transactions = pettyCashData?.recent_transactions || [];
 
   const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
+
+  const spentVal = gauge.total_spent || 0;
+  const totalVal = gauge.total_budget || 9000;
+  const remainingVal = Math.max(0, totalVal - spentVal);
+  const usedPct = totalVal > 0 ? Math.min(100, Math.round((spentVal / totalVal) * 100)) : 0;
+
+  // SVG Pie calculations
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (usedPct / 100) * circumference;
 
   return (
     <motion.div variants={itemVariants}>
@@ -20,7 +30,7 @@ const ExpensesCard = ({ pettyCashData, onNavigate }) => {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Wallet size={16} className="text-[#1E3A5F]" />
+              <PieIcon size={16} className="text-[#1E3A5F]" />
               Expenses &amp; Director Discretionary Budget
             </CardTitle>
             <span className="text-xs text-[#1E3A5F] cursor-pointer hover:underline font-semibold" onClick={() => onNavigate("/director/expenses")}>
@@ -30,24 +40,60 @@ const ExpensesCard = ({ pettyCashData, onNavigate }) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Gauge */}
-            <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-between">
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Monthly Budget</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-2xl font-extrabold text-[#1E3A5F]">{fmtMoney(gauge.total_spent)}</span>
-                  <span className="text-xs text-gray-400">/ {fmtMoney(gauge.total_budget)}</span>
+            {/* Donut / Pie Chart Box */}
+            <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Annual Budget Breakdown</p>
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="text-2xl font-extrabold text-[#1E3A5F]">{fmtMoney(spentVal)}</span>
+                  <span className="text-xs text-gray-400">/ {fmtMoney(totalVal)}</span>
                 </div>
-                <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${gauge.used_pct > 90 ? "bg-[#AE4A3E]" : gauge.used_pct > 75 ? "bg-[#B78A2F]" : "bg-[#1E3A5F]"}`}
-                    style={{ width: `${Math.min(100, Math.round(gauge.used_pct))}%` }}
-                  />
+                <div className="mt-2 space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#1E3A5F] shrink-0" />
+                    <span className="text-gray-600 font-medium">Spent:</span>
+                    <span className="font-bold text-gray-900">{usedPct}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-gray-600 font-medium">Remaining:</span>
+                    <span className="font-bold text-emerald-700">{fmtMoney(remainingVal)}</span>
+                  </div>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-500 mt-2">
-                {fmtMoney(gauge.remaining)} remaining ({Math.round(gauge.used_pct)}% used)
-              </p>
+
+              {/* Visual SVG Donut Pie Chart */}
+              <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  {/* Background remaining circle */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    className="text-emerald-100"
+                    strokeWidth="14"
+                    stroke="currentColor"
+                    fill="transparent"
+                  />
+                  {/* Spent arc overlay */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    className="text-[#1E3A5F] transition-all duration-500"
+                    strokeWidth="14"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="transparent"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-xs font-extrabold text-[#1E3A5F]">{usedPct}%</span>
+                  <span className="text-[8px] text-gray-400 uppercase font-semibold">Used</span>
+                </div>
+              </div>
             </div>
 
             {/* Recent Transactions */}

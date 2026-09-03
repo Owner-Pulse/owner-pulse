@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, CheckCircle2, ClipboardList, Trash2, Pencil, Play } from "lucide-react";
+import { Calendar, CheckCircle2, ClipboardList, Trash2, Pencil, Play, MessageSquare, Crown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import AssigneeTag from "./AssigneeTag";
 import EditTaskModal from "./EditTaskModal";
+import TaskCommentsModal from "./TaskCommentsModal";
 import { useOwnerTaskActions, useDirectorTaskActions } from "@/hooks/useTaskActions";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 
@@ -51,6 +52,8 @@ const TaskCardInner = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [comments, setComments] = useState(task.comments || []);
 
   const days = daysUntil(task.due);
   const isDone = status === "done" || status === "completed";
@@ -60,8 +63,23 @@ const TaskCardInner = ({
   const assigneeRole = (typeof task.assignee === "string" ? task.assignee : task.assignee?.role || "").toLowerCase();
   const userRole = (currentRole || "").toLowerCase();
   const isForMe = assigneeRole === userRole;
-  const isCreator = (typeof task.assignedBy === "string" ? task.assignedBy : task.assignedBy?.role || "").toLowerCase() === userRole;
+  const assignedByRole = (typeof task.assignedBy === "string" ? task.assignedBy : task.assignedBy?.role || "").toLowerCase();
+  const isCreator = assignedByRole === userRole;
   const canEditOrDelete = isCreator || userRole === "owner" || isForMe;
+
+  // Requirement B-06: FROM OWNER identification
+  const isFromOwner = assignedByRole.includes("owner") || task.creatorId === 2 || task.raw?.created_by === 2;
+
+  const handleAddComment = (taskId, text) => {
+    const newComm = {
+      id: Date.now(),
+      author: userRole === "owner" ? "School Owner" : "Director",
+      role: userRole,
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setComments((prev) => [...prev, newComm]);
+  };
 
   const handleDelete = async () => {
     await deleteTask(task.id);
@@ -83,7 +101,13 @@ const TaskCardInner = ({
         <Card
           className={`bg-white border-none shadow-sm transition-all ${
             isDone ? "opacity-60" : ""
-          } ${isForMe ? "border-l-4 border-l-[#1E3A5F]" : ""}`}
+          } ${
+            isFromOwner
+              ? "border-l-4 border-l-[#B78A2F] bg-gradient-to-r from-amber-50/30 via-white to-white"
+              : isForMe
+              ? "border-l-4 border-l-[#1E3A5F]"
+              : ""
+          }`}
         >
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -124,10 +148,17 @@ const TaskCardInner = ({
                       {task.title}
                     </span>
                     <div className="flex flex-wrap items-center gap-1">
+                      {/* B-06: Distinct FROM OWNER Badge */}
+                      {isFromOwner && (
+                        <span className="text-[9px] md:text-[10px] font-extrabold text-[#8F6A1F] bg-[#B78A2F]/15 border border-[#B78A2F]/30 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                          <Crown size={10} className="text-[#8F6A1F]" />
+                          FROM OWNER
+                        </span>
+                      )}
                       <PriorityTag priority={task.priority} />
                       <StatusTag status={status} />
                       <AssigneeTag assignee={task.assignee} />
-                      {isForMe && (
+                      {isForMe && !isFromOwner && (
                         <span className="text-[9px] md:text-[10px] font-bold text-[#1E3A5F] bg-[#1E3A5F]/10 px-1.5 py-0.5 rounded-full">
                           Mine
                         </span>
@@ -185,18 +216,22 @@ const TaskCardInner = ({
                   </Button>
                 )}
 
-                {/* Edit Task button - commented out */}
-                {/* {canEditOrDelete && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 border-none px-2 font-medium"
-                    onClick={() => setShowEditModal(true)}
-                  >
-                    <Pencil size={11} className="mr-1" />
-                    Edit
-                  </Button>
-                )} */}
+                {/* B-05: Discussion / Comments button */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 border-none px-2 font-medium flex items-center gap-1"
+                  onClick={() => setShowCommentsModal(true)}
+                  title="Open task comments & updates"
+                >
+                  <MessageSquare size={11} />
+                  <span>Comments</span>
+                  {comments.length > 0 && (
+                    <span className="bg-[#1E3A5F] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                      {comments.length}
+                    </span>
+                  )}
+                </Button>
 
                 {/* Delete Task button */}
                 {canEditOrDelete && (
@@ -216,6 +251,16 @@ const TaskCardInner = ({
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Comments Thread Modal */}
+      <TaskCommentsModal
+        isOpen={showCommentsModal}
+        task={task}
+        currentRole={currentRole}
+        comments={comments}
+        onAddComment={handleAddComment}
+        onClose={() => setShowCommentsModal(false)}
+      />
 
       {/* Edit Task Modal */}
       {showEditModal && (

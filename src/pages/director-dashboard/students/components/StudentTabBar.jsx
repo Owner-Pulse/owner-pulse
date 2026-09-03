@@ -10,7 +10,7 @@ const itemVariants = {
 const TABS = [
   { id: "enrollment", label: "Enrollment", icon: GraduationCap, accent: "text-[#1E3A5F]", activeBg: "bg-[#1E3A5F]" },
   { id: "incidents", label: "Incidents", icon: AlertTriangle, accent: "text-[#8F6A1F]", activeBg: "bg-[#B78A2F]" },
-  { id: "removals", label: "Removals", icon: UserMinus, accent: "text-[#8A362C]", activeBg: "bg-[#AE4A3E]" },
+  { id: "removals", label: "Withdrawn", icon: UserMinus, accent: "text-[#8A362C]", activeBg: "bg-[#AE4A3E]" },
   { id: "at-risk", label: "At-Risk", icon: ShieldAlert, accent: "text-[#8A362C]", activeBg: "bg-[#AE4A3E]" },
 ];
 

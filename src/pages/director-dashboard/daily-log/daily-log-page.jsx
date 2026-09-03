@@ -119,6 +119,9 @@ const DailyLogPage = () => {
   // Classrooms hook
   const { classrooms } = useGetAllClassrooms();
 
+  // Map filterType for API request so 'open' & 'this_week' send 'all' to the backend
+  const apiType = ["open", "this_week"].includes(filterType) ? "all" : filterType;
+
   // Fetch backend daily log data using custom TanStack Query hook
   const {
     summary,
@@ -126,7 +129,7 @@ const DailyLogPage = () => {
     isLoading,
     refetch
   } = useGetDailyLogs({
-    type: filterType,
+    type: apiType,
     search: searchQuery,
   });
 
@@ -269,7 +272,7 @@ const DailyLogPage = () => {
       </motion.div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 xl:grid-cols-8 gap-3">
         {["all", "incident", "removal", "pto", "substitute", "waitlist", "maintenance", "at_risk"].map((typeKey) => (
           <DailyLogStatsCard
             key={typeKey}

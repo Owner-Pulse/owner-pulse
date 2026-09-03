@@ -26,7 +26,7 @@ const RemovalCard = ({ removal }) => {
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#AE4A3E]/10 text-[#8A362C] capitalize">
             {reasonText}
           </span>
-          <span className="text-[9px] text-gray-400 ml-auto font-medium">Removed {elapsedDays} days ago</span>
+          <span className="text-[9px] text-gray-400 ml-auto font-medium">Withdrawn {elapsedDays} days ago</span>
         </div>
         <p className="text-xs text-gray-500 mt-0.5">{classroomName}</p>
         {detailText && <p className="text-[10px] text-gray-500 mt-1 italic">"{detailText}"</p>}
