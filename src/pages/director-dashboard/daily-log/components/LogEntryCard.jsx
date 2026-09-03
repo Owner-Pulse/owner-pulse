@@ -18,7 +18,7 @@ const LOG_TYPE_CONFIG = {
     badgeBg: "bg-[#AE4A3E]/10 text-[#8A362C] border-[#AE4A3E]/20"
   },
   removal: {
-    label: "Removal",
+    label: "Withdrawn",
     icon: UserX,
     dotColor: "bg-[#8A362C]",
     badgeBg: "bg-[#8A362C]/10 text-[#8A362C] border-[#8A362C]/20"
@@ -94,7 +94,7 @@ const LogEntryCard = ({ entry, index }) => {
         );
       }
     } else if (typeKey === "removal") {
-      if (!title) title = `Removal: ${entry.student_name || entry.student || "Student"}`;
+      if (!title) title = `Withdrawn: ${entry.student_name || entry.student || "Student"}`;
       if (!sub) sub = `${entry.classroom_name || entry.classroom || "General"} · Reason: ${entry.reason?.replace("_", " ") || "Withdrawn"}`;
       extraTag = (
         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">

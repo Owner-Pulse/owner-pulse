@@ -49,21 +49,30 @@ const KpiCard = ({
           </div>
         </div>
 
-        {/* Item list under count per D-06 */}
+        {/* Item list under count per D-06 & D-08 */}
         {displayItems.length > 0 ? (
-          <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1">
+          <div className="mt-2.5 pt-2 border-t border-gray-100 space-y-1.5">
             {displayItems.map((it, idx) => {
               const name = it.item || it.name || "Item";
               const days = it.days_left !== undefined ? `${it.days_left}d` : it.expires ? it.expires : "";
+              const isExpired = it.status === "expired" || (it.days_left !== undefined && it.days_left <= 0);
+              const isWarning = !isExpired && (it.status === "expiring" || (it.days_left !== undefined && it.days_left <= 60));
+              
+              const solidBg = isExpired 
+                ? "bg-[#AE4A3E] text-white" 
+                : isWarning 
+                ? "bg-[#B78A2F] text-white" 
+                : "bg-[#3E7A54] text-white";
+
               return (
                 <div
                   key={it.id || idx}
                   onClick={() => onItemClick && onItemClick(it)}
-                  className="flex items-center justify-between text-[11px] hover:bg-gray-50 p-1 rounded transition-colors cursor-pointer"
+                  className={`flex items-center justify-between text-[11px] p-1.5 rounded-lg shadow-2xs transition-transform hover:scale-[1.01] cursor-pointer ${solidBg}`}
                   title={`View ${name}`}
                 >
-                  <span className="font-semibold text-gray-800 truncate max-w-[130px]">{name}</span>
-                  {days && <span className="text-gray-500 font-medium shrink-0 ml-1">{days}</span>}
+                  <span className="font-semibold truncate max-w-[135px]">{name}</span>
+                  {days && <span className="text-[10px] font-extrabold bg-white/20 px-1.5 py-0.5 rounded shrink-0 ml-1">{days}</span>}
                 </div>
               );
             })}

@@ -24,21 +24,35 @@ const ComplianceCard = ({ items = [], onNavigate }) => {
         </CardHeader>
         <CardContent className="space-y-2">
           {complianceList.map((c, i) => {
-            const isExpired = c.is_overdue || c.days_left <= 0;
+            const isExpired = c.is_overdue || c.days_left < 0;
             const urgent = !isExpired && c.days_left <= 30;
             const title = c.title || c.item;
 
+            const daysText = c.days_left < 0
+              ? `${Math.abs(c.days_left)}d overdue`
+              : c.days_left === 0
+              ? "Due today"
+              : `${c.days_left}d left`;
+
+            const boxBg = isExpired
+              ? "bg-[#AE4A3E] text-white shadow-xs"
+              : urgent
+              ? "bg-[#B78A2F] text-white shadow-xs"
+              : "bg-[#1E3A5F] text-white shadow-xs";
+
             return (
-              <div key={c.id || i} className={`p-2.5 rounded-lg ${isExpired ? "bg-[#AE4A3E]/[0.06]" : urgent ? "bg-[#B78A2F]/[0.08]" : "bg-[#1E3A5F]/[0.04]"}`}>
+              <div key={c.id || i} className={`p-3 rounded-xl transition-all ${boxBg}`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-900 truncate">{title}</p>
-                  <span className={`text-[10px] font-bold shrink-0 ml-1 ${isExpired ? "text-[#8A362C]" : urgent ? "text-[#8F6A1F]" : "text-[#1E3A5F]"}`}>
-                    {isExpired ? `${Math.abs(c.days_left)}d overdue` : `${c.days_left}d`}
+                  <p className="text-xs font-bold text-white truncate">{title}</p>
+                  <span className="text-[10px] font-extrabold shrink-0 ml-1.5 px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-xs">
+                    {daysText}
                   </span>
                 </div>
-                <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${isExpired ? "bg-[#AE4A3E]" : urgent ? "bg-[#B78A2F]" : "bg-[#1E3A5F]"}`}
-                    style={{ width: `${isExpired ? 100 : Math.min(100, Math.round((1 - c.days_left / 365) * 100))}%` }} />
+                <div className="mt-2 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white/90 rounded-full"
+                    style={{ width: `${isExpired ? 100 : Math.min(100, Math.max(10, Math.round((1 - c.days_left / 365) * 100)))}%` }}
+                  />
                 </div>
               </div>
             );

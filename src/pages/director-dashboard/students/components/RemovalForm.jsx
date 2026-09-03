@@ -39,7 +39,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
     const classId = e.target.value;
     setSelectedClassroomId(classId);
 
-    const foundClass = classrooms.find((c) => String(c.procare_classroom_id || c.id) === String(classId));
+    const foundClass = classrooms.find((c) => String(c.classroom_id || c.id || c.procare_classroom_id) === String(classId));
     const className = foundClass ? (foundClass.classroom_name || foundClass.name) : "";
     setSelectedClassroomName(className);
 
@@ -69,6 +69,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
       setError("Please select a student.");
       return;
     }
+    const foundClass = classrooms.find((c) => String(c.classroom_id || c.id || c.procare_classroom_id) === String(selectedClassroomId));
     setIsSubmitting(true);
     onAdd({
       id: Date.now(),
@@ -77,7 +78,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
       childId: form.childId,
       procare_child_id: form.childId,
       classroomId: selectedClassroomId,
-      procare_classroom_id: selectedClassroomId,
+      procare_classroom_id: foundClass?.procare_classroom_id || selectedClassroomId,
       reason: form.reason,
       classroom: selectedClassroomName,
       detail: form.detail,
@@ -94,7 +95,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Remove Student</h2>
+              <h2 className="text-xl font-bold text-gray-900">Withdraw Student</h2>
               <p className="text-sm text-gray-500 mt-0.5">Record a student withdrawal from the school registry</p>
             </div>
             <button onClick={onClose} disabled={activeLoading} className="p-2 hover:bg-gray-100 rounded-xl disabled:opacity-50">
@@ -109,7 +110,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white font-medium disabled:bg-gray-50">
                 <option value="">Select classroom...</option>
                 {classrooms.map((c) => {
-                  const cId = c.procare_classroom_id || c.id;
+                  const cId = c.classroom_id || c.id || c.procare_classroom_id;
                   const cName = c.classroom_name || c.name;
                   return (
                     <option key={cId || cName} value={cId}>
@@ -166,7 +167,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Details</label>
-              <textarea value={form.detail} onChange={(e) => update("detail", e.target.value)} placeholder="Reason for removal..." rows={2} disabled={activeLoading}
+              <textarea value={form.detail} onChange={(e) => update("detail", e.target.value)} placeholder="Reason for withdrawal..." rows={2} disabled={activeLoading}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 resize-none disabled:bg-gray-50" />
             </div>
 
@@ -174,7 +175,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
             <div className="p-3.5 bg-amber-50/70 border border-amber-100 rounded-xl flex items-start gap-2.5">
               <AlertTriangle size={16} className="text-amber-700 shrink-0 mt-0.5" />
               <p className="text-[11px] text-amber-700 leading-normal font-medium">
-                <strong>Retention Notice:</strong> Removed student records are kept in this registry for exactly 60 days for compliance auditing, after which they will be permanently purged.
+                <strong>Retention Notice:</strong> Withdrawn student records are kept in this registry for exactly 60 days for compliance auditing, after which they will be permanently purged.
               </p>
             </div>
 
@@ -189,7 +190,7 @@ const RemovalForm = ({ onAdd, onClose, isLoading = false }) => {
                   </>
                 ) : (
                   <>
-                    <Send size={15} className="mr-1.5 inline" /> Record Removal
+                    <Send size={15} className="mr-1.5 inline" /> Record Withdrawal
                   </>
                 )}
               </Button>

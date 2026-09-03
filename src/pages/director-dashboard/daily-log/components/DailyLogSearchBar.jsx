@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Search, X } from "lucide-react";
+import { Search, X, Layers, CalendarCheck2 } from "lucide-react";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -9,11 +9,11 @@ const itemVariants = {
 
 const FILTERS = [
   { id: "all", label: "All History" },
+  { id: "open", label: "Open Items", icon: Layers },
+  { id: "this_week", label: "This Week", icon: CalendarCheck2 },
   { id: "incident", label: "Incidents" },
-  { id: "removal", label: "Removals" },
-  { id: "pto", label: "Staff PTO" },
+  { id: "removal", label: "Withdrawn" },
   { id: "substitute", label: "Substitutes" },
-  { id: "waitlist", label: "Waitlist" },
   { id: "maintenance", label: "Maintenance" },
   { id: "at_risk", label: "At-Risk" },
 ];
@@ -42,17 +42,19 @@ const DailyLogSearchBar = ({ searchQuery, onSearchChange, filterType, onFilterCh
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
         {FILTERS.map((f) => {
           const isActive = filterType === f.id;
+          const Icon = f.icon;
           return (
             <button
               key={f.id}
               onClick={() => onFilterChange(f.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 isActive 
                   ? "bg-[#1E3A5F] text-white shadow-sm" 
-                  : "bg-white text-gray-500 hover:bg-slate-100 border border-gray-100"
+                  : "bg-white text-gray-600 hover:bg-slate-100 border border-gray-200"
               }`}
             >
-              {f.label}
+              {Icon && <Icon size={13} />}
+              <span>{f.label}</span>
             </button>
           );
         })}

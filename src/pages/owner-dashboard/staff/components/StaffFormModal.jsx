@@ -4,7 +4,7 @@ import { X, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const ROLES = ["Lead Teacher", "Assistant Teacher", "Floater", "Director", "Assistant Director", "Cook/Chef", "Admin", "Other"];
+const ROLES = ["Teacher"];
 
 const parseToYYYYMMDD = (dateStr) => {
   if (!dateStr) return "";
@@ -46,7 +46,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
   const [form, setForm] = useState({
     name: "",
     employee_id: "",
-    role: "",
+    role: "Teacher",
     classroom: "",
     status: "",
     ptoAllowance: "",
@@ -63,7 +63,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
       setForm({
         name: staff.full_name || staff.name || "",
         employee_id: staff.procare_employee_id || staff.employee_id || "",
-        role: staff.role || "",
+        role: staff.role || "Teacher",
         classroom: staff.primary_assignment || staff.classroom || staff.work_area || "",
         status: staff.employment_status || staff.status || "Currently Employed",
         ptoAllowance: staff.pto_allowance ?? staff.ptoAllowance ?? staff.total_allowance_days ?? "",
@@ -77,7 +77,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
       setForm({
         name: "",
         employee_id: "",
-        role: "",
+        role: "Teacher",
         classroom: "",
         status: "",
         ptoAllowance: "",
