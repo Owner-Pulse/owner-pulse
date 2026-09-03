@@ -27,8 +27,6 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import WaitlistFunnelCard from "./components/WaitlistFunnelCard";
 import StaleLeadAlertCard from "./components/StaleLeadAlertCard";
 
-import { useGetUser } from "@/hooks/auth/user-details.hook";
-import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import {
   useGetDirectorWaitlistList,
   useAddDirectorWaitlist,
@@ -38,9 +36,12 @@ import {
   useOfferSpotDirectorWaitlist,
   useConfirmEnrollmentDirectorWaitlist,
   useMarkLostDirectorWaitlist,
-  useDeleteDirectorWaitlist
+  useDeleteDirectorWaitlist,
 } from "@/hooks/director-hook/waitlist.hook";
+
 import { useGetOwnerWaitlistList } from "@/hooks/owner-hook/waitlist.hook";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
+import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -52,7 +53,18 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const ALL_PROGRAMS = ["2 Yr Old Room", "PreK3", "PreK4", "VPK", "Kindergarten", "1st-8th Grade"];
+const ALL_PROGRAMS = [
+  "Infants",
+  "Toddlers",
+  "Twos",
+  "Threes",
+  "Pre-K",
+  "VPK A",
+  "Kindergarten",
+  "1st/2nd Grade",
+  "3rd/4th Grade",
+  "7/8 Grade",
+];
 
 const WaitlistPage = () => {
   const { user } = useGetUser();
@@ -75,20 +87,21 @@ const WaitlistPage = () => {
   const [editModalEntry, setEditModalEntry] = useState(null);
   const [deleteModalEntry, setDeleteModalEntry] = useState(null);
 
-  // Map local filter state parameters to API specifications
-  const waitlistParams = useMemo(() => {
-    const matchedClassroom = classrooms.find(
-      (c) => (c.classroom_name || c.name) === programFilter
-    );
-    return {
-      status: statusFilter === "all" ? undefined : statusFilter.toLowerCase(),
-      classroom_id: matchedClassroom ? (matchedClassroom.procare_classroom_id || matchedClassroom.id) : undefined,
-      search: searchQuery.trim() || undefined,
-      per_page: 15,
-    };
-  }, [statusFilter, programFilter, searchQuery, classrooms]);
+  // Pagination / Params
+  const [page, setPage] = useState(1);
 
-  // Fetch list states from hooks based on current user role roles
+  const waitlistParams = useMemo(
+    () => ({
+      page,
+      per_page: 15,
+      status: statusFilter !== "all" ? statusFilter.toLowerCase() : undefined,
+      program: programFilter !== "all" ? programFilter : undefined,
+      search: searchQuery.trim() || undefined,
+    }),
+    [page, statusFilter, programFilter, searchQuery]
+  );
+
+  // Fetch list states from hooks based on current user role
   const directorHook = useGetDirectorWaitlistList(!isOwner ? waitlistParams : undefined);
   const ownerHook = useGetOwnerWaitlistList(isOwner ? waitlistParams : undefined);
 
@@ -101,7 +114,10 @@ const WaitlistPage = () => {
     isFetchingNextPage,
   } = activeHook;
 
-  const waitlists = waitlistData?.waitlists || [];
+  // Handle updated API response structure: payload can be inside data.data or data directly
+  const payload = waitlistData?.data || waitlistData || {};
+  const waitlists = payload.waitlists || [];
+  const classroomWiseWaitlist = payload.classroom_wise_waitlist || payload.summary?.classroom_wise_waitlist || [];
 
   // Mutations
   const { addWaitlist: addMutation, isPending: isAddPending } = useAddDirectorWaitlist();
@@ -132,78 +148,71 @@ const WaitlistPage = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Map API snake_case format items into camelCase structure key references of view components
+  // Map API snake_case format items into camelCase structure
   const mappedWaitlist = useMemo(() => {
-    return waitlists.map((w) => {
-      // Normalize statuses with capitalized letters for views matching old state
-      const capStatus = w.status
-        ? w.status.charAt(0).toUpperCase() + w.status.slice(1).toLowerCase()
-        : "Inquiry";
+    const rawList = Array.isArray(waitlists)
+      ? waitlists
+      : Array.isArray(waitlists?.data)
+      ? waitlists.data
+      : [];
 
+    return rawList.map((item) => {
+      const isPast30Days = item.wait_time_days > 30;
       return {
-        ...w,
-        id: w.id,
-        childName: w.child_name || w.childName || "Unknown",
-        age: w.age_dob || w.age || "",
-        program: w.program || w.classroom || "",
-        parentName: w.parent_name || w.parentName || "",
-        phone: w.phone || "",
-        email: w.email || "",
-        status: capStatus,
-        notes: w.notes_and_history || w.notes || "",
-        source: w.source || "Referral",
-        addedDate: w.added_date || w.addedDate || new Date().toISOString(),
+        id: item.id,
+        childName: item.child_name,
+        ageDob: item.age_dob,
+        program: item.program || item.classroom_name || "Unassigned",
+        classroomId: item.classroom_id,
+        classroomName: item.classroom_name || item.classroom || "Unassigned",
+        parentName: item.parent_name,
+        phone: item.phone,
+        email: item.email,
+        source: item.source || "other",
+        notes: item.notes || "",
+        specialNotes: item.special_notes || "",
+        status: (item.status || "inquiry").toLowerCase(),
+        tourDate: item.tour_date,
+        tourTime: item.tour_time,
+        tourShowedUp: item.tour_showed_up,
+        tourNotes: item.tour_notes,
+        packetHandedToFamily: item.packet_handed_to_family,
+        applicationDate: item.application_date,
+        applicationNotes: item.application_notes,
+        offerDate: item.offer_date,
+        offeredStartDate: item.offered_start_date,
+        offerNotes: item.offer_notes,
+        finalEnrollmentNotes: item.final_enrollment_notes,
+        lossReason: item.loss_reason,
+        lostDate: item.lost_date,
+        enrolledDate: item.enrolled_date,
+        addedDate: item.added_date || item.created_at,
+        waitTimeDays: item.wait_time_days || 0,
+        waitTimeText: item.wait_time_text || `${item.wait_time_days || 0}d`,
+        isPast30Days,
+        raw: item,
       };
     });
   }, [waitlists]);
 
-  // Local matching filters fallback (if anything slipped or needs safety local filter)
-  const filtered = useMemo(() => {
-    return mappedWaitlist.filter((w) => {
-      if (statusFilter !== "all" && w.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
-      if (programFilter !== "all" && w.program !== programFilter) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          w.childName.toLowerCase().includes(q) ||
-          w.parentName.toLowerCase().includes(q) ||
-          (w.notes && w.notes.toLowerCase().includes(q)) ||
-          w.program.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [mappedWaitlist, statusFilter, programFilter, searchQuery]);
-
-  // Adapt backend metrics / summary data into stats matching component props
+  // Calculated Stats & Aggregations
   const stats = useMemo(() => {
-    const summary = waitlistData?.summary;
-    const byStatus = summary?.by_status || {};
+    const summary = payload.summary || payload.data?.summary || {};
+    const byStatus = summary.by_status || {};
 
-    const total = summary?.total_pipeline ?? 0;
-    const inquiryCount = byStatus.inquiry ?? 0;
-    const touredCount = byStatus.toured ?? 0;
-    const appliedCount = byStatus.applied ?? 0;
-    const offeredCount = byStatus.offered ?? 0;
-    const enrolledCount = byStatus.enrolled ?? 0;
-    const lostCount = byStatus.lost ?? 0;
-    const staleCount = summary?.stale_30_days ?? 0;
-    const staleItems = waitlistData?.stale_warning_list || [];
+    const total = summary.total_pipeline ?? mappedWaitlist.length;
+    const inquiryCount = byStatus.inquiry ?? mappedWaitlist.filter((x) => x.status === "inquiry").length;
+    const touredCount = byStatus.toured ?? mappedWaitlist.filter((x) => x.status === "toured").length;
+    const appliedCount = byStatus.applied ?? mappedWaitlist.filter((x) => x.status === "applied").length;
+    const offeredCount = byStatus.offered ?? mappedWaitlist.filter((x) => x.status === "offered").length;
+    const enrolledCount = byStatus.enrolled ?? mappedWaitlist.filter((x) => x.status === "enrolled").length;
+    const lostCount = byStatus.lost ?? mappedWaitlist.filter((x) => x.status === "lost").length;
 
-    // Funnel conversions calculation
-    const touredOrHigher = touredCount + appliedCount + offeredCount + enrolledCount;
-    const appliedOrHigher = appliedCount + offeredCount + enrolledCount;
-    const offeredOrHigher = offeredCount + enrolledCount;
+    const staleItems = mappedWaitlist.filter((x) => x.isPast30Days && x.status !== "enrolled" && x.status !== "lost");
+    const staleCount = summary.stale_30_days ?? staleItems.length;
 
-    const inquiryToTourRate = total > 0 ? Math.round((touredOrHigher / total) * 100) : 0;
-    const tourToAppliedRate = touredOrHigher > 0 ? Math.round((appliedOrHigher / touredOrHigher) * 100) : 0;
-    const appliedToOfferRate = appliedOrHigher > 0 ? Math.round((offeredOrHigher / appliedOrHigher) * 100) : 0;
-    const offerToEnrollRate = offeredOrHigher > 0 ? Math.round((enrolledCount / offeredOrHigher) * 100) : 0;
-
-    const overallConversionRate = summary?.conversion_rate_numeric ?? (total > 0 ? Math.round((enrolledCount / total) * 100) : 0);
-
-    const projectedMonthlyRevenue = summary?.projected_revenue_numeric ??
-      (waitlistData?.revenue_forecast?.monthly_forecast_numeric ?? (appliedCount + offeredCount) * 950);
+    const overallConversionRate = total > 0 ? Math.round((enrolledCount / total) * 100) : 0;
+    const touredToAppliedRate = touredCount > 0 ? Math.round(((appliedCount + offeredCount) / touredCount) * 100) : 0;
 
     return {
       total,
@@ -215,122 +224,50 @@ const WaitlistPage = () => {
       lostCount,
       staleCount,
       staleItems,
-      inquiryToTourRate,
-      tourToAppliedRate,
-      appliedToOfferRate,
-      offerToEnrollRate,
       overallConversionRate,
-      projectedMonthlyRevenue,
+      touredToAppliedRate,
     };
-  }, [waitlistData]);
+  }, [payload, mappedWaitlist]);
 
-  // Program Breakdown Data mapped from owner endpoints or fallback
+  // Breakdown aggregations
   const byProgram = useMemo(() => {
-    if (waitlistData?.by_program) {
-      return waitlistData.by_program.map((p) => ({
-        program: p.program || p.classroom_name || "Unknown",
-        count: p.total_families ?? 0,
-        avgWait: p.avg_wait_days ?? 0,
-      }));
-    }
-    return [];
-  }, [waitlistData]);
+    const counts = {};
+    const waitTimes = {};
+    mappedWaitlist.forEach((x) => {
+      const p = x.program;
+      counts[p] = (counts[p] || 0) + 1;
+      waitTimes[p] = (waitTimes[p] || 0) + x.waitTimeDays;
+    });
+    return Object.entries(counts).map(([program, count]) => ({
+      program,
+      count,
+      avgWait: Math.round(waitTimes[program] / count),
+    }));
+  }, [mappedWaitlist]);
 
   const bySource = useMemo(() => {
-    return waitlistData?.by_source || {};
-  }, [waitlistData]);
+    const counts = {};
+    mappedWaitlist.forEach((x) => {
+      counts[x.source] = (counts[x.source] || 0) + 1;
+    });
+    return counts;
+  }, [mappedWaitlist]);
 
-  // Action Dispatch Handlers
-  const handleSaveAddModal = async (formData) => {
-    const classroom = classrooms.find(
-      (c) => (c.classroom_name || c.name) === formData.program
-    );
-    const procareClassroomId = classroom ? (classroom.procare_classroom_id || classroom.id) : null;
-
-    const payload = {
-      child_full_name: formData.childName,
-      age_dob: formData.dob || "—",
-      procare_classroom_id: procareClassroomId,
-      parent_guardian_name: formData.parentName,
-      phone: formData.phone,
-      email: formData.email,
-      lead_source: formData.source,
-      special_notes: formData.notes,
-    };
-
-    if (editModalEntry) {
-      await updateMutation({ id: editModalEntry.id, payload });
-      setEditModalEntry(null);
-    } else {
-      await addMutation(payload);
-    }
-  };
-
-  const logTour = async (id, data) => {
-    const payload = {
-      tour_date: data.tourDate,
-      tour_time: data.tourTime,
-      did_they_show_up: data.showedUp === "yes" ? "Yes - Showed up (Move to Toured)" : "No - Did not show up (Mark Lost)",
-      tour_notes: data.tourNotes,
-    };
-    await logTourMutation({ id, payload });
-  };
-
-  const moveToApplied = async (id, data) => {
-    const payload = {
-      packet_handed_to_family: data.packetGiven === "Yes" ? "Yes - Paperwork/Digital Packet Issued" : "No - Pending Packet",
-      application_date: data.appliedDate,
-      application_notes: data.appliedNotes,
-    };
-    await moveToAppliedMutation({ id, payload });
-  };
-
-  const offerSpot = async (id, data) => {
-    const payload = {
-      offer_date: data.offerDate,
-      offered_start_date: data.startDate,
-      offer_notes: data.offerNotes,
-    };
-    await offerSpotMutation({ id, payload });
-  };
-
-  const confirmEnrollment = async (id, data) => {
-    const payload = {
-      procare_child_id: Number(data.childId) || 0,
-      procare_parent_person_id: Number(data.personId) || 0,
-      student_full_name: data.childName,
-      date_of_birth: data.dob,
-      gender: data.gender,
-      primary_classroom: data.finalRoom,
-      enrollment_status: data.status,
-      enrollment_date: data.actualStart,
-      medical_allergy_alerts: data.allergies || "None",
-      parent_name: data.parentName,
-      parent_phone: data.phone,
-      parent_email: data.email,
-      final_enrollment_notes: data.enrollNotes,
-    };
-    await confirmEnrollmentMutation({ id, payload });
-  };
-
-  const markLost = async (id, reason) => {
-    const payload = {
-      loss_reason: reason || "Other",
-      lost_date: new Date().toISOString().slice(0, 10),
-    };
-    await markLostMutation({ id, payload });
-  };
-
-  const confirmDeleteEntry = async () => {
-    if (!deleteModalEntry) return;
-    try {
-      await deleteMutation(deleteModalEntry.id);
-      setDeleteModalEntry(null);
-    } catch (err) {
-      // Error handled by mutation toast
-    }
-  };
-
+  // Local Filter matching
+  const filtered = useMemo(() => {
+    return mappedWaitlist.filter((entry) => {
+      if (statusFilter !== "all" && entry.status !== statusFilter.toLowerCase()) return false;
+      if (programFilter !== "all" && entry.program !== programFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchChild = entry.childName?.toLowerCase().includes(q);
+        const matchParent = entry.parentName?.toLowerCase().includes(q);
+        const matchNotes = entry.notes?.toLowerCase().includes(q);
+        if (!matchChild && !matchParent && !matchNotes) return false;
+      }
+      return true;
+    });
+  }, [mappedWaitlist, statusFilter, programFilter, searchQuery]);
 
   return (
     <motion.div
@@ -339,16 +276,14 @@ const WaitlistPage = () => {
       initial="hidden"
       animate="show"
     >
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* ── Page Header ────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
-            {isOwner ? "Waitlist & Funnel Analytics" : "Waitlist Management"}
+            Waitlist Management
           </h1>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            {isOwner
-              ? "Strategic overview of inquiries, funnel conversion rates, and tuition forecasts"
-              : "Manage family inquiries → tours → enrollment pipeline"}
+            Track inquiries, tours, offers, and classroom waitlist tallies
           </p>
         </div>
 
@@ -390,11 +325,11 @@ const WaitlistPage = () => {
 
           <motion.div variants={itemVariants}>
             <KpiCard
-              icon={DollarSign}
-              label="Projected Revenue"
-              value={`$${stats.projectedMonthlyRevenue.toLocaleString()}`}
-              sub="Monthly tuition from pending seats"
-              iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
+              icon={GraduationCap}
+              label="Offered Spots"
+              value={stats.offeredCount}
+              sub="Awaiting family response"
+              iconBg="bg-teal-100 text-teal-800"
             />
           </motion.div>
 
@@ -437,30 +372,32 @@ const WaitlistPage = () => {
 
           <motion.div variants={itemVariants}>
             <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Offered</p>
-              <p className="text-2xl font-extrabold text-teal-600 mt-1">{stats.offeredCount}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Spot offered</p>
+              <p className="text-xs font-semibold text-gray-500">Applied</p>
+              <p className="text-2xl font-extrabold text-teal-600 mt-1">{stats.appliedCount + stats.offeredCount}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Paperwork / Applied</p>
             </div>
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Stale (30d+)</p>
+              <p className="text-xs font-semibold text-gray-500">Needs Follow-Up</p>
               <p className={`text-2xl font-extrabold mt-1 ${stats.staleCount > 0 ? "text-[#8A362C]" : "text-gray-900"}`}>
                 {stats.staleCount}
               </p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Need follow-up</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">&gt;30 days waiting</p>
             </div>
           </motion.div>
         </div>
       )}
 
-      {/* ── Owner Funnel & Alert Row ─────────────────────────────── */}
-      {isOwner && (
+      {/* ── Owner Funnel & Classroom Breakdown Row ──────────────────────── */}
+      {isOwner ? (
         <div className="space-y-4">
-          <motion.div variants={itemVariants}>
-            <StaleLeadAlertCard staleItems={stats.staleItems} />
-          </motion.div>
+          {stats.staleCount > 0 && (
+            <motion.div variants={itemVariants}>
+              <StaleLeadAlertCard staleItems={stats.staleItems} />
+            </motion.div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {stats.total > 0 && (
@@ -469,19 +406,31 @@ const WaitlistPage = () => {
               </motion.div>
             )}
             <motion.div variants={itemVariants} className={stats.total > 0 ? "lg:col-span-1" : "lg:col-span-3"}>
-              <ProgramBreakdownCard byProgram={byProgram} bySource={bySource} />
+              <ProgramBreakdownCard
+                byProgram={byProgram}
+                bySource={bySource}
+                classroomWiseWaitlist={classroomWiseWaitlist}
+              />
             </motion.div>
           </div>
         </div>
+      ) : (
+        <motion.div variants={itemVariants}>
+          <ProgramBreakdownCard
+            byProgram={byProgram}
+            bySource={bySource}
+            classroomWiseWaitlist={classroomWiseWaitlist}
+          />
+        </motion.div>
       )}
 
-      {/* ── Filter Bar ─────────────────────────────────────────── */}
+      {/* ── Filter Bar & Primary Waitlist Table ──────────────────── */}
       <motion.div variants={itemVariants}>
         <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Filter buttons */}
             <div className="flex items-center bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
-              {["all", "Inquiry", "Toured", "Applied", "Offered", "Enrolled", "Lost"].map((st) => (
+              {["all", "Inquiry", "Toured", "Applied", "Enrolled", "Lost"].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
@@ -521,7 +470,7 @@ const WaitlistPage = () => {
         </div>
       </motion.div>
 
-      {/* ── Waitlist Table ─────────────────────────────────────── */}
+      {/* ── Main Pipeline Table ───────────────────────────────────── */}
       <WaitlistTable
         entries={filtered}
         isLoading={isWaitlistLoading}
@@ -544,74 +493,120 @@ const WaitlistPage = () => {
 
       {hasNextPage && (
         <div ref={observerRef} className="py-4 text-center text-xs text-gray-500 font-medium">
-          {isFetchingNextPage ? "Loading more families..." : "Scroll down to load more"}
+          {isFetchingNextPage ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin" />
+              <span>Loading more waitlist records...</span>
+            </div>
+          ) : (
+            <span>Scroll down to load more</span>
+          )}
         </div>
       )}
 
-      {/* ── Interactive Stage Modals ───────────────────────────── */}
-      <AddWaitlistModal
-        isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          setEditModalEntry(null);
-        }}
-        onSave={handleSaveAddModal}
-        editItem={editModalEntry}
-        isPending={isAddPending || isUpdatePending}
-      />
+      {/* ── Action Modals ────────────────────────────────────────── */}
+      {showAddModal && (
+        <AddWaitlistModal
+          isOpen={showAddModal}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditModalEntry(null);
+          }}
+          onSubmit={async (data) => {
+            if (editModalEntry) {
+              await updateMutation({ id: editModalEntry.id, data });
+            } else {
+              await addMutation(data);
+            }
+            setShowAddModal(false);
+            setEditModalEntry(null);
+          }}
+          isPending={isAddPending || isUpdatePending}
+          editEntry={editModalEntry}
+          classrooms={classrooms}
+        />
+      )}
 
-      <LogTourModal
-        isOpen={!!tourModalEntry}
-        onClose={() => setTourModalEntry(null)}
-        entry={tourModalEntry}
-        onLogTour={logTour}
-        isPending={isTourPending}
-      />
+      {tourModalEntry && (
+        <LogTourModal
+          isOpen={!!tourModalEntry}
+          entry={tourModalEntry}
+          onClose={() => setTourModalEntry(null)}
+          onSubmit={async (tourData) => {
+            await logTourMutation({ id: tourModalEntry.id, data: tourData });
+            setTourModalEntry(null);
+          }}
+          isPending={isTourPending}
+        />
+      )}
 
-      <MoveAppliedModal
-        isOpen={!!appliedModalEntry}
-        onClose={() => setAppliedModalEntry(null)}
-        entry={appliedModalEntry}
-        onMoveToApplied={moveToApplied}
-        isPending={isAppliedPending}
-      />
+      {appliedModalEntry && (
+        <MoveAppliedModal
+          isOpen={!!appliedModalEntry}
+          entry={appliedModalEntry}
+          onClose={() => setAppliedModalEntry(null)}
+          onSubmit={async (appliedData) => {
+            await moveToAppliedMutation({ id: appliedModalEntry.id, data: appliedData });
+            setAppliedModalEntry(null);
+          }}
+          isPending={isAppliedPending}
+        />
+      )}
 
-      <OfferSpotModal
-        isOpen={!!offerModalEntry}
-        onClose={() => setOfferModalEntry(null)}
-        entry={offerModalEntry}
-        onOfferSpot={offerSpot}
-        isPending={isOfferPending}
-      />
+      {offerModalEntry && (
+        <OfferSpotModal
+          isOpen={!!offerModalEntry}
+          entry={offerModalEntry}
+          onClose={() => setOfferModalEntry(null)}
+          onSubmit={async (offerData) => {
+            await offerSpotMutation({ id: offerModalEntry.id, data: offerData });
+            setOfferModalEntry(null);
+          }}
+          isPending={isOfferPending}
+        />
+      )}
 
-      <ConfirmEnrollmentModal
-        isOpen={!!enrollModalEntry}
-        onClose={() => setEnrollModalEntry(null)}
-        entry={enrollModalEntry}
-        onConfirmEnrollment={confirmEnrollment}
-        isPending={isEnrollPending}
-      />
+      {enrollModalEntry && (
+        <ConfirmEnrollmentModal
+          isOpen={!!enrollModalEntry}
+          entry={enrollModalEntry}
+          onClose={() => setEnrollModalEntry(null)}
+          onSubmit={async (enrollData) => {
+            await confirmEnrollmentMutation({ id: enrollModalEntry.id, data: enrollData });
+            setEnrollModalEntry(null);
+          }}
+          isPending={isEnrollPending}
+        />
+      )}
 
-      <MarkLostModal
-        isOpen={!!lostModalEntry}
-        onClose={() => setLostModalEntry(null)}
-        entry={lostModalEntry}
-        onMarkLost={markLost}
-        isPending={isLostPending}
-      />
+      {lostModalEntry && (
+        <MarkLostModal
+          isOpen={!!lostModalEntry}
+          entry={lostModalEntry}
+          onClose={() => setLostModalEntry(null)}
+          onSubmit={async (lostData) => {
+            await markLostMutation({ id: lostModalEntry.id, data: lostData });
+            setLostModalEntry(null);
+          }}
+          isPending={isLostPending}
+        />
+      )}
 
-      {/* ── Global Delete Confirmation Modal ────────────────────── */}
-      <ConfirmationModal
-        isOpen={!!deleteModalEntry}
-        onClose={() => setDeleteModalEntry(null)}
-        onConfirm={confirmDeleteEntry}
-        title="Delete Waitlist Entry"
-        message={`Are you sure you want to delete "${deleteModalEntry?.childName || "this entry"}" from the waitlist? This action cannot be undone.`}
-        confirmText="Delete Entry"
-        cancelText="Cancel"
-        type="danger"
-        isLoading={isDeletePending}
-      />
+      {deleteModalEntry && (
+        <ConfirmationModal
+          isOpen={!!deleteModalEntry}
+          onClose={() => setDeleteModalEntry(null)}
+          onConfirm={async () => {
+            await deleteMutation(deleteModalEntry.id);
+            setDeleteModalEntry(null);
+          }}
+          title="Delete Waitlist Entry"
+          description={`Are you sure you want to delete ${deleteModalEntry.childName} from the waitlist? This action cannot be undone.`}
+          confirmText="Delete"
+          confirmVariant="destructive"
+          isPending={isDeletePending}
+        />
+      )}
     </motion.div>
   );
 };

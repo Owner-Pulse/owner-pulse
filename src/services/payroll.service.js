@@ -47,6 +47,18 @@ export const payrollService = {
         return payrollService.delete_schedule(axiosInstance, id);
     },
 
+    update_schedule: async (axiosInstance, id, data) => {
+        try {
+            const response = await axiosInstance.post(`/payroll/schedules/${id}`, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    updateSchedule: async (axiosInstance, id, data) => {
+        return payrollService.update_schedule(axiosInstance, id, data);
+    },
+
     director_payroll_history: async (axiosInstance, params) => {
         try {
             const response = await axiosInstance.get("/director/payroll/history", { params });

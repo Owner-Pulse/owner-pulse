@@ -93,7 +93,7 @@ const StudentManagementPage = () => {
   const displayClassrooms = useMemo(() => {
     if (activeTab === "enrollment" && Array.isArray(apiTabData?.data) && apiTabData.data.length > 0) {
       return apiTabData.data.map((c) => ({
-        id: c.procare_classroom_id || c.classroom_id || c.id,
+        id: c.classroom_id || c.id || c.procare_classroom_id,
         classroom_id: c.classroom_id,
         name: c.classroom_name || c.name || `Classroom ${c.classroom_id}`,
         procare_classroom_id: c.procare_classroom_id || c.classroom_id || c.id,
@@ -107,8 +107,8 @@ const StudentManagementPage = () => {
     }
     if (allClassrooms && allClassrooms.length > 0) {
       return allClassrooms.map((c) => ({
-        id: c.procare_classroom_id || c.id,
-        classroom_id: c.id,
+        id: c.classroom_id || c.id || c.procare_classroom_id,
+        classroom_id: c.classroom_id || c.id,
         name: c.classroom_name || `Classroom ${c.id}`,
         procare_classroom_id: c.procare_classroom_id || c.id,
         capacity: c.capacity || 20,
@@ -332,7 +332,7 @@ const StudentManagementPage = () => {
           </Button>
         ) : (
           <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2 rounded-xl text-xs md:text-sm flex items-center gap-1.5" onClick={() => setShowForm(activeTab === "incidents" ? "incident" : "removal")}>
-            <Plus size={16} /> {activeTab === "incidents" ? "Log Incident" : "Record Removal"}
+            <Plus size={16} /> {activeTab === "incidents" ? "Log Incident" : "Record Withdrawal"}
           </Button>
         )}
       </motion.div>

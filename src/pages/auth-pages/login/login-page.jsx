@@ -169,7 +169,7 @@ const LoginPage = () => {
         </Card>
 
         <p className="text-center text-xs text-white/60 mt-8">
-          © 2026 OwnerPulse • HCLC
+          © 2026 OwnerPulse
         </p>
       </motion.div>
     </div>

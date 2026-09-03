@@ -291,66 +291,19 @@ const DirectorStaffManagement = () => {
 
       {/* ─── ROSTER TAB ─── */}
       {activeTab === "roster" && (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fadeIn">
-            <motion.div variants={itemVariants}>
-              <StatCard 
-                icon={Users} 
-                label="Total Roster" 
-                value={rosterStats.total} 
-                sub="Active staff" 
-                iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
-                isLoading={isDirectorLoading || isDirectorFetching}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard 
-                icon={Users} 
-                label="Lead Teachers" 
-                value={rosterStats.leadTeachers} 
-                valueColor="text-[#2F6042]" 
-                sub="Classroom leads" 
-                iconBg="bg-[#3E7A54]/10 text-[#2F6042]" 
-                isLoading={isDirectorLoading || isDirectorFetching}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard 
-                icon={Users} 
-                label="Assistants" 
-                value={rosterStats.assistants} 
-                valueColor="text-[#1E3A5F]" 
-                sub="Co-teachers & helpers" 
-                iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
-                isLoading={isDirectorLoading || isDirectorFetching}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard 
-                icon={Users} 
-                label="Other Staff" 
-                value={rosterStats.support} 
-                sub="Chef, admins & floaters" 
-                iconBg="bg-gray-50 text-gray-600" 
-                isLoading={isDirectorLoading || isDirectorFetching}
-              />
-            </motion.div>
-          </div>
-
-          <motion.div variants={itemVariants} className="mt-6">
-            <StaffRosterTable
-              staffRoster={allStaffRoster}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              pagination={rosterPagination}
-              onLoadMore={handleLoadMoreRoster}
-              isLoading={isDirectorLoading || (isDirectorFetching && allStaffRoster.length === 0)}
-              isLoadingMore={isDirectorFetching && rosterPage > 1}
-              onEdit={handleEditStaffClick}
-              onDelete={handleDeleteStaffClick}
-            />
-          </motion.div>
-        </>
+        <motion.div variants={itemVariants}>
+          <StaffRosterTable
+            staffRoster={allStaffRoster}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            pagination={rosterPagination}
+            onLoadMore={handleLoadMoreRoster}
+            isLoading={isDirectorLoading || (isDirectorFetching && allStaffRoster.length === 0)}
+            isLoadingMore={isDirectorFetching && rosterPage > 1}
+            onEdit={handleEditStaffClick}
+            onDelete={handleDeleteStaffClick}
+          />
+        </motion.div>
       )}
 
       {/* ─── PTO TAB ─── */}

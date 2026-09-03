@@ -23,9 +23,8 @@ const WaitlistFunnelCard = ({ stats }) => {
   const stages = [
     { label: "1. Inquiry", count: inquiryCount, color: "bg-[#1E3A5F]", textColor: "text-[#1E3A5F]", rate: `${inquiryToTourRate}% tour rate` },
     { label: "2. Toured", count: touredCount, color: "bg-[#5B7FA6]", textColor: "text-[#5B7FA6]", rate: `${tourToAppliedRate}% apply rate` },
-    { label: "3. Applied", count: appliedCount, color: "bg-[#B78A2F]", textColor: "text-[#8F6A1F]", rate: `${appliedToOfferRate}% offer rate` },
-    { label: "4. Offered", count: offeredCount, color: "bg-teal-600", textColor: "text-teal-700", rate: `${offerToEnrollRate}% enroll rate` },
-    { label: "5. Enrolled", count: enrolledCount, color: "bg-emerald-600", textColor: "text-emerald-700", rate: "Final Conversion" },
+    { label: "3. Applied", count: appliedCount + offeredCount, color: "bg-[#B78A2F]", textColor: "text-[#8F6A1F]", rate: `${appliedToOfferRate}% conversion rate` },
+    { label: "4. Enrolled", count: enrolledCount, color: "bg-emerald-600", textColor: "text-emerald-700", rate: "Final Conversion" },
   ];
 
   return (

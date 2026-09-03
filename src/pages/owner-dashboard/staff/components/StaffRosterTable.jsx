@@ -83,6 +83,9 @@ const StaffRosterTable = ({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
             <Users size={16} /> Staff Roster
+            <span className="text-xs font-semibold text-[#1E3A5F] bg-[#1E3A5F]/10 px-2.5 py-0.5 rounded-full">
+              {pagination?.total || staffRoster.length} Total Staff
+            </span>
           </CardTitle>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
