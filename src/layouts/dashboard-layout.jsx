@@ -126,7 +126,8 @@ const DashboardLayout = () => {
     return INITIAL_NOTIFS;
   }, [apiNotifications]);
 
-  // Reverb Real-Time Notification Listener
+  // Reverb Real-Time Notification Listener (Commented out for deployment without Reverb)
+  /*
   useEffect(() => {
     const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
     const token = localStorage.getItem(tokenName);
@@ -140,21 +141,24 @@ const DashboardLayout = () => {
       const echo = initEcho(token);
 
       // 3. Listen for incoming real-time notifications on private channel notify.{userId}
-      listenToNotifications(echo, userId, (notification) => {
-        console.log("⚡️ Real-time Notification Received via Reverb:", notification);
-        if (notification?.title) {
-          toast.success(notification.title, {
-            description: notification?.body,
-          });
-        }
-        queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      });
+      if (echo) {
+        listenToNotifications(echo, userId, (notification) => {
+          console.log("⚡️ Real-time Notification Received via Reverb:", notification);
+          if (notification?.title) {
+            toast.success(notification.title, {
+              description: notification?.body,
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        });
+      }
 
       return () => {
-        echo.disconnect();
+        if (echo) echo.disconnect();
       };
     }
   }, [user?.id, queryClient]);
+  */
 
   // Click-outside handler for notification dropdown
   useEffect(() => {

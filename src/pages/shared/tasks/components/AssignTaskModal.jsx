@@ -14,15 +14,22 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const createTask = isDirector ? directorCreateTask : ownerCreateTask;
   const isPending = isDirector ? directorPending : ownerPending;
   
+  const directorsList = React.useMemo(() => {
+    return Array.isArray(allDirector) ? allDirector : [];
+  }, [allDirector]);
+
   const [title, setTitle] = useState("");
-  const targetDirectorId = allDirector?.[0]?.id || "1";
-  const [assignee, setAssignee] = useState(currentRole === "owner" ? targetDirectorId : "owner");
+  const defaultTargetDirectorId = directorsList?.[0]?.id ? String(directorsList[0].id) : "1";
+  const [assignee, setAssignee] = useState(currentRole === "owner" ? defaultTargetDirectorId : "owner");
 
   React.useEffect(() => {
-    if (currentRole === "owner" && allDirector?.[0]?.id) {
-      setAssignee(allDirector[0].id);
+    if (currentRole === "owner" && directorsList && directorsList.length > 0) {
+      const exists = directorsList.some((d) => String(d.id) === String(assignee));
+      if (!assignee || !exists) {
+        setAssignee(String(directorsList[0].id));
+      }
     }
-  }, [allDirector, currentRole]);
+  }, [directorsList, currentRole]);
 
   const [priority, setPriority] = useState("medium");
   const [due, setDue] = useState("");
@@ -91,7 +98,15 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium">
                   {currentRole === "owner" ? (
-                    <option value={targetDirectorId}>Director</option>
+                    directorsList && directorsList.length > 0 ? (
+                      directorsList.map((dir) => (
+                        <option key={dir.id} value={dir.id}>
+                          {dir.name || `Director #${dir.id}`}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="1">Director</option>
+                    )
                   ) : (
                     <option value="owner">Owner</option>
                   )}
