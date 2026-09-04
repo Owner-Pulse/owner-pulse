@@ -52,5 +52,18 @@ export const classroomService = {
             throw error;
         }
     },
+
+    updateEnrollmentTargets: async (axiosInstance, data) => {
+        try {
+            const formData = new FormData();
+            formData.append("enrollment_target_preschool", data.enrollment_target_preschool);
+            formData.append("enrollment_target_k8", data.enrollment_target_k8);
+
+            const response = await axiosInstance.post("/settings/enrollment-targets", formData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
 

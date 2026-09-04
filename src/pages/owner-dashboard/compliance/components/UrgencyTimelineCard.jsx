@@ -1,17 +1,16 @@
 import React, { useState } from "react";
-import { AlertTriangle, CheckCircle2, ShoppingCart, ClipboardList, Info, Calendar, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
-import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { daysUntil } from "@/hooks/compliance/useCompliance";
 
 const UrgencyTimelineCard = ({ items = [] }) => {
   const [selectedItemId, setSelectedItemId] = useState(null);
 
-  // Filter items that are non-compliant or expiring, and sort by urgency
+  // Filter & sort items by urgency based on days_left / days_overdue
   const sortedItems = [...items].sort((a, b) => {
-    const aDays = a.status === "expired" ? -(a.days_overdue || 1) : (a.days_left ?? daysUntil(a.expires));
-    const bDays = b.status === "expired" ? -(b.days_overdue || 1) : (b.days_left ?? daysUntil(b.expires));
+    const aDays = a.status === "expired" ? -(a.days_overdue || 1) : (a.days_left ?? daysUntil(a.expires || a.expiration_date));
+    const bDays = b.status === "expired" ? -(b.days_overdue || 1) : (b.days_left ?? daysUntil(b.expires || b.expiration_date));
     return aDays - bDays;
   });
 
@@ -21,15 +20,21 @@ const UrgencyTimelineCard = ({ items = [] }) => {
     return ((90 - clamped) / 105) * 100;
   };
 
-  // 60, 30, 0 days positions
+  // 60, 30, 0 days hard-stop line positions
   const pos60 = getTimelinePosPct(60); // ~28.5%
   const pos30 = getTimelinePosPct(30); // ~57.1%
   const pos0 = getTimelinePosPct(0);   // ~85.7%
 
-  const getItemColor = (daysLeft, isExpired) => {
-    if (isExpired || daysLeft <= 0) return { bg: "bg-[#AE4A3E]", text: "text-[#8A362C]", border: "border-[#AE4A3E]", lightBg: "bg-[#AE4A3E]/10" };
-    if (daysLeft <= 30) return { bg: "bg-[#AE4A3E]", text: "text-[#8A362C]", border: "border-[#AE4A3E]", lightBg: "bg-[#AE4A3E]/10" };
-    if (daysLeft <= 60) return { bg: "bg-[#B78A2F]", text: "text-[#8F6A1F]", border: "border-[#B78A2F]", lightBg: "bg-[#B78A2F]/10" };
+  const getItemColor = (daysLeft, isExpired, statusColor) => {
+    if (statusColor === "danger" || isExpired || daysLeft <= 0) {
+      return { bg: "bg-[#AE4A3E]", text: "text-[#8A362C]", border: "border-[#AE4A3E]", lightBg: "bg-[#AE4A3E]/10" };
+    }
+    if (statusColor === "warning" || daysLeft <= 60) {
+      if (daysLeft <= 30) {
+        return { bg: "bg-[#AE4A3E]", text: "text-[#8A362C]", border: "border-[#AE4A3E]", lightBg: "bg-[#AE4A3E]/10" };
+      }
+      return { bg: "bg-[#B78A2F]", text: "text-[#8F6A1F]", border: "border-[#B78A2F]", lightBg: "bg-[#B78A2F]/10" };
+    }
     return { bg: "bg-[#3E7A54]", text: "text-[#2F6042]", border: "border-[#3E7A54]", lightBg: "bg-[#3E7A54]/10" };
   };
 
@@ -43,15 +48,15 @@ const UrgencyTimelineCard = ({ items = [] }) => {
               Compliance Horizontal Timeline Chart
             </CardTitle>
             <CardDescription className="text-xs text-gray-500 mt-0.5">
-              Horizontal timeline axis with hard-stop lines at 60d, 30d, and 0d expiry
+              Horizontal timeline axis with hard-stop lines at 60d, 30d, and 0d expiry (Item B-04)
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-semibold">
+          <div className="flex items-center gap-2 text-[10px] font-semibold flex-wrap">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#3E7A54]/10 text-[#2F6042]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#3E7A54]" /> &gt;60d Safe
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#B78A2F]/10 text-[#8F6A1F]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#B78A2F]" /> 30-60d Warning
+              <span className="w-1.5 h-1.5 rounded-full bg-[#B78A2F]" /> 30-60d Notice
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#AE4A3E]/10 text-[#8A362C]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#AE4A3E]" /> &lt;30d Urgent / Expired
@@ -83,7 +88,7 @@ const UrgencyTimelineCard = ({ items = [] }) => {
               style={{ left: `${pos60}%`, transform: "translateX(-50%)" }}
             >
               <span className="text-[9px] font-extrabold text-[#B78A2F] uppercase tracking-wider bg-white px-1 py-0.5 rounded shadow-xs border border-[#B78A2F]/30 mb-1">
-                60d Notice
+                60d Line
               </span>
               <div className="w-0.5 flex-1 bg-dashed border-l-2 border-dashed border-[#B78A2F]" />
             </div>
@@ -94,7 +99,7 @@ const UrgencyTimelineCard = ({ items = [] }) => {
               style={{ left: `${pos30}%`, transform: "translateX(-50%)" }}
             >
               <span className="text-[9px] font-extrabold text-[#AE4A3E] uppercase tracking-wider bg-white px-1 py-0.5 rounded shadow-xs border border-[#AE4A3E]/30 mb-1">
-                30d Urgent
+                30d Line
               </span>
               <div className="w-0.5 flex-1 border-l-2 border-dashed border-[#AE4A3E]" />
             </div>
@@ -112,10 +117,13 @@ const UrgencyTimelineCard = ({ items = [] }) => {
 
             {/* Item Markers Placed on Horizontal Timeline Axis */}
             {sortedItems.map((item) => {
-              const isExpired = item.status === "expired";
-              const daysLeft = isExpired ? -(item.days_overdue || 1) : (item.days_left ?? daysUntil(item.expires));
+              const itemName = item.name || item.item || "Compliance Item";
+              const authority = item.authority_agency || item.authority || "Regulatory Body";
+              const expirationDate = item.expiration_date || item.expires || "";
+              const isExpired = item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0);
+              const daysLeft = isExpired ? -(item.days_overdue || Math.abs(item.days_left || 1)) : (item.days_left ?? daysUntil(expirationDate));
               const posPct = getTimelinePosPct(daysLeft);
-              const colorInfo = getItemColor(daysLeft, isExpired);
+              const colorInfo = getItemColor(daysLeft, isExpired, item.status_color);
               const isSelected = selectedItemId === item.id;
 
               return (
@@ -136,10 +144,10 @@ const UrgencyTimelineCard = ({ items = [] }) => {
                   {/* Marker Tooltip on Hover */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
                     <div className="bg-slate-900 text-white text-[10px] rounded-lg p-2 shadow-xl whitespace-nowrap space-y-0.5">
-                      <p className="font-bold">{item.item}</p>
-                      <p className="text-gray-300">{item.authority}</p>
-                      <p className={`font-semibold ${isExpired ? "text-red-400" : "text-amber-300"}`}>
-                        {isExpired ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft} days remaining`} ({item.expires})
+                      <p className="font-bold">{itemName}</p>
+                      <p className="text-gray-300">{authority}</p>
+                      <p className={`font-semibold ${isExpired ? "text-red-400" : daysLeft <= 30 ? "text-amber-300" : "text-emerald-300"}`}>
+                        {isExpired ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft} days remaining`} ({expirationDate})
                       </p>
                     </div>
                     <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1" />
@@ -152,9 +160,9 @@ const UrgencyTimelineCard = ({ items = [] }) => {
           {/* Timeline Footer Labels */}
           <div className="flex justify-between items-center text-[10px] text-gray-400 font-semibold mt-2 px-1">
             <span>90+ Days (Safe)</span>
-            <span className="text-[#B78A2F]">60 Days Window</span>
-            <span className="text-[#AE4A3E]">30 Days Window</span>
-            <span className="text-red-600 font-bold">Expired (Hard Stop)</span>
+            <span className="text-[#B78A2F]">60 Days Notice Line</span>
+            <span className="text-[#AE4A3E]">30 Days Urgent Line</span>
+            <span className="text-red-600 font-bold">0 Days (Expiry Hard Stop)</span>
           </div>
         </div>
 
@@ -167,10 +175,14 @@ const UrgencyTimelineCard = ({ items = [] }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {sortedItems.map((item) => {
-              const isExpired = item.status === "expired";
-              const daysLeft = isExpired ? -(item.days_overdue || 1) : (item.days_left ?? daysUntil(item.expires));
-              const colorInfo = getItemColor(daysLeft, isExpired);
+              const itemName = item.name || item.item || "Compliance Item";
+              const authority = item.authority_agency || item.authority || "Regulatory Body";
+              const expirationDate = item.expiration_date || item.expires || "";
+              const isExpired = item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0);
+              const daysLeft = isExpired ? -(item.days_overdue || Math.abs(item.days_left || 1)) : (item.days_left ?? daysUntil(expirationDate));
+              const colorInfo = getItemColor(daysLeft, isExpired, item.status_color);
               const isSelected = selectedItemId === item.id;
+              const role = item.responsible_role || item.ownerRole;
 
               return (
                 <div
@@ -184,21 +196,21 @@ const UrgencyTimelineCard = ({ items = [] }) => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`w-2 h-2 rounded-full ${colorInfo.bg}`} />
-                        <span className="text-xs font-bold text-gray-900 truncate">{item.item}</span>
+                        <span className="text-xs font-bold text-gray-900 truncate">{itemName}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-0.5 truncate">{item.authority}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 truncate">{authority}</p>
                     </div>
 
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorInfo.lightBg} ${colorInfo.text} ${colorInfo.border}`}>
-                      {isExpired ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}
+                      {item.status_badge || (isExpired ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`)}
                     </span>
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-500">
                     <span className="flex items-center gap-1">
-                      <Calendar size={11} className="text-gray-400" /> Expires: {item.expires}
+                      <Calendar size={11} className="text-gray-400" /> Expires: {expirationDate}
                     </span>
-                    <RoleBadge role={item.ownerRole} />
+                    <RoleBadge role={role} />
                   </div>
                 </div>
               );

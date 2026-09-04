@@ -211,3 +211,24 @@ export const useDeleteClassroom = () => {
 
     return { deleteClassroom, isPending, isError, error };
 };
+
+export const useUpdateEnrollmentTargets = () => {
+    const queryClient = useQueryClient();
+
+    const { mutateAsync: updateTargets, isPending, isError, error } = useMutation({
+        mutationKey: ["update-enrollment-targets"],
+        mutationFn: (body) => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.updateEnrollmentTargets(axiosInstance, body);
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["classroom"] });
+            toast.success(data?.message ?? "Enrollment targets updated successfully.");
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message ?? "Failed to update enrollment targets.");
+        },
+    });
+
+    return { updateTargets, isPending, isError, error };
+};

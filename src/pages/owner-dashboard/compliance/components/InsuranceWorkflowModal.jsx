@@ -4,9 +4,7 @@ import {
   X,
   RefreshCw,
   CheckCircle2,
-  Clock,
   DollarSign,
-  ArrowRight,
   Lightbulb,
   ShieldCheck,
   Loader2,
@@ -55,7 +53,7 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
   const selectedQuoteId = insuranceData?.selected_quote_id;
   const policyExpiryDate = insuranceData?.policy_expiry_date || currentItem?.expires || "2026-10-07";
 
-  // Compute lowest quote premium among all valid quotes
+  // Compute lowest quote premium among all valid quotes if backend flag isn't present
   const validPremiums = quotesList
     .map((q) => Number(q.annual_premium ?? q.amount ?? 0))
     .filter((p) => p > 0);
@@ -113,7 +111,7 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -124,7 +122,7 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
           <div className="flex items-center justify-between px-6 py-4 bg-[#1E3A5F] text-white">
             <div className="flex items-center gap-2">
               <RefreshCw size={20} className="text-[#9DB8D9]" />
-              <h2 className="text-base md:text-lg font-bold">Insurance Renewal & Shopping Workflow</h2>
+              <h2 className="text-base md:text-lg font-bold">Insurance Renewal & Shopping Workflow (B-05)</h2>
             </div>
             <button onClick={onClose} className="p-1 text-white/80 hover:text-white rounded-lg cursor-pointer">
               <X size={20} />
@@ -189,8 +187,9 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
                         const isThisSelecting = selectingQuoteId === q.id;
                         const carrierName = q.carrier_name || q.carrier || `Carrier #${idx + 1}`;
                         const premium = Number(q.annual_premium ?? q.amount ?? 0);
-                        const isLowest = lowestPremium !== null && premium === lowestPremium;
-                        const coverageText = q.coverage || "$1M / $2M General Liability";
+                        const isLowest = q.is_lowest_premium ?? (lowestPremium !== null && premium === lowestPremium);
+                        const formattedPremium = q.formatted_premium || (premium ? `$${premium.toLocaleString()}/yr` : "N/A");
+                        const coverageText = q.coverage_details || q.coverage || "$1M / $2M General Liability";
                         const expiryText = q.expiry_date || q.policy_expiry_date || policyExpiryDate;
 
                         return (
@@ -198,7 +197,7 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
                             key={q.id || idx}
                             className={`relative p-4 rounded-xl border flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
                               isLowest
-                                ? "bg-[#3E7A54]/[0.06] border-[#3E7A54] ring-2 ring-[#3E7A54]/30 shadow-sm"
+                                ? "bg-[#3E7A54]/[0.08] border-[#3E7A54] ring-2 ring-[#3E7A54]/40 shadow-sm"
                                 : isSelected
                                 ? "bg-[#1E3A5F]/[0.08] border-[#1E3A5F] ring-1 ring-[#1E3A5F]/30"
                                 : "bg-white border-gray-200"
@@ -207,8 +206,8 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
                             {/* Lowest Highlight Badge */}
                             {isLowest && (
                               <div className="mb-2">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#3E7A54] text-white shadow-xs">
-                                  <Award size={10} /> Lowest Quote
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#3E7A54] text-white shadow-xs">
+                                  <Award size={10} /> Lowest Rate / Best Price
                                 </span>
                               </div>
                             )}
@@ -218,13 +217,13 @@ const InsuranceWorkflowModal = ({ isOpen, onClose, insuranceItem }) => {
                                 <h5 className="font-bold text-gray-900 text-sm">{carrierName}</h5>
                                 {isSelected && (
                                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-                                    Active
+                                    Selected
                                   </span>
                                 )}
                               </div>
 
                               <p className="text-xl font-black text-[#1E3A5F] my-1">
-                                ${premium.toLocaleString()}<span className="text-xs font-normal text-gray-500">/yr</span>
+                                {formattedPremium}
                               </p>
 
                               <div className="space-y-1.5 mt-3 text-[11px] text-gray-600">
