@@ -1,27 +1,27 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, Clock, AlertTriangle, ChevronRight, User } from "lucide-react";
+import { Mail, Phone, Clock, AlertTriangle, ChevronRight, User, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const DirectorCard = ({ director, onClick }) => {
+const DirectorCard = ({ director, onClick, onViewActivity }) => {
   const name = director?.name || "Unknown";
   const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const isActive = director?.status === "active";
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className="bg-white hover:bg-linear-to-br hover:from-white hover:to-[#1E3A5F]/3 rounded-2xl border border-gray-100 hover:border-[#1E3A5F]/20 hover:shadow-[0_8px_30px_rgb(30,58,95,0.08)] transition-all duration-300 cursor-pointer overflow-hidden group relative"
+      whileHover={{ y: -3 }}
+      className="bg-white hover:bg-gradient-to-br hover:from-white hover:to-[#1E3A5F]/3 rounded-2xl border border-gray-100 hover:border-[#1E3A5F]/20 hover:shadow-[0_8px_30px_rgb(30,58,95,0.08)] transition-all duration-300 cursor-pointer overflow-hidden group relative"
       onClick={() => onClick(director)}
     >
       {/* Decorative left accent on hover */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1E3A5F] scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-bottom" />
 
-      <div className="p-6">
+      <div className="p-5 md:p-6">
         <div className="flex flex-col sm:flex-row gap-5 items-start">
-
           {/* Avatar Area */}
           <div className="relative shrink-0">
             {director?.avatar ? (
@@ -31,7 +31,7 @@ const DirectorCard = ({ director, onClick }) => {
                 className="w-16 h-16 rounded-full object-cover ring-4 ring-gray-50 group-hover:ring-[#1E3A5F]/10 transition-all"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white bg-linear-to-br from-[#1E3A5F] to-[#2A4C7E] ring-4 ring-gray-50 group-hover:ring-[#1E3A5F]/10 transition-all shadow-sm">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white bg-gradient-to-br from-[#1E3A5F] to-[#2A4C7E] ring-4 ring-gray-50 group-hover:ring-[#1E3A5F]/10 transition-all shadow-xs">
                 {initials}
               </div>
             )}
@@ -60,14 +60,14 @@ const DirectorCard = ({ director, onClick }) => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-gray-600">
                 <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 text-gray-400">
                   <Mail size={14} />
                 </div>
                 <span className="truncate">{director?.email}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-gray-600">
                 <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 text-gray-400">
                   <Phone size={14} />
                 </div>
@@ -75,6 +75,7 @@ const DirectorCard = ({ director, onClick }) => {
               </div>
             </div>
 
+            {/* Bottom Actions Row */}
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
               <div className="flex items-center gap-1.5 text-xs">
                 {director?.last_activity_at ? (
@@ -92,8 +93,22 @@ const DirectorCard = ({ director, onClick }) => {
                 )}
               </div>
 
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 group-hover:bg-[#1E3A5F] group-hover:text-white transition-colors text-gray-400">
-                <ChevronRight size={16} />
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onViewActivity) onViewActivity(director);
+                  }}
+                  className="h-8 px-3 text-xs font-bold text-[#1E3A5F] border-[#1E3A5F]/20 hover:bg-[#1E3A5F] hover:text-white transition-all gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Activity size={14} /> View Activity
+                </Button>
+
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 group-hover:bg-[#1E3A5F] group-hover:text-white transition-colors text-gray-400">
+                  <ChevronRight size={16} />
+                </div>
               </div>
             </div>
 
@@ -103,4 +118,5 @@ const DirectorCard = ({ director, onClick }) => {
     </motion.div>
   );
 };
+
 export default DirectorCard;

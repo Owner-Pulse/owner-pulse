@@ -10,6 +10,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { initEcho, listenToNotifications, requestNotificationPermission } from '@/lib/reverb-connection';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -28,7 +29,7 @@ const ownerTabs = [
   { id: "staff", label: "Staff", icon: Users },
   { id: "pto", label: "PTO", icon: Calendar },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
-  { id: "director-management", label: "Director Mgmt", icon: Shield },
+  { id: "director-management", label: "Director Management", icon: Shield },
   // { id: "pending-decisions", label: "Decisions", icon: AlertTriangle },
 ];
 
@@ -97,6 +98,7 @@ const timeAgo = (ts) => {
 };
 
 const DashboardLayout = () => {
+  const queryClient = useQueryClient();
   const { user } = useGetUser();
   const { signout, isPending: isPendingSignout } = useSignout();
   const { notifications: apiNotifications } = useGetNotifications();
@@ -123,6 +125,36 @@ const DashboardLayout = () => {
     }
     return INITIAL_NOTIFS;
   }, [apiNotifications]);
+
+  // Reverb Real-Time Notification Listener
+  useEffect(() => {
+    const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
+    const token = localStorage.getItem(tokenName);
+    const userId = user?.id;
+
+    if (token && userId) {
+      // 1. Request notification permissions
+      requestNotificationPermission();
+
+      // 2. Start Echo WebSocket client
+      const echo = initEcho(token);
+
+      // 3. Listen for incoming real-time notifications on private channel notify.{userId}
+      listenToNotifications(echo, userId, (notification) => {
+        console.log("⚡️ Real-time Notification Received via Reverb:", notification);
+        if (notification?.title) {
+          toast.success(notification.title, {
+            description: notification?.body,
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      });
+
+      return () => {
+        echo.disconnect();
+      };
+    }
+  }, [user?.id, queryClient]);
 
   // Click-outside handler for notification dropdown
   useEffect(() => {
@@ -157,8 +189,6 @@ const DashboardLayout = () => {
       markAsRead(id);
     }
   };
-
-  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     setShowLogoutModal(true);

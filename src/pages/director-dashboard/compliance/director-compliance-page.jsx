@@ -476,12 +476,19 @@ const DirectorCompliancePage = () => {
           const d = item.status === "expired"
             ? (item.days_overdue ?? daysSince(item.expires))
             : (item.days_left ?? daysUntil(item.expires));
-          const isExpired = item.status === "expired";
+          const isExpired = item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0);
           const isUrgent = !isExpired && d <= 30;
-          const progressPct = item.progress_percentage !== undefined && item.progress_percentage !== null
-            ? item.progress_percentage
-            : (isExpired ? 100 : Math.min(100, Math.round((1 - d / 365) * 100)));
-          const pct = clamp(progressPct, 0, 100);
+
+          // Compute accurate time progress percentage (0% for expired)
+          let computedTimePct = 0;
+          if (!isExpired) {
+            if (item.time_progress_percentage !== undefined && item.time_progress_percentage !== null) {
+              computedTimePct = Math.min(100, Math.max(0, Math.round(item.time_progress_percentage)));
+            } else {
+              computedTimePct = Math.min(100, Math.max(0, Math.round((d / 60) * 100)));
+            }
+          }
+          const pct = clamp(computedTimePct, 0, 100);
 
           return (
             <motion.div key={item.id} variants={itemVariants}>
@@ -536,32 +543,47 @@ const DirectorCompliancePage = () => {
                     </div>
                   </div>
 
-                  {/* Progress bar with globe marker */}
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-gray-400">Expires {item.expires}</span>
-                      <span className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] bg-clip-text text-transparent">
-                          {pct}%
+                  {/* Expiration Progress Bar */}
+                  <div className="mt-4 pt-1 border-t border-gray-100/70">
+                    <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
+                      <span className="text-gray-500 font-semibold flex items-center gap-1">
+                        <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-black tracking-tight px-2 py-0.5 rounded-full ${
+                          isExpired
+                            ? "bg-[#AE4A3E]/10 text-[#8A362C]"
+                            : isUrgent
+                            ? "bg-[#B78A2F]/10 text-[#8F6A1F]"
+                            : "bg-[#3E7A54]/10 text-[#2F6042]"
+                        }`}>
+                          {pct}% Time Remaining
                         </span>
-                        <span className={`font-semibold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-500"}`}>
+                        <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
                           {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
                         </span>
-                      </span>
+                      </div>
                     </div>
-                    <div className="relative h-2.5 bg-[#1E3A5F]/10 ring-1 ring-inset ring-[#1E3A5F]/10 rounded-full">
+
+                    <div className="relative h-3 bg-gray-100 ring-1 ring-inset ring-gray-200/80 rounded-full my-1">
                       <div
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#1E3A5F] via-[#5B7FA6] to-[#9DB8D9] transition-[width] duration-700 ease-out"
-                        style={{ width: `${clamp(pct, 2, 100)}%` }}
+                        className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out ${
+                          isExpired
+                            ? "bg-gradient-to-r from-red-500 to-[#AE4A3E]"
+                            : isUrgent
+                            ? "bg-gradient-to-r from-[#B78A2F] to-[#AE4A3E]"
+                            : "bg-gradient-to-r from-[#3E7A54] via-[#5B7FA6] to-[#1E3A5F]"
+                        }`}
+                        style={{ width: `${clamp(pct, isExpired ? 0 : 2, 100)}%` }}
                       />
                       <div
                         className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 transition-[left] duration-700 ease-out"
-                        style={{ left: `${clamp(pct, 4, 96)}%` }}
+                        style={{ left: `${clamp(pct, 3, 97)}%` }}
                       >
                         <img
                           src="/world.png"
                           alt="World"
-                          className="w-7 h-7 rounded-full object-cover shadow-sm ring-1 ring-[#1E3A5F]/30"
+                          className="w-6 h-6 rounded-full object-cover shadow-md ring-2 ring-white"
                         />
                       </div>
                     </div>

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Users, UserPlus, CheckCircle2, Clock, Award } from "lucide-react";
+import { Users, UserPlus, CheckCircle2, Clock, Award, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./components/KpiCard";
 import DirectorCard from "./components/DirectorCard";
 import DirectorDetailModal from "./components/DirectorDetailModal";
+import DirectorActivityModal from "./components/DirectorActivityModal";
 import CreateDirectorForm from "./components/CreateDirectorForm";
 import FilterBar from "./components/FilterBar";
 import { useGetAllDirector, useGetSingleDirector } from "@/hooks/owner-hook/create-director.hook";
@@ -13,17 +14,18 @@ const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
+
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
-
 
 const DirectorManagementPage = () => {
   const { allDirector, isLoading } = useGetAllDirector();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedDirector, setSelectedDirector] = useState(null);
+  const [activityModalDirector, setActivityModalDirector] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const { singleDirector, isLoading: isSingleLoading } = useGetSingleDirector(selectedDirector?.id);
@@ -33,10 +35,11 @@ const DirectorManagementPage = () => {
     if (statusFilter !== "all") result = result.filter((d) => d.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter((d) =>
-        d?.name?.toLowerCase().includes(q) ||
-        d?.email?.toLowerCase().includes(q) ||
-        d?.role?.toLowerCase().includes(q)
+      result = result.filter(
+        (d) =>
+          d?.name?.toLowerCase().includes(q) ||
+          d?.email?.toLowerCase().includes(q) ||
+          d?.role?.toLowerCase().includes(q)
       );
     }
     return result;
@@ -47,9 +50,7 @@ const DirectorManagementPage = () => {
     return {
       total: dirs.length,
       active: dirs.filter((d) => d.status === "active").length,
-      pending: dirs.filter((d) => d.status !== "active").length, // Assuming non-active means pending or something similar
-      totalTasks: 0, // Not provided in current API
-      totalLogs: 0,  // Not provided in current API
+      pending: dirs.filter((d) => d.status !== "active").length,
     };
   }, [allDirector]);
 
@@ -57,19 +58,21 @@ const DirectorManagementPage = () => {
     // Status update logic
   };
 
-
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
-      {/* Header */}
+      {/* ── Header ── */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Director Management</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats.active} active · {stats.pending} pending
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+            <Shield size={28} className="text-[#1E3A5F]" /> Director Management
+          </h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            {stats.active} active directors · {stats.pending} pending invites
           </p>
         </div>
-        <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm" onClick={() => setShowCreateForm(true)}>
-          <UserPlus size={16} className="mr-2" /> Add Director
+
+        <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm text-xs md:text-sm cursor-pointer" onClick={() => setShowCreateForm(true)}>
+          <UserPlus size={16} className="mr-1.5" /> Add Director
         </Button>
       </motion.div>
 
@@ -85,7 +88,7 @@ const DirectorManagementPage = () => {
           <KpiCard icon={Clock} label="Pending Invites" value={stats.pending} sub={stats.pending > 0 ? "Awaiting first login" : "All accounts activated"} color={stats.pending > 0 ? "bg-[#B78A2F]/10 text-[#8F6A1F]" : "bg-gray-50 text-gray-400"} />
         </motion.div>
         <motion.div variants={itemVariants}>
-          <KpiCard icon={Award} label="Total Activity" value={stats.totalTasks + stats.totalLogs} sub={`${stats.totalTasks} tasks · ${stats.totalLogs} logs`} color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          <KpiCard icon={Award} label="Activity Logs" value="Live Audit" sub="Click View Activity on any card" color="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
       </div>
 
@@ -103,7 +106,7 @@ const DirectorManagementPage = () => {
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between animate-pulse min-h-[49">
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between animate-pulse min-h-[160px]">
               <div className="flex gap-5 items-start">
                 <div className="w-16 h-16 rounded-full bg-slate-200 shrink-0" />
                 <div className="flex-1 space-y-3 py-1 w-full">
@@ -120,18 +123,19 @@ const DirectorManagementPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-                <div className="h-4 bg-slate-200 rounded w-1/3" />
-                <div className="w-8 h-8 rounded-full bg-slate-200" />
-              </div>
             </div>
           ))
         ) : filtered?.length > 0 ? (
           filtered.map((director) => (
-            <DirectorCard key={director.id} director={director} onClick={setSelectedDirector} />
+            <DirectorCard
+              key={director.id}
+              director={director}
+              onClick={setSelectedDirector}
+              onViewActivity={(dir) => setActivityModalDirector(dir)}
+            />
           ))
         ) : (
-          <div className="col-span-full py-16 text-center">
+          <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-gray-100">
             <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Users size={28} className="text-gray-300" />
             </div>
@@ -150,6 +154,15 @@ const DirectorManagementPage = () => {
           isLoading={isSingleLoading}
           onClose={() => setSelectedDirector(null)}
           onUpdateStatus={handleUpdateStatus}
+        />
+      )}
+
+      {/* Dedicated Director Activity Modal */}
+      {activityModalDirector && (
+        <DirectorActivityModal
+          isOpen={!!activityModalDirector}
+          director={activityModalDirector}
+          onClose={() => setActivityModalDirector(null)}
         />
       )}
 

@@ -8,6 +8,7 @@ import ProfitChart from "./components/ProfitChart";
 import TierFilter from "./components/TierFilter";
 import ClassroomDetailCard from "./components/ClassroomDetailCard";
 import AddClassroomModal from "./components/AddClassroomModal";
+import EnrollmentTargetModal from "./components/EnrollmentTargetModal";
 import Pagination from "./components/Pagination";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { ClassroomCardSkeleton, PnLChartSkeleton } from "./components/Skeleton";
@@ -41,6 +42,7 @@ const ClassroomsPage = () => {
   const [activeFilter, setActiveFilter] = useState("All Classrooms");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [classroomForm, setClassroomForm] = useState(EMPTY_CLASSROOM_FORM);
   const [editingClassroom, setEditingClassroom] = useState(null);
 
@@ -66,6 +68,7 @@ const ClassroomsPage = () => {
   const pnl = data?.classroom_pnl;
   const metrics = pnl?.metrics;
   const pnlSummary = pnl?.pnl_summary;
+  const enrollmentSummary = pnl?.enrollment_summary;
   const filters = pnl?.filters ?? ["All Classrooms"];
   const classroomsList = pnl?.classrooms_list?.data ?? [];
   const pagination = pnl?.classrooms_list?.classrooms_list_pagination;
@@ -165,7 +168,6 @@ const ClassroomsPage = () => {
     }
   };
 
-
   const displayedClassrooms = classroomsList.length > 0 ? classroomsList : localClassrooms;
 
   return (
@@ -177,7 +179,7 @@ const ClassroomsPage = () => {
         onAddClick={() => setIsAddModalOpen(true)} 
       />
 
-      <ClassroomKpis isLoading={isLoading} metrics={metrics} />
+      <ClassroomKpis isLoading={isLoading} metrics={metrics} enrollmentSummary={enrollmentSummary} />
 
       {/* P&L + Profit Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -200,13 +202,14 @@ const ClassroomsPage = () => {
         )}
       </div>
 
-      {/* Tier Filter */}
+      {/* Tier Filter & Targets Setting Button */}
       {!isLoading && (
         <TierFilter
           activeFilter={activeFilter}
           filters={filters}
           onFilterChange={handleFilterChange}
           count={pagination?.total ?? displayedClassrooms.length}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
         />
       )}
 
@@ -251,6 +254,13 @@ const ClassroomsPage = () => {
         onClose={closeAddModal}
         isEdit={!!editingClassroom}
         isLoading={isAdding || isUpdating}
+      />
+
+      {/* Enrollment Targets Settings Modal */}
+      <EnrollmentTargetModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        initialTargets={enrollmentSummary?.targets}
       />
 
       {/* Delete Confirmation Modal */}

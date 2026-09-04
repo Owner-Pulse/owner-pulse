@@ -1,15 +1,28 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Calendar, CheckCircle2, ClipboardList, Trash2, Pencil, Play, MessageSquare, Crown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Calendar,
+  CheckCircle2,
+  Trash2,
+  Play,
+  MessageSquare,
+  Crown,
+  Send,
+  Loader2,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import AssigneeTag from "./AssigneeTag";
 import EditTaskModal from "./EditTaskModal";
-import TaskCommentsModal from "./TaskCommentsModal";
 import { useOwnerTaskActions, useDirectorTaskActions } from "@/hooks/useTaskActions";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
+import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -17,6 +30,157 @@ const itemVariants = {
 };
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+const formatTime = (isoString) => {
+  if (!isoString) return "";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+};
+
+const UserAvatar = ({ avatar, name, role }) => {
+  const [imgError, setImgError] = useState(false);
+
+  if (avatar && !imgError) {
+    return (
+      <img
+        src={avatar}
+        alt={name || "User"}
+        onError={() => setImgError(true)}
+        className="w-7 h-7 rounded-full object-cover shrink-0 border border-gray-200 shadow-2xs"
+      />
+    );
+  }
+
+  const initial = (name || role || "U").charAt(0).toUpperCase();
+  const bgClass = role === "owner" ? "bg-amber-600 text-white" : "bg-[#1E3A5F] text-white";
+
+  return (
+    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 shadow-2xs ${bgClass}`}>
+      {initial}
+    </div>
+  );
+};
+
+/**
+ * Facebook-style inline comment thread section
+ */
+const InlineTaskComments = ({ taskId, currentRole }) => {
+  const { user } = useGetUser();
+  const { comments, isLoading } = useGetTaskComments(taskId, true);
+  const { postComment, isPending } = usePostTaskComment();
+  const [newCommentText, setNewCommentText] = useState("");
+
+  const handlePostComment = async (e) => {
+    e.preventDefault();
+    if (!newCommentText.trim() || isPending) return;
+
+    const textToSubmit = newCommentText.trim();
+    setNewCommentText("");
+
+    try {
+      await postComment({ taskId, commentText: textToSubmit });
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    }
+  };
+
+  return (
+    <div className="pt-3 border-t border-slate-100 mt-3 space-y-3 animate-fadeIn">
+      {/* Comments List Header */}
+      <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+        <span className="flex items-center gap-1.5 text-slate-700 font-bold">
+          <MessageSquare size={13} className="text-[#1E3A5F]" />
+          Comments ({comments.length})
+        </span>
+      </div>
+
+      {/* Comments List */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-4 text-xs text-slate-400 gap-2">
+          <Loader2 size={14} className="animate-spin text-[#1E3A5F]" /> Loading comments...
+        </div>
+      ) : comments.length === 0 ? (
+        <p className="text-xs text-slate-400 italic py-2 pl-2">
+          No comments yet. Write a comment below.
+        </p>
+      ) : (
+        <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+          {comments.map((item) => {
+            const authorName = item.user?.name || (item.user_id === 1 ? "Director" : "Owner");
+            const authorRole = item.user?.role || "user";
+            const commentText = item.comment;
+            const createdAt = item.created_at || item.createdAt;
+
+            return (
+              <div key={item.id || Math.random()} className="flex items-start gap-2.5">
+                <UserAvatar avatar={item.user?.avatar} name={authorName} role={authorRole} />
+
+                <div className="flex-1 min-w-0">
+                  {/* Facebook-style Bubble */}
+                  <div className="bg-slate-100/90 hover:bg-slate-100 rounded-2xl px-3.5 py-2 inline-block max-w-full text-xs text-gray-900 border border-slate-200/60 shadow-2xs">
+                    <div className="flex items-center gap-1.5 font-bold text-gray-900 mb-0.5">
+                      <span>{authorName}</span>
+                      <span
+                        className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full ${
+                          authorRole === "owner"
+                            ? "bg-amber-100 text-amber-800 border border-amber-200"
+                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                        }`}
+                      >
+                        {authorRole}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap break-words leading-relaxed text-gray-800">
+                      {commentText}
+                    </p>
+                  </div>
+
+                  {/* Time display */}
+                  {createdAt && (
+                    <div className="text-[10px] text-slate-400 mt-0.5 pl-2 flex items-center gap-1">
+                      <Clock size={9} />
+                      <span>{formatTime(createdAt)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Post Comment Input */}
+      <form onSubmit={handlePostComment} className="flex items-center gap-2 pt-1">
+        <UserAvatar avatar={user?.avatar} name={user?.name} role={currentRole} />
+        <input
+          type="text"
+          value={newCommentText}
+          onChange={(e) => setNewCommentText(e.target.value)}
+          placeholder="Write a comment..."
+          disabled={isPending}
+          className="flex-1 bg-slate-100 hover:bg-slate-100/90 focus:bg-white text-xs px-3.5 py-2 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] transition-all"
+        />
+        <Button
+          type="submit"
+          disabled={isPending || !newCommentText.trim()}
+          className="bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-full p-2 h-8 w-8 shrink-0 flex items-center justify-center shadow-2xs disabled:opacity-40"
+        >
+          {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+        </Button>
+      </form>
+    </div>
+  );
+};
 
 // Wrapper that calls owner hooks
 const OwnerTaskCard = (props) => {
@@ -52,8 +216,7 @@ const TaskCardInner = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [comments, setComments] = useState(task.comments || []);
+  const [showComments, setShowComments] = useState(false);
 
   const days = daysUntil(task.due);
   const isDone = status === "done" || status === "completed";
@@ -67,19 +230,7 @@ const TaskCardInner = ({
   const isCreator = assignedByRole === userRole;
   const canEditOrDelete = isCreator || userRole === "owner" || isForMe;
 
-  // Requirement B-06: FROM OWNER identification
   const isFromOwner = assignedByRole.includes("owner") || task.creatorId === 2 || task.raw?.created_by === 2;
-
-  const handleAddComment = (taskId, text) => {
-    const newComm = {
-      id: Date.now(),
-      author: userRole === "owner" ? "School Owner" : "Director",
-      role: userRole,
-      text,
-      createdAt: new Date().toISOString(),
-    };
-    setComments((prev) => [...prev, newComm]);
-  };
 
   const handleDelete = async () => {
     await deleteTask(task.id);
@@ -99,7 +250,7 @@ const TaskCardInner = ({
     <>
       <motion.div variants={itemVariants}>
         <Card
-          className={`bg-white border-none shadow-sm transition-all ${
+          className={`bg-white border-none shadow-xs transition-all ${
             isDone ? "opacity-60" : ""
           } ${
             isFromOwner
@@ -148,7 +299,6 @@ const TaskCardInner = ({
                       {task.title}
                     </span>
                     <div className="flex flex-wrap items-center gap-1">
-                      {/* B-06: Distinct FROM OWNER Badge */}
                       {isFromOwner && (
                         <span className="text-[9px] md:text-[10px] font-extrabold text-[#8F6A1F] bg-[#B78A2F]/15 border border-[#B78A2F]/30 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
                           <Crown size={10} className="text-[#8F6A1F]" />
@@ -216,21 +366,21 @@ const TaskCardInner = ({
                   </Button>
                 )}
 
-                {/* B-05: Discussion / Comments button */}
+                {/* View Comments toggle button */}
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 border-none px-2 font-medium flex items-center gap-1"
-                  onClick={() => setShowCommentsModal(true)}
-                  title="Open task comments & updates"
+                  className={`h-7 text-xs border-none px-2.5 font-medium flex items-center gap-1 transition-all ${
+                    showComments
+                      ? "bg-[#1E3A5F] text-white hover:bg-[#15294A]"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                  onClick={() => setShowComments((prev) => !prev)}
+                  title={showComments ? "Hide comments" : "View comments"}
                 >
                   <MessageSquare size={11} />
-                  <span>Comments</span>
-                  {comments.length > 0 && (
-                    <span className="bg-[#1E3A5F] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
-                      {comments.length}
-                    </span>
-                  )}
+                  <span>{showComments ? "Hide Comments" : "View Comments"}</span>
+                  {showComments ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 </Button>
 
                 {/* Delete Task button */}
@@ -248,19 +398,17 @@ const TaskCardInner = ({
                 )}
               </div>
             </div>
+
+            {/* Inline Facebook-style Comments Section */}
+            {showComments && (
+              <InlineTaskComments
+                taskId={task.id}
+                currentRole={currentRole}
+              />
+            )}
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Comments Thread Modal */}
-      <TaskCommentsModal
-        isOpen={showCommentsModal}
-        task={task}
-        currentRole={currentRole}
-        comments={comments}
-        onAddComment={handleAddComment}
-        onClose={() => setShowCommentsModal(false)}
-      />
 
       {/* Edit Task Modal */}
       {showEditModal && (
@@ -274,15 +422,17 @@ const TaskCardInner = ({
       )}
 
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="Delete Task"
-        itemName={task.title}
-        confirmText="Delete"
-        isLoading={isDeleting}
-      />
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          title="Delete Task"
+          itemName={task.title}
+          confirmText="Delete"
+          isLoading={isDeleting}
+        />
+      )}
     </>
   );
 };
