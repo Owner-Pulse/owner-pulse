@@ -8,11 +8,16 @@ window.Pusher = Pusher;
  * Initialize Laravel Echo with Reverb WebSocket Connection
  */
 export const initEcho = (token) => {
+    const key = import.meta.env.VITE_REVERB_APP_KEY;
+    if (!key) {
+        console.warn('Reverb App Key is missing or disabled. Echo disabled.');
+        return null;
+    }
     const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || '';
 
     return new Echo({
         broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
+        key: key,
         wsHost: import.meta.env.VITE_REVERB_HOST,
         wsPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 80,
         wssPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 443,
