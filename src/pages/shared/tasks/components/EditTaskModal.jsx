@@ -6,10 +6,29 @@ import { useGetAllDirector } from "@/hooks/owner-hook/create-director.hook";
 const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) => {
   const { allDirector } = useGetAllDirector();
 
+  const directorsList = React.useMemo(() => {
+    return Array.isArray(allDirector) ? allDirector : [];
+  }, [allDirector]);
+
   const formattedDueDate = task.due ? task.due.slice(0, 10) : "";
 
   const [title, setTitle] = useState(task.title || "");
-  const [assignee, setAssignee] = useState(task.raw?.assigned_to || (currentRole === "owner" ? "" : "1"));
+  const initialAssignee = task.raw?.assigned_to
+    ? String(task.raw.assigned_to)
+    : directorsList?.[0]?.id
+    ? String(directorsList[0].id)
+    : "1";
+  const [assignee, setAssignee] = useState(currentRole === "owner" ? initialAssignee : "owner");
+
+  React.useEffect(() => {
+    if (currentRole === "owner" && directorsList && directorsList.length > 0 && !task.raw?.assigned_to) {
+      const exists = directorsList.some((d) => String(d.id) === String(assignee));
+      if (!assignee || !exists) {
+        setAssignee(String(directorsList[0].id));
+      }
+    }
+  }, [directorsList, currentRole, task.raw?.assigned_to]);
+
   const [priority, setPriority] = useState(task.priority || "medium");
   const [status, setStatus] = useState(task.raw?.status || task.status || "pending");
   const [due, setDue] = useState(formattedDueDate);
@@ -101,7 +120,15 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium"
                 >
                   {currentRole === "owner" ? (
-                    <option value={allDirector?.[0]?.id || "1"}>Director</option>
+                    directorsList && directorsList.length > 0 ? (
+                      directorsList.map((dir) => (
+                        <option key={dir.id} value={dir.id}>
+                          {dir.name || `Director #${dir.id}`}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="1">Director</option>
+                    )
                   ) : (
                     <option value="owner">Owner</option>
                   )}
