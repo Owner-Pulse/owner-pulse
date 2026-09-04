@@ -14,6 +14,7 @@ import {
   Wallet,
   Tag,
   Link2,
+  UploadCloud,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import EnrollmentChart from "./components/EnrollmentChart";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
 import DonutKpiCard from "./components/DonutKpiCard";
 import CashFlowMetricsCard from "./components/CashFlowMetricsCard";
+import CsvUploadModal from "./components/CsvUploadModal";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -50,6 +52,8 @@ const itemVariants = {
 const OverviewPage = () => {
   const navigate = useNavigate();
   const go = (path) => navigate(path);
+
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   // Fetch API data
   const { ownerOverviewData, isLoading } = useGetOwnerOverview();
@@ -151,6 +155,13 @@ const OverviewPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <Button
+            onClick={() => setIsCsvModalOpen(true)}
+            className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <UploadCloud size={15} /> Upload CSV
+          </Button>
+
           {isQbStatusLoading ? (
             <Skeleton className="h-9 w-40 rounded-xl" />
           ) : isQbConnected ? (
@@ -234,6 +245,12 @@ const OverviewPage = () => {
         <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrollmentByGrade.reduce((sum, g) => sum + (g.available || 0), 0)} />
         <UpcomingEventsCard events={upcomingEvents} />
       </div>
+
+      {/* CSV Upload Modal */}
+      <CsvUploadModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+      />
     </motion.div>
   );
 };
