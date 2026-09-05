@@ -5,20 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const WaitlistFunnelCard = ({ stats }) => {
   const {
-    total,
-    inquiryCount,
-    touredCount,
-    appliedCount,
-    offeredCount,
-    enrolledCount,
-    lostCount,
-    inquiryToTourRate,
-    tourToAppliedRate,
-    appliedToOfferRate,
-    offerToEnrollRate,
-    overallConversionRate,
-    projectedMonthlyRevenue,
-  } = stats;
+    total = 0,
+    inquiryCount = 0,
+    touredCount = 0,
+    appliedCount = 0,
+    offeredCount = 0,
+    enrolledCount = 0,
+    lostCount = 0,
+    inquiryToTourRate = 0,
+    tourToAppliedRate = 0,
+    appliedToOfferRate = 0,
+    offerToEnrollRate = 0,
+    overallConversionRate = 0,
+    projectedMonthlyRevenue = 0,
+  } = stats || {};
 
   const stages = [
     { label: "1. Inquiry", count: inquiryCount, color: "bg-[#1E3A5F]", textColor: "text-[#1E3A5F]", rate: `${inquiryToTourRate}% tour rate` },

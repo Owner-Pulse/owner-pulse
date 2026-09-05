@@ -49,13 +49,13 @@ const LoginPage = () => {
       },
 
       onError: (error) => {
-        const errorMsg =
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          (error?.response ? `Server Error (${error.response.status})` : null) ||
-          (error?.message && !error.message.includes("undefined") ? error.message : null) ||
-          "Unable to connect to login server. Please check network connection.";
-        toast.error(errorMsg);
+        if (error?.response) {
+          const errorMsg =
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            `Server Error (${error.response.status})`;
+          toast.error(errorMsg);
+        }
       }
     });
   };
