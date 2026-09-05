@@ -2,7 +2,10 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const TIME_OUT = import.meta.env.VITE_TIME_OUT;
+// Enforce a sane minimum timeout: on mobile networks a login/API request can
+// easily exceed a short timeout (e.g. 3000ms), which surfaces as a generic
+// "Network Error" even though the server is reachable.
+const TIME_OUT = Math.max(Number(import.meta.env.VITE_TIME_OUT) || 30000, 30000);
 
 export const axiosPublic = () => {
     const instance = axios.create({
