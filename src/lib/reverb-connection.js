@@ -5,25 +5,106 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 /**
+ * Play a gentle, modern audio chime using Web Audio API
+ */
+export const playNotificationChime = () => {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+
+        const now = ctx.currentTime;
+
+        // Primary bell tone
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+
+        gain1.gain.setValueAtTime(0.18, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+
+        osc1.start(now);
+        osc1.stop(now + 0.6);
+
+        // Secondary subtle harmonic
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(880, now + 0.1);
+        osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.22); // D6
+
+        gain2.gain.setValueAtTime(0.08, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.7);
+    } catch (e) {
+        // Silent fallback if audio context is blocked
+    }
+};
+
+/**
+ * Trigger native mobile haptic feedback if running inside Capacitor
+ */
+export const triggerNotificationHaptics = async () => {
+    try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+            const { Haptics, NotificationType } = await import('@capacitor/haptics');
+            await Haptics.notification({ type: NotificationType.Success });
+        }
+    } catch (e) {
+        // Haptics not supported or permitted
+    }
+};
+
+/**
  * Initialize Laravel Echo with Reverb WebSocket Connection
  */
 export const initEcho = (token) => {
-    const key = import.meta.env.VITE_REVERB_APP_KEY;
-    if (!key) {
-        console.warn('Reverb App Key is missing or disabled. Echo disabled.');
+    const rawKey = import.meta.env.VITE_REVERB_APP_KEY || import.meta.env.REVERB_APP_KEY;
+    if (!rawKey) {
+        console.warn('⚡️ Reverb App Key is missing. Echo real-time connection disabled.');
         return null;
     }
-    const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || '';
+
+    const key = String(rawKey).replace(/^["']|["']$/g, '').trim();
+    const rawHost = import.meta.env.VITE_REVERB_HOST || import.meta.env.REVERB_HOST || 'reverb.softvencefsd.xyz';
+    const wsHost = String(rawHost).replace(/^["']|["']$/g, '').trim();
+
+    const rawPort = import.meta.env.VITE_REVERB_PORT || import.meta.env.REVERB_PORT || 443;
+    const wsPort = Number(String(rawPort).replace(/^["']|["']$/g, '').trim()) || 443;
+
+    const rawScheme = import.meta.env.VITE_REVERB_SCHEME || import.meta.env.REVERB_SCHEME || 'https';
+    const scheme = String(rawScheme).replace(/^["']|["']$/g, '').trim();
+    const forceTLS = scheme === 'https';
+
+    const rawBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://staging-back.owner-pulse.com';
+    const baseUrl = String(rawBaseUrl).replace(/^["']|["']$/g, '').replace(/\/$/, '');
+
+    console.log(`📡 Connecting to Reverb at ${wsHost}:${wsPort} (${scheme})`);
 
     return new Echo({
         broadcaster: 'reverb',
         key: key,
-        wsHost: import.meta.env.VITE_REVERB_HOST,
-        wsPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 80,
-        wssPort: import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 443,
-        forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+        wsHost: wsHost,
+        wsPort: wsPort,
+        wssPort: wsPort,
+        forceTLS: forceTLS,
         enabledTransports: ['ws', 'wss'],
-        // Backend auth endpoint for private channels
+        // Backend authentication endpoint for private channels
         authEndpoint: `${baseUrl}/api/broadcasting/auth`,
         auth: {
             headers: {
@@ -35,18 +116,43 @@ export const initEcho = (token) => {
 };
 
 /**
- * Request Push & Local Notification Permissions
+ * Request Push & Local Notification Permissions and set up Android notification channels
  */
 export const requestNotificationPermission = async () => {
     try {
         const { Capacitor } = await import('@capacitor/core');
         if (Capacitor.isNativePlatform()) {
             const { LocalNotifications } = await import('@capacitor/local-notifications');
-            const status = await LocalNotifications.requestPermissions();
+            const check = await LocalNotifications.checkPermissions();
+            let status = check;
+            if (check.display !== 'granted') {
+                status = await LocalNotifications.requestPermissions();
+            }
+
+            // Create high-importance notification channel for Android (API 26+)
+            try {
+                await LocalNotifications.createChannel({
+                    id: 'ownerpulse_alerts',
+                    name: 'OwnerPulse Alerts',
+                    description: 'Real-time alerts, tasks, and system notifications for OwnerPulse',
+                    importance: 5, // High / Heads-up notification
+                    visibility: 1, // Public on lockscreen
+                    sound: 'beep.wav',
+                    vibration: true,
+                    lights: true,
+                    lightColor: '#4880FF',
+                });
+            } catch (chanErr) {
+                console.warn('Notification channel setup notice:', chanErr);
+            }
+
             return status.display === 'granted';
         } else if ('Notification' in window) {
-            const permission = await Notification.requestPermission();
-            return permission === 'granted';
+            if (Notification.permission === 'granted') return true;
+            if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                return permission === 'granted';
+            }
         }
     } catch (e) {
         console.warn('Notification permission request error:', e);
@@ -55,49 +161,150 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
+ * Listen for notification click/action in Capacitor native mobile app
+ */
+export const setupNotificationTapListener = (onNavigate) => {
+    try {
+        import('@capacitor/core').then(({ Capacitor }) => {
+            if (Capacitor.isNativePlatform()) {
+                import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
+                    LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+                        console.log('📱 Notification tapped on mobile:', notificationAction);
+                        const extra = notificationAction.notification?.extra;
+                        const path = extra?.path || extra?.link;
+                        if (path && typeof onNavigate === 'function') {
+                            onNavigate(path);
+                        }
+                    });
+                });
+            }
+        });
+    } catch (e) {
+        console.warn('Error setting up notification tap listener:', e);
+    }
+};
+
+/**
+ * Normalize incoming notification payload from various backend structures
+ */
+const normalizeNotification = (event) => {
+    const raw = event?.notification || event?.data || event;
+    const title = raw?.title || raw?.heading || event?.title || 'OwnerPulse Notification';
+    const body = raw?.body || raw?.message || raw?.description || event?.body || event?.message || '';
+    const path = raw?.path || raw?.link || raw?.url || event?.path || event?.link || null;
+    const type = raw?.type || event?.type || 'general';
+    const id = raw?.id || event?.id || `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const isCritical = Boolean(raw?.critical || raw?.is_critical || event?.critical || title?.toLowerCase().includes('critical'));
+
+    return {
+        id,
+        title,
+        body,
+        description: body,
+        path,
+        type,
+        critical: isCritical,
+        time: Date.now(),
+        raw: event,
+    };
+};
+
+/**
  * Listen for real-time notifications for the authenticated user
  */
 export const listenToNotifications = (echoInstance, userId, onNotificationReceived) => {
-    if (!echoInstance || !userId) return;
+    if (!echoInstance || !userId) return () => {};
 
-    // Listen on private channel: notify.{userId}
-    echoInstance.private(`notify.${userId}`)
-        .listen('.NotificationEvent', async (event) => {
-            console.log('⚡️ Real-time Notification Received via Reverb:', event);
+    // Deduplication tracker to prevent duplicate alerts within 3 seconds
+    const recentEventIds = new Set();
 
-            try {
-                const { Capacitor } = await import('@capacitor/core');
+    const handleEvent = async (rawEvent) => {
+        const notif = normalizeNotification(rawEvent);
 
-                // A. Native Mobile App / PWA (Capacitor JS) -> Push Local Notification
-                if (Capacitor.isNativePlatform()) {
-                    const { LocalNotifications } = await import('@capacitor/local-notifications');
-                    await LocalNotifications.schedule({
-                        notifications: [
-                            {
-                                id: Math.floor(Math.random() * 100000),
-                                title: event.title,
-                                body: event.body,
-                                extra: event.data || {},
-                                smallIcon: 'ic_stat_notification',
+        // Deduplicate
+        const dedupKey = `${notif.id}-${notif.title}`;
+        if (recentEventIds.has(dedupKey)) return;
+        recentEventIds.add(dedupKey);
+        setTimeout(() => recentEventIds.delete(dedupKey), 3000);
+
+        console.log('⚡️ Real-time Notification Received via Reverb:', notif);
+
+        // 1. Play chime sound
+        playNotificationChime();
+
+        // 2. Trigger mobile haptics
+        triggerNotificationHaptics();
+
+        try {
+            const { Capacitor } = await import('@capacitor/core');
+
+            // A. Native Mobile App (Capacitor JS) -> Schedule Local Notification
+            if (Capacitor.isNativePlatform()) {
+                const { LocalNotifications } = await import('@capacitor/local-notifications');
+                await LocalNotifications.schedule({
+                    notifications: [
+                        {
+                            id: Math.floor(Math.random() * 1000000),
+                            title: notif.title,
+                            body: notif.body,
+                            extra: {
+                                path: notif.path,
+                                id: notif.id,
+                                type: notif.type,
                             },
-                        ],
-                    });
-                }
-                // B. Desktop / Web Browser -> Browser Notification
-                else if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(event.title || 'New Notification', {
-                        body: event.body || '',
-                        icon: event.icon || '/logo.png',
-                        data: event.data,
-                    });
-                }
-            } catch (e) {
-                console.warn('Error handling local notification:', e);
+                            channelId: 'ownerpulse_alerts',
+                            smallIcon: 'ic_stat_notification',
+                            iconColor: '#4880FF',
+                        },
+                    ],
+                });
             }
+            // B. Desktop / Web Browser -> Browser Notification
+            else if ('Notification' in window && Notification.permission === 'granted') {
+                const browserNotif = new Notification(notif.title, {
+                    body: notif.body,
+                    icon: '/logo.png',
+                    badge: '/favicon-32x32.png',
+                    data: { path: notif.path },
+                });
 
-            // Callback to update in-app state (badge count, dropdown list, etc.)
-            if (typeof onNotificationReceived === 'function') {
-                onNotificationReceived(event);
+                browserNotif.onclick = () => {
+                    window.focus();
+                    if (notif.path && window.__pulse_navigate) {
+                        window.__pulse_navigate(notif.path);
+                    }
+                };
             }
-        });
+        } catch (e) {
+            console.warn('Error dispatching push notification to device:', e);
+        }
+
+        // Callback to update in-app state (badge count, toast, queryClient)
+        if (typeof onNotificationReceived === 'function') {
+            onNotificationReceived(notif);
+        }
+    };
+
+    // 1. Subscribe to custom private channel: notify.{userId}
+    const notifyChannel = echoInstance.private(`notify.${userId}`);
+    notifyChannel.listen('.NotificationEvent', handleEvent);
+    notifyChannel.listen('NotificationEvent', handleEvent);
+    notifyChannel.listen('.notification', handleEvent);
+    notifyChannel.listen('notification', handleEvent);
+
+    // 2. Also subscribe to standard Laravel user notification channel: App.Models.User.{userId}
+    const userChannel = echoInstance.private(`App.Models.User.${userId}`);
+    if (typeof userChannel.notification === 'function') {
+        userChannel.notification(handleEvent);
+    }
+    userChannel.listen('.NotificationEvent', handleEvent);
+
+    return () => {
+        try {
+            echoInstance.leave(`notify.${userId}`);
+            echoInstance.leave(`App.Models.User.${userId}`);
+        } catch (e) {
+            // Ignore leave errors on teardown
+        }
+    };
 };
