@@ -34,6 +34,7 @@ import EnrollmentChart from "./components/EnrollmentChart";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
 import DonutKpiCard from "./components/DonutKpiCard";
 import CashFlowMetricsCard from "./components/CashFlowMetricsCard";
+import LatestPayrollSubmissionCard from "./components/LatestPayrollSubmissionCard";
 import CsvUploadModal from "./components/CsvUploadModal";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -74,6 +75,7 @@ const OverviewPage = () => {
   const budgetOverview = ownerOverviewData?.budget_overview;
   const enrollmentByGrade = ownerOverviewData?.enrollment_by_grade || [];
   const upcomingEvents = ownerOverviewData?.upcoming_events || [];
+  const latestPayrollSubmission = ownerOverviewData?.latest_payroll_submission;
 
   // Mapped Pulse from API
   const ownerPulse = {
@@ -191,6 +193,14 @@ const OverviewPage = () => {
 
       {/* Pulse Health Score */}
       <PulseSection ownerPulse={ownerPulse} pulseHistory={pulseHistory} />
+
+      {/* Latest Payroll Submission Summary */}
+      {latestPayrollSubmission && (
+        <LatestPayrollSubmissionCard
+          submission={latestPayrollSubmission}
+          onNavigate={() => navigate("/owner/payroll")}
+        />
+      )}
 
       {/* Cash Flow Metrics */}
       <CashFlowMetricsCard cashFlowMetrics={cashFlowMetrics} />

@@ -39,6 +39,7 @@ import PtoPage from "@/pages/shared/pto/pto-page";
 import ProfilePage from "@/pages/shared/profile/profile-page";
 import SettingsPage from "@/pages/shared/settings/settings-page";
 import BillingPage from "@/pages/shared/billing/billing-page";
+import DiscountsPage from "@/pages/shared/discounts/discounts-page";
 
 
 export const router = createBrowserRouter([
@@ -139,6 +140,10 @@ export const router = createBrowserRouter([
             element: <WaitlistPage />
           },
           {
+            path: 'discounts',
+            element: <DiscountsPage />
+          },
+          {
             path: 'pto',
             element: <PtoPage />
           },
@@ -215,6 +220,10 @@ export const router = createBrowserRouter([
           {
             path: 'waitlist',
             element: <WaitlistPage />
+          },
+          {
+            path: 'discounts',
+            element: <DiscountsPage />
           },
           {
             path: 'pto',

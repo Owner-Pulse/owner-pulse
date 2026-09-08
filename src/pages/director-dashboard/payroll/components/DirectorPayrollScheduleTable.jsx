@@ -7,7 +7,7 @@ import EditPayrollScheduleModal from "@/pages/owner-dashboard/payroll/components
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
-const DirectorPayrollScheduleTable = ({ schedule = [], onDeleteLocal }) => {
+const DirectorPayrollScheduleTable = ({ schedule = [] }) => {
   const { deleteSchedule, isPending } = useDeletePayrollSchedule();
   const [editingPeriod, setEditingPeriod] = useState(null);
 
@@ -17,9 +17,8 @@ const DirectorPayrollScheduleTable = ({ schedule = [], onDeleteLocal }) => {
     }
     try {
       await deleteSchedule(id);
-      if (onDeleteLocal) onDeleteLocal(id);
     } catch (err) {
-      if (onDeleteLocal) onDeleteLocal(id);
+      // Error is handled in hook toast
     }
   };
 

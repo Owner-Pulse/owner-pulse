@@ -48,8 +48,8 @@ const OwnerPayrollHistorySection = ({ history = [], onSelectPayroll }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredHistory.map((item) => {
-          const startDate = item.cycle_start_date || item.periodStart || "2026-04-16";
-          const endDate = item.cycle_end_date || item.periodEnding || "2026-04-30";
+          const startDate = item.cycle_start_date || item.periodStart || "";
+          const endDate = item.cycle_end_date || item.periodEnding || "";
           const submittedAt = item.submitted_at || item.submittedAt;
           const submittedByName = typeof item.submitted_by === "object" ? item.submitted_by?.name : item.submitted_by || "Director";
 

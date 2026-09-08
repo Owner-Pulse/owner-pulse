@@ -16,6 +16,9 @@ export const OwnerOverviewSkeleton = () => {
       {/* Pulse Card Skeleton */}
       <Skeleton className="h-44 w-full rounded-2xl bg-slate-900/60" />
 
+      {/* Latest Payroll Submission Card Skeleton */}
+      <Skeleton className="h-32 w-full rounded-2xl" />
+
       {/* Cash Flow Metrics Skeleton */}
       <div className="space-y-3">
         <Skeleton className="h-6 w-48" />

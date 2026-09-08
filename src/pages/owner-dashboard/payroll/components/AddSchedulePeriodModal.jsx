@@ -4,7 +4,7 @@ import { X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGeneratePayrollSchedule } from "@/hooks/payroll/payroll.hook";
 
-const AddSchedulePeriodModal = ({ isOpen, onClose, onLocalAdd }) => {
+const AddSchedulePeriodModal = ({ isOpen, onClose }) => {
   const [scheduleMode, setScheduleMode] = useState("single"); // "single" | "series"
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -39,30 +39,9 @@ const AddSchedulePeriodModal = ({ isOpen, onClose, onLocalAdd }) => {
 
       try {
         await generateSchedule(payload);
-        if (onLocalAdd) {
-          onLocalAdd({
-            id: Date.now(),
-            startDate,
-            endDate,
-            dueDate,
-            status: "Pending",
-          });
-        }
         resetAndClose();
       } catch (err) {
-        // Fallback for demo/mock if backend endpoint is unavailable
-        if (onLocalAdd) {
-          onLocalAdd({
-            id: Date.now(),
-            startDate,
-            endDate,
-            dueDate,
-            status: "Pending",
-          });
-          resetAndClose();
-        } else {
-          setModalError(err?.response?.data?.message || "Failed to create schedule cycle.");
-        }
+        setModalError(err?.response?.data?.message || "Failed to create schedule cycle.");
       }
     } else {
       // Auto-Generate Series
@@ -78,68 +57,9 @@ const AddSchedulePeriodModal = ({ isOpen, onClose, onLocalAdd }) => {
 
       try {
         await generateSchedule(payload);
-        if (onLocalAdd) {
-          // Generate series locally for mock preview if offline
-          const count = parseInt(seriesCount, 10);
-          const newPeriods = [];
-          let currentStart = new Date(startDate);
-
-          for (let i = 0; i < count; i++) {
-            const currentEnd = new Date(currentStart);
-            currentEnd.setDate(currentStart.getDate() + 13);
-            const due = new Date(currentEnd);
-            due.setDate(currentEnd.getDate() + 2);
-
-            const startStr = currentStart.toISOString().split("T")[0];
-            const endStr = currentEnd.toISOString().split("T")[0];
-            const dueStr = due.toISOString().split("T")[0];
-
-            newPeriods.push({
-              id: Date.now() + i,
-              startDate: startStr,
-              endDate: endStr,
-              dueDate: dueStr,
-              status: "Pending",
-            });
-
-            currentStart = new Date(currentEnd);
-            currentStart.setDate(currentStart.getDate() + 1);
-          }
-          onLocalAdd(newPeriods);
-        }
         resetAndClose();
       } catch (err) {
-        if (onLocalAdd) {
-          const count = parseInt(seriesCount, 10);
-          const newPeriods = [];
-          let currentStart = new Date(startDate);
-
-          for (let i = 0; i < count; i++) {
-            const currentEnd = new Date(currentStart);
-            currentEnd.setDate(currentStart.getDate() + 13);
-            const due = new Date(currentEnd);
-            due.setDate(currentEnd.getDate() + 2);
-
-            const startStr = currentStart.toISOString().split("T")[0];
-            const endStr = currentEnd.toISOString().split("T")[0];
-            const dueStr = due.toISOString().split("T")[0];
-
-            newPeriods.push({
-              id: Date.now() + i,
-              startDate: startStr,
-              endDate: endStr,
-              dueDate: dueStr,
-              status: "Pending",
-            });
-
-            currentStart = new Date(currentEnd);
-            currentStart.setDate(currentStart.getDate() + 1);
-          }
-          onLocalAdd(newPeriods);
-          resetAndClose();
-        } else {
-          setModalError(err?.response?.data?.message || "Failed to generate schedule series.");
-        }
+        setModalError(err?.response?.data?.message || "Failed to generate schedule series.");
       }
     }
   };

@@ -93,7 +93,7 @@ const EnrollmentPage = () => {
 
   const totalEnrolledCount = totalEnrolledObj.count ?? header.students_count ?? 0;
   const openSeatsCount = openSeatsObj.count ?? 0;
-  const totalWaitlistCount = waitlistObj.count ?? 0;
+  const totalWaitlistCount = waitlistObj.families_waiting ?? waitlistObj.count ?? 0;
   const activeRiskCount = atRiskObj.active_count ?? atRiskStudents.filter((r) => (activeRiskStatus[r.id] || r.status) === "intervening").length;
   const discountTotalMonthly = discountsObj.monthly_amount || 0;
   const hasTotalCapacity = (totalEnrolledObj.capacity || 0) > 0;
@@ -189,7 +189,12 @@ const EnrollmentPage = () => {
       {/* ── Waitlist + Discounts ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div variants={itemVariants}>
-          <WaitlistCard entries={[]} totalWaitlist={totalWaitlistCount} waitlistObj={waitlistObj} />
+          <WaitlistCard
+            entries={[]}
+            totalWaitlist={totalWaitlistCount}
+            waitlistObj={waitlistObj}
+            classrooms={classroomsRaw}
+          />
         </motion.div>
         <motion.div variants={itemVariants}>
           <DiscountsCard discountsObj={discountsObj} categories={discountCategories} />
