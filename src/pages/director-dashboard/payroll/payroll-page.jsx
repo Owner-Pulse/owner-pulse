@@ -27,6 +27,7 @@ import DirectorPayrollScheduleTable from "./components/DirectorPayrollScheduleTa
 import AddSchedulePeriodModal from "@/pages/owner-dashboard/payroll/components/AddSchedulePeriodModal";
 
 // Custom API Hooks
+// Custom API Hooks
 import {
   useGetDirectorPayrollOverview,
   useGetDirectorPayrollSchedules,
@@ -35,15 +36,6 @@ import {
 } from "@/hooks/payroll/payroll.hook";
 import { useGetAllStaffs } from "@/hooks/classroom/classroom.hook";
 import { getStaffName, getStaffId } from "@/pages/owner-dashboard/classrooms/components/SearchableStaffSelect";
-
-// Local Storage Fallback Utils
-import {
-  getPayrollHistory,
-  savePayrollHistory,
-  getPayrollSchedule,
-  savePayrollSchedule,
-} from "@/utils/payroll-storage";
-
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -56,10 +48,6 @@ const itemVariants = {
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
-
-const PERIOD_HOLIDAYS = [
-  { id: 1, date: "2026-05-08", name: "Mother's Day (no school)" },
-];
 
 const daysBetween = (start, end) => {
   if (!start) return 0;
@@ -82,32 +70,13 @@ const PayrollPage = () => {
   const { history: apiHistory } = useGetDirectorPayrollHistory();
   const { submitPayroll: apiSubmitPayroll, isPending: isSubmitting } = useSubmitPayroll();
 
-  // Local Storage Fallback State
-  const [localHistory, setLocalHistory] = useState([]);
-  const [localSchedule, setLocalSchedule] = useState([]);
-
-  const loadLocalData = () => {
-    const loadedHistory = getPayrollHistory();
-    const loadedSchedule = getPayrollSchedule();
-    setLocalHistory(loadedHistory);
-    setLocalSchedule(loadedSchedule);
-  };
-
-  useEffect(() => {
-    loadLocalData();
-    window.addEventListener("pulse_payroll_update", loadLocalData);
-    return () => window.removeEventListener("pulse_payroll_update", loadLocalData);
-  }, []);
-
   const displaySchedules = useMemo(() => {
-    if (Array.isArray(apiSchedules)) return apiSchedules;
-    return localSchedule;
-  }, [apiSchedules, localSchedule]);
+    return Array.isArray(apiSchedules) ? apiSchedules : [];
+  }, [apiSchedules]);
 
   const displayHistory = useMemo(() => {
-    if (Array.isArray(apiHistory)) return apiHistory;
-    return localHistory;
-  }, [apiHistory, localHistory]);
+    return Array.isArray(apiHistory) ? apiHistory : [];
+  }, [apiHistory]);
 
   const pendingSchedules = useMemo(() => {
     return displaySchedules.filter((s) => (s.status || "pending").toLowerCase() === "pending");
@@ -174,16 +143,14 @@ const PayrollPage = () => {
   const updHTA = (i, f, v) => setHoursToAdd(hoursToAdd.map((r, idx) => (idx === i ? { ...r, [f]: v } : r)));
   const rmHTA = (i) => setHoursToAdd(hoursToAdd.filter((_, idx) => idx !== i));
 
-  const [holidayExceptions, setHolidayExceptions] = useState({});
-  const toggleExclusion = (holidayId, staffId) => {
-    const current = holidayExceptions[holidayId] || [];
-    const next = current.includes(staffId) ? current.filter((x) => x !== staffId) : [...current, staffId];
-    setHolidayExceptions({ ...holidayExceptions, [holidayId]: next });
-  };
+  const [holidayExceptions, setHolidayExceptions] = useState([]);
+  const addHE = () => setHolidayExceptions([...holidayExceptions, { id: Date.now(), staffId: "", holidayName: "", date: "" }]);
+  const updHE = (i, f, v) => setHolidayExceptions(holidayExceptions.map((r, idx) => (idx === i ? { ...r, [f]: v } : r)));
+  const rmHE = (i) => setHolidayExceptions(holidayExceptions.filter((_, idx) => idx !== i));
 
   const [notes, setNotes] = useState({ preschool: "", elementary: "" });
 
-  const itemCount = childCare.length + otherDed.length + pto.length + birthday.length + hoursToAdd.length;
+  const itemCount = childCare.length + otherDed.length + pto.length + birthday.length + hoursToAdd.length + holidayExceptions.length;
 
   const stats = useMemo(() => {
     const metrics = directorOverview?.metrics;
@@ -270,80 +237,34 @@ const PayrollPage = () => {
     });
 
     // 6. Holiday exceptions
-    PERIOD_HOLIDAYS.forEach((h) => {
-      const excluded = holidayExceptions[h.id] || [];
-      excluded.forEach((staffId) => {
-        selectedStaffSet.add(staffId);
-        formData.append(`items[${idx}][staff_id]`, staffId);
-        formData.append(`items[${idx}][item_type]`, "holiday_exception");
-        formData.append(`items[${idx}][hours]`, 8);
-        formData.append(`items[${idx}][category_tag]`, h.name);
-        idx++;
-      });
+    holidayExceptions.forEach((r) => {
+      if (!r.staffId) return;
+      selectedStaffSet.add(r.staffId);
+      formData.append(`items[${idx}][staff_id]`, r.staffId);
+      formData.append(`items[${idx}][item_type]`, "holiday_exception");
+      formData.append(`items[${idx}][hours]`, 8);
+      formData.append(`items[${idx}][category_tag]`, r.holidayName || "Holiday Exception");
+      if (r.date) formData.append(`items[${idx}][start_date]`, r.date);
+      idx++;
     });
 
     // Total staff count selected for the payload
     formData.append("staff_count", selectedStaffSet.size);
 
-    // Fallback payload format for local state
-    const localPayload = {
-      payroll_cycle_id: Number(selectedPeriodId) || null,
-      periodEnding,
-      periodStart,
-      dueDate: activePeriod?.dueDate || activePeriod?.submission_due_date || periodEnding,
-      submittedAt: new Date().toISOString(),
-      submittedBy: "Director",
-      childCare: childCare.map((r) => ({ name: findStaffName(r.staffId), amount: Number(r.amount) || 0 })),
-      otherDeductions: otherDed.map((r) => ({ name: findStaffName(r.staffId), amount: Number(r.amount) || 0 })),
-      pto: pto.map((r) => ({ name: findStaffName(r.staffId), startDate: r.startDate, endDate: r.endDate || r.startDate, days: daysBetween(r.startDate, r.endDate) })),
-      birthday: birthday.map((r) => ({ name: findStaffName(r.staffId), date: r.date })),
-      hoursToAdd: hoursToAdd.map((r) => ({ name: findStaffName(r.staffId), hours: Number(r.hours) || 0, type: r.type })),
-      holidayExceptions: PERIOD_HOLIDAYS.map((h) => ({ date: h.date, name: h.name, excluded: (holidayExceptions[h.id] || []).map((sid) => findStaffName(sid)) })),
-      notes,
-    };
-
     try {
       await apiSubmitPayroll(formData);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 4000);
+      setChildCare([]);
+      setOtherDed([]);
+      setPto([]);
+      setBirthday([]);
+      setHoursToAdd([]);
+      setHolidayExceptions([]);
+      setNotes({ preschool: "", elementary: "" });
     } catch (err) {
-      // API submission fallback to local storage mode
+      // Error handled by useSubmitPayroll hook toast
     }
-
-
-    const updatedHistory = [{ ...localPayload, id: Date.now() }, ...localHistory];
-    setLocalHistory(updatedHistory);
-    savePayrollHistory(updatedHistory);
-
-    const updatedSchedule = displaySchedules.map((p) =>
-      p.id.toString() === selectedPeriodId ? { ...p, status: "Submitted" } : p
-    );
-    setLocalSchedule(updatedSchedule);
-    savePayrollSchedule(updatedSchedule);
-
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 4000);
-    setChildCare([]);
-    setOtherDed([]);
-    setPto([]);
-    setBirthday([]);
-    setHoursToAdd([]);
-    setHolidayExceptions({});
-    setNotes({ preschool: "", elementary: "" });
-  };
-
-  const handleLocalAddSchedule = (newItems) => {
-    const itemsToAdd = Array.isArray(newItems) ? newItems : [newItems];
-    const updated = [...displaySchedules, ...itemsToAdd].sort(
-      (a, b) =>
-        new Date(a.startDate || a.start_date) - new Date(b.startDate || b.start_date)
-    );
-    setLocalSchedule(updated);
-    savePayrollSchedule(updated);
-  };
-
-  const handleLocalDeleteSchedule = (id) => {
-    const updated = displaySchedules.filter((p) => p.id !== id);
-    setLocalSchedule(updated);
-    savePayrollSchedule(updated);
   };
 
   return (
@@ -535,9 +456,10 @@ const PayrollPage = () => {
             </div>
             <div className="relative z-[10]">
               <HolidayExceptionsSection
-                holidays={PERIOD_HOLIDAYS}
-                exceptions={holidayExceptions}
-                onToggleExclusion={toggleExclusion}
+                rows={holidayExceptions}
+                onAdd={addHE}
+                onUpdate={updHE}
+                onRemove={rmHE}
               />
             </div>
             <PayrollNotesSection notes={notes} onChange={setNotes} />
@@ -563,7 +485,6 @@ const PayrollPage = () => {
       {activeTab === "schedule" && (
         <DirectorPayrollScheduleTable
           schedule={displaySchedules}
-          onDeleteLocal={handleLocalDeleteSchedule}
         />
       )}
 
@@ -571,7 +492,6 @@ const PayrollPage = () => {
       <AddSchedulePeriodModal
         isOpen={isAddPeriodOpen}
         onClose={() => setIsAddPeriodOpen(false)}
-        onLocalAdd={handleLocalAddSchedule}
       />
     </motion.div>
   );
