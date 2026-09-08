@@ -21,7 +21,8 @@ const SearchableStudentSelect = ({
   onSelectStudent,
   disabled = false,
   isLoading = false,
-  placeholder = "Select student..."
+  placeholder = "Select student...",
+  triggerClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,7 +61,10 @@ const SearchableStudentSelect = ({
         type="button"
         disabled={disabled || isLoading}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm flex items-center justify-between bg-white text-left focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 disabled:bg-gray-50 disabled:cursor-not-allowed font-medium text-gray-800"
+        className={
+          triggerClassName ||
+          "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm flex items-center justify-between bg-white text-left focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 disabled:bg-gray-50 disabled:cursor-not-allowed font-medium text-gray-800"
+        }
       >
         <span className={selectedStudent ? "text-gray-900 font-semibold" : "text-gray-400"}>
           {disabled

@@ -17,15 +17,6 @@ import {
   useGetOwnerPayrollSubmissions,
 } from "@/hooks/payroll/payroll.hook";
 
-// Local Storage Fallback Utils
-import {
-  getPayrollHistory,
-  savePayrollHistory,
-  getPayrollSchedule,
-  savePayrollSchedule,
-} from "@/utils/payroll-storage";
-
-
 const OwnerPayrollPage = () => {
   const [activeTab, setActiveTab] = useState("history"); // "history" | "schedule"
   const [selectedPayroll, setSelectedPayroll] = useState(null);
@@ -36,31 +27,13 @@ const OwnerPayrollPage = () => {
   const { schedules: apiSchedules } = useGetOwnerPayrollSchedules();
   const { submissions: apiSubmissions } = useGetOwnerPayrollSubmissions();
 
-  // Local Storage Fallback State
-  const [localHistory, setLocalHistory] = useState([]);
-  const [localSchedule, setLocalSchedule] = useState([]);
-
-  const loadLocalData = () => {
-    setLocalHistory(getPayrollHistory());
-    setLocalSchedule(getPayrollSchedule());
-  };
-
-  useEffect(() => {
-    loadLocalData();
-    window.addEventListener("pulse_payroll_update", loadLocalData);
-    return () => window.removeEventListener("pulse_payroll_update", loadLocalData);
-  }, []);
-
-  // Merge API data with Local Storage fallbacks (use API data if available, even if empty array)
   const displaySchedules = useMemo(() => {
-    if (Array.isArray(apiSchedules)) return apiSchedules;
-    return localSchedule;
-  }, [apiSchedules, localSchedule]);
+    return Array.isArray(apiSchedules) ? apiSchedules : [];
+  }, [apiSchedules]);
 
   const displayHistory = useMemo(() => {
-    if (Array.isArray(apiSubmissions)) return apiSubmissions;
-    return localHistory;
-  }, [apiSubmissions, localHistory]);
+    return Array.isArray(apiSubmissions) ? apiSubmissions : [];
+  }, [apiSubmissions]);
 
   // Compute Next Pending Period and Days Remaining for KPI
   const nextPendingPeriod = useMemo(() => {
@@ -88,23 +61,6 @@ const OwnerPayrollPage = () => {
     const diffTime = dueDt - now;
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   }, [nextPendingPeriod]);
-
-  // Handle local schedule modifications if offline
-  const handleLocalAddSchedule = (newItems) => {
-    const itemsToAdd = Array.isArray(newItems) ? newItems : [newItems];
-    const updated = [...displaySchedules, ...itemsToAdd].sort(
-      (a, b) =>
-        new Date(a.startDate || a.start_date) - new Date(b.startDate || b.start_date)
-    );
-    setLocalSchedule(updated);
-    savePayrollSchedule(updated);
-  };
-
-  const handleLocalDeleteSchedule = (id) => {
-    const updated = displaySchedules.filter((p) => p.id !== id);
-    setLocalSchedule(updated);
-    savePayrollSchedule(updated);
-  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -154,11 +110,10 @@ const OwnerPayrollPage = () => {
 
       {/* KPI Cards Header */}
       <OwnerPayrollKpiCards
-        overviewData={overviewData}
+        metrics={overviewData}
         nextPendingPeriod={nextPendingPeriod}
         daysRemaining={daysRemaining}
-        displayHistory={displayHistory}
-        displaySchedules={displaySchedules}
+        historyCount={displayHistory.length}
       />
 
       {/* Tab Content */}
@@ -173,7 +128,6 @@ const OwnerPayrollPage = () => {
           <OwnerPayrollScheduleTable
             key="schedule-tab"
             schedule={displaySchedules}
-            onDeleteLocal={handleLocalDeleteSchedule}
           />
         )}
       </AnimatePresence>
@@ -190,7 +144,6 @@ const OwnerPayrollPage = () => {
       <AddSchedulePeriodModal
         isOpen={isAddPeriodOpen}
         onClose={() => setIsAddPeriodOpen(false)}
-        onLocalAdd={handleLocalAddSchedule}
       />
     </div>
   );

@@ -1,31 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Calendar, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import SectionHeader from "./SectionHeader";
 import EmptyRow from "./EmptyRow";
 import StaffSelect from "./StaffSelect";
-import { useGetAllStaffs } from "@/hooks/classroom/classroom.hook";
-import { getStaffName, getStaffId } from "@/pages/owner-dashboard/classrooms/components/SearchableStaffSelect";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const HolidayExceptionsSection = ({ holidays, exceptions, onToggleExclusion }) => {
-  const { staffs } = useGetAllStaffs();
-  const [selectedStaffToAdd, setSelectedStaffToAdd] = useState({});
-
-  const handleAddStaffToHoliday = (holidayId, staffId) => {
-    if (!staffId) return;
-    const currentExcluded = exceptions[holidayId] || [];
-    if (!currentExcluded.includes(staffId)) {
-      onToggleExclusion(holidayId, staffId);
-    }
-    setSelectedStaffToAdd((prev) => ({ ...prev, [holidayId]: "" }));
-  };
-
+const HolidayExceptionsSection = ({ rows = [], onAdd, onUpdate, onRemove }) => {
   return (
     <motion.div variants={itemVariants}>
       <Card className="bg-white border-none shadow-sm overflow-visible">
@@ -33,70 +19,45 @@ const HolidayExceptionsSection = ({ holidays, exceptions, onToggleExclusion }) =
           <SectionHeader
             number={6}
             title="Holiday Exceptions"
-            description="Staff who worked during the holiday and should be paid."
+            description="Staff who worked during a holiday and should be paid."
+            onAdd={onAdd}
+            addLabel="Add Holiday Exception"
           />
-          <div className="space-y-4 overflow-visible">
-            {holidays.length === 0 && <EmptyRow text="No holidays scheduled for this pay period." />}
-            {holidays.map((h) => {
-              const excludedIds = exceptions[h.id] || [];
-
-              return (
-                <div key={h.id} className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3 relative z-20 overflow-visible">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-[#1E3A5F]" />
-                      <span className="text-sm font-bold text-gray-800">{h.name}</span>
-                      <span className="text-xs text-gray-400 font-medium">({h.date})</span>
-                    </div>
-                    {excludedIds.length > 0 && (
-                      <span className="text-[10px] text-[#3E7A54] bg-[#3E7A54]/10 px-2.5 py-1 rounded-full font-bold">
-                        {excludedIds.length} staff marked for exception
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Searchable Staff Selection Dropdown */}
-                  <div className="max-w-md relative z-30">
-                    <StaffSelect
-                      value={selectedStaffToAdd[h.id] || ""}
-                      onChange={(staffId) => handleAddStaffToHoliday(h.id, staffId)}
-                      placeholder="Add staff member who worked..."
-                    />
-                  </div>
-
-                  {/* List of Selected Exception Badges */}
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {excludedIds.map((sid) => {
-                      const staffObj = staffs.find(
-                        (s) => String(getStaffId(s)) === String(sid)
-                      );
-                      const name = staffObj ? getStaffName(staffObj) : `Staff #${sid}`;
-
-                      return (
-                        <div
-                          key={sid}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-gray-200 shadow-sm text-xs font-semibold text-gray-800"
-                        >
-                          <span>{name}</span>
-                          <button
-                            type="button"
-                            onClick={() => onToggleExclusion(h.id, sid)}
-                            className="p-0.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-[#AE4A3E]"
-                            title="Remove exception"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      );
-                    })}
-
-                    {excludedIds.length === 0 && (
-                      <p className="text-xs text-gray-400 italic">No staff selected for this holiday exception.</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="space-y-2 overflow-visible">
+            {rows.length === 0 && <EmptyRow text="No holiday exceptions logged for this pay period." />}
+            {rows.map((row, i) => (
+              <div
+                key={row.id}
+                className="grid gap-2 items-center relative z-20"
+                style={{ gridTemplateColumns: "1fr 1.2fr 130px 28px" }}
+              >
+                <StaffSelect
+                  value={row.staffId}
+                  onChange={(v) => onUpdate(i, "staffId", v)}
+                  placeholder="Select staff who worked..."
+                />
+                <input
+                  type="text"
+                  value={row.holidayName || ""}
+                  onChange={(e) => onUpdate(i, "holidayName", e.target.value)}
+                  placeholder="Holiday name (e.g. Memorial Day)..."
+                  className="w-full h-10 px-3 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                />
+                <input
+                  type="date"
+                  value={row.date || ""}
+                  onChange={(e) => onUpdate(i, "date", e.target.value)}
+                  className="w-full h-10 px-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                />
+                <button
+                  type="button"
+                  onClick={() => onRemove(i)}
+                  className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
