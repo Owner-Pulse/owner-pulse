@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { initEcho, listenToNotifications, requestNotificationPermission } from '@/lib/reverb-connection';
+import { initEcho, listenToNotifications, requestNotificationPermission, setupNotificationTapListener } from '@/lib/reverb-connection';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -120,6 +120,7 @@ const DashboardLayout = () => {
   const currentPath = location.pathname;
 
   const role = user?.role;
+  const basePath = `/${role || 'owner'}`;
   const menuItems = role === "owner" ? ownerTabs : directorTabs;
 
   const notificationsList = useMemo(() => {
@@ -129,39 +130,93 @@ const DashboardLayout = () => {
     return INITIAL_NOTIFS;
   }, [apiNotifications]);
 
-  // Reverb Real-Time Notification Listener (Commented out for deployment without Reverb)
-  /*
+  // Reverb Real-Time Notification Listener
   useEffect(() => {
     const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
     const token = localStorage.getItem(tokenName);
     const userId = user?.id;
 
-    if (token && userId) {
-      // 1. Request notification permissions
-      requestNotificationPermission();
+    if (!token || !userId) return;
 
-      // 2. Start Echo WebSocket client
-      const echo = initEcho(token);
+    // 1. Request notification permissions (Mobile native & Web browser)
+    requestNotificationPermission();
 
-      // 3. Listen for incoming real-time notifications on private channel notify.{userId}
-      if (echo) {
-        listenToNotifications(echo, userId, (notification) => {
-          console.log("⚡️ Real-time Notification Received via Reverb:", notification);
-          if (notification?.title) {
-            toast.success(notification.title, {
-              description: notification?.body,
-            });
-          }
-          queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        });
-      }
+    // 2. Set up mobile notification tap handler (navigates to relevant route)
+    setupNotificationTapListener((targetPath) => {
+      if (!targetPath) return;
+      const destination =
+        targetPath.startsWith('/owner') || targetPath.startsWith('/director')
+          ? targetPath
+          : `${basePath}${targetPath.startsWith('/') ? '' : '/'}${targetPath}`;
+      navigate(destination);
+    });
 
-      return () => {
-        if (echo) echo.disconnect();
-      };
+    // 3. Start Echo WebSocket client
+    const echo = initEcho(token);
+
+    // 4. Listen for incoming real-time notifications
+    let cleanupListener = null;
+    if (echo) {
+      cleanupListener = listenToNotifications(echo, userId, (notification) => {
+        console.log("⚡️ Real-time Notification Received via Reverb:", notification);
+
+        // Display rich interactive toast with asset logo
+        if (notification?.title) {
+          toast.custom(
+            (t) => (
+              <div
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  if (notification.path) {
+                    const destination =
+                      notification.path.startsWith('/owner') || notification.path.startsWith('/director')
+                        ? notification.path
+                        : `${basePath}${notification.path.startsWith('/') ? '' : '/'}${notification.path}`;
+                    navigate(destination);
+                  } else {
+                    setNotifOpen(true);
+                  }
+                }}
+                className={`${
+                  t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+                } max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex p-3.5 border ${
+                  notification.critical ? 'border-red-300 ring-2 ring-red-100' : 'border-blue-100 ring-2 ring-blue-50'
+                } cursor-pointer transition-all duration-200 hover:scale-[1.02]`}
+              >
+                <div className="flex items-start gap-3 w-full">
+                  <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 p-1 border border-gray-100">
+                    <img src={logo} alt="Logo" className="h-full w-full object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-gray-900 truncate">
+                        {notification.title}
+                      </p>
+                      <span className="text-[10px] text-gray-400 shrink-0">Just now</span>
+                    </div>
+                    {notification.body && (
+                      <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">
+                        {notification.body}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ),
+            { duration: 5000, position: 'top-right' }
+          );
+        }
+
+        // Invalidate queries to refresh notification list and badge count
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      });
     }
-  }, [user?.id, queryClient]);
-  */
+
+    return () => {
+      if (cleanupListener) cleanupListener();
+      if (echo) echo.disconnect();
+    };
+  }, [user?.id, role, queryClient, navigate, basePath]);
 
   // Click-outside handler for notification dropdown
   useEffect(() => {
@@ -214,8 +269,6 @@ const DashboardLayout = () => {
       navigate('/');
     }
   };
-
-  const basePath = `/${role}`;
 
   return (
     <div className="min-h-screen text-white flex">
@@ -400,7 +453,13 @@ const DashboardLayout = () => {
                                 key={notif.id}
                                 onClick={() => {
                                   toggleNotifRead(notif.id);
-                                  if (notif.path) navigate(basePath + notif.path);
+                                  if (notif.path) {
+                                    const destination =
+                                      notif.path.startsWith('/owner') || notif.path.startsWith('/director')
+                                        ? notif.path
+                                        : `${basePath}${notif.path.startsWith('/') ? '' : '/'}${notif.path}`;
+                                    navigate(destination);
+                                  }
                                   setNotifOpen(false);
                                 }}
                                 className={`flex items-start gap-3 px-5 py-3 cursor-pointer transition-all hover:bg-gray-50 ${notif.critical
