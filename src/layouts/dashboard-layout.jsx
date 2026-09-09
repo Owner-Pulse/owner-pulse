@@ -134,9 +134,7 @@ const DashboardLayout = () => {
   useEffect(() => {
     const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
     const token = localStorage.getItem(tokenName);
-    const userId = user?.id;
-
-    if (!token || !userId) return;
+    const userId = user?.id || user?.user_id || user?.data?.id || user?.user?.id;
 
     // 1. Request notification permissions (Mobile native & Web browser)
     requestNotificationPermission();
@@ -158,7 +156,6 @@ const DashboardLayout = () => {
     let cleanupListener = null;
     if (echo) {
       cleanupListener = listenToNotifications(echo, userId, (notification) => {
-        console.log("⚡️ Real-time Notification Received via Reverb:", notification);
 
         // Display rich interactive toast with asset logo
         if (notification?.title) {
@@ -177,11 +174,9 @@ const DashboardLayout = () => {
                     setNotifOpen(true);
                   }
                 }}
-                className={`${
-                  t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-                } max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex p-3.5 border ${
-                  notification.critical ? 'border-red-300 ring-2 ring-red-100' : 'border-blue-100 ring-2 ring-blue-50'
-                } cursor-pointer transition-all duration-200 hover:scale-[1.02]`}
+                className={`${t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+                  } max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex p-3.5 border ${notification.critical ? 'border-red-300 ring-2 ring-red-100' : 'border-blue-100 ring-2 ring-blue-50'
+                  } cursor-pointer transition-all duration-200 hover:scale-[1.02]`}
               >
                 <div className="flex items-start gap-3 w-full">
                   <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 p-1 border border-gray-100">

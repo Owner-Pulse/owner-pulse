@@ -200,7 +200,6 @@ const CsvUploadModal = ({ isOpen, onClose }) => {
         toast.error(response?.message || "Failed to process CSV file.");
       }
     } catch (err) {
-      console.error("CSV Upload Error:", err);
       const errMsg = err?.response?.data?.message || err?.message || "An error occurred while uploading the CSV.";
       toast.error(errMsg);
     }
@@ -443,11 +442,10 @@ const CsvUploadModal = ({ isOpen, onClose }) => {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`cursor-pointer p-6 md:p-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center transition-all ${
-                        isDragging
+                      className={`cursor-pointer p-6 md:p-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center transition-all ${isDragging
                           ? "border-[#1E3A5F] bg-[#1E3A5F]/5 scale-[0.99]"
                           : "border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 hover:border-slate-300"
-                      }`}
+                        }`}
                     >
                       <div className="p-3 bg-white shadow-xs rounded-full border border-slate-100 mb-3 text-[#1E3A5F]">
                         <UploadCloud size={28} />

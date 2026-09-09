@@ -90,7 +90,7 @@ const InlineTaskComments = ({ taskId, currentRole }) => {
     try {
       await postComment({ taskId, commentText: textToSubmit });
     } catch (err) {
-      console.error("Error posting comment:", err);
+      throw new Error(err.response?.data?.message || err.message || "Failed to post comment");
     }
   };
 
@@ -131,11 +131,10 @@ const InlineTaskComments = ({ taskId, currentRole }) => {
                     <div className="flex items-center gap-1.5 font-bold text-gray-900 mb-0.5">
                       <span>{authorName}</span>
                       <span
-                        className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full ${
-                          authorRole === "owner"
+                        className={`text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full ${authorRole === "owner"
                             ? "bg-amber-100 text-amber-800 border border-amber-200"
                             : "bg-blue-100 text-blue-800 border border-blue-200"
-                        }`}
+                          }`}
                       >
                         {authorRole}
                       </span>
@@ -250,15 +249,13 @@ const TaskCardInner = ({
     <>
       <motion.div variants={itemVariants}>
         <Card
-          className={`bg-white border-none shadow-xs transition-all ${
-            isDone ? "opacity-60" : ""
-          } ${
-            isFromOwner
+          className={`bg-white border-none shadow-xs transition-all ${isDone ? "opacity-60" : ""
+            } ${isFromOwner
               ? "border-l-4 border-l-[#B78A2F] bg-gradient-to-r from-amber-50/30 via-white to-white"
               : isForMe
-              ? "border-l-4 border-l-[#1E3A5F]"
-              : ""
-          }`}
+                ? "border-l-4 border-l-[#1E3A5F]"
+                : ""
+            }`}
         >
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -268,17 +265,15 @@ const TaskCardInner = ({
                   type="button"
                   onClick={handleToggleStatus}
                   disabled={!isForMe || isInProgressPending || isCompleting}
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                    isForMe ? "cursor-pointer" : "cursor-not-allowed opacity-50"
-                  } ${
-                    isDone
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isForMe ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+                    } ${isDone
                       ? "bg-[#3E7A54] border-[#3E7A54]"
                       : isOverdue
-                      ? "border-[#AE4A3E] hover:bg-[#AE4A3E]/10"
-                      : isDueSoon
-                      ? "border-[#B78A2F] hover:bg-[#B78A2F]/10"
-                      : "border-gray-300 hover:border-[#1E3A5F]"
-                  }`}
+                        ? "border-[#AE4A3E] hover:bg-[#AE4A3E]/10"
+                        : isDueSoon
+                          ? "border-[#B78A2F] hover:bg-[#B78A2F]/10"
+                          : "border-gray-300 hover:border-[#1E3A5F]"
+                    }`}
                   title={!isForMe ? "Only assigned role can update status" : isDone ? "Re-open Task" : "Complete Task"}
                 >
                   {isCompleting || isInProgressPending ? (
@@ -292,9 +287,8 @@ const TaskCardInner = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-1.5 flex-wrap">
                     <span
-                      className={`text-xs md:text-sm font-semibold leading-snug ${
-                        isDone ? "text-gray-400 line-through" : "text-gray-900"
-                      }`}
+                      className={`text-xs md:text-sm font-semibold leading-snug ${isDone ? "text-gray-400 line-through" : "text-gray-900"
+                        }`}
                     >
                       {task.title}
                     </span>
@@ -320,13 +314,12 @@ const TaskCardInner = ({
                   )}
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
                     <span
-                      className={`text-xs flex items-center gap-1 ${
-                        isOverdue
+                      className={`text-xs flex items-center gap-1 ${isOverdue
                           ? "text-[#8A362C] font-semibold"
                           : isDueSoon
-                          ? "text-[#8F6A1F] font-semibold"
-                          : "text-gray-400"
-                      }`}
+                            ? "text-[#8F6A1F] font-semibold"
+                            : "text-gray-400"
+                        }`}
                     >
                       <Calendar size={10} /> Due {fmtDate(task.due)}
                       {isOverdue && ` · ${Math.abs(days)}d overdue`}
@@ -370,11 +363,10 @@ const TaskCardInner = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  className={`h-7 text-xs border-none px-2.5 font-medium flex items-center gap-1 transition-all ${
-                    showComments
+                  className={`h-7 text-xs border-none px-2.5 font-medium flex items-center gap-1 transition-all ${showComments
                       ? "bg-[#1E3A5F] text-white hover:bg-[#15294A]"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
+                    }`}
                   onClick={() => setShowComments((prev) => !prev)}
                   title={showComments ? "Hide comments" : "View comments"}
                 >
