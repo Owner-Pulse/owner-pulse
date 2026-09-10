@@ -1,8 +1,11 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import logoAsset from '../assets/Logo.png';
 
-// Assign Pusher to window for Laravel Echo compatibility
+// Assign Pusher and Echo to window for global access
 window.Pusher = Pusher;
+
+export { logoAsset };
 
 /**
  * Play a gentle, modern audio chime using Web Audio API
@@ -76,12 +79,11 @@ export const triggerNotificationHaptics = async () => {
 export const initEcho = (token) => {
     const rawKey = import.meta.env.VITE_REVERB_APP_KEY || import.meta.env.REVERB_APP_KEY;
     if (!rawKey) {
-        console.warn('⚡️ Reverb App Key is missing. Echo real-time connection disabled.');
         return null;
     }
 
     const key = String(rawKey).replace(/^["']|["']$/g, '').trim();
-    const rawHost = import.meta.env.VITE_REVERB_HOST || import.meta.env.REVERB_HOST || 'reverb.softvencefsd.xyz';
+    const rawHost = import.meta.env.VITE_REVERB_HOST || import.meta.env.REVERB_HOST || 'reverb.owner-pulse.com';
     const wsHost = String(rawHost).replace(/^["']|["']$/g, '').trim();
 
     const rawPort = import.meta.env.VITE_REVERB_PORT || import.meta.env.REVERB_PORT || 443;
@@ -94,14 +96,13 @@ export const initEcho = (token) => {
     const rawBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://staging-back.owner-pulse.com';
     const baseUrl = String(rawBaseUrl).replace(/^["']|["']$/g, '').replace(/\/$/, '');
 
-    console.log(`📡 Connecting to Reverb at ${wsHost}:${wsPort} (${scheme})`);
-
-    return new Echo({
+    const echoInstance = new Echo({
         broadcaster: 'reverb',
+        Pusher: Pusher,
         key: key,
         wsHost: wsHost,
-        wsPort: wsPort,
-        wssPort: wsPort,
+        wsPort: wsPort ?? 80,
+        wssPort: wsPort ?? 443,
         forceTLS: forceTLS,
         enabledTransports: ['ws', 'wss'],
         // Backend authentication endpoint for private channels
@@ -113,6 +114,9 @@ export const initEcho = (token) => {
             },
         },
     });
+
+    window.Echo = echoInstance;
+    return echoInstance;
 };
 
 /**
@@ -137,7 +141,6 @@ export const requestNotificationPermission = async () => {
                     description: 'Real-time alerts, tasks, and system notifications for OwnerPulse',
                     importance: 5, // High / Heads-up notification
                     visibility: 1, // Public on lockscreen
-                    sound: 'beep.wav',
                     vibration: true,
                     lights: true,
                     lightColor: '#4880FF',
@@ -169,7 +172,6 @@ export const setupNotificationTapListener = (onNavigate) => {
             if (Capacitor.isNativePlatform()) {
                 import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
                     LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-                        console.log('📱 Notification tapped on mobile:', notificationAction);
                         const extra = notificationAction.notification?.extra;
                         const path = extra?.path || extra?.link;
                         if (path && typeof onNavigate === 'function') {
@@ -213,12 +215,32 @@ const normalizeNotification = (event) => {
  * Listen for real-time notifications for the authenticated user
  */
 export const listenToNotifications = (echoInstance, userId, onNotificationReceived) => {
-    if (!echoInstance || !userId) return () => {};
+    if (!echoInstance || !userId) return () => { };
+
+    // Track connection state & errors on Pusher safely
+    try {
+        const pusher = echoInstance.connector?.pusher;
+        if (pusher) {
+            pusher.connection.bind('state_change', (states) => {
+                // Log state change safely without throwing errors
+            });
+            pusher.connection.bind('error', (err) => {
+                console.warn('⚡️ Reverb Echo connection notice:', err);
+            });
+        }
+    } catch (e) {
+        // Ignore pusher listener setup errors
+    }
 
     // Deduplication tracker to prevent duplicate alerts within 3 seconds
     const recentEventIds = new Set();
 
-    const handleEvent = async (rawEvent) => {
+    const handleEvent = async (rawEvent, eventName = '') => {
+        // Filter out pusher internal system events (ping, pong, subscription_succeeded)
+        if (eventName.startsWith('pusher:') || eventName.startsWith('pusher_internal:')) {
+            return;
+        }
+
         const notif = normalizeNotification(rawEvent);
 
         // Deduplicate
@@ -226,8 +248,6 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
         if (recentEventIds.has(dedupKey)) return;
         recentEventIds.add(dedupKey);
         setTimeout(() => recentEventIds.delete(dedupKey), 3000);
-
-        console.log('⚡️ Real-time Notification Received via Reverb:', notif);
 
         // 1. Play chime sound
         playNotificationChime();
@@ -241,6 +261,13 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
             // A. Native Mobile App (Capacitor JS) -> Schedule Local Notification
             if (Capacitor.isNativePlatform()) {
                 const { LocalNotifications } = await import('@capacitor/local-notifications');
+                
+                // Ensure permission before scheduling
+                const check = await LocalNotifications.checkPermissions();
+                if (check.display !== 'granted') {
+                    await LocalNotifications.requestPermissions();
+                }
+
                 await LocalNotifications.schedule({
                     notifications: [
                         {
@@ -255,16 +282,18 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
                             channelId: 'ownerpulse_alerts',
                             smallIcon: 'ic_stat_notification',
                             iconColor: '#4880FF',
+                            schedule: { at: new Date(Date.now() + 100) },
                         },
                     ],
                 });
+                console.log('📱 Mobile push notification scheduled successfully:', notif.title);
             }
             // B. Desktop / Web Browser -> Browser Notification
             else if ('Notification' in window && Notification.permission === 'granted') {
                 const browserNotif = new Notification(notif.title, {
                     body: notif.body,
-                    icon: '/logo.png',
-                    badge: '/favicon-32x32.png',
+                    icon: logoAsset || '/logo.png',
+                    badge: logoAsset || '/favicon-32x32.png',
                     data: { path: notif.path },
                 });
 
@@ -285,24 +314,75 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
         }
     };
 
-    // 1. Subscribe to custom private channel: notify.{userId}
-    const notifyChannel = echoInstance.private(`notify.${userId}`);
-    notifyChannel.listen('.NotificationEvent', handleEvent);
-    notifyChannel.listen('NotificationEvent', handleEvent);
-    notifyChannel.listen('.notification', handleEvent);
-    notifyChannel.listen('notification', handleEvent);
+    // Helper to register listeners on a channel
+    const registerChannelListeners = (channel) => {
+        if (!channel) return;
 
-    // 2. Also subscribe to standard Laravel user notification channel: App.Models.User.{userId}
-    const userChannel = echoInstance.private(`App.Models.User.${userId}`);
-    if (typeof userChannel.notification === 'function') {
-        userChannel.notification(handleEvent);
+        // Listen to standard notification method
+        if (typeof channel.notification === 'function') {
+            channel.notification((e) => handleEvent(e, 'Notification'));
+        }
+
+        // Listen to all events on channel if supported
+        if (typeof channel.listenToAll === 'function') {
+            channel.listenToAll((evt, data) => handleEvent(data, evt));
+        }
+
+        // Listen to specific common event names
+        const commonEvents = [
+            '.NotificationEvent',
+            'NotificationEvent',
+            '.notification',
+            'notification',
+            '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
+            'Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
+            '.App\\Events\\NotificationEvent',
+            'App\\Events\\NotificationEvent'
+        ];
+
+        commonEvents.forEach((evt) => {
+            if (typeof channel.listen === 'function') {
+                channel.listen(evt, (e) => handleEvent(e, evt));
+            }
+        });
+    };
+
+    // 1. Subscribe to private channels
+    const privateNotify = echoInstance.private(`notify.${userId}`);
+    registerChannelListeners(privateNotify);
+
+    const privateUser = echoInstance.private(`App.Models.User.${userId}`);
+    registerChannelListeners(privateUser);
+
+    const privateUserShort = echoInstance.private(`user.${userId}`);
+    registerChannelListeners(privateUserShort);
+
+    // 2. Also subscribe to public channels as fallback (in case backend sends on public channel)
+    const publicNotify = echoInstance.channel(`notify.${userId}`);
+    registerChannelListeners(publicNotify);
+
+    const publicUser = echoInstance.channel(`user.${userId}`);
+    registerChannelListeners(publicUser);
+
+    // 3. Bind global listener on Pusher connection to catch ANY unhandled event
+    try {
+        const pusher = echoInstance.connector?.pusher;
+        if (pusher && typeof pusher.bind_global === 'function') {
+            pusher.bind_global((eventName, data) => {
+                if (!eventName.startsWith('pusher:') && !eventName.startsWith('pusher_internal:')) {
+                    handleEvent(data, eventName);
+                }
+            });
+        }
+    } catch (e) {
+        // Ignore global bind fallback error
     }
-    userChannel.listen('.NotificationEvent', handleEvent);
 
     return () => {
         try {
             echoInstance.leave(`notify.${userId}`);
             echoInstance.leave(`App.Models.User.${userId}`);
+            echoInstance.leave(`user.${userId}`);
         } catch (e) {
             // Ignore leave errors on teardown
         }
