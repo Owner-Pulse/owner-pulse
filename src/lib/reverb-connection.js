@@ -1,8 +1,11 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import logoAsset from '../assets/Logo.png';
 
-// Assign Pusher to window for Laravel Echo compatibility
+// Assign Pusher and Echo to window for global access
 window.Pusher = Pusher;
+
+export { logoAsset };
 
 /**
  * Play a gentle, modern audio chime using Web Audio API
@@ -80,7 +83,7 @@ export const initEcho = (token) => {
     }
 
     const key = String(rawKey).replace(/^["']|["']$/g, '').trim();
-    const rawHost = import.meta.env.VITE_REVERB_HOST || import.meta.env.REVERB_HOST || 'staging-back.owner-pulse.com';
+    const rawHost = import.meta.env.VITE_REVERB_HOST || import.meta.env.REVERB_HOST || 'reverb.owner-pulse.com';
     const wsHost = String(rawHost).replace(/^["']|["']$/g, '').trim();
 
     const rawPort = import.meta.env.VITE_REVERB_PORT || import.meta.env.REVERB_PORT || 443;
@@ -93,14 +96,13 @@ export const initEcho = (token) => {
     const rawBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://staging-back.owner-pulse.com';
     const baseUrl = String(rawBaseUrl).replace(/^["']|["']$/g, '').replace(/\/$/, '');
 
-
-    return new Echo({
+    const echoInstance = new Echo({
         broadcaster: 'reverb',
         Pusher: Pusher,
         key: key,
         wsHost: wsHost,
-        wsPort: wsPort,
-        wssPort: wsPort,
+        wsPort: wsPort ?? 80,
+        wssPort: wsPort ?? 443,
         forceTLS: forceTLS,
         enabledTransports: ['ws', 'wss'],
         // Backend authentication endpoint for private channels
@@ -112,6 +114,9 @@ export const initEcho = (token) => {
             },
         },
     });
+
+    window.Echo = echoInstance;
+    return echoInstance;
 };
 
 /**
@@ -136,7 +141,6 @@ export const requestNotificationPermission = async () => {
                     description: 'Real-time alerts, tasks, and system notifications for OwnerPulse',
                     importance: 5, // High / Heads-up notification
                     visibility: 1, // Public on lockscreen
-                    sound: 'beep.wav',
                     vibration: true,
                     lights: true,
                     lightColor: '#4880FF',
@@ -257,6 +261,13 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
             // A. Native Mobile App (Capacitor JS) -> Schedule Local Notification
             if (Capacitor.isNativePlatform()) {
                 const { LocalNotifications } = await import('@capacitor/local-notifications');
+                
+                // Ensure permission before scheduling
+                const check = await LocalNotifications.checkPermissions();
+                if (check.display !== 'granted') {
+                    await LocalNotifications.requestPermissions();
+                }
+
                 await LocalNotifications.schedule({
                     notifications: [
                         {
@@ -271,16 +282,18 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
                             channelId: 'ownerpulse_alerts',
                             smallIcon: 'ic_stat_notification',
                             iconColor: '#4880FF',
+                            schedule: { at: new Date(Date.now() + 100) },
                         },
                     ],
                 });
+                console.log('📱 Mobile push notification scheduled successfully:', notif.title);
             }
             // B. Desktop / Web Browser -> Browser Notification
             else if ('Notification' in window && Notification.permission === 'granted') {
                 const browserNotif = new Notification(notif.title, {
                     body: notif.body,
-                    icon: '/logo.png',
-                    badge: '/favicon-32x32.png',
+                    icon: logoAsset || '/logo.png',
+                    badge: logoAsset || '/favicon-32x32.png',
                     data: { path: notif.path },
                 });
 
