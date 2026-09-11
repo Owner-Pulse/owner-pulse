@@ -30,8 +30,12 @@ const DirectorManagementPage = () => {
 
   const { singleDirector, isLoading: isSingleLoading } = useGetSingleDirector(selectedDirector?.id);
 
+  const directorsList = useMemo(() => {
+    return Array.isArray(allDirector) ? allDirector : [];
+  }, [allDirector]);
+
   const filtered = useMemo(() => {
-    let result = allDirector || [];
+    let result = directorsList;
     if (statusFilter !== "all") result = result.filter((d) => d.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -43,16 +47,16 @@ const DirectorManagementPage = () => {
       );
     }
     return result;
-  }, [allDirector, statusFilter, searchQuery]);
+  }, [directorsList, statusFilter, searchQuery]);
 
   const stats = useMemo(() => {
-    const dirs = allDirector || [];
+    const dirs = directorsList;
     return {
       total: dirs.length,
       active: dirs.filter((d) => d.status === "active").length,
       pending: dirs.filter((d) => d.status !== "active").length,
     };
-  }, [allDirector]);
+  }, [directorsList]);
 
   const handleUpdateStatus = (directorId, status) => {
     // Status update logic

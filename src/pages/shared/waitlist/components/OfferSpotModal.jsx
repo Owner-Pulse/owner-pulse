@@ -4,7 +4,7 @@ import { X, Send, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, isPending = false }) => {
+const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, onSubmit, isPending = false }) => {
   const [offerDate, setOfferDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [offerNotes, setOfferNotes] = useState("");
@@ -19,8 +19,10 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, isPending = false
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const handler = onOfferSpot || onSubmit;
+    if (!handler) return;
     try {
-      await onOfferSpot(entry.id, {
+      await handler(entry.id, {
         offerDate,
         startDate,
         offerNotes: offerNotes.trim(),

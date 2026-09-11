@@ -4,7 +4,7 @@ import { X, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const ROLES = ["Teacher"];
+const ROLES = ["Teacher", "Assistant Teacher", "Staff", "Other"];
 
 const parseToYYYYMMDD = (dateStr) => {
   if (!dateStr) return "";

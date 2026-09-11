@@ -431,9 +431,9 @@ const LogForm = ({ onAdd, onClose, defaultType = null }) => {
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 outline-none bg-white"
                       >
                         <option value="Sick Leave">Sick Leave</option>
-                        <option value="Vacation">Vacation</option>
-                        <option value="Personal Day">Personal Day</option>
-                        <option value="Training">Training / Workshop</option>
+                        <option value="Vacation">Vacation / Holiday</option>
+                        <option value="Jury Duty">Jury Duty</option>
+                        <option value="Hurricane">Hurricane</option>
                       </select>
                     </div>
                     <div>

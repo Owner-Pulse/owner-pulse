@@ -12,18 +12,8 @@ const DeleteConfirmationModal = ({
   confirmText = "Delete",
   isLoading = false,
 }) => {
-  const [deleteInput, setDeleteInput] = useState("");
-
-  useEffect(() => {
-    if (!isOpen) {
-      setDeleteInput("");
-    }
-  }, [isOpen]);
-
   const handleConfirm = async () => {
-    if (deleteInput === confirmText) {
-      await onConfirm();
-    }
+    await onConfirm();
   };
 
   return (
@@ -42,43 +32,25 @@ const DeleteConfirmationModal = ({
                 <AlertTriangle size={24} />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Are you sure you want to delete <span className="font-semibold text-gray-700">"{itemName}"</span>? This action cannot be undone.
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to delete {itemName ? <span className="font-semibold text-gray-700">"{itemName}"</span> : "this item"}? This action cannot be undone.
               </p>
-              
-              <div className="w-full mb-6 text-left">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Type "<strong>{confirmText}</strong>" to confirm
-                </label>
-                <input
-                  type="text"
-                  value={deleteInput}
-                  onChange={(e) => setDeleteInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none"
-                  placeholder={confirmText}
-                  disabled={isLoading}
-                />
-              </div>
               
               <div className="flex items-center gap-3 w-full">
                 <Button
                   variant="outline"
-                  className="flex-1 rounded-xl h-10"
+                  className="flex-1 rounded-xl h-10 cursor-pointer"
                   onClick={onClose}
                   disabled={isLoading}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className={`flex-1 rounded-xl h-10 text-white transition-colors ${
-                    deleteInput === confirmText && !isLoading
-                      ? "bg-red-600 hover:bg-red-700" 
-                      : "bg-red-300 cursor-not-allowed"
-                  }`}
+                  className="flex-1 rounded-xl h-10 text-white bg-red-600 hover:bg-red-700 transition-colors cursor-pointer"
                   onClick={handleConfirm}
-                  disabled={isLoading || deleteInput !== confirmText}
+                  disabled={isLoading}
                 >
-                  {isLoading ? "Deleting..." : "Delete"}
+                  {isLoading ? "Deleting..." : confirmText}
                 </Button>
               </div>
             </div>

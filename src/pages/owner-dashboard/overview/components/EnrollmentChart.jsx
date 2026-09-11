@@ -15,9 +15,9 @@ const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           <Users size={15} className="text-[#1E3A5F]" />
-          Enrollment by Grade
+          Enrollment by Program
         </CardTitle>
-        <CardDescription className="text-[10px]">Students vs Capacity with Waitlist demand</CardDescription>
+        <CardDescription className="text-[10px]">Source: Procare Classrooms & Roster · Students vs Capacity with Waitlist demand</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[160px] w-full">

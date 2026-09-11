@@ -66,9 +66,13 @@ const CashFlowPage = () => {
     {
       icon: Percent,
       label: "Operating Margin",
-      value: `${metrics.operating_margin?.percentage ?? "—"}%`,
-      sub: metrics.operating_margin?.status || "",
-      iconBg: (metrics.operating_margin?.percentage || 0) >= 30 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#B78A2F]/10 text-[#8F6A1F]",
+      value: (metrics.expenses_ytd?.amount_numeric > 0 && metrics.operating_margin?.percentage !== undefined && metrics.operating_margin?.percentage !== null)
+        ? `${metrics.operating_margin.percentage}%`
+        : "—",
+      sub: (metrics.expenses_ytd?.amount_numeric > 0 && metrics.operating_margin?.status)
+        ? metrics.operating_margin.status
+        : "No Cost Data",
+      iconBg: (metrics.operating_margin?.percentage || 0) >= 30 && metrics.expenses_ytd?.amount_numeric > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-gray-100 text-gray-500",
     },
     {
       icon: Building2,

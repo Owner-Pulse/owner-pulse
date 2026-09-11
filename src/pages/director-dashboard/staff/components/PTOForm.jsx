@@ -66,14 +66,26 @@ const PTOForm = ({ onClose }) => {
     if (!form.date) { setError("Please select a date."); return; }
     setError("");
 
-    const formData = new FormData();
-    formData.append("employee_id", form.staffId);
-    formData.append("day_type", form.dayType);
-    formData.append("days", form.days);
-    formData.append("date", form.date);
+    const dayTypeMapped =
+      form.dayType === "sick"
+        ? "Sick"
+        : form.dayType === "vacation"
+        ? "Vacation"
+        : form.dayType === "jury"
+        ? "Jury Duty"
+        : form.dayType === "hurricane"
+        ? "Hurricane"
+        : form.dayType;
+
+    const payload = {
+      employee_id: Number(form.staffId) || form.staffId,
+      day_type: dayTypeMapped,
+      dates: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
+      days: Number(form.days) || 1,
+    };
 
     try {
-      await addPto(formData);
+      await addPto(payload);
       onClose();
     } catch {
       // toast shown by hook's onError
@@ -218,9 +230,9 @@ const PTOForm = ({ onClose }) => {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 appearance-none bg-white"
                 >
                   <option value="sick">Sick</option>
-                  <option value="personal">Personal</option>
-                  <option value="vacation">Vacation</option>
+                  <option value="vacation">Vacation / Holiday</option>
                   <option value="jury">Jury Duty</option>
+                  <option value="hurricane">Hurricane</option>
                 </select>
               </div>
               <div>

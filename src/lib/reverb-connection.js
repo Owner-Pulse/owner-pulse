@@ -280,7 +280,6 @@ export const listenToNotifications = (echoInstance, userId, onNotificationReceiv
                                 type: notif.type,
                             },
                             channelId: 'ownerpulse_alerts',
-                            smallIcon: 'ic_stat_notification',
                             iconColor: '#4880FF',
                             schedule: { at: new Date(Date.now() + 100) },
                         },

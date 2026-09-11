@@ -398,6 +398,18 @@ const CompliancePage = () => {
                   <div className="flex flex-col items-end gap-2">
                     <StatusPill status={item.status} statusColor={item.status_color} statusBadge={item.status_badge} />
                     <div className="flex items-center gap-1">
+                      {isExpired && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setEditItem(item);
+                            setIsAddModalOpen(true);
+                          }}
+                          className="h-7 px-2 text-[11px] bg-red-600 hover:bg-red-700 text-white font-bold cursor-pointer"
+                        >
+                          <RefreshCw size={12} className="mr-1" /> Mark Complete / Renew
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -443,7 +455,7 @@ const CompliancePage = () => {
                           ? "bg-[#B78A2F]/10 text-[#8F6A1F]"
                           : "bg-[#3E7A54]/10 text-[#2F6042]"
                       }`}>
-                        {pct}% Time Remaining
+                        {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                       </span>
                       <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
                         {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
@@ -455,16 +467,16 @@ const CompliancePage = () => {
                     <div
                       className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out ${
                         isExpired
-                          ? "bg-gradient-to-r from-red-500 to-[#AE4A3E]"
+                          ? "bg-gradient-to-r from-red-600 to-[#AE4A3E]"
                           : isUrgent
                           ? "bg-gradient-to-r from-[#B78A2F] to-[#AE4A3E]"
                           : "bg-gradient-to-r from-[#3E7A54] via-[#5B7FA6] to-[#1E3A5F]"
                       }`}
-                      style={{ width: `${clamp(pct, isExpired ? 0 : 2, 100)}%` }}
+                      style={{ width: `${isExpired ? 100 : clamp(pct, 2, 100)}%` }}
                     />
                     <div
                       className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 transition-[left] duration-700 ease-out"
-                      style={{ left: `${clamp(pct, 3, 97)}%` }}
+                      style={{ left: `${isExpired ? 97 : clamp(pct, 3, 97)}%` }}
                     >
                       <img
                         src="/world.png"

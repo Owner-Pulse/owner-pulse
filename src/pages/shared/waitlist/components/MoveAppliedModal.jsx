@@ -4,7 +4,7 @@ import { X, FileText, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, isPending = false }) => {
+const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, onSubmit, isPending = false }) => {
   const [packetGiven, setPacketGiven] = useState("Yes");
   const [appliedDate, setAppliedDate] = useState("");
   const [appliedNotes, setAppliedNotes] = useState("");
@@ -19,8 +19,10 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, isPending =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const handler = onMoveToApplied || onSubmit;
+    if (!handler) return;
     try {
-      await onMoveToApplied(entry.id, {
+      await handler(entry.id, {
         packetGiven,
         appliedDate,
         appliedNotes: appliedNotes.trim(),
