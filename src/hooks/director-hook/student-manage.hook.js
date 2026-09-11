@@ -187,6 +187,25 @@ export const useWithdrawAtRisk = () => {
     mutationFn: (payload) => directorStudentManageService.withdrawAtRisk(axiosInstance, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["director-students-by-type"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["director-at-risk"] });
+    },
+  });
+};
+
+// Mutation: Retain At-Risk Student
+export const useRetainAtRisk = () => {
+  const axiosInstance = axiosPrivate();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload) => directorStudentManageService.retainAtRisk(axiosInstance, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["director-students-by-type"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["director-at-risk"] });
     },
   });
 };

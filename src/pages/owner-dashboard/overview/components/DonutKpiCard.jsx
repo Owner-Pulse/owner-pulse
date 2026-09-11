@@ -11,15 +11,15 @@ const itemVariants = {
 const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0, onClick }) => {
   return (
     <motion.div variants={itemVariants} key={index} onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
-      <Card className="bg-white border-none shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-2">
+      <Card className="bg-white border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5 mb-1">
             {Icon && (
-              <Icon size={15} strokeWidth={2} style={{ color }} aria-hidden />
+              <Icon size={14} strokeWidth={2} style={{ color }} aria-hidden />
             )}
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">{label}</p>
           </div>
-          <div className="relative flex items-center justify-center h-[110px]">
+          <div className="relative flex items-center justify-center h-[75px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -28,7 +28,7 @@ const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, ind
                     { value: 100 - pct, fill: "#F1F5F9" },
                   ]}
                   dataKey="value"
-                  innerRadius="65%"
+                  innerRadius="68%"
                   outerRadius="100%"
                   startAngle={90}
                   endAngle={-270}
@@ -36,12 +36,12 @@ const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, ind
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute text-2xl font-black" style={{ color }}>
+            <div className="absolute text-base font-extrabold" style={{ color }}>
               {pct}%
             </div>
           </div>
-          <p className="text-base font-bold text-gray-900 text-center mt-2">{value}</p>
-          <p className={`text-xs ${subColor} text-center mt-0.5`}>{sub}</p>
+          <p className="text-sm font-bold text-gray-900 text-center mt-1.5 truncate">{value}</p>
+          <p className={`text-[10px] ${subColor} text-center mt-0.5 truncate`}>{sub}</p>
         </CardContent>
       </Card>
     </motion.div>

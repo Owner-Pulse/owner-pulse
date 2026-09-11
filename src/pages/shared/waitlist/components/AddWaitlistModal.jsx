@@ -4,7 +4,7 @@ import { X, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null, isPending = false }) => {
+const AddWaitlistModal = ({ isOpen = true, onClose, onSave, onSubmit, editItem = null, isPending = false }) => {
   const isEdit = !!editItem;
   const { classrooms } = useGetAllClassrooms();
 
@@ -51,9 +51,10 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, editItem = null, isP
     e.preventDefault();
     if (!form.childName.trim() || !form.parentName.trim()) return;
 
-    if (onSave) {
+    const handler = onSave || onSubmit;
+    if (handler) {
       try {
-        await onSave({
+        await handler({
           childName: form.childName.trim(),
           dob: form.dob,
           program: form.program,

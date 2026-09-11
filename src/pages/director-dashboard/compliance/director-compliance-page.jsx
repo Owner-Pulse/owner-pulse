@@ -347,7 +347,7 @@ const DirectorCompliancePage = () => {
       </motion.div>
 
       {/* ── Director KPI Cards ──────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <motion.div variants={itemVariants}>
           <div className="p-4 rounded-xl bg-white shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
@@ -357,7 +357,20 @@ const DirectorCompliancePage = () => {
               </div>
             </div>
             <p className="text-2xl font-extrabold text-gray-900 mt-2">{stats.directorCount}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Primary operational responsibility</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">Primary operational</p>
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <div className="p-4 rounded-xl bg-white shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-medium">Owner Items</span>
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-700">
+                <Building2 size={16} />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900 mt-2">{stats.ownerCount}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">Owner responsible</p>
           </div>
         </motion.div>
 
@@ -370,7 +383,7 @@ const DirectorCompliancePage = () => {
               </div>
             </div>
             <p className="text-2xl font-extrabold text-[#8F6A1F] mt-2">{stats.expiring}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Under 60-day renewal window</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">Under 60-day window</p>
           </div>
         </motion.div>
 
@@ -385,7 +398,7 @@ const DirectorCompliancePage = () => {
             <p className={`text-2xl font-extrabold mt-2 ${stats.expired > 0 ? "text-[#8A362C]" : "text-gray-900"}`}>
               {stats.expired}
             </p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Immediate action required</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">Action required</p>
           </div>
         </motion.div>
 
@@ -512,6 +525,18 @@ const DirectorCompliancePage = () => {
                     <div className="flex flex-col items-end gap-2">
                       <StatusPill status={item.status} statusColor={item.status_color} statusBadge={item.status_badge} />
                       <div className="flex items-center gap-1">
+                        {isExpired && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setEditItem(item);
+                              setIsAddModalOpen(true);
+                            }}
+                            className="h-7 px-2 text-[11px] bg-red-600 hover:bg-red-700 text-white font-bold cursor-pointer"
+                          >
+                            <RefreshCw size={12} className="mr-1" /> Mark Complete / Renew
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
@@ -557,7 +582,7 @@ const DirectorCompliancePage = () => {
                             ? "bg-[#B78A2F]/10 text-[#8F6A1F]"
                             : "bg-[#3E7A54]/10 text-[#2F6042]"
                         }`}>
-                          {pct}% Time Remaining
+                          {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                         </span>
                         <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
                           {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
@@ -569,16 +594,16 @@ const DirectorCompliancePage = () => {
                       <div
                         className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out ${
                           isExpired
-                            ? "bg-gradient-to-r from-red-500 to-[#AE4A3E]"
+                            ? "bg-gradient-to-r from-red-600 to-[#AE4A3E]"
                             : isUrgent
                             ? "bg-gradient-to-r from-[#B78A2F] to-[#AE4A3E]"
                             : "bg-gradient-to-r from-[#3E7A54] via-[#5B7FA6] to-[#1E3A5F]"
                         }`}
-                        style={{ width: `${clamp(pct, isExpired ? 0 : 2, 100)}%` }}
+                        style={{ width: `${isExpired ? 100 : clamp(pct, 2, 100)}%` }}
                       />
                       <div
                         className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 transition-[left] duration-700 ease-out"
-                        style={{ left: `${clamp(pct, 3, 97)}%` }}
+                        style={{ left: `${isExpired ? 97 : clamp(pct, 3, 97)}%` }}
                       >
                         <img
                           src="/world.png"

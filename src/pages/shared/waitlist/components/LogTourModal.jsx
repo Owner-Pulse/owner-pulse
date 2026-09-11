@@ -4,7 +4,7 @@ import { X, Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const LogTourModal = ({ isOpen, onClose, entry, onLogTour, isPending = false }) => {
+const LogTourModal = ({ isOpen, onClose, entry, onLogTour, onSubmit, isPending = false }) => {
   const [tourDate, setTourDate] = useState("");
   const [tourTime, setTourTime] = useState("");
   const [showedUp, setShowedUp] = useState("yes");
@@ -21,8 +21,10 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour, isPending = false }) 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const handler = onLogTour || onSubmit;
+    if (!handler) return;
     try {
-      await onLogTour(entry.id, {
+      await handler(entry.id, {
         tourDate,
         tourTime,
         showedUp,
@@ -90,17 +92,25 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour, isPending = false }) 
             </div>
 
             {/* Showed Up */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Did they show up for the tour? *</label>
-              <select
-                value={showedUp}
-                onChange={(e) => setShowedUp(e.target.value)}
-                className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
-              >
-                <option value="yes">Yes - Showed up (Move to Toured)</option>
-                <option value="no">No - Did not show up (Mark Lost)</option>
-              </select>
-            </div>
+            {/* Showed Up - Only render if tour date is today or in the past */}
+            {(() => {
+              const todayStr = new Date().toISOString().slice(0, 10);
+              const isPastOrToday = !tourDate || tourDate <= todayStr;
+              if (!isPastOrToday) return null;
+              return (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Did they show up for the tour? *</label>
+                  <select
+                    value={showedUp}
+                    onChange={(e) => setShowedUp(e.target.value)}
+                    className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                  >
+                    <option value="yes">Yes - Showed up (Move to Toured)</option>
+                    <option value="no">No - Did not show up (Mark Lost)</option>
+                  </select>
+                </div>
+              );
+            })()}
 
             {/* Notes */}
             <div>

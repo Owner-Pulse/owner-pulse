@@ -1,5 +1,5 @@
 import React from "react";
-import { Receipt } from "lucide-react";
+import { Receipt, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const fmtDate = (dateStr) => {
@@ -21,14 +21,16 @@ const fmtMoney = (n) => {
   return "$" + Math.round(n).toLocaleString();
 };
 
-const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, title = "Recent Expenses" }) => (
+const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, onDeleteExpense, title = "Recent Expenses" }) => (
   <Card className="bg-white border-none shadow-sm h-full">
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Receipt size={16} className="text-[#1E3A5F]" />
-        {title}
-      </CardTitle>
-      {isDirector && <CardDescription>Track what you've spent</CardDescription>}
+    <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <div>
+        <CardTitle className="flex items-center gap-2">
+          <Receipt size={16} className="text-[#1E3A5F]" />
+          {title}
+        </CardTitle>
+        {isDirector && <CardDescription>Track what you've spent</CardDescription>}
+      </div>
     </CardHeader>
     <CardContent>
       <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1.5">
@@ -59,8 +61,26 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, title = "Recent
                     <p className="text-[10px] text-gray-400 mt-0.5">{fmtDate(exp.date)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <span className="text-xs md:text-sm font-semibold text-gray-900">{amountDisplay}</span>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <span className="text-xs md:text-sm font-semibold text-gray-900 mr-1">{amountDisplay}</span>
+                  {onEditExpense && (
+                    <button
+                      onClick={() => onEditExpense(exp)}
+                      className="p-1 text-gray-400 hover:text-[#1E3A5F] rounded transition-all cursor-pointer"
+                      title="Edit expense"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  )}
+                  {onDeleteExpense && (
+                    <button
+                      onClick={() => onDeleteExpense(exp)}
+                      className="p-1 text-gray-400 hover:text-red-600 rounded transition-all cursor-pointer"
+                      title="Delete expense"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             );

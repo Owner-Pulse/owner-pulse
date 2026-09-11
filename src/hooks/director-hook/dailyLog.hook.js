@@ -25,6 +25,7 @@ export const useGetDailyLogs = (params = {}) => {
 
   const responseData = data?.data || {};
   const summary = responseData.summary || {
+    total_daily_logs: 0,
     total_logs_today: 0,
     incidents: 0,
     removals: 0,

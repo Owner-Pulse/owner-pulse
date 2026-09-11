@@ -21,5 +21,20 @@ export const getBudgetService = {
         const response = await axiosInstance.post(`/director/expense/store`, payload);
         return response.data;
     },
+
+    deleteExpenseDirector: async (axiosInstance, id) => {
+        try {
+            const response = await axiosInstance.delete(`/director/expense/delete/${id}`);
+            return response.data;
+        } catch (err) {
+            const response = await axiosInstance.post(`/director/expense/delete/${id}`);
+            return response.data;
+        }
+    },
+
+    updateDirectorExpense: async (axiosInstance, id, payload) => {
+        const response = await axiosInstance.post(`/director/expense/update/${id}`, payload);
+        return response.data;
+    },
 };
 

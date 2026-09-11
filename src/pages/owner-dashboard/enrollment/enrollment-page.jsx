@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Users, UserPlus, GraduationCap, Building2, Calendar, AlertTriangle, Award, Loader2 } from "lucide-react";
+import { Users, Building2, Calendar, AlertTriangle, Award, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./components/KpiCard";
 import EnrollmentTargetsCard from "./components/EnrollmentTargetsCard";
@@ -24,11 +24,6 @@ const fmtMoneyShort = (n) => (n >= 1000 ? "$" + (n / 1000).toFixed(1) + "K" : "$
 
 const EnrollmentPage = () => {
   const { enrollmentData, isLoading, isError, refetch } = useGetOwnerEnrollments();
-  const [activeRiskStatus, setActiveRiskStatus] = useState({});
-
-  const updateRiskStatus = (id, status) => {
-    setActiveRiskStatus((prev) => ({ ...prev, [id]: status }));
-  };
 
   if (isLoading) {
     return (
@@ -94,7 +89,7 @@ const EnrollmentPage = () => {
   const totalEnrolledCount = totalEnrolledObj.count ?? header.students_count ?? 0;
   const openSeatsCount = openSeatsObj.count ?? 0;
   const totalWaitlistCount = waitlistObj.families_waiting ?? waitlistObj.count ?? 0;
-  const activeRiskCount = atRiskObj.active_count ?? atRiskStudents.filter((r) => (activeRiskStatus[r.id] || r.status) === "intervening").length;
+  const activeRiskCount = atRiskObj.active_count ?? atRiskStudents.filter((r) => r.status === "intervening").length;
   const discountTotalMonthly = discountsObj.monthly_amount || 0;
   const hasTotalCapacity = (totalEnrolledObj.capacity || 0) > 0;
 
@@ -180,11 +175,7 @@ const EnrollmentPage = () => {
       </div>
 
       {/* ── At-Risk Students ─────────────────────────────────────── */}
-      <AtRiskStudentsCard
-        atRiskStudents={atRiskStudents}
-        activeRiskStatus={activeRiskStatus}
-        onUpdateRiskStatus={updateRiskStatus}
-      />
+      <AtRiskStudentsCard atRiskStudents={atRiskStudents} />
 
       {/* ── Waitlist + Discounts ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

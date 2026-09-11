@@ -3,15 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertOctagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost, isPending = false }) => {
+const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost, onSubmit, isPending = false }) => {
   const [reason, setReason] = useState("Financial / Pricing");
 
   if (!isOpen || !entry) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const handler = onMarkLost || onSubmit;
+    if (!handler) return;
     try {
-      await onMarkLost(entry.id, reason);
+      await handler(entry.id, reason);
       onClose();
     } catch (err) {
       // Error handled by mutation toast notification

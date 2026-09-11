@@ -4,7 +4,7 @@ import { X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
-const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, isPending = false }) => {
+const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, onSubmit, isPending = false }) => {
   const { classrooms } = useGetAllClassrooms();
 
   const [form, setForm] = useState({
@@ -47,8 +47,10 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, i
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const handler = onConfirmEnrollment || onSubmit;
+    if (!handler) return;
     try {
-      await onConfirmEnrollment(entry.id, {
+      await handler(entry.id, {
         childId: form.childId,
         personId: form.personId,
         childName: form.childName.trim(),
