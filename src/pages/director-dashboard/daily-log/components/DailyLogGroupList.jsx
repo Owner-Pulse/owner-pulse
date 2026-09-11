@@ -43,11 +43,29 @@ const DailyLogGroupList = ({
   const matchesFilter = (log) => {
     if (!log) return false;
 
-    // 1. Filter by Category / Type
+    // 1. Filter by Category / Type or Timeframe
     if (filterType && filterType !== "all") {
-      const cat = (log.category || log.type || "").toLowerCase().replace("-", "_");
-      const targetFilter = filterType.toLowerCase().replace("-", "_");
-      if (cat !== targetFilter) return false;
+      if (filterType === "this_week") {
+        const dateStr = log.raw_data?.created_at || log.created_at || log.date;
+        if (dateStr) {
+          const logTime = new Date(dateStr).getTime();
+          const nowTime = new Date().getTime();
+          const daysDiff = (nowTime - logTime) / (1000 * 60 * 60 * 24);
+          if (isNaN(daysDiff) || daysDiff > 7) {
+            return false;
+          }
+        } else if (log.date_group) {
+          const dg = (log.date_group || "").toLowerCase();
+          if (dg.includes("ago")) {
+            const match = dg.match(/(\d+)\s*days?\s*ago/);
+            if (match && parseInt(match[1], 10) > 7) return false;
+          }
+        }
+      } else {
+        const cat = (log.category || log.type || "").toLowerCase().replace("-", "_");
+        const targetFilter = filterType.toLowerCase().replace("-", "_");
+        if (cat !== targetFilter) return false;
+      }
     }
 
     // 2. Filter by Search Query

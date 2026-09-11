@@ -35,7 +35,7 @@ const EnrollmentChart = ({ programs }) => {
       <CardHeader>
         <CardTitle>Enrollment by Program</CardTitle>
         <CardDescription>
-          {hasAnyCapacity ? "Current enrollment vs capacity across all programs" : "Current enrollment across all programs"}
+          Source: Procare Classrooms & Roster · {hasAnyCapacity ? "Current enrollment vs capacity across all programs" : "Current enrollment across all programs"}
         </CardDescription>
       </CardHeader>
       <CardContent>

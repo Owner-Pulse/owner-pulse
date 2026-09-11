@@ -512,6 +512,15 @@ const WaitlistPage = () => {
             setShowAddModal(false);
             setEditModalEntry(null);
           }}
+          onSave={async (data) => {
+            if (editModalEntry) {
+              await updateMutation({ id: editModalEntry.id, data });
+            } else {
+              await addMutation(data);
+            }
+            setShowAddModal(false);
+            setEditModalEntry(null);
+          }}
           onSubmit={async (data) => {
             if (editModalEntry) {
               await updateMutation({ id: editModalEntry.id, data });
@@ -532,8 +541,16 @@ const WaitlistPage = () => {
           isOpen={!!tourModalEntry}
           entry={tourModalEntry}
           onClose={() => setTourModalEntry(null)}
-          onSubmit={async (tourData) => {
-            await logTourMutation({ id: tourModalEntry.id, data: tourData });
+          onLogTour={async (id, tourData) => {
+            const data = tourData || id;
+            const targetId = typeof id === "object" ? tourModalEntry.id : id;
+            await logTourMutation({ id: targetId, data });
+            setTourModalEntry(null);
+          }}
+          onSubmit={async (id, tourData) => {
+            const data = tourData || id;
+            const targetId = typeof id === "object" ? tourModalEntry.id : id;
+            await logTourMutation({ id: targetId, data });
             setTourModalEntry(null);
           }}
           isPending={isTourPending}
@@ -545,8 +562,16 @@ const WaitlistPage = () => {
           isOpen={!!appliedModalEntry}
           entry={appliedModalEntry}
           onClose={() => setAppliedModalEntry(null)}
-          onSubmit={async (appliedData) => {
-            await moveToAppliedMutation({ id: appliedModalEntry.id, data: appliedData });
+          onMoveToApplied={async (id, appliedData) => {
+            const data = appliedData || id;
+            const targetId = typeof id === "object" ? appliedModalEntry.id : id;
+            await moveToAppliedMutation({ id: targetId, data });
+            setAppliedModalEntry(null);
+          }}
+          onSubmit={async (id, appliedData) => {
+            const data = appliedData || id;
+            const targetId = typeof id === "object" ? appliedModalEntry.id : id;
+            await moveToAppliedMutation({ id: targetId, data });
             setAppliedModalEntry(null);
           }}
           isPending={isAppliedPending}
@@ -558,8 +583,16 @@ const WaitlistPage = () => {
           isOpen={!!offerModalEntry}
           entry={offerModalEntry}
           onClose={() => setOfferModalEntry(null)}
-          onSubmit={async (offerData) => {
-            await offerSpotMutation({ id: offerModalEntry.id, data: offerData });
+          onOfferSpot={async (id, offerData) => {
+            const data = offerData || id;
+            const targetId = typeof id === "object" ? offerModalEntry.id : id;
+            await offerSpotMutation({ id: targetId, data });
+            setOfferModalEntry(null);
+          }}
+          onSubmit={async (id, offerData) => {
+            const data = offerData || id;
+            const targetId = typeof id === "object" ? offerModalEntry.id : id;
+            await offerSpotMutation({ id: targetId, data });
             setOfferModalEntry(null);
           }}
           isPending={isOfferPending}
@@ -571,8 +604,16 @@ const WaitlistPage = () => {
           isOpen={!!enrollModalEntry}
           entry={enrollModalEntry}
           onClose={() => setEnrollModalEntry(null)}
-          onSubmit={async (enrollData) => {
-            await confirmEnrollmentMutation({ id: enrollModalEntry.id, data: enrollData });
+          onConfirmEnrollment={async (id, enrollData) => {
+            const data = enrollData || id;
+            const targetId = typeof id === "object" ? enrollModalEntry.id : id;
+            await confirmEnrollmentMutation({ id: targetId, data });
+            setEnrollModalEntry(null);
+          }}
+          onSubmit={async (id, enrollData) => {
+            const data = enrollData || id;
+            const targetId = typeof id === "object" ? enrollModalEntry.id : id;
+            await confirmEnrollmentMutation({ id: targetId, data });
             setEnrollModalEntry(null);
           }}
           isPending={isEnrollPending}
@@ -584,8 +625,16 @@ const WaitlistPage = () => {
           isOpen={!!lostModalEntry}
           entry={lostModalEntry}
           onClose={() => setLostModalEntry(null)}
-          onSubmit={async (lostData) => {
-            await markLostMutation({ id: lostModalEntry.id, data: lostData });
+          onMarkLost={async (id, lostData) => {
+            const data = lostData || id;
+            const targetId = typeof id === "object" ? lostModalEntry.id : id;
+            await markLostMutation({ id: targetId, data });
+            setLostModalEntry(null);
+          }}
+          onSubmit={async (id, lostData) => {
+            const data = lostData || id;
+            const targetId = typeof id === "object" ? lostModalEntry.id : id;
+            await markLostMutation({ id: targetId, data });
             setLostModalEntry(null);
           }}
           isPending={isLostPending}

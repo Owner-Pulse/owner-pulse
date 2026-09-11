@@ -1,12 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
-const AddExpenseModal = ({ isOpen, onClose, onAdd, isPending = false }) => {
+const formatForInput = (dStr) => {
+  if (!dStr) return new Date().toISOString().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
+  const d = new Date(dStr);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().split("T")[0];
+  }
+  return new Date().toISOString().split("T")[0];
+};
+
+const AddExpenseModal = ({ isOpen, onClose, onAdd, expenseToEdit = null, isPending = false }) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      if (expenseToEdit) {
+        const numVal = expenseToEdit.numeric_amount !== undefined && expenseToEdit.numeric_amount !== null
+          ? expenseToEdit.numeric_amount
+          : expenseToEdit.amount?.toString().replace(/[^0-9.]/g, "");
+        setAmount(numVal || "");
+        setDescription(expenseToEdit.description || expenseToEdit.title || "");
+        setDate(formatForInput(expenseToEdit.date));
+      } else {
+        setAmount("");
+        setDescription("");
+        setDate(new Date().toISOString().split("T")[0]);
+      }
+      setError("");
+    }
+  }, [isOpen, expenseToEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +54,8 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, isPending = false }) => {
     }
   };
 
+  const isEditing = !!expenseToEdit;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -37,7 +67,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, isPending = false }) => {
             className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Log Expense</h2>
+                <h2 className="text-lg font-bold text-gray-900">{isEditing ? "Edit Expense" : "Log Expense"}</h2>
                 <p className="text-xs text-gray-500 mt-0.5">Director's discretionary fund</p>
               </div>
               <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
@@ -70,7 +100,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, isPending = false }) => {
                   className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">Cancel</button>
                 <button type="submit" disabled={isPending}
                   className="flex-1 h-10 rounded-xl bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#15294A] transition-colors disabled:opacity-50">
-                  {isPending ? "Logging..." : "Log Expense"}
+                  {isPending ? (isEditing ? "Updating..." : "Logging...") : (isEditing ? "Update Expense" : "Log Expense")}
                 </button>
               </div>
             </form>

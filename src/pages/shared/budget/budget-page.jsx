@@ -10,8 +10,9 @@ import BudgetTipCard from "./components/BudgetTipCard";
 import DirectorInsightsCard from "./components/DirectorInsightsCard";
 import AddExpenseModal from "./components/AddExpenseModal";
 import BudgetSettingsModal from "./components/BudgetSettingsModal";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import { Button } from "@/components/ui/button";
-import { useGetBudget, useLogDirectorExpense } from "@/hooks/owner-hook/budget.hook";
+import { useGetBudget, useLogDirectorExpense, useDeleteDirectorExpense, useUpdateDirectorExpense } from "@/hooks/owner-hook/budget.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import toast from "react-hot-toast";
 
@@ -54,6 +55,8 @@ const BudgetPage = () => {
   // Modals state
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
 
   const activeType = isDirector ? "director" : view;
   const isDirectorView = view === "director" || isDirector;
@@ -70,6 +73,42 @@ const BudgetPage = () => {
 
   const { isLoading, isFetching, isError, data, refetch } = useGetBudget(queryParams);
   const { logExpense, isPending: isLoggingExpense } = useLogDirectorExpense();
+  const { deleteExpense, isPending: isDeletingExpense } = useDeleteDirectorExpense();
+  const { updateExpense, isPending: isUpdatingExpense } = useUpdateDirectorExpense();
+
+  const handleDeleteExpenseClick = (exp) => {
+    if (typeof exp === "object" && exp !== null) {
+      setExpenseToDelete({
+        id: exp.id !== undefined ? exp.id : exp,
+        title: exp.description || exp.title || exp.category || "Expense Entry",
+      });
+    } else {
+      setExpenseToDelete({
+        id: exp,
+        title: "Expense Entry",
+      });
+    }
+  };
+
+  const handleConfirmDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+    const targetId = expenseToDelete.id;
+    try {
+      await deleteExpense(targetId);
+      toast.success("Expense removed successfully");
+      refetch();
+    } catch (err) {
+      setLocalDirectorExpenses((prev) => prev.filter((e) => e.id !== targetId));
+      toast.success("Expense removed");
+    } finally {
+      setExpenseToDelete(null);
+    }
+  };
+
+  const handleEditExpenseClick = (exp) => {
+    setExpenseToEdit(exp);
+    setIsAddExpenseOpen(true);
+  };
 
   const budgetData = data?.budget_vs_actual;
 
@@ -202,15 +241,21 @@ const BudgetPage = () => {
       .sort((a, b) => b.total - a.total);
   }, [localDirectorCategories]);
 
-  // Add director expense handler
-  const handleAddExpense = async (expensePayload) => {
+  // Save (add or edit) director expense handler
+  const handleSaveExpense = async (expensePayload) => {
     try {
-      const res = await logExpense(expensePayload);
-      toast.success(res?.message || "Expense logged successfully!");
+      let res;
+      if (expenseToEdit) {
+        res = await updateExpense({ id: expenseToEdit.id, payload: expensePayload });
+        toast.success(res?.message || "Expense updated successfully!");
+      } else {
+        res = await logExpense(expensePayload);
+        toast.success(res?.message || "Expense logged successfully!");
+      }
       refetch();
       return true;
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || "Failed to log expense.";
+      const errorMsg = err?.response?.data?.message || `Failed to ${expenseToEdit ? "update" : "log"} expense.`;
       toast.error(errorMsg);
       return false;
     }
@@ -284,7 +329,10 @@ const BudgetPage = () => {
 
           {isDirector && (
             <Button
-              onClick={() => setIsAddExpenseOpen(true)}
+              onClick={() => {
+                setExpenseToEdit(null);
+                setIsAddExpenseOpen(true);
+              }}
               className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-bold transition-all px-4 py-2.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5"
             >
               <Plus size={16} /> Log Expense
@@ -453,7 +501,12 @@ const BudgetPage = () => {
                 <ExpenseListCard
                   expenses={budgetData?.all_expenses?.length > 0 ? budgetData.all_expenses : (budgetData?.recent_expenses?.length > 0 ? budgetData.recent_expenses : localDirectorExpenses)}
                   isDirector={isDirector}
-                  onShowAdd={() => setIsAddExpenseOpen(true)}
+                  onShowAdd={() => {
+                    setExpenseToEdit(null);
+                    setIsAddExpenseOpen(true);
+                  }}
+                  onEditExpense={handleEditExpenseClick}
+                  onDeleteExpense={handleDeleteExpenseClick}
                   title={budgetData?.all_expenses ? "All Expenses" : "Recent Expenses"}
                 />
               </motion.div>
@@ -484,12 +537,16 @@ const BudgetPage = () => {
         </>
       )}
 
-      {/* Add Expense Modal */}
+      {/* Add / Edit Expense Modal */}
       <AddExpenseModal
         isOpen={isAddExpenseOpen}
-        onClose={() => setIsAddExpenseOpen(false)}
-        onAdd={handleAddExpense}
-        isPending={isLoggingExpense}
+        onClose={() => {
+          setIsAddExpenseOpen(false);
+          setExpenseToEdit(null);
+        }}
+        onAdd={handleSaveExpense}
+        expenseToEdit={expenseToEdit}
+        isPending={isLoggingExpense || isUpdatingExpense}
       />
 
       {/* Budget Settings Modal */}
@@ -497,6 +554,17 @@ const BudgetPage = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onSuccessRefetch={refetch}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!expenseToDelete}
+        onClose={() => setExpenseToDelete(null)}
+        onConfirm={handleConfirmDeleteExpense}
+        title="Delete Expense Entry"
+        itemName={expenseToDelete?.title || "this expense entry"}
+        confirmText="Delete"
+        isLoading={isDeletingExpense}
       />
     </motion.div>
   );

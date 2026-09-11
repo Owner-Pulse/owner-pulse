@@ -112,6 +112,15 @@ export const directorStudentManageService = {
         }
     },
 
+    retainAtRisk: async (axiosInstance, payload) => {
+        try {
+            const response = await axiosInstance.post(`/director/at-risk/retain/${payload.at_risk_id}`, payload);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     withdrawFromClass: async (axiosInstance, params) => {
         try {
             const response = await axiosInstance.post(`/director/students/withdraw/${params?.procare_child_id}`, params);

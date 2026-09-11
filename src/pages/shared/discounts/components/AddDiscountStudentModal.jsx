@@ -276,13 +276,13 @@ const AddDiscountStudentModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedClassroomId || !formData.student_name || !formData.category_id || !formData.weekly_amount) {
+    if (!selectedClassroomId || !formData.student_name || !formData.weekly_amount) {
       return;
     }
 
-    // Exact payload matching Postman form-data
+    // Exact payload matching Postman form-data / API spec
     const payload = {
-      category_id: formData.category_id,
+      category_id: formData.category_id || null,
       child_id: formData.child_id || "",
       student_name: formData.student_name,
       classroom_id: selectedClassroomId,
@@ -462,12 +462,11 @@ const AddDiscountStudentModal = ({
                     Discount Category <span className="text-red-500">*</span>
                   </label>
                   <select
-                    required
                     value={formData.category_id}
                     onChange={handleCategoryChange}
                     className="w-full px-3.5 py-2 sm:py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 font-medium"
                   >
-                    <option value="">Choose category...</option>
+                    <option value="">Custom / Direct Entry (Optional)...</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name} ({cat.type === "waiver" ? "Waiver" : "Discount"} -{" "}
@@ -768,8 +767,7 @@ const AddDiscountStudentModal = ({
                 isSaving ||
                 !selectedClassroomId ||
                 !formData.student_name ||
-                !formData.weekly_amount ||
-                !formData.category_id
+                !formData.weekly_amount
               }
               className="flex-1 sm:flex-none px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-[#1E3A5F] hover:bg-[#152A45] active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center"
             >

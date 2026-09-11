@@ -157,13 +157,6 @@ const OverviewPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-          <Button
-            onClick={() => setIsCsvModalOpen(true)}
-            className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-3 md:px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-          >
-            <UploadCloud size={15} /> Upload CSV
-          </Button>
-
           {isQbStatusLoading ? (
             <Skeleton className="h-9 w-40 rounded-xl" />
           ) : isQbConnected ? (
@@ -208,7 +201,7 @@ const OverviewPage = () => {
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <DonutKpiCard label="Enrolled" value={enrolledData.count} pct={Math.min(100, Math.round(enrolledData.capacity_pct))} color="#1E3A5F" sub={`${enrolledData.yoy_growth} y/y`} subColor="text-[#2F6042]" icon={kpiIcon.Users} />
-        <DonutKpiCard label="Revenue" value={revenueDataKpi.formatted} pct={85} color="#3E7A54" sub={`${revenueDataKpi.mom_growth} MoM`} subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
+        <DonutKpiCard label="Revenue" value={revenueDataKpi.formatted} pct={revenueDataKpi.amount > 0 ? (revenueDataKpi.pct ?? 85) : 0} color="#3E7A54" sub={`${revenueDataKpi.mom_growth} MoM`} subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
         <DonutKpiCard label="Waitlist" value={waitlistKpi.count} pct={Math.round(waitlistKpi.waitlist_ratio_pct)} color="#1E3A5F" sub={`${waitlistKpi.open_seats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
         <DonutKpiCard label="Tasks Done" value={`${tasksKpi.completed}/${tasksKpi.total}`} pct={tasksKpi.total ? Math.round((tasksKpi.completed / tasksKpi.total) * 100) : 0} color="#B78A2F" sub={`${tasksKpi.high_priority} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
       </div>
@@ -216,15 +209,15 @@ const OverviewPage = () => {
       {/* KPI Row 2 — Donut Charts */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <DonutKpiCard label="Maintenance" value={`${maintKpi.resolved}/${maintKpi.total}`} pct={maintKpi.total ? Math.round((maintKpi.resolved / maintKpi.total) * 100) : 0} color="#AE4A3E" sub={`${maintKpi.critical_count} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
-        <DonutKpiCard label="At-Risk" value={`${atRiskKpi.intervening}/${atRiskKpi.total}`} pct={atRiskKpi.total ? Math.round((atRiskKpi.intervening / atRiskKpi.total) * 100) : 0} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
+        <DonutKpiCard label="At-Risk" value={`${atRiskKpi.intervening} Students`} pct={atRiskKpi.total ? Math.round((atRiskKpi.intervening / atRiskKpi.total) * 100) : 0} color="#AE4A3E" sub="intervening" subColor="text-[#8A362C]" icon={kpiIcon.AlertTriangle} />
         <DonutKpiCard label="PTO Used" value={`${ptoKpi.days_used}/${ptoKpi.total_allowance}`} pct={Math.round(ptoKpi.used_pct)} color="#1E3A5F" sub={`${ptoKpi.subs_count} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
       </div>
 
       {/* KPI Row 3 — Compliance, Director Discretionary Budget, Discounts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Compliance" value={`${complianceKpi.compliant}/${complianceKpi.total}`} pct={Math.round(complianceKpi.compliant_pct)} color={complianceKpi.compliant_pct >= 80 ? "#3E7A54" : complianceKpi.compliant_pct >= 50 ? "#B78A2F" : "#AE4A3E"} sub={`${complianceKpi.need_attention} need attention`} subColor={complianceKpi.compliant_pct >= 80 ? "text-[#2F6042]" : complianceKpi.compliant_pct >= 50 ? "text-[#8F6A1F]" : "text-[#8A362C]"} icon={kpiIcon.ShieldCheck} />
+        <DonutKpiCard label="Compliance" value={`${complianceKpi.compliant}/${complianceKpi.total}`} pct={Math.round(complianceKpi.compliant_pct)} color={complianceKpi.compliant === 0 || complianceKpi.compliant_pct < 50 ? "#AE4A3E" : complianceKpi.compliant_pct >= 80 ? "#3E7A54" : "#B78A2F"} sub={`${complianceKpi.need_attention} need attention`} subColor={complianceKpi.compliant === 0 || complianceKpi.compliant_pct < 50 ? "text-[#8A362C]" : complianceKpi.compliant_pct >= 80 ? "text-[#2F6042]" : "text-[#8F6A1F]"} icon={kpiIcon.ShieldCheck} />
         <DonutKpiCard label="Director Discretionary Budget" value={fmtMoney(pettyCashKpi.spent)} pct={Math.round(pettyCashKpi.used_pct)} color="#1E3A5F" sub={`${fmtMoney(pettyCashKpi.remaining)} left`} subColor={pettyCashKpi.remaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
-        <DonutKpiCard label="Discounts" value={fmtMoney(discountsKpi.total_amount)} pct={Math.round(discountsKpi.pct_share)} color="#1E3A5F" sub={`${discountsKpi.active_discounts} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
+        <DonutKpiCard label="Discounts" value={fmtMoney(discountsKpi.total_amount)} pct={discountsKpi.active_discounts > 0 || discountsKpi.total_amount > 0 ? Math.round(discountsKpi.pct_share) : 0} color="#1E3A5F" sub={`${discountsKpi.active_discounts} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
         <DonutKpiCard 
           label="Payroll Cycles" 
           value={`${payrollKpi.filed_count} filed`} 

@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Users, DollarSign, Wrench, ClipboardList,
+  Users, DollarSign, Wrench, ClipboardList, UploadCloud,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { useGetDirectorOverview } from "@/hooks/director-hook/overview.hook";
 import DirectorOverviewSkeleton from "./components/DirectorOverviewSkeleton";
+import CsvUploadModal from "@/pages/owner-dashboard/overview/components/CsvUploadModal";
 
 // ─── Extracted Components ─────────────────────────────────────
 import PulseSection from "./components/PulseSection";
@@ -30,6 +32,7 @@ const itemVariants = {
 const DirectorOverviewPage = () => {
   const navigate = useNavigate();
   const go = (path) => navigate(path);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   // Fetch Director Overview Data
   const { directorOverviewData, isLoading } = useGetDirectorOverview();
@@ -88,6 +91,14 @@ const DirectorOverviewPage = () => {
           <p className="text-sm text-gray-500 mt-1">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
           </p>
+        </div>
+        <div className="shrink-0">
+          <Button
+            onClick={() => setIsCsvModalOpen(true)}
+            className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-4 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <UploadCloud size={15} /> Upload Procare CSV
+          </Button>
         </div>
       </motion.div>
 
@@ -148,6 +159,12 @@ const DirectorOverviewPage = () => {
 
       {/* Over-Escalation Rate */}
       <OverEscalationCard data={pendingTasksData?.over_escalation_rate} />
+
+      {/* CSV Upload Modal */}
+      <CsvUploadModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+      />
     </motion.div>
   );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldAlert, UserMinus } from "lucide-react";
+import { ShieldAlert, UserMinus, CheckCircle2 } from "lucide-react";
 
 const fmtRelative = (d) => {
   if (!d) return "Recently";
@@ -11,11 +11,12 @@ const fmtRelative = (d) => {
   return `${Math.abs(diff)} days ago`;
 };
 
-const AtRiskCard = ({ student, onWithdraw = () => {} }) => {
+const AtRiskCard = ({ student, onWithdraw = () => {}, onRetain = () => {} }) => {
   if (!student) return null;
 
   const statusKey = String(student.status || "intervening").toLowerCase();
   const isLost = statusKey === "lost" || statusKey === "withdrawn";
+  const isRetained = statusKey === "retained";
 
   const studentName = student.student || student.student_full_name || "Unknown Student";
   const classroomGrade = student.grade || student.classroom_name || student.classroom || "General";
@@ -24,25 +25,34 @@ const AtRiskCard = ({ student, onWithdraw = () => {} }) => {
   const reasonText = student.reason || student.risk_category;
 
   return (
-    <div className={`flex items-start gap-3.5 p-4 rounded-2xl border-l-3 transition-all ${isLost ? "bg-gray-50 border-l-gray-300 border border-gray-100 opacity-60" : "bg-[#AE4A3E]/[0.03] border-l-[#AE4A3E] border border-[#AE4A3E]/10 hover:shadow-sm"}`}>
-      <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${isLost ? "bg-gray-200 text-gray-500" : "bg-[#AE4A3E]/10 text-[#AE4A3E]"}`}>
+    <div className={`flex items-start gap-3.5 p-4 rounded-2xl border-l-3 transition-all ${isLost ? "bg-gray-50 border-l-gray-300 border border-gray-100 opacity-60" : isRetained ? "bg-[#3E7A54]/[0.03] border-l-[#3E7A54] border border-[#3E7A54]/10 hover:shadow-sm" : "bg-[#AE4A3E]/[0.03] border-l-[#AE4A3E] border border-[#AE4A3E]/10 hover:shadow-sm"}`}>
+      <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${isLost ? "bg-gray-200 text-gray-500" : isRetained ? "bg-[#3E7A54]/10 text-[#3E7A54]" : "bg-[#AE4A3E]/10 text-[#AE4A3E]"}`}>
         <ShieldAlert size={16} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-sm font-bold text-gray-900">{studentName} · Class: {classroomGrade}</p>
           <div className="flex items-center gap-2">
-            <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${isLost ? "bg-gray-200 text-gray-600" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
-              {isLost ? "Lost" : "Intervening"}
+            <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${isLost ? "bg-gray-200 text-gray-600" : isRetained ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
+              {isLost ? "Lost" : isRetained ? "Retained" : "Intervening"}
             </span>
-            {!isLost && (
-              <button 
-                onClick={() => onWithdraw(student)}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-[#AE4A3E] hover:bg-[#8A362C] px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
-                title="Withdraw Student"
-              >
-                <UserMinus size={11} /> Withdraw
-              </button>
+            {!isLost && !isRetained && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onRetain(student)}
+                  className="flex items-center gap-1 text-[10px] font-bold text-white bg-[#3E7A54] hover:bg-[#2F6042] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  title="Retain Student"
+                >
+                  <CheckCircle2 size={11} /> Retain
+                </button>
+                <button 
+                  onClick={() => onWithdraw(student)}
+                  className="flex items-center gap-1 text-[10px] font-bold text-white bg-[#AE4A3E] hover:bg-[#8A362C] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  title="Withdraw Student"
+                >
+                  <UserMinus size={11} /> Withdraw
+                </button>
+              </div>
             )}
           </div>
         </div>

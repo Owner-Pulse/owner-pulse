@@ -18,7 +18,7 @@ const itemVariants = {
 };
 
 const STAT_CONFIG = [
-  { id: "all", label: "Total Logs Today", icon: ClipboardList, color: "text-[#1E3A5F]", bg: "bg-[#1E3A5F]/10" },
+  { id: "all", label: "Total Daily Logs", icon: ClipboardList, color: "text-[#1E3A5F]", bg: "bg-[#1E3A5F]/10" },
   { id: "incident", label: "Incidents", icon: AlertTriangle, color: "text-[#8A362C]", bg: "bg-[#AE4A3E]/10" },
   {id: "removal", label: "Withdrawn", icon: UserX, color: "text-[#8A362C]", bg: "bg-[#8A362C]/10" },
   { id: "pto", label: "PTO Entries", icon: Calendar, color: "text-blue-700", bg: "bg-blue-50" },

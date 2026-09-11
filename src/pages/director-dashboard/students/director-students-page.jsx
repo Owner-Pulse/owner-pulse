@@ -37,7 +37,8 @@ import {
   useLogIncident,
   useAddRemovalStudent,
   useAddAtRiskStudent,
-  useWithdrawAtRisk
+  useWithdrawAtRisk,
+  useRetainAtRisk
 } from "@/hooks/director-hook/student-manage.hook";
 import toast from "react-hot-toast";
 
@@ -68,10 +69,13 @@ const StudentManagementPage = () => {
   const removalMutation = useAddRemovalStudent();
   const atRiskMutation = useAddAtRiskStudent();
   const withdrawMutation = useWithdrawAtRisk();
+  const retainMutation = useRetainAtRisk();
 
   // Confirmation Modal & View Details states
   const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
   const [pendingWithdrawStudent, setPendingWithdrawStudent] = useState(null);
+  const [isConfirmRetainOpen, setIsConfirmRetainOpen] = useState(false);
+  const [pendingRetainStudent, setPendingRetainStudent] = useState(null);
   const [selectedStudentForModal, setSelectedStudentForModal] = useState(null);
 
   // Form inputs matching Procare schema for student enrollment
@@ -267,6 +271,37 @@ const StudentManagementPage = () => {
         setShowForm(null);
       }
     });
+  };
+
+  const handleRetainClick = (student) => {
+    setPendingRetainStudent(student);
+    setIsConfirmRetainOpen(true);
+  };
+
+  const confirmRetainStudent = () => {
+    if (!pendingRetainStudent) return;
+    const student = pendingRetainStudent;
+
+    retainMutation.mutate(
+      {
+        at_risk_id: student.id,
+        notes: "Retained by Director",
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Successfully retained ${student.student || student.student_full_name || "student"}!`);
+        },
+        onError: () => {
+          setAtRiskList((prev) =>
+            prev.map((s) => (s.id === student.id ? { ...s, status: "retained" } : s))
+          );
+          toast.success("Student marked as retained");
+        },
+      }
+    );
+
+    setIsConfirmRetainOpen(false);
+    setPendingRetainStudent(null);
   };
 
   const handleWithdrawClick = (student) => {
@@ -490,6 +525,7 @@ const StudentManagementPage = () => {
                       key={student.id || i}
                       student={student}
                       onWithdraw={handleWithdrawClick}
+                      onRetain={handleRetainClick}
                     />
                   ))
                 ) : (
@@ -520,6 +556,22 @@ const StudentManagementPage = () => {
           isLoading={enrollMutation.isPending}
         />
       )}
+
+      {/* Confirmation Dialog for At-Risk Student Retain */}
+      <ConfirmationModal
+        isOpen={isConfirmRetainOpen}
+        onClose={() => {
+          setIsConfirmRetainOpen(false);
+          setPendingRetainStudent(null);
+        }}
+        onConfirm={confirmRetainStudent}
+        title="Retain Student"
+        message={`Are you sure you want to retain "${pendingRetainStudent?.student || pendingRetainStudent?.student_full_name || "this student"}"? This will confirm their enrollment and resolve the active at-risk intervention.`}
+        confirmText="Retain Student"
+        cancelText="Cancel"
+        type="success"
+        isLoading={retainMutation.isPending}
+      />
 
       {/* Confirmation Dialog for At-Risk Student Withdrawal */}
       <ConfirmationModal

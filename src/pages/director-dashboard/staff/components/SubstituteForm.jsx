@@ -14,6 +14,7 @@ const SubstituteForm = ({ onClose }) => {
     subEmployeeId: "",
     subEmployeeName: "",
     subProcareId: "",
+    manualSubName: "",
     date: TODAY_STR,
   });
   const [absentSearch, setAbsentSearch] = useState("");
@@ -87,6 +88,7 @@ const SubstituteForm = ({ onClose }) => {
     update("subEmployeeId", staff.id);
     update("subEmployeeName", staff.name);
     update("subProcareId", staff.procare_employee_id || staff.employee_id || "");
+    update("manualSubName", "");
     setSubDropdownOpen(false);
   };
 
@@ -96,11 +98,12 @@ const SubstituteForm = ({ onClose }) => {
       setError("Please select the absent staff member.");
       return;
     }
-    if (!form.subEmployeeId) {
-      setError("Please select the substitute staff member.");
+    const finalSubName = form.manualSubName.trim() || form.subEmployeeName;
+    if (!form.subEmployeeId && !finalSubName) {
+      setError("Please select a substitute staff member or enter an external substitute name.");
       return;
     }
-    if (form.absentEmployeeId === form.subEmployeeId) {
+    if (form.subEmployeeId && form.absentEmployeeId === form.subEmployeeId) {
       setError("Absent and substitute staff cannot be the same person.");
       return;
     }
@@ -110,13 +113,15 @@ const SubstituteForm = ({ onClose }) => {
     }
     setError("");
 
-    const formData = new FormData();
-    formData.append("absent_employee_id", form.absentEmployeeId);
-    formData.append("sub_employee_id", form.subEmployeeId);
-    formData.append("date", form.date);
+    const payload = {
+      absent_employee_id: Number(form.absentEmployeeId) || form.absentEmployeeId,
+      sub_name: finalSubName,
+      sub_employee_id: form.subEmployeeId ? Number(form.subEmployeeId) : null,
+      dates: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
+    };
 
     try {
-      await addSubstitution(formData);
+      await addSubstitution(payload);
       onClose();
     } catch {
       // toast already shown by the hook's onError
@@ -330,6 +335,20 @@ const SubstituteForm = ({ onClose }) => {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            {/* External Substitute Name (Optional / Override) */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                Or External Substitute Name <span className="text-gray-400 font-normal">(if non-staff / temp agency)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Maria Gonzales (External Sub)"
+                value={form.manualSubName}
+                onChange={(e) => update("manualSubName", e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white"
+              />
             </div>
 
             {/* Date */}

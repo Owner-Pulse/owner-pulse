@@ -140,11 +140,11 @@ const EnrollStudentForm = ({ onAdd, onClose, displayClassrooms = [], isLoading =
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1E3A5F]/20 focus:outline-none"
                 >
                   <option value="" disabled>Select Status</option>
-                  <option value="Active">Active</option>
-                  <option value="Enrolled">Enrolled</option>
+                  <option value="Enrolled">Enrolled (Attending)</option>
                   <option value="Pre-Registered">Pre-Registered</option>
                   <option value="Withdrawn">Withdrawn</option>
                 </select>
+                <p className="text-[10px] text-gray-400 mt-0.5">Enrolled = actively attending / registered</p>
               </div>
             </div>
 

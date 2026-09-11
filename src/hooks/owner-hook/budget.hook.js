@@ -100,4 +100,50 @@ export const useGetBudgetLimit = () => {
     };
 };
 
+export const useDeleteDirectorExpense = () => {
+    const axiosInstance = axiosPrivate();
+
+    const {
+        data,
+        mutateAsync: deleteExpense,
+        isPending,
+        isError,
+        error,
+    } = useMutation({
+        mutationKey: ["delete-director-expense"],
+        mutationFn: (id) => getBudgetService.deleteExpenseDirector(axiosInstance, id),
+    });
+
+    return {
+        data,
+        deleteExpense,
+        isPending,
+        isError,
+        error,
+    };
+};
+
+export const useUpdateDirectorExpense = () => {
+    const axiosInstance = axiosPrivate();
+
+    const {
+        data,
+        mutateAsync: updateExpense,
+        isPending,
+        isError,
+        error,
+    } = useMutation({
+        mutationKey: ["update-director-expense"],
+        mutationFn: ({ id, payload }) => getBudgetService.updateDirectorExpense(axiosInstance, id, payload),
+    });
+
+    return {
+        data,
+        updateExpense,
+        isPending,
+        isError,
+        error,
+    };
+};
+
 

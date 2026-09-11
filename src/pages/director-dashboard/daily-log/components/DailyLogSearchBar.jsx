@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Search, X, Layers, CalendarCheck2 } from "lucide-react";
+import { Search, X, CalendarCheck2 } from "lucide-react";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -9,7 +9,6 @@ const itemVariants = {
 
 const FILTERS = [
   { id: "all", label: "All History" },
-  { id: "open", label: "Open Items", icon: Layers },
   { id: "this_week", label: "This Week", icon: CalendarCheck2 },
   { id: "incident", label: "Incidents" },
   { id: "removal", label: "Withdrawn" },
