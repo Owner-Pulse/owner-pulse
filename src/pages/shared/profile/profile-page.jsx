@@ -59,6 +59,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     const formData = new FormData();
     formData.append("name", form.name);
+    formData.append("email", form.email || "");
     formData.append("phone", form.phone);
     formData.append("about", form.bio);
     formData.append("location", form.location);

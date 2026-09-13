@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { initEcho, listenToNotifications, requestNotificationPermission, setupNotificationTapListener } from '@/lib/reverb-connection';
+import { getToken, removeToken } from '@/lib/token';
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -132,8 +133,7 @@ const DashboardLayout = () => {
 
   // Reverb Real-Time Notification Listener
   useEffect(() => {
-    const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
-    const token = localStorage.getItem(tokenName);
+    const token = getToken();
     const userId = user?.id || user?.user_id || user?.data?.id || user?.user?.id;
 
     // 1. Request notification permissions (Mobile native & Web browser)
@@ -258,8 +258,7 @@ const DashboardLayout = () => {
       toast.error(e?.response?.data?.message || "Logout failed");
     } finally {
 
-      const tokenName = import.meta.env.VITE_AUTH_TOKEN_NAME || "pulse_token";
-      localStorage.removeItem(tokenName);
+      removeToken();
       queryClient.clear();
       navigate('/');
     }

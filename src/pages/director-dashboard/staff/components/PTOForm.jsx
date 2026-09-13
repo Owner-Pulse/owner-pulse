@@ -80,7 +80,7 @@ const PTOForm = ({ onClose }) => {
     const payload = {
       employee_id: Number(form.staffId) || form.staffId,
       day_type: dayTypeMapped,
-      dates: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
+      date: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
       days: Number(form.days) || 1,
     };
 
