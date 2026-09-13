@@ -117,7 +117,7 @@ const SubstituteForm = ({ onClose }) => {
       absent_employee_id: Number(form.absentEmployeeId) || form.absentEmployeeId,
       sub_name: finalSubName,
       sub_employee_id: form.subEmployeeId ? Number(form.subEmployeeId) : null,
-      dates: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
+      date: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
     };
 
     try {

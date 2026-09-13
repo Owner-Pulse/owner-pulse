@@ -1,9 +1,11 @@
-import { axiosPrivate } from "@/lib/axios.private"
+import { axiosPrivate } from "@/lib/axios.private";
+import { getToken } from "@/lib/token";
 import { getUserService } from "@/services/auth/user-details.service";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const axiosInstance = axiosPrivate();
 export const useGetUser = () => {
+    const token = getToken();
     const {
         data,
         isLoading,
@@ -14,11 +16,13 @@ export const useGetUser = () => {
     } = useQuery({
         queryKey: ["user"],
         queryFn: () => getUserService.userDetail(axiosInstance),
+        enabled: !!token,
+        retry: 1,
     });
 
     return {
-        user: data?.data,
-        isLoading,
+        user: token ? data?.data : null,
+        isLoading: !!token && isLoading,
         isFetching,
         isError,
         error,
