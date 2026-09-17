@@ -28,6 +28,7 @@ const FilterBar = ({ categoryFilter, statusFilter, onCategoryChange, onStatusCha
         {[
           { id: "all", label: "All" },
           { id: "compliant", label: "Compliant" },
+          { id: "completed", label: "Completed" },
           { id: "expiring", label: "Expiring" },
           { id: "expired", label: "Expired" },
         ].map((f) => (
@@ -41,7 +42,7 @@ const FilterBar = ({ categoryFilter, statusFilter, onCategoryChange, onStatusCha
             }`}
           >
             <span className="sm:hidden">
-              {f.label === "Compliant" ? "OK" : f.label === "Expiring" ? "⚠" : f.label === "Expired" ? "✕" : f.label}
+              {f.label === "Compliant" ? "OK" : f.label === "Completed" ? "✓" : f.label === "Expiring" ? "⚠" : f.label === "Expired" ? "✕" : f.label}
             </span>
             <span className="hidden sm:inline">{f.label}</span>
           </button>

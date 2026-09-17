@@ -15,6 +15,7 @@ import {
   Tag,
   Link2,
   UploadCloud,
+  Target,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import DonutKpiCard from "./components/DonutKpiCard";
 import CashFlowMetricsCard from "./components/CashFlowMetricsCard";
 import LatestPayrollSubmissionCard from "./components/LatestPayrollSubmissionCard";
 import CsvUploadModal from "./components/CsvUploadModal";
+import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -55,6 +57,7 @@ const OverviewPage = () => {
   const go = (path) => navigate(path);
 
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [isTargetsModalOpen, setIsTargetsModalOpen] = useState(false);
 
   // Fetch API data
   const { ownerOverviewData, isLoading } = useGetOwnerOverview();
@@ -94,24 +97,53 @@ const OverviewPage = () => {
   ];
 
   // KPI calculations from real API data
-  const enrolledData = kpiCards?.enrolled || { count: 0, capacity: 0, capacity_pct: 0, yoy_growth: "0%" };
-  const revenueDataKpi = kpiCards?.revenue || { amount: 0, formatted: "$0", mom_growth: "0%" };
-  const waitlistKpi = kpiCards?.waitlist || { count: 0, open_seats: 0, waitlist_ratio_pct: 0 };
+  const enrolledData = kpiCards?.enrolled || { count: 0, capacity: 0, capacity_pct: 0, open_seats: 0, yoy_growth: "0%" };
+  const revenueDataKpi = kpiCards?.revenue || { amount: 0, formatted: "$0", formatted_full: "$0", mom_growth: "0%" };
+  const waitlistKpi = kpiCards?.waitlist || { count: 0, open_seats: 0, waitlist_ratio_pct: 0, conversion_rate_pct: 0 };
   const tasksKpi = kpiCards?.tasks_done || { completed: 0, total: 0, high_priority: 0 };
   const maintKpi = kpiCards?.maintenance || { resolved: 0, total: 0, critical_count: 0 };
   const atRiskKpi = kpiCards?.at_risk_students || { intervening: 0, total: 0 };
   const ptoKpi = kpiCards?.pto_used || { days_used: 0, total_allowance: 0, subs_count: 0, used_pct: 0 };
-  const complianceKpi = kpiCards?.compliance || { compliant: 0, need_attention: 0, total: 0, compliant_pct: 0 };
   const pettyCashKpi = kpiCards?.petty_cash || { spent: 0, remaining: 0, budget: 0, used_pct: 0 };
-  const discountsKpi = kpiCards?.discounts || { total_amount: 0, active_discounts: 0, pct_share: 0 };
+  const discountsKpi = kpiCards?.discounts || { total_amount: 0, formatted_monthly_amount: "$0/mo", active_discounts: 0, pct_share: 0 };
   const payrollKpi = kpiCards?.payroll_cycles || { filed_count: 0, next_due_days: 0, progress_pct: 0 };
+
+  // Robust Compliance KPI derivation
+  const complianceKpi = kpiCards?.compliance || {
+    compliant: 0,
+    need_attention: 0,
+    expired: 0,
+    expiring: 0,
+    total: 0,
+    compliant_pct: 0,
+  };
+  const complianceTotal = complianceKpi.total || 0;
+  const complianceCompliant = complianceKpi.compliant || 0;
+  const complianceNeedAttention = complianceKpi.need_attention ?? ((complianceKpi.expired || 0) + (complianceKpi.expiring || 0));
+  const compliancePct = Math.round(
+    complianceKpi.compliant_pct !== undefined && complianceKpi.compliant_pct !== null
+      ? complianceKpi.compliant_pct
+      : complianceTotal > 0
+      ? (complianceCompliant / complianceTotal) * 100
+      : 0
+  );
+  const complianceColor =
+    compliancePct < 50 ? "#AE4A3E" : compliancePct >= 80 ? "#3E7A54" : "#B78A2F";
+  const complianceSubColor =
+    compliancePct < 50 ? "text-[#8A362C]" : compliancePct >= 80 ? "text-[#2F6042]" : "text-[#8F6A1F]";
+
+  const enrolledOpenSeats = enrolledData.open_seats ?? enrolledData.open_spots ?? Math.max(0, enrolledData.capacity - enrolledData.count);
 
   // Enrollment Chart formatting
   const formattedEnrollmentData = enrollmentByGrade.map((item) => ({
+    id: item.id,
     name: item.name,
+    program_type: item.program_type,
     students: item.enrolled,
     capacity: item.capacity,
+    available: item.available ?? Math.max(0, item.capacity - item.enrolled),
     waitlist: item.waitlist || 0,
+    fill_rate: item.fill_rate ?? (item.capacity > 0 ? Math.round((item.enrolled / item.capacity) * 1000) / 10 : 0),
   }));
 
   // Budget Overview Data from real API response
@@ -157,6 +189,13 @@ const OverviewPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <Button
+            onClick={() => setIsTargetsModalOpen(true)}
+            variant="outline"
+            className="bg-white text-xs md:text-sm px-3 border-gray-200 text-[#1E3A5F] hover:bg-gray-50 h-9 font-semibold rounded-xl flex items-center gap-1.5 shadow-2xs"
+          >
+            <Target size={14} className="text-[#1E3A5F]" /> Enrollment Goals
+          </Button>
           {isQbStatusLoading ? (
             <Skeleton className="h-9 w-40 rounded-xl" />
           ) : isQbConnected ? (
@@ -200,9 +239,33 @@ const OverviewPage = () => {
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Enrolled" value={enrolledData.count} pct={Math.min(100, Math.round(enrolledData.capacity_pct))} color="#1E3A5F" sub={`${enrolledData.yoy_growth} y/y`} subColor="text-[#2F6042]" icon={kpiIcon.Users} />
-        <DonutKpiCard label="Revenue" value={revenueDataKpi.formatted} pct={revenueDataKpi.amount > 0 ? (revenueDataKpi.pct ?? 85) : 0} color="#3E7A54" sub={`${revenueDataKpi.mom_growth} MoM`} subColor="text-[#2F6042]" icon={kpiIcon.DollarSign} />
-        <DonutKpiCard label="Waitlist" value={waitlistKpi.count} pct={Math.round(waitlistKpi.waitlist_ratio_pct)} color="#1E3A5F" sub={`${waitlistKpi.open_seats} open seats`} subColor="text-gray-400" icon={kpiIcon.ClipboardList} />
+        <DonutKpiCard
+          label="Enrolled"
+          value={`${enrolledData.count}/${enrolledData.capacity}`}
+          pct={Math.min(100, Math.round(enrolledData.capacity_pct || (enrolledData.capacity > 0 ? (enrolledData.count / enrolledData.capacity) * 100 : 0)))}
+          color="#1E3A5F"
+          sub={`${enrolledOpenSeats} open seats · ${enrolledData.yoy_growth || "0%"} y/y`}
+          subColor="text-[#2F6042]"
+          icon={kpiIcon.Users}
+        />
+        <DonutKpiCard
+          label="Revenue"
+          value={revenueDataKpi.formatted_full || revenueDataKpi.formatted || fmtMoney(revenueDataKpi.amount)}
+          pct={revenueDataKpi.pct ?? (revenueDataKpi.amount > 0 ? 85 : 0)}
+          color="#3E7A54"
+          sub={`${revenueDataKpi.mom_growth || "0%"} MoM`}
+          subColor="text-[#2F6042]"
+          icon={kpiIcon.DollarSign}
+        />
+        <DonutKpiCard
+          label="Waitlist"
+          value={`${waitlistKpi.count} Leads`}
+          pct={Math.round(waitlistKpi.waitlist_ratio_pct || 0)}
+          color="#1E3A5F"
+          sub={`${waitlistKpi.open_seats ?? waitlistKpi.open_spots ?? 0} open seats · ${waitlistKpi.conversion_rate_pct ?? 0}% conv`}
+          subColor="text-gray-400"
+          icon={kpiIcon.ClipboardList}
+        />
         <DonutKpiCard label="Tasks Done" value={`${tasksKpi.completed}/${tasksKpi.total}`} pct={tasksKpi.total ? Math.round((tasksKpi.completed / tasksKpi.total) * 100) : 0} color="#B78A2F" sub={`${tasksKpi.high_priority} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
       </div>
 
@@ -215,9 +278,26 @@ const OverviewPage = () => {
 
       {/* KPI Row 3 — Compliance, Director Discretionary Budget, Discounts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <DonutKpiCard label="Compliance" value={`${complianceKpi.compliant}/${complianceKpi.total}`} pct={Math.round(complianceKpi.compliant_pct)} color={complianceKpi.compliant === 0 || complianceKpi.compliant_pct < 50 ? "#AE4A3E" : complianceKpi.compliant_pct >= 80 ? "#3E7A54" : "#B78A2F"} sub={`${complianceKpi.need_attention} need attention`} subColor={complianceKpi.compliant === 0 || complianceKpi.compliant_pct < 50 ? "text-[#8A362C]" : complianceKpi.compliant_pct >= 80 ? "text-[#2F6042]" : "text-[#8F6A1F]"} icon={kpiIcon.ShieldCheck} />
+        <DonutKpiCard
+          label="Compliance"
+          value={`${complianceCompliant}/${complianceTotal}`}
+          pct={compliancePct}
+          color={complianceColor}
+          sub={`${complianceNeedAttention} need attention`}
+          subColor={complianceSubColor}
+          icon={kpiIcon.ShieldCheck}
+          onClick={() => navigate("/owner/compliance")}
+        />
         <DonutKpiCard label="Director Discretionary Budget" value={fmtMoney(pettyCashKpi.spent)} pct={Math.round(pettyCashKpi.used_pct)} color="#1E3A5F" sub={`${fmtMoney(pettyCashKpi.remaining)} left`} subColor={pettyCashKpi.remaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
-        <DonutKpiCard label="Discounts" value={fmtMoney(discountsKpi.total_amount)} pct={discountsKpi.active_discounts > 0 || discountsKpi.total_amount > 0 ? Math.round(discountsKpi.pct_share) : 0} color="#1E3A5F" sub={`${discountsKpi.active_discounts} active discounts`} subColor="text-gray-400" icon={kpiIcon.Tag} />
+        <DonutKpiCard
+          label="Discounts"
+          value={discountsKpi.formatted_monthly_amount || discountsKpi.formatted_total_amount || (fmtMoney(discountsKpi.total_amount) + "/mo")}
+          pct={Math.round(discountsKpi.pct_share || discountsKpi.discount_percentage || 0)}
+          color="#1E3A5F"
+          sub={`${discountsKpi.active_discounts ?? discountsKpi.students_count ?? 0} active (${discountsKpi.pct_share ?? discountsKpi.discount_percentage ?? 0}% share)`}
+          subColor="text-gray-400"
+          icon={kpiIcon.Tag}
+        />
         <DonutKpiCard 
           label="Payroll Cycles" 
           value={`${payrollKpi.filed_count} filed`} 
@@ -249,10 +329,15 @@ const OverviewPage = () => {
         <UpcomingEventsCard events={upcomingEvents} />
       </div>
 
-      {/* CSV Upload Modal */}
+      {/* Modals */}
       <CsvUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
+      />
+
+      <EnrollmentTargetsModal
+        isOpen={isTargetsModalOpen}
+        onClose={() => setIsTargetsModalOpen(false)}
       />
     </motion.div>
   );

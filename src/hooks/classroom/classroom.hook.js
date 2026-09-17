@@ -212,6 +212,26 @@ export const useDeleteClassroom = () => {
     return { deleteClassroom, isPending, isError, error };
 };
 
+// Fetch enrollment target settings
+export const useGetEnrollmentTargets = () => {
+    const { data, isLoading, isError, error, refetch } = useQuery({
+        queryKey: ["enrollment-targets"],
+        queryFn: () => {
+            const axiosInstance = axiosPrivate();
+            return classroomService.getEnrollmentTargets(axiosInstance);
+        },
+        staleTime: 5 * 60 * 1000,
+    });
+
+    return {
+        targetsData: data?.data ?? data,
+        isLoading,
+        isError,
+        error,
+        refetch,
+    };
+};
+
 export const useUpdateEnrollmentTargets = () => {
     const queryClient = useQueryClient();
 
@@ -222,7 +242,9 @@ export const useUpdateEnrollmentTargets = () => {
             return classroomService.updateEnrollmentTargets(axiosInstance, body);
         },
         onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["enrollment-targets"] });
             queryClient.invalidateQueries({ queryKey: ["classroom"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
             toast.success(data?.message ?? "Enrollment targets updated successfully.");
         },
         onError: (err) => {

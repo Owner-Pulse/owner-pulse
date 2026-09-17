@@ -7,6 +7,7 @@ export const ownerComplianceService = {
     add_item: compliancesService.add_compliance_item,
     update_item: compliancesService.update_compliance_item,
     delete_item: compliancesService.delete_compliance_item,
+    complete_item: compliancesService.complete_compliance_item,
     add_log_note: compliancesService.log_note,
     toggle_checklist: compliancesService.checklist_toggle,
     get_insurance_shopping: compliancesService.insurance_Shopping,

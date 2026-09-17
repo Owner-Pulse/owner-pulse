@@ -30,6 +30,7 @@ import {
   useAddDirectorComplianceItem,
   useUpdateDirectorComplianceItem,
   useDeleteDirectorComplianceItem,
+  useCompleteDirectorComplianceItem,
   useAddDirectorComplianceLogNote,
   useToggleDirectorComplianceChecklist,
 } from "@/hooks/director-hook/compliance.hook";
@@ -40,6 +41,8 @@ import StatusPill from "@/pages/owner-dashboard/compliance/components/StatusPill
 import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryTag";
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
 import DeleteConfirmationModal from "@/pages/owner-dashboard/compliance/components/DeleteConfirmationModal";
+import CompleteComplianceModal from "@/pages/owner-dashboard/compliance/components/CompleteComplianceModal";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -61,6 +64,7 @@ const DirectorCompliancePage = () => {
   const { addComplianceItem, isPending: isAdding } = useAddDirectorComplianceItem();
   const { updateComplianceItem, isPending: isUpdating } = useUpdateDirectorComplianceItem();
   const { deleteComplianceItem, isPending: isDeleting } = useDeleteDirectorComplianceItem();
+  const { completeComplianceItem, isPending: isCompleting } = useCompleteDirectorComplianceItem();
   const { addLogNote, isPending: isAddingLog } = useAddDirectorComplianceLogNote();
   const { toggleChecklist, isPending: isToggling } = useToggleDirectorComplianceChecklist();
 
@@ -70,20 +74,47 @@ const DirectorCompliancePage = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [completeModalItem, setCompleteModalItem] = useState(null);
+  const [confirmCompleteItem, setConfirmCompleteItem] = useState(null);
+  const [completingId, setCompletingId] = useState(null);
   const [logModalItem, setLogModalItem] = useState(null);
   const [deleteModalItem, setDeleteModalItem] = useState(null);
   const [togglingChecklistId, setTogglingChecklistId] = useState(null);
   const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
 
-  // Normalize API compliance items
+  // Normalize API compliance items including completed_items
   const items = useMemo(() => {
     const rawItems = (complianceItems && complianceItems.length > 0)
-      ? complianceItems
-      : (overviewData?.urgency_timeline || []);
-    return rawItems.map((c) => {
+      ? [...complianceItems]
+      : [...(overviewData?.urgency_timeline || [])];
+
+    const completedItems = overviewData?.completed_items || [];
+
+    const map = new Map();
+    rawItems.forEach((item) => {
+      if (item && item.id) {
+        map.set(item.id, item);
+      }
+    });
+
+    completedItems.forEach((cItem) => {
+      if (cItem && cItem.id) {
+        if (map.has(cItem.id)) {
+          map.set(cItem.id, { ...map.get(cItem.id), ...cItem, is_completed: true });
+        } else {
+          map.set(cItem.id, { ...cItem, is_completed: true });
+        }
+      }
+    });
+
+    const mergedList = Array.from(map.values());
+
+    return mergedList.map((c) => {
       const exp = c.expiration_date ? c.expiration_date.slice(0, 10) : c.expires || "";
       const dLeft = c.days_left !== undefined && c.days_left !== null ? c.days_left : daysUntil(exp);
       const dOverdue = c.days_overdue !== undefined && c.days_overdue !== null ? c.days_overdue : daysSince(exp);
+      const isCompleted = !!c.is_completed || c.status === "completed" || c.status_badge === "Completed";
+
       return {
         id: c.id,
         item: c.name || c.item || "",
@@ -92,17 +123,21 @@ const DirectorCompliancePage = () => {
         category: c.category || "regulatory",
         ownerRole: c.responsible_role || c.ownerRole || "director",
         notes: c.renewal_notes || c.notes || "",
-        status: c.status || "compliant",
-        status_color: c.status_color || null,
-        status_badge: c.status_badge || null,
+        status: isCompleted ? "completed" : (c.status || "compliant"),
+        status_color: c.status_color || (isCompleted ? "success" : null),
+        status_badge: c.status_badge || (isCompleted ? "Completed" : null),
+        is_completed: isCompleted,
+        completed_at: c.completed_at || null,
+        completed_by: c.completed_by || null,
+        card_color: c.card_color || (isCompleted ? "#3E7A54" : null),
         days_left: dLeft,
         days_overdue: dOverdue,
-        progress_percentage: c.progress_percentage ?? null,
+        progress_percentage: c.progress_percentage ?? (isCompleted ? 100 : null),
         time_progress_percentage: c.time_progress_percentage ?? null,
         docChecklist: (c.checklists || c.docChecklist || []).map((ch) => ({
           id: ch.id,
           text: ch.title || ch.text || "",
-          checked: ch.is_completed ?? ch.checked ?? false,
+          checked: ch.is_completed ?? ch.checked ?? isCompleted,
         })),
         logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
           id: l.id,
@@ -120,11 +155,14 @@ const DirectorCompliancePage = () => {
     const pulse = overviewData?.pulse_health || {};
     const directorCount = overviewData?.director_assigned_count ?? items.filter(i => i.ownerRole === "director").length;
     const ownerCount = items.filter(i => i.ownerRole === "owner").length;
+    const completedCount = overviewData?.completed_count ?? items.filter(i => i.is_completed).length;
+
     return {
-      compliant: (items.length - (overviewData?.expiring_soon_count ?? 0) - (overviewData?.urgent_expired_count ?? 0)),
+      compliant: Math.max(0, items.length - (overviewData?.expiring_soon_count ?? 0) - (overviewData?.urgent_expired_count ?? 0) - completedCount),
+      completed: completedCount,
       expiring: overviewData?.expiring_soon_count ?? 0,
       expired: overviewData?.urgent_expired_count ?? 0,
-      total: items.length,
+      total: overviewData?.total_count ?? items.length,
       nextDeadline: overviewData?.next_deadline?.days_left ?? 0,
       nextDeadlineItem: overviewData?.next_deadline,
       complianceScore: pulse.score ?? 100,
@@ -139,7 +177,15 @@ const DirectorCompliancePage = () => {
     return items.filter((c) => {
       if (categoryFilter === "director" && c.ownerRole !== "director") return false;
       if (categoryFilter === "owner" && c.ownerRole !== "owner") return false;
-      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if (statusFilter !== "all") {
+        if (statusFilter === "completed") {
+          if (!c.is_completed && c.status !== "completed") return false;
+        } else if (statusFilter === "compliant") {
+          if (c.status !== "compliant" && !c.is_completed && c.status !== "completed") return false;
+        } else {
+          if (c.status !== statusFilter) return false;
+        }
+      }
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         return (
@@ -154,18 +200,18 @@ const DirectorCompliancePage = () => {
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const urgencyA = a.status === "expired" ? -999 : (a.days_left ?? daysUntil(a.expires));
-      const urgencyB = b.status === "expired" ? -999 : (b.days_left ?? daysUntil(b.expires));
+      const urgencyA = a.is_completed ? 999 : a.status === "expired" ? -999 : (a.days_left ?? daysUntil(a.expires));
+      const urgencyB = b.is_completed ? 999 : b.status === "expired" ? -999 : (b.days_left ?? daysUntil(b.expires));
       return urgencyA - urgencyB;
     });
   }, [filtered]);
 
   const expiredDirectorItems = useMemo(() => {
-    return items.filter((i) => i.status === "expired" && i.ownerRole === "director");
+    return items.filter((i) => i.status === "expired" && i.ownerRole === "director" && !i.is_completed);
   }, [items]);
 
   const expiringDirectorItems = useMemo(() => {
-    return items.filter((i) => i.status === "expiring" && i.ownerRole === "director");
+    return items.filter((i) => i.status === "expiring" && i.ownerRole === "director" && !i.is_completed);
   }, [items]);
 
   const handleSaveItem = async (formData) => {
@@ -194,6 +240,21 @@ const DirectorCompliancePage = () => {
     if (!deleteModalItem) return;
     await deleteComplianceItem(deleteModalItem.id);
     setDeleteModalItem(null);
+  };
+
+  const handleCompleteItem = async (itemId) => {
+    await completeComplianceItem({ id: itemId, data: {} });
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!confirmCompleteItem) return;
+    setCompletingId(confirmCompleteItem.id);
+    try {
+      await completeComplianceItem({ id: confirmCompleteItem.id, data: {} });
+      setConfirmCompleteItem(null);
+    } finally {
+      setCompletingId(null);
+    }
   };
 
   const handleToggleChecklist = async (itemId, checkObj) => {
@@ -234,7 +295,7 @@ const DirectorCompliancePage = () => {
             </span>
           </div>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            Daily Monitoring Workflow & Regulatory Readiness · {stats.compliant}/{stats.total} items active
+            Daily Monitoring Workflow & Regulatory Readiness · {stats.compliant}/{stats.total} active · {stats.completed} completed
           </p>
         </div>
 
@@ -465,6 +526,7 @@ const DirectorCompliancePage = () => {
               className="h-8 rounded-lg border border-gray-200 bg-white px-3 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
             >
               <option value="all">All Statuses</option>
+              <option value="completed">✅ Completed ({stats.completed})</option>
               <option value="expired">🔴 Expired</option>
               <option value="expiring">🟠 Expiring Soon</option>
               <option value="compliant">🟢 Compliant</option>
@@ -486,15 +548,19 @@ const DirectorCompliancePage = () => {
       {/* ── Compliance Items List ──────────────────────────────── */}
       <div className="space-y-3">
         {sorted.map((item) => {
-          const d = item.status === "expired"
+          const d = item.is_completed
+            ? 0
+            : item.status === "expired"
             ? (item.days_overdue ?? daysSince(item.expires))
             : (item.days_left ?? daysUntil(item.expires));
-          const isExpired = item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0);
-          const isUrgent = !isExpired && d <= 30;
+          const isExpired = !item.is_completed && (item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0));
+          const isUrgent = !item.is_completed && !isExpired && d <= 30;
 
-          // Compute accurate time progress percentage (100% for expired)
+          // Compute accurate time progress percentage (100% for completed or expired)
           let computedTimePct = 100;
-          if (item.time_progress_percentage !== undefined && item.time_progress_percentage !== null) {
+          if (item.is_completed) {
+            computedTimePct = 100;
+          } else if (item.time_progress_percentage !== undefined && item.time_progress_percentage !== null) {
             computedTimePct = Math.min(100, Math.max(0, Math.round(item.time_progress_percentage)));
           } else if (isExpired) {
             computedTimePct = 100;
@@ -506,7 +572,13 @@ const DirectorCompliancePage = () => {
           return (
             <motion.div key={item.id} variants={itemVariants}>
               <Card className={`bg-white border-none shadow-sm hover:shadow-md transition-shadow border-l-4 ${
-                isExpired ? "border-l-[#AE4A3E]" : isUrgent ? "border-l-[#B78A2F]" : "border-l-[#1E3A5F]"
+                item.is_completed
+                  ? "border-l-[#3E7A54]"
+                  : isExpired
+                  ? "border-l-[#AE4A3E]"
+                  : isUrgent
+                  ? "border-l-[#B78A2F]"
+                  : "border-l-[#1E3A5F]"
               }`}>
                 <CardContent className="p-4 md:p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -520,21 +592,48 @@ const DirectorCompliancePage = () => {
                         <Building2 size={12} className="text-[#1E3A5F]/40 shrink-0" />
                         <span className="text-xs text-gray-500">{item.authority}</span>
                       </div>
+                      {item.is_completed && item.completed_at && (
+                        <div className="mt-1 text-[11px] text-[#3E7A54] font-semibold flex items-center gap-1">
+                          <CheckCircle2 size={12} /> Completed on {new Date(item.completed_at).toLocaleDateString()}
+                        </div>
+                      )}
                       {item.notes && <div className="mt-1 text-[11px] text-gray-500 italic">{item.notes}</div>}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <StatusPill status={item.status} statusColor={item.status_color} statusBadge={item.status_badge} />
                       <div className="flex items-center gap-1">
-                        {isExpired && (
+                        {(isExpired || isUrgent || item.is_completed) && (
                           <Button
                             size="sm"
                             onClick={() => {
                               setEditItem(item);
                               setIsAddModalOpen(true);
                             }}
-                            className="h-7 px-2 text-[11px] bg-red-600 hover:bg-red-700 text-white font-bold cursor-pointer"
+                            className="h-7 px-2.5 text-[11px] font-bold bg-[#B78A2F] hover:bg-[#8F6A1F] text-white cursor-pointer"
                           >
-                            <RefreshCw size={12} className="mr-1" /> Mark Complete / Renew
+                            <RefreshCw size={12} className="mr-1" /> Renew
+                          </Button>
+                        )}
+                        {item.is_completed ? (
+                          <span className="inline-flex items-center gap-1 h-7 px-2.5 text-[11px] font-bold bg-[#3E7A54]/15 text-[#2F6042] rounded-md border border-[#3E7A54]/30">
+                            <CheckCircle2 size={12} /> Completed
+                          </span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            disabled={completingId === item.id || isCompleting}
+                            onClick={() => setConfirmCompleteItem(item)}
+                            className="h-7 px-2.5 text-[11px] font-bold bg-[#3E7A54] hover:bg-[#2F6042] text-white cursor-pointer disabled:opacity-60 transition-all flex items-center gap-1"
+                          >
+                            {completingId === item.id ? (
+                              <>
+                                <Loader2 size={12} className="animate-spin" /> Completing...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 size={12} /> Mark Complete
+                              </>
+                            )}
                           </Button>
                         )}
                         <Button
@@ -712,6 +811,26 @@ const DirectorCompliancePage = () => {
         isOpen={isPulseModalOpen}
         onClose={() => setIsPulseModalOpen(false)}
         stats={stats}
+      />
+
+      <CompleteComplianceModal
+        isOpen={!!completeModalItem}
+        onClose={() => setCompleteModalItem(null)}
+        item={completeModalItem}
+        onComplete={handleCompleteItem}
+        isLoading={isCompleting}
+      />
+
+      <ConfirmationModal
+        isOpen={!!confirmCompleteItem}
+        onClose={() => setConfirmCompleteItem(null)}
+        onConfirm={handleConfirmComplete}
+        title="Complete Compliance Item"
+        message={`Are you sure you want to mark "${confirmCompleteItem?.item || confirmCompleteItem?.name}" as completed? This will mark all checklists completed and recalculate the compliance score.`}
+        confirmText="Yes, Mark Complete"
+        cancelText="Cancel"
+        type="success"
+        isLoading={isCompleting}
       />
     </motion.div>
   );

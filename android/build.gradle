@@ -27,20 +27,18 @@ allprojects {
 subprojects {
     afterEvaluate { subproj ->
         if (subproj.extensions.findByName("kotlin") != null) {
-            subproj.kotlin.jvmToolchain(17)
+            subproj.kotlin.jvmToolchain(JavaVersion.current().majorVersion.toInteger())
         }
     }
 }
 
-gradle.projectsEvaluated {
-    allprojects {
-        tasks.withType(JavaCompile).configureEach {
-            sourceCompatibility = JavaVersion.VERSION_17.toString()
-            targetCompatibility = JavaVersion.VERSION_17.toString()
-        }
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-            compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-        }
+allprojects {
+    tasks.withType(JavaCompile).configureEach { task ->
+        task.sourceCompatibility = JavaVersion.VERSION_21.toString()
+        task.targetCompatibility = JavaVersion.VERSION_21.toString()
+    }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
+        task.compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
 }
 

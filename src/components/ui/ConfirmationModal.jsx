@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ConfirmationModal = ({
@@ -90,7 +90,13 @@ const ConfirmationModal = ({
                   onClick={onConfirm}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Processing..." : confirmText}
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-1.5">
+                      <Loader2 size={14} className="animate-spin" /> Processing...
+                    </span>
+                  ) : (
+                    confirmText
+                  )}
                 </Button>
               </div>
             </div>

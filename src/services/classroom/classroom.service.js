@@ -53,13 +53,25 @@ export const classroomService = {
         }
     },
 
+    getEnrollmentTargets: async (axiosInstance) => {
+        try {
+            const response = await axiosInstance.get("/settings/enrollment-targets");
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     updateEnrollmentTargets: async (axiosInstance, data) => {
         try {
-            const formData = new FormData();
-            formData.append("enrollment_target_preschool", data.enrollment_target_preschool);
-            formData.append("enrollment_target_k8", data.enrollment_target_k8);
-
-            const response = await axiosInstance.post("/settings/enrollment-targets", formData);
+            let body = data;
+            if (!(data instanceof FormData) && typeof data === "object") {
+                body = {
+                    enrollment_target_preschool: data.enrollment_target_preschool,
+                    enrollment_target_k8: data.enrollment_target_k8,
+                };
+            }
+            const response = await axiosInstance.post("/settings/enrollment-targets", body);
             return response.data;
         } catch (error) {
             throw error;

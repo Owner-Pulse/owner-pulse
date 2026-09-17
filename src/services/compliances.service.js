@@ -29,6 +29,17 @@ export const compliancesService = {
         }
     },
 
+    complete_compliance_item: async (axiosInstance, idOrData, dataOrId) => {
+        try {
+            const id = typeof idOrData === "object" ? dataOrId : idOrData;
+            const data = typeof idOrData === "object" ? idOrData : (dataOrId || {});
+            const response = await axiosInstance.post(`/compliance/items/complete/${id}`, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     log_note: async (axiosInstance, idOrData, dataOrId) => {
         try {
             const itemId = typeof idOrData === "object" ? dataOrId : idOrData;

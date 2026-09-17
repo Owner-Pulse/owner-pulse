@@ -115,6 +115,29 @@ export const useDeleteDirectorComplianceItem = () => {
     return { deleteComplianceItem, isPending, isError, error };
 };
 
+// ─── Complete Compliance Item Mutation for Director ───
+export const useCompleteDirectorComplianceItem = () => {
+    const queryClient = useQueryClient();
+    const axiosInstance = axiosPrivate();
+
+    const { mutateAsync: completeComplianceItem, isPending, isError, error } = useMutation({
+        mutationKey: ["complete-director-compliance-item"],
+        mutationFn: ({ id, data }) => compliancesService.complete_compliance_item(axiosInstance, id, data || {}),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-compliance-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-compliance-items"] });
+            toast.success(data?.message ?? "Compliance item marked as completed successfully");
+        },
+        onError: (err) => {
+            toast.error(err?.response?.data?.message ?? "Failed to mark compliance item completed");
+        },
+    });
+
+    return { completeComplianceItem, isPending, isError, error };
+};
+
 // ─── Add Log Note Mutation for Director ───
 export const useAddDirectorComplianceLogNote = () => {
     const queryClient = useQueryClient();

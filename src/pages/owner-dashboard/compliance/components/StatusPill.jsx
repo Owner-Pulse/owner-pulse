@@ -2,12 +2,15 @@ import React from "react";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
 const StatusPill = ({ status, statusColor, statusBadge, size = "sm" }) => {
-  // Map statusColor (danger, warning, success, etc) or status
-  const normalizedColor = statusColor
+  const isCompleted = status === "completed" || statusBadge === "Completed";
+  const normalizedColor = isCompleted
+    ? "completed"
+    : statusColor
     ? (statusColor === "danger" ? "expired" : statusColor === "warning" ? "expiring" : "compliant")
     : status;
 
   const config = {
+    completed: { bg: "bg-[#3E7A54]/15", text: "text-[#2F6042]", border: "border-[#3E7A54]/30", label: "Completed" },
     compliant: { bg: "bg-[#3E7A54]/10", text: "text-[#2F6042]", border: "border-[#3E7A54]/25", label: "Compliant" },
     expiring: { bg: "bg-[#B78A2F]/10", text: "text-[#8F6A1F]", border: "border-[#B78A2F]/25", label: "Expiring" },
     expired: { bg: "bg-[#AE4A3E]/10", text: "text-[#8A362C]", border: "border-[#AE4A3E]/25", label: "Expired" },
@@ -19,9 +22,9 @@ const StatusPill = ({ status, statusColor, statusBadge, size = "sm" }) => {
 
   return (
     <span className={`inline-flex items-center gap-1 ${padding} rounded-full font-bold uppercase tracking-wider border ${c.bg} ${c.text} ${c.border}`}>
-      {(normalizedColor === "compliant" || status === "compliant") && <CheckCircle2 size={size === "xs" ? 10 : 12} />}
-      {(normalizedColor === "expiring" || status === "expiring") && <Clock size={size === "xs" ? 10 : 12} />}
-      {(normalizedColor === "expired" || status === "expired") && <AlertCircle size={size === "xs" ? 10 : 12} />}
+      {(normalizedColor === "completed" || normalizedColor === "compliant" || status === "compliant" || isCompleted) && <CheckCircle2 size={size === "xs" ? 10 : 12} />}
+      {normalizedColor === "expiring" && <Clock size={size === "xs" ? 10 : 12} />}
+      {normalizedColor === "expired" && <AlertCircle size={size === "xs" ? 10 : 12} />}
       {displayLabel}
     </span>
   );

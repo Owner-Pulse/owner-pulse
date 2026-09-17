@@ -9,6 +9,23 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-2.5 rounded-xl shadow-md border border-gray-100 text-xs space-y-1">
+        <p className="font-bold text-gray-900">{label}</p>
+        <p className="text-[#1E3A5F] font-semibold">
+          Enrolled: {data.students} / {data.capacity} ({data.fill_rate}% fill rate)
+        </p>
+        <p className="text-emerald-700">Available: {data.available} spots</p>
+        <p className="text-amber-700">Waitlist: {data.waitlist} leads</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
   <motion.div variants={itemVariants}>
     <Card className="bg-white border-none shadow-sm h-full">
@@ -26,7 +43,7 @@ const EnrollmentChart = ({ data, totalEnrolled, totalWaitlist, openSeats }) => (
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} dy={5} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} />
-              <Tooltip contentStyle={{ borderRadius: "8px", border: "none", fontSize: "11px" }} />
+              <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="capacity" fill="#E5E7EB" radius={[4, 4, 0, 0]} barSize={16} name="Capacity" />
               <Bar dataKey="students" radius={[4, 4, 0, 0]} barSize={16} name="Enrolled">
                 {data.map((entry, index) => (
