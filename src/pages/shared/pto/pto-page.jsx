@@ -40,19 +40,23 @@ const PtoPage = () => {
   const { addPto, isPending: isAddingPto } = useAddPto();
 
   const ptoSummary = ptoData?.summary || ptoData?.pto_summary || {};
+  const totalStaff = ptoSummary?.total_staff ?? ptoData?.total_staff ?? processedStaff?.length ?? 0;
   const overallPct = ptoSummary?.overall_pto_percentage ?? 0;
-  const totalUsed = ptoSummary?.total_pto_used_days ?? 0;
-  const totalAllowance = ptoSummary?.total_pto_allowance_days ?? 0;
-  const highUsageCount = ptoSummary?.high_usage_count ?? 0;
+  const totalUsed = ptoSummary?.total_pto_used_days ?? ptoSummary?.pto_used_ytd ?? 0;
+  const totalAllowance = ptoSummary?.total_pto_allowance_days ?? ptoSummary?.total_allowance ?? 0;
+  const highUsageCount = ptoSummary?.high_usage_count ?? ptoSummary?.high_usage_alert ?? 0;
 
   // Process & Sort Staff PTO Records
   const processedStaff = useMemo(() => {
     const list = (Array.isArray(staffList) ? staffList : []).map((s) => {
-      const used = Number(s.used_days ?? s.ptoUsed ?? s.used ?? 0);
-      const allowance = Number(s.allowance_days ?? s.ptoAllowance ?? s.allowance ?? 10);
-      const remaining = Number(s.remaining_days ?? s.remaining ?? (allowance - used));
-      const usagePct = s.usage_percentage ?? (allowance > 0 ? Math.round((used / allowance) * 100) : 0);
-      const isHighUsage = s.is_warning || usagePct >= 70;
+      const used = Number(s.used_days ?? s.pto_used ?? s.ptoUsed ?? s.used ?? 0);
+      const allowance = Number(s.allowance_days ?? s.pto_allowance ?? s.ptoAllowance ?? s.allowance ?? 10);
+      const remaining = Number(s.remaining_days ?? s.pto_remaining ?? s.remaining ?? (allowance - used));
+      const usagePct = Number(s.usage_percentage ?? (allowance > 0 ? Math.round((used / allowance) * 100) : 0));
+      const isHighUsage = Boolean(s.is_high_usage || s.is_warning || usagePct >= 70);
+      const role = s.role || "";
+      const assignment = s.primary_assignment || "";
+      const latestPtoDate = s.latest_pto_date || null;
 
       return {
         ...s,
@@ -61,6 +65,9 @@ const PtoPage = () => {
         remaining,
         usagePct,
         isHighUsage,
+        role,
+        assignment,
+        latestPtoDate,
         displayName: s.name || s.employee_name || "Staff Member",
         employeeId: s.employee_id || s.procare_employee_id || s.id || "N/A",
       };
@@ -134,7 +141,7 @@ const PtoPage = () => {
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-500">Total Staff</p>
-              <p className="text-2xl font-extrabold text-gray-900 mt-0.5">{processedStaff.length}</p>
+              <p className="text-2xl font-extrabold text-gray-900 mt-0.5">{totalStaff}</p>
               <p className="text-[10px] text-gray-400">Active roster</p>
             </div>
           </div>
@@ -303,7 +310,11 @@ const PtoPage = () => {
                                     </span>
                                   )}
                                 </div>
-                                <span className="text-[11px] text-gray-400">ID: {staff.employeeId}</span>
+                                <span className="text-[11px] text-gray-400">
+                                  ID: {staff.employeeId}
+                                  {staff.role ? ` · ${staff.role}` : ""}
+                                  {staff.assignment ? ` (${staff.assignment})` : ""}
+                                </span>
                               </div>
                             </div>
                           </td>

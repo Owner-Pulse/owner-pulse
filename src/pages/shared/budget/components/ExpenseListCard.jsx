@@ -63,7 +63,7 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, 
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 ml-2">
                   <span className="text-xs md:text-sm font-semibold text-gray-900 mr-1">{amountDisplay}</span>
-                  {onEditExpense && (
+                  {onEditExpense && isDirector && (
                     <button
                       onClick={() => onEditExpense(exp)}
                       className="p-1 text-gray-400 hover:text-[#1E3A5F] rounded transition-all cursor-pointer"
@@ -72,7 +72,7 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, 
                       <Pencil size={14} />
                     </button>
                   )}
-                  {onDeleteExpense && (
+                  {onDeleteExpense && isDirector && (
                     <button
                       onClick={() => onDeleteExpense(exp)}
                       className="p-1 text-gray-400 hover:text-red-600 rounded transition-all cursor-pointer"

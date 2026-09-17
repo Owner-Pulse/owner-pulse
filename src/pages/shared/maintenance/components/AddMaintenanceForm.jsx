@@ -4,6 +4,7 @@ import { AlertTriangle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
+import { useUpdateOwnerMaintenance } from "@/hooks/owner-hook/maintenance.hook";
 
 import toast from "react-hot-toast";
 
@@ -26,9 +27,11 @@ const STAFF_ROSTER = [
 
 const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
   const { user } = useGetUser();
+  const isOwner = user?.role === "owner";
   const { createMaintenance, isPending: isCreating } = useCreateDirectorMaintenance();
-  const { updateMaintenance, isPending: isUpdating } = useUpdateDirectorMaintenance();
-  const isPending = isCreating || isUpdating;
+  const { updateMaintenance: updateDirectorMaint, isPending: isUpdatingDirector } = useUpdateDirectorMaintenance();
+  const { updateMaintenance: updateOwnerMaint, isPending: isUpdatingOwner } = useUpdateOwnerMaintenance();
+  const isPending = isCreating || isUpdatingDirector || isUpdatingOwner;
 
   const [form, setForm] = useState(() => {
     if (editItem) {
@@ -95,7 +98,11 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
 
     try {
         if (editItem) {
-            await updateMaintenance({ id: editItem.id, payload });
+            if (isOwner) {
+                await updateOwnerMaint({ id: editItem.id, data: payload });
+            } else {
+                await updateDirectorMaint({ id: editItem.id, payload });
+            }
         } else {
             await createMaintenance(payload);
         }

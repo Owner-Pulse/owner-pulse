@@ -4,7 +4,7 @@ import { Wrench, AlertTriangle, Clock, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { useGetDirectorMaintenanceList, useDeleteDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
-import { useGetOwnerMaintenanceList, useUpdateOwnerMaintenanceStatus } from "@/hooks/owner-hook/maintenance.hook";
+import { useGetOwnerMaintenanceList, useUpdateOwnerMaintenanceStatus, useCompleteOwnerMaintenance, useDeleteOwnerMaintenance } from "@/hooks/owner-hook/maintenance.hook";
 import KpiCard from "./components/KpiCard";
 import RequestCard from "./components/RequestCard";
 import AddMaintenanceForm from "./components/AddMaintenanceForm";
@@ -49,26 +49,35 @@ const MaintenancePage = () => {
 
   const activeQuery = isOwner ? ownerQuery : directorQuery;
   const { maintenanceData, isMaintenanceListLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = activeQuery;
-  const { deleteMaintenance, isPending: isDeleting } = useDeleteDirectorMaintenance();
+  const { deleteMaintenance: deleteDirectorMaint, isPending: isDeletingDirector } = useDeleteDirectorMaintenance();
+  const { deleteMaintenance: deleteOwnerMaint, isPending: isDeletingOwner } = useDeleteOwnerMaintenance();
+  const { completeMaintenance: completeOwnerMaint } = useCompleteOwnerMaintenance();
   const { updateOwnerMaintenanceStatus } = useUpdateOwnerMaintenanceStatus();
+  const isDeleting = isDeletingDirector || isDeletingOwner;
 
   const updateStatus = async (id, status) => {
     try {
-      await updateOwnerMaintenanceStatus({ maintenance_id: id, data: { status } });
-      toast.success("Maintenance status updated!");
+      if (status === "done" || status === "completed") {
+        await completeOwnerMaint({ id, data: { notes: "Marked complete from dashboard" } });
+      } else {
+        await updateOwnerMaintenanceStatus({ maintenance_id: id, data: { status } });
+      }
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update maintenance status");
+      // error handled in hook
     }
   };
 
   const handleDelete = async () => {
     if (!deleteItem) return;
     try {
-      await deleteMaintenance(deleteItem.id);
-      toast.success("Maintenance request deleted!");
+      if (isOwner) {
+        await deleteOwnerMaint(deleteItem.id);
+      } else {
+        await deleteDirectorMaint(deleteItem.id);
+      }
       setDeleteItem(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete maintenance request");
+      // error handled in hook
     }
   };
 

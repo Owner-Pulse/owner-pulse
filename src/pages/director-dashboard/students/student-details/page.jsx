@@ -111,9 +111,11 @@ const DirectorClassroomDetailPage = () => {
   const totalRegistered = headerSummary?.total_students_registered ?? studentsSummary?.total_students ?? rawStudents.length;
   const activeLabel = headerSummary?.total_students_label ?? `${totalRegistered} Active Profiles`;
   const spaceUtilization = headerSummary?.classroom_space_utilization ?? (
-    headerSummary?.capacity 
-      ? `${headerSummary.utilization_percentage}% (${headerSummary.open_seats} open seats)` 
-      : `${Math.round((rawStudents.length / 15) * 100)}% (${15 - rawStudents.length} open seats)`
+    headerSummary?.utilization_percentage !== undefined && headerSummary?.utilization_percentage !== null
+      ? `${headerSummary.utilization_percentage}%${headerSummary.open_seats !== undefined ? ` (${headerSummary.open_seats} open seats)` : ''}`
+      : headerSummary?.capacity && headerSummary.capacity > 0
+        ? `${Math.round((rawStudents.length / headerSummary.capacity) * 100)}% (${headerSummary.capacity - rawStudents.length} open seats)`
+        : "--"
   );
 
   const activeAllergiesCount = headerSummary?.active_allergy_warnings ?? studentsSummary?.allergy_warnings ?? rawStudents.filter(s => {

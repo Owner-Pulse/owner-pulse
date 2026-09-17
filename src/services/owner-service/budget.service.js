@@ -36,5 +36,10 @@ export const getBudgetService = {
         const response = await axiosInstance.post(`/director/expense/update/${id}`, payload);
         return response.data;
     },
+
+    resetDirectorExpenses: async (axiosInstance) => {
+        const response = await axiosInstance.post(`/director/expense/reset`);
+        return response.data;
+    },
 };
 

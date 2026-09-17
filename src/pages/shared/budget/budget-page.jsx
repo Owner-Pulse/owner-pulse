@@ -505,8 +505,8 @@ const BudgetPage = () => {
                     setExpenseToEdit(null);
                     setIsAddExpenseOpen(true);
                   }}
-                  onEditExpense={handleEditExpenseClick}
-                  onDeleteExpense={handleDeleteExpenseClick}
+                  onEditExpense={isDirector ? handleEditExpenseClick : undefined}
+                  onDeleteExpense={isDirector ? handleDeleteExpenseClick : undefined}
                   title={budgetData?.all_expenses ? "All Expenses" : "Recent Expenses"}
                 />
               </motion.div>

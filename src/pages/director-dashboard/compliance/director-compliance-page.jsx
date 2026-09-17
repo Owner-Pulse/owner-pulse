@@ -492,14 +492,14 @@ const DirectorCompliancePage = () => {
           const isExpired = item.status === "expired" || (item.days_left !== undefined && item.days_left <= 0);
           const isUrgent = !isExpired && d <= 30;
 
-          // Compute accurate time progress percentage (0% for expired)
-          let computedTimePct = 0;
-          if (!isExpired) {
-            if (item.time_progress_percentage !== undefined && item.time_progress_percentage !== null) {
-              computedTimePct = Math.min(100, Math.max(0, Math.round(item.time_progress_percentage)));
-            } else {
-              computedTimePct = Math.min(100, Math.max(0, Math.round((d / 60) * 100)));
-            }
+          // Compute accurate time progress percentage (100% for expired)
+          let computedTimePct = 100;
+          if (item.time_progress_percentage !== undefined && item.time_progress_percentage !== null) {
+            computedTimePct = Math.min(100, Math.max(0, Math.round(item.time_progress_percentage)));
+          } else if (isExpired) {
+            computedTimePct = 100;
+          } else {
+            computedTimePct = Math.min(100, Math.max(0, Math.round((d / 60) * 100)));
           }
           const pct = clamp(computedTimePct, 0, 100);
 

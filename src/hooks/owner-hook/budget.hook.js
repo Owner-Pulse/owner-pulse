@@ -146,4 +146,29 @@ export const useUpdateDirectorExpense = () => {
     };
 };
 
+export const useResetDirectorExpenses = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: resetExpenses,
+        isPending,
+    } = useMutation({
+        mutationKey: ["reset-director-expenses"],
+        mutationFn: () => getBudgetService.resetDirectorExpenses(axiosInstance),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Test expense data reset successfully.");
+            queryClient.invalidateQueries({ queryKey: ["budget-data"] });
+            queryClient.invalidateQueries({ queryKey: ["director-budget"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+        },
+        onError: (error) => {
+            toast.error(error?.response?.data?.message || "Failed to reset test expense data.");
+        }
+    });
+
+    return { resetExpenses, isPending };
+};
+
+
 

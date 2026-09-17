@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Loader2, ChevronDown, Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MultiDatePicker from "@/components/ui/MultiDatePicker";
 import { useAddPto, useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
@@ -13,7 +14,7 @@ const PTOForm = ({ onClose }) => {
     staffProcareId: "",
     dayType: "sick",
     days: 1,
-    date: TODAY_STR,
+    dates: [TODAY_STR],
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -63,7 +64,7 @@ const PTOForm = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.staffId) { setError("Please select a staff member."); return; }
-    if (!form.date) { setError("Please select a date."); return; }
+    if (!form.dates || form.dates.length === 0) { setError("Please select at least one PTO date."); return; }
     setError("");
 
     const dayTypeMapped =
@@ -80,8 +81,8 @@ const PTOForm = ({ onClose }) => {
     const payload = {
       employee_id: Number(form.staffId) || form.staffId,
       day_type: dayTypeMapped,
-      date: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
-      days: Number(form.days) || 1,
+      dates: form.dates,
+      days: form.dates.length,
     };
 
     try {
@@ -237,32 +238,22 @@ const PTOForm = ({ onClose }) => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                  Days <span className="text-gray-400 font-normal">(1–10)</span>
+                  Total PTO Days
                 </label>
-                <input
-                  type="number"
-                  value={form.days}
-                  onChange={(e) => update("days", e.target.value)}
-                  min={1}
-                  max={10}
-                  step={1}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20"
-                />
+                <div className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 text-sm font-bold text-[#1E3A5F] flex items-center justify-between">
+                  <span>{form.dates.length} Day{form.dates.length > 1 ? "s" : ""}</span>
+                  <span className="text-xs text-gray-400 font-normal">({form.dates.length * 8} Hours)</span>
+                </div>
               </div>
             </div>
 
-            {/* Date */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">PTO Date</label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => update("date", e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white"
-              />
-            </div>
+            {/* Multiple PTO Dates */}
+            <MultiDatePicker
+              dates={form.dates}
+              onChange={(newDates) => setForm((p) => ({ ...p, dates: newDates, days: newDates.length }))}
+              label="Select PTO Dates (Multiple)"
+              placeholder="Pick PTO date..."
+            />
 
             {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
 

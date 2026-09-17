@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Loader2, ChevronDown, Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MultiDatePicker from "@/components/ui/MultiDatePicker";
 import { useAddSubstitution, useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
 
 const TODAY_STR = new Date().toISOString().split("T")[0];
@@ -15,7 +16,7 @@ const SubstituteForm = ({ onClose }) => {
     subEmployeeName: "",
     subProcareId: "",
     manualSubName: "",
-    date: TODAY_STR,
+    dates: [TODAY_STR],
   });
   const [absentSearch, setAbsentSearch] = useState("");
   const [subSearch, setSubSearch] = useState("");
@@ -107,8 +108,8 @@ const SubstituteForm = ({ onClose }) => {
       setError("Absent and substitute staff cannot be the same person.");
       return;
     }
-    if (!form.date) {
-      setError("Please select a date.");
+    if (!form.dates || form.dates.length === 0) {
+      setError("Please select at least one coverage date.");
       return;
     }
     setError("");
@@ -117,7 +118,7 @@ const SubstituteForm = ({ onClose }) => {
       absent_employee_id: Number(form.absentEmployeeId) || form.absentEmployeeId,
       sub_name: finalSubName,
       sub_employee_id: form.subEmployeeId ? Number(form.subEmployeeId) : null,
-      date: form.date.includes(",") ? form.date.split(",").map((d) => d.trim()) : [form.date],
+      dates: form.dates,
     };
 
     try {
@@ -351,19 +352,13 @@ const SubstituteForm = ({ onClose }) => {
               />
             </div>
 
-            {/* Date */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                Coverage Date
-              </label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => update("date", e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 bg-white"
-              />
-            </div>
+            {/* Multiple Coverage Dates */}
+            <MultiDatePicker
+              dates={form.dates}
+              onChange={(newDates) => setForm((p) => ({ ...p, dates: newDates }))}
+              label="Select Coverage Dates (Multiple)"
+              placeholder="Pick coverage date..."
+            />
 
             {error && (
               <p className="text-xs text-red-500 font-medium">{error}</p>

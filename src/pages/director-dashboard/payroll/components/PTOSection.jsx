@@ -5,12 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import SectionHeader from "./SectionHeader";
 import EmptyRow from "./EmptyRow";
 import StaffSelect from "./StaffSelect";
-
-const daysBetween = (start, end) => {
-  if (!start) return 0;
-  if (!end || end === start) return 1;
-  return Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
-};
+import MultiDatePicker from "@/components/ui/MultiDatePicker";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -25,48 +20,48 @@ const PTOSection = ({ rows, onAdd, onUpdate, onRemove }) => {
           <SectionHeader
             number={3}
             title="PTO This Period"
-            description="Single day or date range — system auto-counts and deducts PTO days."
+            description="Select multiple non-consecutive dates per staff member — system auto-counts PTO days."
             onAdd={onAdd}
             addLabel="Add PTO"
           />
-          <div className="space-y-2 overflow-visible">
+          <div className="space-y-3 overflow-visible">
             {rows.length === 0 && <EmptyRow />}
             {rows.map((row, i) => {
-              const days = daysBetween(row.startDate, row.endDate);
+              const datesList = row.dates || (row.startDate ? [row.startDate] : []);
+              const daysCount = datesList.length;
+
               return (
                 <div
                   key={row.id}
-                  className="grid gap-2 items-center relative z-20"
-                  style={{ gridTemplateColumns: "1fr 1.2fr 90px 28px" }}
+                  className="grid gap-3 items-start relative z-20 p-3 rounded-xl border border-gray-100 bg-gray-50/50"
+                  style={{ gridTemplateColumns: "1fr 1.6fr 100px 28px" }}
                 >
                   <StaffSelect
                     value={row.staffId}
                     onChange={(v) => onUpdate(i, "staffId", v)}
                     placeholder="Select staff for PTO..."
                   />
-                  <div className="flex gap-1 items-center">
-                    <input
-                      type="date"
-                      value={row.startDate}
-                      onChange={(e) => onUpdate(i, "startDate", e.target.value)}
-                      className="flex-1 min-w-0 h-10 px-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
-                    />
-                    <span className="text-xs text-gray-400">→</span>
-                    <input
-                      type="date"
-                      value={row.endDate}
-                      onChange={(e) => onUpdate(i, "endDate", e.target.value)}
-                      className="flex-1 min-w-0 h-10 px-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
-                    />
+
+                  <MultiDatePicker
+                    dates={datesList}
+                    onChange={(newDates) => onUpdate(i, "dates", newDates)}
+                    label=""
+                    placeholder="Add PTO date..."
+                    compact={true}
+                  />
+
+                  <div className="px-2 h-9 flex flex-col items-center justify-center rounded-xl text-xs font-bold bg-[#B78A2F]/10 text-[#8F6A1F]">
+                    <span>{daysCount > 0 ? `${daysCount} Day${daysCount > 1 ? "s" : ""}` : "0 Days"}</span>
+                    {daysCount > 0 && <span className="text-[10px] font-normal opacity-80">{daysCount * 8} hrs</span>}
                   </div>
-                  <div className="px-2 h-10 flex items-center justify-center rounded-xl text-xs font-bold bg-[#B78A2F]/10 text-[#8F6A1F]">
-                    {days > 0 ? `${days} Day${days > 1 ? "s" : ""}` : "0 Days"}
-                  </div>
+
                   <button
+                    type="button"
                     onClick={() => onRemove(i)}
-                    className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors"
+                    className="p-1.5 hover:bg-[#AE4A3E]/10 rounded-lg text-gray-400 hover:text-[#AE4A3E] transition-colors mt-0.5"
+                    title="Remove PTO entry"
                   >
-                    <X size={14} />
+                    <X size={16} />
                   </button>
                 </div>
               );

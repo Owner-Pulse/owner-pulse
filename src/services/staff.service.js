@@ -2,8 +2,16 @@ const createFormData = (obj) => {
     if (obj instanceof FormData) return obj;
     const formData = new FormData();
     Object.keys(obj || {}).forEach((key) => {
-        if (obj[key] !== null && obj[key] !== undefined) {
-            formData.append(key, obj[key]);
+        const val = obj[key];
+        if (val !== null && val !== undefined) {
+            if (Array.isArray(val)) {
+                val.forEach((item, idx) => {
+                    formData.append(`${key}[${idx}]`, item);
+                    formData.append(`${key}[]`, item);
+                });
+            } else {
+                formData.append(key, val);
+            }
         }
     });
     return formData;

@@ -129,7 +129,7 @@ const PayrollPage = () => {
   const rmOD = (i) => setOtherDed(otherDed.filter((_, idx) => idx !== i));
 
   const [pto, setPto] = useState([]);
-  const addPTO = () => setPto([...pto, { id: Date.now(), staffId: "", startDate: "", endDate: "" }]);
+  const addPTO = () => setPto([...pto, { id: Date.now(), staffId: "", dates: [] }]);
   const updPTO = (i, f, v) => setPto(pto.map((r, idx) => (idx === i ? { ...r, [f]: v } : r)));
   const rmPTO = (i) => setPto(pto.filter((_, idx) => idx !== i));
 
@@ -159,7 +159,7 @@ const PayrollPage = () => {
         totalStaff: metrics.staff_count ?? staffs.length,
         ptoPct: metrics.pto_used_ytd_percentage ?? 0,
         deductions: metrics.deductions_count ?? itemCount,
-        pendingPTO: metrics.pto_this_period ?? pto.reduce((a, r) => a + daysBetween(r.startDate, r.endDate), 0),
+        pendingPTO: metrics.pto_this_period ?? pto.reduce((a, r) => a + (r.dates?.length || 0), 0),
         historyCount: metrics.past_submissions_count ?? displayHistory.length,
       };
     }
@@ -167,7 +167,7 @@ const PayrollPage = () => {
       totalStaff: staffs.length,
       ptoPct: 0,
       deductions: itemCount,
-      pendingPTO: pto.reduce((a, r) => a + daysBetween(r.startDate, r.endDate), 0),
+      pendingPTO: pto.reduce((a, r) => a + (r.dates?.length || 0), 0),
       historyCount: displayHistory.length,
     };
   }, [directorOverview, itemCount, pto, displayHistory, staffs]);
@@ -205,13 +205,19 @@ const PayrollPage = () => {
     // 3. PTO
     pto.forEach((r) => {
       if (!r.staffId) return;
+      const datesList = r.dates || (r.startDate ? [r.startDate] : []);
+      const daysCount = datesList.length;
+      if (daysCount === 0) return;
+
       selectedStaffSet.add(r.staffId);
       formData.append(`items[${idx}][staff_id]`, r.staffId);
       formData.append(`items[${idx}][item_type]`, "pto");
-      if (r.startDate) formData.append(`items[${idx}][start_date]`, r.startDate);
-      if (r.endDate || r.startDate) formData.append(`items[${idx}][end_date]`, r.endDate || r.startDate);
-      const days = daysBetween(r.startDate, r.endDate);
-      formData.append(`items[${idx}][hours]`, days * 8);
+      formData.append(`items[${idx}][hours]`, daysCount * 8);
+
+      datesList.forEach((d, dIdx) => {
+        formData.append(`items[${idx}][dates][${dIdx}]`, d);
+        formData.append(`items[${idx}][dates][]`, d);
+      });
       idx++;
     });
 

@@ -59,8 +59,9 @@ export const useUpdateOwnerMaintenanceStatus = () => {
         mutationFn: ({ maintenance_id, data }) => ownerMaintenanceService.status_change(axiosInstance, maintenance_id, data),
         onSuccess: (data) => {
             toast.success(data?.message || "Maintenance status updated successfully");
-            queryClient.invalidateQueries(["director-maintenance-list"]);
-            queryClient.invalidateQueries(["owner-maintenance-list"]);
+            queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
         },
         onError: (error) => {
             toast.error(error.response?.data?.message || "Failed to update maintenance status");
@@ -73,4 +74,79 @@ export const useUpdateOwnerMaintenanceStatus = () => {
         isUpdateOwnerMaintenanceStatusSuccess,
         isUpdateOwnerMaintenanceStatusError,
     };
+};
+
+// Mark maintenance as complete
+export const useCompleteOwnerMaintenance = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: completeMaintenance,
+        isPending,
+    } = useMutation({
+        mutationKey: ["owner-maintenance-complete"],
+        mutationFn: ({ id, data }) => ownerMaintenanceService.mark_complete(axiosInstance, id, data),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Maintenance request marked as completed.");
+            queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to complete maintenance request");
+        }
+    });
+
+    return { completeMaintenance, isPending };
+};
+
+// Update maintenance details
+export const useUpdateOwnerMaintenance = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: updateMaintenance,
+        isPending,
+    } = useMutation({
+        mutationKey: ["owner-maintenance-update"],
+        mutationFn: ({ id, data }) => ownerMaintenanceService.update_maintenance(axiosInstance, id, data),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Maintenance request updated successfully.");
+            queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to update maintenance request");
+        }
+    });
+
+    return { updateMaintenance, isPending };
+};
+
+// Delete maintenance ticket
+export const useDeleteOwnerMaintenance = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: deleteMaintenance,
+        isPending,
+    } = useMutation({
+        mutationKey: ["owner-maintenance-delete"],
+        mutationFn: (id) => ownerMaintenanceService.delete_maintenance(axiosInstance, id),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Maintenance request deleted successfully.");
+            queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to delete maintenance request");
+        }
+    });
+
+    return { deleteMaintenance, isPending };
 };
