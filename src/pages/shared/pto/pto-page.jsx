@@ -39,13 +39,6 @@ const PtoPage = () => {
   const { data: ptoData, staffList = [], isLoading } = useGetPtoStaff({ per_page: 1000 });
   const { addPto, isPending: isAddingPto } = useAddPto();
 
-  const ptoSummary = ptoData?.summary || ptoData?.pto_summary || {};
-  const totalStaff = ptoSummary?.total_staff ?? ptoData?.total_staff ?? processedStaff?.length ?? 0;
-  const overallPct = ptoSummary?.overall_pto_percentage ?? 0;
-  const totalUsed = ptoSummary?.total_pto_used_days ?? ptoSummary?.pto_used_ytd ?? 0;
-  const totalAllowance = ptoSummary?.total_pto_allowance_days ?? ptoSummary?.total_allowance ?? 0;
-  const highUsageCount = ptoSummary?.high_usage_count ?? ptoSummary?.high_usage_alert ?? 0;
-
   // Process & Sort Staff PTO Records
   const processedStaff = useMemo(() => {
     const list = (Array.isArray(staffList) ? staffList : []).map((s) => {
@@ -98,6 +91,13 @@ const PtoPage = () => {
       return 0;
     });
   }, [staffList, search, sortOrder]);
+
+  const ptoSummary = ptoData?.summary || ptoData?.pto_summary || {};
+  const totalStaff = ptoSummary?.total_staff ?? ptoData?.total_staff ?? processedStaff?.length ?? 0;
+  const overallPct = ptoSummary?.overall_pto_percentage ?? 0;
+  const totalUsed = ptoSummary?.total_pto_used_days ?? ptoSummary?.pto_used_ytd ?? 0;
+  const totalAllowance = ptoSummary?.total_pto_allowance_days ?? ptoSummary?.total_allowance ?? 0;
+  const highUsageCount = ptoSummary?.high_usage_count ?? ptoSummary?.high_usage_alert ?? 0;
 
   const handleAddPtoSubmit = async (formData) => {
     await addPto(formData);

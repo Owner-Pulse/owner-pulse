@@ -205,7 +205,9 @@ const PayrollPage = () => {
     // 3. PTO
     pto.forEach((r) => {
       if (!r.staffId) return;
-      const datesList = r.dates || (r.startDate ? [r.startDate] : []);
+      const rawDates = r.dates || (r.startDate ? [r.startDate] : []);
+      const datesList = (Array.isArray(rawDates) ? rawDates.flat(Infinity) : [rawDates])
+        .filter((d) => typeof d === "string" && d.trim() !== "");
       const daysCount = datesList.length;
       if (daysCount === 0) return;
 
@@ -214,8 +216,7 @@ const PayrollPage = () => {
       formData.append(`items[${idx}][item_type]`, "pto");
       formData.append(`items[${idx}][hours]`, daysCount * 8);
 
-      datesList.forEach((d, dIdx) => {
-        formData.append(`items[${idx}][dates][${dIdx}]`, d);
+      datesList.forEach((d) => {
         formData.append(`items[${idx}][dates][]`, d);
       });
       idx++;
