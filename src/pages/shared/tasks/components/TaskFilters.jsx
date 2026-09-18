@@ -24,7 +24,7 @@ const TaskFilters = ({
       <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
         <button
           onClick={() => onTabChange("my")}
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all ${
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "my" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -32,7 +32,7 @@ const TaskFilters = ({
         </button>
         <button
           onClick={() => onTabChange("all")}
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all ${
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all cursor-pointer ${
             activeTab === "all" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -45,7 +45,7 @@ const TaskFilters = ({
         <div className="flex items-center gap-1 bg-amber-50/80 border border-amber-200/80 rounded-lg p-0.5">
           <button
             onClick={() => onOriginChange("all")}
-            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-bold transition-all ${
+            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-bold transition-all cursor-pointer ${
               filterOrigin === "all"
                 ? "bg-[#1E3A5F] text-white shadow-xs"
                 : "text-gray-600 hover:text-gray-900"
@@ -55,7 +55,7 @@ const TaskFilters = ({
           </button>
           <button
             onClick={() => onOriginChange("owner")}
-            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-extrabold transition-all flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-extrabold transition-all flex items-center gap-1 cursor-pointer ${
               filterOrigin === "owner"
                 ? "bg-[#B78A2F] text-white shadow-xs"
                 : "text-[#8F6A1F] hover:bg-amber-100"
@@ -65,7 +65,7 @@ const TaskFilters = ({
           </button>
           <button
             onClick={() => onOriginChange("self")}
-            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-md text-[10px] md:text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
               filterOrigin === "self"
                 ? "bg-gray-800 text-white shadow-xs"
                 : "text-gray-600 hover:bg-gray-200"
@@ -85,7 +85,7 @@ const TaskFilters = ({
           <button
             key={p}
             onClick={() => onFilterChange(p)}
-            className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all ${
+            className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold transition-all cursor-pointer ${
               filterPriority === p
                 ? "bg-[#1E3A5F] text-white shadow-sm"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
