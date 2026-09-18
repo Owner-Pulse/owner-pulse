@@ -4,6 +4,7 @@ import { X, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 
+const STANDARD_ROLES = ["Teacher", "Assistant Teacher", "Staff"];
 const ROLES = ["Teacher", "Assistant Teacher", "Staff", "Other"];
 
 const parseToYYYYMMDD = (dateStr) => {
@@ -47,6 +48,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
     name: "",
     employee_id: "",
     role: "Teacher",
+    customRole: "",
     classroom: "",
     status: "",
     ptoAllowance: "",
@@ -60,10 +62,16 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
 
   useEffect(() => {
     if (staff) {
+      const rawRole = staff.role || "Teacher";
+      const isStandard = STANDARD_ROLES.includes(rawRole);
+      const roleVal = isStandard ? rawRole : "Other";
+      const customRoleVal = isStandard ? "" : (rawRole === "Other" ? "" : rawRole);
+
       setForm({
         name: staff.full_name || staff.name || "",
         employee_id: staff.procare_employee_id || staff.employee_id || "",
-        role: staff.role || "Teacher",
+        role: roleVal,
+        customRole: customRoleVal,
         classroom: staff.primary_assignment || staff.classroom || staff.work_area || "",
         status: staff.employment_status || staff.status || "Currently Employed",
         ptoAllowance: staff.pto_allowance ?? staff.ptoAllowance ?? staff.total_allowance_days ?? "",
@@ -78,6 +86,7 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
         name: "",
         employee_id: "",
         role: "Teacher",
+        customRole: "",
         classroom: "",
         status: "",
         ptoAllowance: "",
@@ -100,10 +109,22 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
       return;
     }
 
+    if (!form.role) {
+      setError("Role is required.");
+      return;
+    }
+
+    if (form.role === "Other" && !form.customRole.trim()) {
+      setError("Please specify the custom role name.");
+      return;
+    }
+
+    const finalRole = form.role === "Other" ? form.customRole.trim() : form.role;
+
     const payload = {
       full_name: form.name,
       employee_id: Number(form.employee_id) || form.employee_id,
-      role: form.role,
+      role: finalRole,
       primary_assignment: form.classroom,
       employment_status: form.status,
       date_of_birth: formatDateToMMDDYYYY(form.dob),
@@ -178,6 +199,19 @@ const StaffFormModal = ({ isOpen, staff, onSave, onClose, isSubmitting = false }
                       ))}
                     </select>
                   </div>
+                  {form.role === "Other" && (
+                    <div className="col-span-2">
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5">Specify Custom Role Name *</label>
+                      <input
+                        type="text"
+                        value={form.customRole}
+                        onChange={(e) => update("customRole", e.target.value)}
+                        placeholder="e.g. Assistant Director, Cook, Bus Driver"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

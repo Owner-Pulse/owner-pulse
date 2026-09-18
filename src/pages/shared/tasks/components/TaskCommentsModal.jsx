@@ -79,7 +79,7 @@ const TaskCommentsModal = ({
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-200/60 rounded-xl transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-gray-200/60 rounded-xl transition-colors cursor-pointer">
               <X size={18} className="text-gray-400" />
             </button>
           </div>

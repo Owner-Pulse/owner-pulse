@@ -65,7 +65,7 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
               <h2 className="text-xl font-bold text-gray-900">Edit Task</h2>
               <p className="text-sm text-gray-500 mt-0.5">Update task details and status</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer">
               <X size={20} className="text-gray-400" />
             </button>
           </div>
@@ -89,7 +89,7 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium cursor-pointer"
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
@@ -102,7 +102,7 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium cursor-pointer"
                 >
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
@@ -117,7 +117,7 @@ const EditTaskModal = ({ task, onClose, currentRole, updateTask, isUpdating }) =
                 <select
                   value={assignee}
                   onChange={(e) => setAssignee(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium cursor-pointer"
                 >
                   {currentRole === "owner" ? (
                     directorsList && directorsList.length > 0 ? (

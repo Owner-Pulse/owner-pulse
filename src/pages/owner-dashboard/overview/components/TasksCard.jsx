@@ -58,7 +58,7 @@ const TasksCard = ({ tasks = [], highPriorityCount = 0, fmtDate, daysUntil, onNa
             </div>
           );
         })}
-        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-7 mt-1" onClick={() => onNavigate("/owner/tasks")}>
+        <Button variant="ghost" className="w-full text-xs text-[#1E3A5F] h-7 mt-1 cursor-pointer" onClick={() => onNavigate("/owner/tasks")}>
           View all tasks →
         </Button>
       </CardContent>

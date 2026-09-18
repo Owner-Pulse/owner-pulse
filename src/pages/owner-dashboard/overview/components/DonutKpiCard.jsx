@@ -8,7 +8,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0, onClick }) => {
+const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, index = 0, onClick, centerText }) => {
   return (
     <motion.div variants={itemVariants} key={index} onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
       <Card className="bg-white border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
@@ -37,7 +37,7 @@ const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, ind
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute text-base font-extrabold" style={{ color }}>
-              {pct}%
+              {centerText !== undefined ? centerText : `${pct}%`}
             </div>
           </div>
           <p className="text-sm font-bold text-gray-900 text-center mt-1.5 truncate">{value}</p>

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil } from "lucide-react";
+import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
@@ -19,7 +19,7 @@ const itemVariants = {
 
 const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner }) => {
   const days = daysSince(req.logged);
-  const isDone = status === "done";
+  const isDone = status === "done" || status === "completed";
   const borderColor = isDone ? "border-l-[#3E7A54]"
     : req.priority === "critical" ? "border-l-[#AE4A3E]"
       : req.priority === "high" ? "border-l-[#B78A2F]"
@@ -28,7 +28,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className={`bg-white border-none shadow-sm hover:shadow-md transition-all border-l-4 ${borderColor} ${isDone ? "opacity-60" : ""}`}>
+      <Card className={`bg-white border-none shadow-sm hover:shadow-md transition-all border-l-4 ${borderColor} ${isDone ? "opacity-75" : ""}`}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="min-w-0 flex-1">
@@ -64,7 +64,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
                       e.stopPropagation();
                       onEdit(req);
                     }}
-                    className="text-gray-400 hover:text-[#1E3A5F] transition-colors p-1.5 rounded-lg hover:bg-[#1E3A5F]/10"
+                    className="text-gray-400 hover:text-[#1E3A5F] transition-colors p-1.5 rounded-lg hover:bg-[#1E3A5F]/10 cursor-pointer"
                     title="Edit Request"
                   >
                     <Pencil size={14} />
@@ -76,7 +76,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
                       e.stopPropagation();
                       onDelete(req);
                     }}
-                    className="text-gray-400 hover:text-[#8A362C] transition-colors p-1.5 rounded-lg hover:bg-[#AE4A3E]/10"
+                    className="text-gray-400 hover:text-[#8A362C] transition-colors p-1.5 rounded-lg hover:bg-[#AE4A3E]/10 cursor-pointer"
                     title="Delete Request"
                   >
                     <Trash2 size={14} />
@@ -86,20 +86,27 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
             </div>
           </div>
 
-          {isOwner && !isDone && (
-            <div className="mt-3 flex gap-1.5">
-              {["open", "in_progress", "done"].map((s) => (
-                <button key={s} onClick={() => onUpdateStatus(req.id, s)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
-                    status === s
-                      ? s === "done" ? "bg-[#3E7A54] text-white"
-                        : s === "in_progress" ? "bg-[#1E3A5F] text-white"
-                        : "bg-gray-500 text-white"
-                      : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
-                  }`}>
-                  {s === "done" ? "✓ Complete" : s === "in_progress" ? "⟳ In Progress" : "○ Open"}
-                </button>
-              ))}
+          {isOwner && (
+            <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-gray-500">Update Status:</span>
+              <div className="relative inline-block">
+                <select
+                  value={status}
+                  onChange={(e) => onUpdateStatus(req.id, e.target.value)}
+                  className={`h-7 pl-2.5 pr-7 text-xs font-bold rounded-lg border appearance-none cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] ${
+                    isDone
+                      ? "bg-[#3E7A54]/10 text-[#2F6042] border-[#3E7A54]/30 hover:bg-[#3E7A54]/20"
+                      : status === "in_progress"
+                      ? "bg-[#1E3A5F]/10 text-[#1E3A5F] border-[#1E3A5F]/30 hover:bg-[#1E3A5F]/20"
+                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                  }`}
+                >
+                  <option value="open">○ Open</option>
+                  <option value="in_progress">⟳ In Progress</option>
+                  <option value="done">✓ Complete</option>
+                </select>
+                <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60 text-current" />
+              </div>
             </div>
           )}
           
@@ -113,7 +120,7 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
               <Clock size={10} /> Being worked on
             </div>
           )}
-          {!isOwner && status === "done" && (
+          {!isOwner && isDone && (
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#2F6042] font-medium">
               <CheckCircle2 size={10} /> Resolved by owner
             </div>

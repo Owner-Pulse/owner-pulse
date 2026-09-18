@@ -61,6 +61,26 @@ body {
   }
 }
 
+/* Global Cursor Pointer Rules */
+button,
+select,
+summary,
+[role="button"],
+[type="button"],
+[type="reset"],
+[type="submit"],
+[type="checkbox"],
+[type="radio"] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
