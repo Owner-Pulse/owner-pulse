@@ -113,7 +113,7 @@ const EnrollmentPage = () => {
 
       {/* ── KPI Row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="h-full">
           <KpiCard 
             icon={Users} 
             label="Total Enrolled" 
@@ -123,7 +123,7 @@ const EnrollmentPage = () => {
             trend={(totalEnrolledObj.yoy_growth_percentage ?? 0) !== 0 ? `${totalEnrolledObj.yoy_growth_percentage}% YoY` : null} 
           />
         </motion.div>
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="h-full">
           <KpiCard 
             icon={Building2} 
             label="Open Seats" 
@@ -132,7 +132,7 @@ const EnrollmentPage = () => {
             accent="bg-[#3E7A54]/10 text-[#2F6042]" 
           />
         </motion.div>
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="h-full">
           <KpiCard 
             icon={Calendar} 
             label="Waitlist" 
@@ -142,7 +142,7 @@ const EnrollmentPage = () => {
             trend={(waitlistObj.mom_growth_percentage ?? 0) !== 0 ? `+${waitlistObj.mom_growth_percentage}% MoM` : null} 
           />
         </motion.div>
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="h-full">
           <KpiCard 
             icon={AlertTriangle} 
             label="At-Risk" 
@@ -151,12 +151,16 @@ const EnrollmentPage = () => {
             accent="bg-[#AE4A3E]/10 text-[#8A362C]" 
           />
         </motion.div>
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="h-full">
           <KpiCard 
             icon={Award} 
             label="Discounts" 
             value={discountsObj.count || 0} 
-            sub={`${discountsObj.student_percentage || 0}% of students · ${discountsObj.formatted_monthly_amount || fmtMoneyShort(discountTotalMonthly)}/mo`} 
+            sub={`${discountsObj.student_percentage || 0}% of students · ${
+              discountsObj.formatted_monthly_amount 
+                ? (discountsObj.formatted_monthly_amount.endsWith('/mo') ? discountsObj.formatted_monthly_amount : `${discountsObj.formatted_monthly_amount}/mo`)
+                : `${fmtMoneyShort(discountTotalMonthly)}/mo`
+            }`} 
             accent="bg-[#1E3A5F]/10 text-[#1E3A5F]" 
           />
         </motion.div>
