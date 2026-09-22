@@ -120,7 +120,7 @@ export const useUpdateDirectorWaitlist = () => {
         isError,
     } = useMutation({
         mutationKey: ["update-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.update_waitlist(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => directorWaitlistService.update_waitlist(axiosInstance, id, payload || data),
         onSuccess: (data) => {
             toast.success(data?.message || "Waitlist entry updated successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -149,7 +149,7 @@ export const useLogTourDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["log-tour-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.inquiryToTour(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => directorWaitlistService.inquiryToTour(axiosInstance, id, payload || data),
         onSuccess: (data) => {
             toast.success(data?.message || "Tour logged successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -172,7 +172,7 @@ export const useMoveAppliedDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["move-applied-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.tourToAppled(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => directorWaitlistService.tourToAppled(axiosInstance, id, payload || data),
         onSuccess: (data) => {
             toast.success(data?.message || "Moved to applied successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -195,7 +195,7 @@ export const useOfferSpotDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["offer-spot-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.appledToOffered(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => directorWaitlistService.appledToOffered(axiosInstance, id, payload || data),
         onSuccess: (data) => {
             toast.success(data?.message || "Spot offered successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -218,7 +218,7 @@ export const useConfirmEnrollmentDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["confirm-enrollment-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.offeredToEnrolled(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => directorWaitlistService.offeredToEnrolled(axiosInstance, id, payload || data),
         onSuccess: (data) => {
             toast.success(data?.message || "Enrollment confirmed successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -241,7 +241,11 @@ export const useMarkLostDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["mark-lost-director-waitlist"],
-        mutationFn: ({ id, payload }) => directorWaitlistService.lostStudent(axiosInstance, id, payload),
+        mutationFn: ({ id, payload, data }) => {
+            const body = payload || data;
+            const finalPayload = typeof body === "string" ? { loss_reason: body } : (body?.loss_reason ? body : { loss_reason: body?.reason || body, ...body });
+            return directorWaitlistService.lostStudent(axiosInstance, id, finalPayload);
+        },
         onSuccess: (data) => {
             toast.success(data?.message || "Waitlist entry marked as lost");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });
@@ -264,7 +268,10 @@ export const useDeleteDirectorWaitlist = () => {
         isPending,
     } = useMutation({
         mutationKey: ["delete-director-waitlist"],
-        mutationFn: (id) => directorWaitlistService.deletefromWaitlist(axiosInstance, id),
+        mutationFn: (id) => {
+            const targetId = typeof id === "object" ? id?.id : id;
+            return directorWaitlistService.deletefromWaitlist(axiosInstance, targetId);
+        },
         onSuccess: (data) => {
             toast.success(data?.message || "Deleted from waitlist successfully");
             queryClient.invalidateQueries({ queryKey: ["director-waitlist-list"] });

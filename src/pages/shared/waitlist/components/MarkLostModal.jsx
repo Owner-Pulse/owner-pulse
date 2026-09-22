@@ -13,7 +13,11 @@ const MarkLostModal = ({ isOpen, onClose, entry, onMarkLost, onSubmit, isPending
     const handler = onMarkLost || onSubmit;
     if (!handler) return;
     try {
-      await handler(entry.id, reason);
+      await handler(entry.id, {
+        loss_reason: reason,
+        reason: reason,
+        lossReason: reason,
+      });
       onClose();
     } catch (err) {
       // Error handled by mutation toast notification

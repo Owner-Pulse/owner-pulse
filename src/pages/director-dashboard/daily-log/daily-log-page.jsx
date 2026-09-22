@@ -236,13 +236,21 @@ const DailyLogPage = () => {
   const handleSaveWaitlist = async (formData) => {
     const matchedClassroom = classrooms.find((c) => (c.classroom_name || c.name) === formData.program);
     await waitlistMutation.addWaitlist({
+      child_full_name: formData.childName || formData.child_full_name,
       child_name: formData.childName,
+      childName: formData.childName,
       date_of_birth: formData.dob,
+      dob: formData.dob,
       procare_classroom_id: matchedClassroom?.procare_classroom_id || matchedClassroom?.id || 1,
+      classroom: formData.program,
+      program: formData.program,
+      parent_guardian_name: formData.parentName || formData.parent_guardian_name,
       parent_name: formData.parentName,
+      parentName: formData.parentName,
       phone: formData.phone,
       email: formData.email,
       lead_source: formData.source,
+      source: formData.source,
       notes: formData.notes,
     });
     closeModal();

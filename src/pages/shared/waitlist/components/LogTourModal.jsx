@@ -25,10 +25,16 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour, onSubmit, isPending =
     if (!handler) return;
     try {
       await handler(entry.id, {
+        tour_date: tourDate,
         tourDate,
+        tour_time: tourTime,
         tourTime,
+        tour_showed_up: showedUp === "yes" ? 1 : 0,
+        showed_up: showedUp,
         showedUp,
+        tour_notes: tourNotes.trim(),
         tourNotes: tourNotes.trim(),
+        notes: tourNotes.trim(),
       });
       onClose();
     } catch (err) {

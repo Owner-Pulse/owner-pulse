@@ -22,10 +22,10 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, onSubmit, editItem =
   useEffect(() => {
     if (editItem) {
       setForm({
-        childName: editItem.childName || editItem.child_name || "",
+        childName: editItem.childName || editItem.child_full_name || editItem.child_name || "",
         dob: editItem.dob || editItem.dateOfBirth || editItem.age || "",
         program: editItem.program || editItem.classroom || "Ones",
-        parentName: editItem.parentName || editItem.parent_name || "",
+        parentName: editItem.parentName || editItem.parent_guardian_name || editItem.parent_name || "",
         phone: editItem.phone || "",
         email: editItem.email || "",
         source: editItem.source || "Referral",
@@ -55,10 +55,14 @@ const AddWaitlistModal = ({ isOpen = true, onClose, onSave, onSubmit, editItem =
     if (handler) {
       try {
         await handler({
+          child_full_name: form.childName.trim(),
+          child_name: form.childName.trim(),
           childName: form.childName.trim(),
           dob: form.dob,
           program: form.program,
           classroom: form.program,
+          parent_guardian_name: form.parentName.trim(),
+          parent_name: form.parentName.trim(),
           parentName: form.parentName.trim(),
           phone: form.phone.trim(),
           email: form.email.trim(),

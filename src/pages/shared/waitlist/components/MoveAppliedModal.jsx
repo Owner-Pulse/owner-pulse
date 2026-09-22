@@ -23,9 +23,16 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, onSubmit, i
     if (!handler) return;
     try {
       await handler(entry.id, {
+        packet_handed_to_family: packetGiven === "Yes" ? 1 : 0,
+        packet_given: packetGiven,
         packetGiven,
+        application_date: appliedDate,
+        applied_date: appliedDate,
         appliedDate,
+        application_notes: appliedNotes.trim(),
+        applied_notes: appliedNotes.trim(),
         appliedNotes: appliedNotes.trim(),
+        notes: appliedNotes.trim(),
       });
       onClose();
     } catch (err) {

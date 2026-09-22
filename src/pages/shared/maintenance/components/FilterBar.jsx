@@ -12,7 +12,7 @@ const STATUS_FILTERS = [
   { id: "all", label: "All" },
   { id: "open", label: "Open" },
   { id: "in_progress", label: "In Progress" },
-  { id: "done", label: "Done" },
+  { id: "done", label: "Completed Maintenance" },
 ];
 
 const FilterBar = ({ filterPriority, filterStatus, onPriorityChange, onStatusChange, filteredCount, totalCount }) => (

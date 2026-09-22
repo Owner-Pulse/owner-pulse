@@ -51,19 +51,31 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, o
     if (!handler) return;
     try {
       await handler(entry.id, {
+        child_id: form.childId,
         childId: form.childId,
+        person_id: form.personId,
         personId: form.personId,
+        child_full_name: form.childName.trim(),
+        child_name: form.childName.trim(),
         childName: form.childName.trim(),
         dob: form.dob,
+        date_of_birth: form.dob,
         gender: form.gender,
+        final_room: form.finalRoom.trim(),
         finalRoom: form.finalRoom.trim(),
+        classroom: form.finalRoom.trim(),
         status: form.status,
+        actual_start: form.actualStart,
         actualStart: form.actualStart,
         allergies: form.allergies.trim(),
+        parent_guardian_name: form.parentName.trim(),
+        parent_name: form.parentName.trim(),
         parentName: form.parentName.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
+        enroll_notes: form.enrollNotes.trim(),
         enrollNotes: form.enrollNotes.trim(),
+        notes: form.enrollNotes.trim(),
       });
       onClose();
     } catch (err) {

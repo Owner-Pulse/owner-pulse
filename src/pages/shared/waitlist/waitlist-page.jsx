@@ -544,13 +544,13 @@ const WaitlistPage = () => {
           onLogTour={async (id, tourData) => {
             const data = tourData || id;
             const targetId = typeof id === "object" ? tourModalEntry.id : id;
-            await logTourMutation({ id: targetId, data });
+            await logTourMutation({ id: targetId, payload: data, data });
             setTourModalEntry(null);
           }}
           onSubmit={async (id, tourData) => {
             const data = tourData || id;
             const targetId = typeof id === "object" ? tourModalEntry.id : id;
-            await logTourMutation({ id: targetId, data });
+            await logTourMutation({ id: targetId, payload: data, data });
             setTourModalEntry(null);
           }}
           isPending={isTourPending}
@@ -565,13 +565,13 @@ const WaitlistPage = () => {
           onMoveToApplied={async (id, appliedData) => {
             const data = appliedData || id;
             const targetId = typeof id === "object" ? appliedModalEntry.id : id;
-            await moveToAppliedMutation({ id: targetId, data });
+            await moveToAppliedMutation({ id: targetId, payload: data, data });
             setAppliedModalEntry(null);
           }}
           onSubmit={async (id, appliedData) => {
             const data = appliedData || id;
             const targetId = typeof id === "object" ? appliedModalEntry.id : id;
-            await moveToAppliedMutation({ id: targetId, data });
+            await moveToAppliedMutation({ id: targetId, payload: data, data });
             setAppliedModalEntry(null);
           }}
           isPending={isAppliedPending}
@@ -586,13 +586,13 @@ const WaitlistPage = () => {
           onOfferSpot={async (id, offerData) => {
             const data = offerData || id;
             const targetId = typeof id === "object" ? offerModalEntry.id : id;
-            await offerSpotMutation({ id: targetId, data });
+            await offerSpotMutation({ id: targetId, payload: data, data });
             setOfferModalEntry(null);
           }}
           onSubmit={async (id, offerData) => {
             const data = offerData || id;
             const targetId = typeof id === "object" ? offerModalEntry.id : id;
-            await offerSpotMutation({ id: targetId, data });
+            await offerSpotMutation({ id: targetId, payload: data, data });
             setOfferModalEntry(null);
           }}
           isPending={isOfferPending}
@@ -607,13 +607,13 @@ const WaitlistPage = () => {
           onConfirmEnrollment={async (id, enrollData) => {
             const data = enrollData || id;
             const targetId = typeof id === "object" ? enrollModalEntry.id : id;
-            await confirmEnrollmentMutation({ id: targetId, data });
+            await confirmEnrollmentMutation({ id: targetId, payload: data, data });
             setEnrollModalEntry(null);
           }}
           onSubmit={async (id, enrollData) => {
             const data = enrollData || id;
             const targetId = typeof id === "object" ? enrollModalEntry.id : id;
-            await confirmEnrollmentMutation({ id: targetId, data });
+            await confirmEnrollmentMutation({ id: targetId, payload: data, data });
             setEnrollModalEntry(null);
           }}
           isPending={isEnrollPending}
@@ -626,15 +626,17 @@ const WaitlistPage = () => {
           entry={lostModalEntry}
           onClose={() => setLostModalEntry(null)}
           onMarkLost={async (id, lostData) => {
-            const data = lostData || id;
+            const raw = lostData || id;
             const targetId = typeof id === "object" ? lostModalEntry.id : id;
-            await markLostMutation({ id: targetId, data });
+            const payload = typeof raw === "string" ? { loss_reason: raw, reason: raw } : { loss_reason: raw?.loss_reason || raw?.reason || "", reason: raw?.reason || raw?.loss_reason || "", ...raw };
+            await markLostMutation({ id: targetId, payload, data: payload });
             setLostModalEntry(null);
           }}
           onSubmit={async (id, lostData) => {
-            const data = lostData || id;
+            const raw = lostData || id;
             const targetId = typeof id === "object" ? lostModalEntry.id : id;
-            await markLostMutation({ id: targetId, data });
+            const payload = typeof raw === "string" ? { loss_reason: raw, reason: raw } : { loss_reason: raw?.loss_reason || raw?.reason || "", reason: raw?.reason || raw?.loss_reason || "", ...raw };
+            await markLostMutation({ id: targetId, payload, data: payload });
             setLostModalEntry(null);
           }}
           isPending={isLostPending}

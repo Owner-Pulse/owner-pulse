@@ -117,10 +117,26 @@ const MaintenancePage = () => {
     }));
   }, [maintenanceData]);
 
+  const filteredRequests = useMemo(() => {
+    return mappedRequests.filter((r) => {
+      const isDone = r.status === "done" || r.status === "completed";
+      if (filterStatus === "all") {
+        if (isDone) return false;
+      } else if (filterStatus === "done" || filterStatus === "completed") {
+        if (!isDone) return false;
+      } else if (filterStatus === "open") {
+        if (r.status !== "open") return false;
+      } else if (filterStatus === "in_progress") {
+        if (r.status !== "in_progress") return false;
+      }
+      return true;
+    });
+  }, [mappedRequests, filterStatus]);
+
   const sorted = useMemo(() => {
     const order = { critical: 0, high: 1, medium: 2, low: 3 };
-    return [...mappedRequests].sort((a, b) => order[a.priority] - order[b.priority]);
-  }, [mappedRequests]);
+    return [...filteredRequests].sort((a, b) => (order[a.priority] ?? 4) - (order[b.priority] ?? 4));
+  }, [filteredRequests]);
 
   const stats = useMemo(() => {
     const summary = maintenanceData?.summary || {};

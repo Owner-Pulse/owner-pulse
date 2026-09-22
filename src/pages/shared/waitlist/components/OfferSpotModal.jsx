@@ -23,9 +23,14 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, onSubmit, isPendi
     if (!handler) return;
     try {
       await handler(entry.id, {
+        offer_date: offerDate,
         offerDate,
+        offered_start_date: startDate,
+        start_date: startDate,
         startDate,
+        offer_notes: offerNotes.trim(),
         offerNotes: offerNotes.trim(),
+        notes: offerNotes.trim(),
       });
       onClose();
     } catch (err) {
