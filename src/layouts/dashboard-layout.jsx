@@ -132,9 +132,10 @@ const DashboardLayout = () => {
   }, [apiNotifications]);
 
   // Reverb Real-Time Notification Listener
+  const userId = user?.id || user?.user_id || user?.data?.id || user?.user?.id;
+
   useEffect(() => {
     const token = getToken();
-    const userId = user?.id || user?.user_id || user?.data?.id || user?.user?.id;
 
     // 1. Request notification permissions (Mobile native & Web browser)
     requestNotificationPermission();
@@ -149,12 +150,14 @@ const DashboardLayout = () => {
       navigate(destination);
     });
 
+    if (!token) return;
+
     // 3. Start Echo WebSocket client
     const echo = initEcho(token);
 
     // 4. Listen for incoming real-time notifications
     let cleanupListener = null;
-    if (echo) {
+    if (echo && userId) {
       cleanupListener = listenToNotifications(echo, userId, (notification) => {
 
         // Display rich interactive toast with asset logo
@@ -211,7 +214,7 @@ const DashboardLayout = () => {
       if (cleanupListener) cleanupListener();
       if (echo) echo.disconnect();
     };
-  }, [user?.id, role, queryClient, navigate, basePath]);
+  }, [userId, role, queryClient, navigate, basePath]);
 
   // Click-outside handler for notification dropdown
   useEffect(() => {

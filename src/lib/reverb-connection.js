@@ -77,8 +77,9 @@ export const triggerNotificationHaptics = async () => {
  * Initialize Laravel Echo with Reverb WebSocket Connection
  */
 export const initEcho = (token) => {
-    const rawKey = import.meta.env.VITE_REVERB_APP_KEY || import.meta.env.REVERB_APP_KEY;
+    const rawKey = import.meta.env.VITE_REVERB_APP_KEY || import.meta.env.REVERB_APP_KEY || '5bcus2pmxhiwlo28uzz3';
     if (!rawKey) {
+        console.warn('⚠️ [Reverb] Missing Reverb App Key. Set VITE_REVERB_APP_KEY in your environment variables.');
         return null;
     }
 
@@ -96,6 +97,8 @@ export const initEcho = (token) => {
     const rawBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://staging-back.owner-pulse.com';
     const baseUrl = String(rawBaseUrl).replace(/^["']|["']$/g, '').replace(/\/$/, '');
 
+    const currentToken = token || (typeof window !== 'undefined' ? localStorage.getItem(import.meta.env.VITE_AUTH_TOKEN_NAME || 'pulse_token') : null);
+
     const echoInstance = new Echo({
         broadcaster: 'reverb',
         Pusher: Pusher,
@@ -109,7 +112,7 @@ export const initEcho = (token) => {
         authEndpoint: `${baseUrl}/api/broadcasting/auth`,
         auth: {
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: currentToken ? `Bearer ${currentToken}` : '',
                 Accept: 'application/json',
             },
         },
