@@ -163,6 +163,8 @@ const OwnerClassroomDetailPage = () => {
     );
   }
 
+  const nweaScore = singleEconomics.nwea ?? singleEconomics.nwea_map?.score ?? singleEconomics.nwea_map_score ?? matchedClassroom.nwea ?? matchedClassroom.nwea_map?.score ?? matchedClassroom.nwea_map_score;
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -180,7 +182,14 @@ const OwnerClassroomDetailPage = () => {
           <ArrowLeft size={18} className="text-gray-600" />
         </Button>
         <div>
-          <span className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider">Classroom Economics</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider">Classroom Economics</span>
+            {nweaScore !== undefined && nweaScore !== null && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#1E3A5F]/10 text-[#1E3A5F]">
+                NWEA MAP: {nweaScore}
+              </span>
+            )}
+          </div>
           <h2 className="text-2xl font-bold text-gray-900">{classroomName} {teacherName ? `(${teacherName})` : ""}</h2>
         </div>
       </div>

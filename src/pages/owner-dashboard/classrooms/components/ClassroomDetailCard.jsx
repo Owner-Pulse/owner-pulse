@@ -30,16 +30,15 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
   const revenue = classroom.revenue ?? {};
   const cost = classroom.cost ?? {};
   const margin = classroom.margin ?? {};
-  const nweaMap = classroom.nwea_map;
   const incidents = classroom.incidents ?? {};
 
-  const capacity = enrollment.capacity ?? 0;
+  const capacity = enrollment.capacity ?? classroom.capacity ?? 0;
   const hasCapacity = capacity > 0;
-  const fillRate = enrollment.fill_rate_percentage ?? 0;
-  const isFull = hasCapacity && enrollment.current >= capacity;
+  const fillRate = enrollment.fill_rate_percentage ?? classroom.fill_rate_percentage ?? 0;
+  const isFull = hasCapacity && (enrollment.current >= capacity || classroom.is_full);
   const isLowFill = hasCapacity && (enrollment.is_low_enrollment ?? fillRate < 70);
 
-  const isPreschool = (classroom.category_group ?? "").toLowerCase() === "preschool";
+  const isPreschool = (classroom.category_group ?? classroom.program ?? "").toLowerCase() === "preschool";
 
   const marginStatus = margin.status ?? (
     (margin.percentage ?? 0) >= 30 ? "Healthy"
@@ -51,11 +50,19 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
     : marginStatus === "Monitoring" ? "text-[#8F6A1F]"
     : "text-[#8A362C]";
 
-  const nweaVsBenchmark = nweaMap
-    ? (nweaMap.score ?? 0) >= (nweaMap.benchmark ?? 0)
+  const rawNwea = classroom.nwea !== undefined && classroom.nwea !== null 
+    ? classroom.nwea 
+    : classroom.nwea_map?.score !== undefined && classroom.nwea_map?.score !== null 
+    ? classroom.nwea_map.score 
+    : classroom.nwea_map_score;
+  const nweaBenchmark = classroom.nwea_map?.benchmark ?? 210;
+  const hasNwea = rawNwea !== undefined && rawNwea !== null && rawNwea !== "";
+  const nweaDisplay = hasNwea ? rawNwea : "—";
+  const nweaVsBenchmark = hasNwea
+    ? rawNwea >= nweaBenchmark
       ? "text-[#2F6042]"
       : "text-[#8F6A1F]"
-    : "text-gray-900";
+    : "text-gray-400";
 
   const profitDisplay = classroom.formatted_net_monthly_profit || `${fmtMoneyShort(profit)}/mo`;
   const revTotalDisplay = revenue.formatted_total || fmtMoneyShort(revenue.total ?? 0);
@@ -176,16 +183,16 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               <p className="text-[10px] text-gray-400 mt-0.5">{marginStatus}</p>
             </div>
 
-            {/* NWEA MAP (if available) */}
-            {nweaMap && (
-              <div className="p-2.5 rounded-lg bg-gray-50">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">NWEA MAP</span>
-                <span className={`text-base font-extrabold ${nweaVsBenchmark}`}>
-                  {nweaMap.score ?? "—"}
-                </span>
-                <p className="text-[10px] text-gray-400 mt-0.5">Benchmark: {nweaMap.benchmark ?? "—"}</p>
-              </div>
-            )}
+            {/* NWEA MAP */}
+            <div className="p-2.5 rounded-lg bg-gray-50">
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">NWEA MAP</span>
+              <span className={`text-base font-extrabold ${nweaVsBenchmark}`}>
+                {nweaDisplay}
+              </span>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                {hasNwea ? `Benchmark: ${nweaBenchmark}` : "No score set"}
+              </p>
+            </div>
 
             {/* Incidents (if available) */}
             {incidents.count !== undefined && (

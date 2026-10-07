@@ -16,6 +16,28 @@ export const getBudgetService = {
         return response.data;
     },
 
+    getCategoryBudgets: async (axiosInstance, params) => {
+        const queryParams = typeof params === "object" ? params : params ? { type: params } : undefined;
+        const response = await axiosInstance.get(`/settings/category-budgets`, { params: queryParams });
+        return response.data;
+    },
+
+    updateCategoryBudgets: async (axiosInstance, payload) => {
+        const response = await axiosInstance.post(`/settings/category-budgets`, payload);
+        return response.data;
+    },
+
+    deleteCategoryBudget: async (axiosInstance, idOrPayload) => {
+        if (typeof idOrPayload === "number" || (typeof idOrPayload === "string" && !isNaN(Number(idOrPayload)))) {
+            const response = await axiosInstance.delete(`/settings/category-budgets/${idOrPayload}`);
+            return response.data;
+        }
+        const response = await axiosInstance.delete(`/settings/category-budgets`, {
+            data: typeof idOrPayload === "string" ? { category_name: idOrPayload } : idOrPayload,
+        });
+        return response.data;
+    },
+
 
     logExpensesDirector: async (axiosInstance, payload) => {
         const response = await axiosInstance.post(`/director/expense/store`, payload);

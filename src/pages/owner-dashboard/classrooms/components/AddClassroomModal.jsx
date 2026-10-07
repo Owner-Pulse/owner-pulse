@@ -130,6 +130,21 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
                   />
                 </div>
+
+                {/* NWEA Score */}
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">NWEA Score (RIT Score)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    name="nwea"
+                    value={form.nwea ?? ""}
+                    onChange={(e) => onFormChange("nwea", e.target.value)}
+                    placeholder="e.g. 212"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                  />
+                </div>
               </div>
 
               {/* Submit Button */}

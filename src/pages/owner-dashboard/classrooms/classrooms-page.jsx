@@ -36,6 +36,7 @@ const EMPTY_CLASSROOM_FORM = {
   tuitionPerSeat: "",
   monthlyCost: "",
   procareClassroomId: "",
+  nwea: "",
 };
 
 const ClassroomsPage = () => {
@@ -121,6 +122,13 @@ const ClassroomsPage = () => {
       tuitionPerSeat: classroom.revenue?.per_seat || classroom.tuition_per_seat || "",
       monthlyCost: classroom.cost?.total || classroom.monthly_operating_cost || "",
       procareClassroomId: classroom.procare_classroom_id || classroom.id || "",
+      nwea: classroom.nwea !== null && classroom.nwea !== undefined
+        ? classroom.nwea
+        : classroom.nwea_map?.score !== null && classroom.nwea_map?.score !== undefined
+        ? classroom.nwea_map.score
+        : classroom.nwea_map_score !== null && classroom.nwea_map_score !== undefined
+        ? classroom.nwea_map_score
+        : "",
     });
     setIsAddModalOpen(true);
   };
@@ -152,6 +160,9 @@ const ClassroomsPage = () => {
       teacher_id: classroomForm.teacherId ? Number(classroomForm.teacherId) : null,
       tuition_per_seat: Number(classroomForm.tuitionPerSeat),
       monthly_operating_cost: Number(classroomForm.monthlyCost),
+      nwea: classroomForm.nwea !== "" && classroomForm.nwea !== null && classroomForm.nwea !== undefined
+        ? Number(classroomForm.nwea)
+        : null,
     };
 
     try {

@@ -5,6 +5,9 @@ import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
 import BudgetPieChartsCard from "./components/BudgetPieChartsCard";
 import CategoryBreakdownCard from "./components/CategoryBreakdownCard";
+import CategoryBudgetHeadroomCard from "./components/CategoryBudgetHeadroomCard";
+import EditCategoryBudgetModal from "./components/EditCategoryBudgetModal";
+import DeclareBudgetModal from "./components/DeclareBudgetModal";
 import ExpenseListCard from "./components/ExpenseListCard";
 import BudgetTipCard from "./components/BudgetTipCard";
 import DirectorInsightsCard from "./components/DirectorInsightsCard";
@@ -12,7 +15,14 @@ import AddExpenseModal from "./components/AddExpenseModal";
 import BudgetSettingsModal from "./components/BudgetSettingsModal";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import { Button } from "@/components/ui/button";
-import { useGetBudget, useLogDirectorExpense, useDeleteDirectorExpense, useUpdateDirectorExpense } from "@/hooks/owner-hook/budget.hook";
+import {
+  useGetBudget,
+  useLogDirectorExpense,
+  useDeleteDirectorExpense,
+  useUpdateDirectorExpense,
+  useGetCategoryBudgets,
+  useDeleteCategoryBudget,
+} from "@/hooks/owner-hook/budget.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import toast from "react-hot-toast";
 
@@ -58,6 +68,11 @@ const BudgetPage = () => {
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
 
+  // Category Budgets modal & action state
+  const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
+  const [isBulkCategoryModalOpen, setIsBulkCategoryModalOpen] = useState(false);
+  const [categoryToReset, setCategoryToReset] = useState(null);
+
   const activeType = isDirector ? "director" : view;
   const isDirectorView = view === "director" || isDirector;
 
@@ -72,9 +87,28 @@ const BudgetPage = () => {
   );
 
   const { isLoading, isFetching, isError, data, refetch } = useGetBudget(queryParams);
+  const { summary: categorySummary, categories: apiCategoryBudgets, refetch: refetchCategoryBudgets } = useGetCategoryBudgets({ type: "school" });
+  const { deleteCategoryBudget, isPending: isDeletingCategory } = useDeleteCategoryBudget();
+
   const { logExpense, isPending: isLoggingExpense } = useLogDirectorExpense();
   const { deleteExpense, isPending: isDeletingExpense } = useDeleteDirectorExpense();
   const { updateExpense, isPending: isUpdatingExpense } = useUpdateDirectorExpense();
+
+  const handleConfirmResetCategory = async () => {
+    if (!categoryToReset) return;
+    try {
+      if (categoryToReset.id) {
+        await deleteCategoryBudget(categoryToReset.id);
+      } else {
+        await deleteCategoryBudget({ category_name: categoryToReset.category_name || categoryToReset.name });
+      }
+      refetch();
+      refetchCategoryBudgets();
+      setCategoryToReset(null);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to reset category budget limit.");
+    }
+  };
 
   const handleDeleteExpenseClick = (exp) => {
     if (typeof exp === "object" && exp !== null) {
@@ -424,17 +458,26 @@ const BudgetPage = () => {
                 />
               </motion.div>
 
+              {/* Master Category Budget Allocations & Unallocated Headroom Card */}
+              <motion.div variants={itemVariants}>
+                <CategoryBudgetHeadroomCard
+                  summary={categorySummary}
+                  schoolBudgetTotal={budgetData?.annual_budget_numeric ?? schoolBudgetTotal}
+                  onManageBulk={() => setIsBulkCategoryModalOpen(true)}
+                />
+              </motion.div>
+
               <motion.div variants={itemVariants}>
                 <BudgetPieChartsCard
                   schoolSpent={budgetData?.spent_ytd_numeric ?? schoolSpent}
                   schoolBudgetTotal={budgetData?.annual_budget_numeric ?? schoolBudgetTotal}
-                  categories={rawCategories.length > 0 ? rawCategories : localSchoolCategories}
+                  categories={apiCategoryBudgets.length > 0 ? apiCategoryBudgets : (rawCategories.length > 0 ? rawCategories : localSchoolCategories)}
                 />
               </motion.div>
 
               <motion.div variants={itemVariants}>
                 <CategoryBreakdownCard
-                  categories={rawCategories.length > 0 ? rawCategories : localSchoolCategories}
+                  categories={apiCategoryBudgets.length > 0 ? apiCategoryBudgets : (rawCategories.length > 0 ? rawCategories : localSchoolCategories)}
                   pagination={paginationInfo}
                   page={page}
                   perPage={perPage}
@@ -445,7 +488,10 @@ const BudgetPage = () => {
                   }}
                   isFetching={isFetching}
                   title={budgetData?.budget_categories?.title || "Budget Categories"}
-                  subtitle={budgetData?.budget_categories?.subtitle || "Annual budget vs. actual spend"}
+                  subtitle={budgetData?.budget_categories?.subtitle || "Annual budget vs. actual spend with custom limits"}
+                  onEditCategory={(cat) => setSelectedCategoryToEdit(cat)}
+                  onResetCategory={(cat) => setCategoryToReset(cat)}
+                  onManageBulk={() => setIsBulkCategoryModalOpen(true)}
                 />
               </motion.div>
             </>
@@ -537,7 +583,7 @@ const BudgetPage = () => {
         </>
       )}
 
-      {/* Add / Edit Expense Modal */}
+      {/* Add / Edit Director Expense Modal */}
       <AddExpenseModal
         isOpen={isAddExpenseOpen}
         onClose={() => {
@@ -549,14 +595,53 @@ const BudgetPage = () => {
         isPending={isLoggingExpense || isUpdatingExpense}
       />
 
+      {/* Single Category Budget Edit Modal */}
+      <EditCategoryBudgetModal
+        isOpen={!!selectedCategoryToEdit}
+        onClose={() => setSelectedCategoryToEdit(null)}
+        category={selectedCategoryToEdit}
+        summary={categorySummary}
+        categories={apiCategoryBudgets.length > 0 ? apiCategoryBudgets : rawCategories}
+        onSuccess={() => {
+          refetch();
+          refetchCategoryBudgets();
+        }}
+      />
+
+      {/* Bulk Category Budgets Modal */}
+      <DeclareBudgetModal
+        isOpen={isBulkCategoryModalOpen}
+        onClose={() => setIsBulkCategoryModalOpen(false)}
+        categories={apiCategoryBudgets.length > 0 ? apiCategoryBudgets : rawCategories}
+        schoolBudgetLimit={categorySummary?.school_budget_limit ?? (budgetData?.annual_budget_numeric ?? schoolBudgetTotal)}
+        onSuccessRefetch={() => {
+          refetch();
+          refetchCategoryBudgets();
+        }}
+      />
+
+      {/* Reset Category Budget Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={!!categoryToReset}
+        onClose={() => setCategoryToReset(null)}
+        onConfirm={handleConfirmResetCategory}
+        title="Reset Category Budget Limit"
+        itemName={`custom limit for ${categoryToReset?.category_name || categoryToReset?.name || "this category"}`}
+        confirmText="Reset to Default"
+        isLoading={isDeletingCategory}
+      />
+
       {/* Budget Settings Modal */}
       <BudgetSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        onSuccessRefetch={refetch}
+        onSuccessRefetch={() => {
+          refetch();
+          refetchCategoryBudgets();
+        }}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal for Expenses */}
       <DeleteConfirmationModal
         isOpen={!!expenseToDelete}
         onClose={() => setExpenseToDelete(null)}
@@ -571,4 +656,5 @@ const BudgetPage = () => {
 };
 
 export default BudgetPage;
+
 

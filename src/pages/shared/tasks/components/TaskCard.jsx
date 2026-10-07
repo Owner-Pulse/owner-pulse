@@ -225,11 +225,22 @@ const TaskCardInner = ({
   const assigneeRole = (typeof task.assignee === "string" ? task.assignee : task.assignee?.role || "").toLowerCase();
   const userRole = (currentRole || "").toLowerCase();
   const isForMe = assigneeRole === userRole;
-  const assignedByRole = (typeof task.assignedBy === "string" ? task.assignedBy : task.assignedBy?.role || "").toLowerCase();
-  const isCreator = assignedByRole === userRole;
-  const canEditOrDelete = isCreator || userRole === "owner" || isForMe;
+
+  // Determine role that created the task
+  const assignedByRole = (
+    task.creatorRole ||
+    (typeof task.assignedBy === "string" ? task.assignedBy : task.assignedBy?.role || "") ||
+    (task.creatorId === 2 ? "owner" : task.creatorId === 1 ? "director" : "")
+  ).toLowerCase();
 
   const isFromOwner = assignedByRole.includes("owner") || task.creatorId === 2 || task.raw?.created_by === 2;
+  const isFromDirector = assignedByRole.includes("director") || task.creatorId === 1 || task.raw?.created_by === 1;
+
+  // Only the creator role can delete the task:
+  // If task is created by director (for owner or self), only director can delete it and see delete button.
+  // If task is created by owner (for director or self), only owner can delete it and see delete button.
+  const canDelete = userRole === "owner" ? isFromOwner : userRole === "director" ? isFromDirector : (assignedByRole === userRole);
+  const canEdit = canDelete;
 
   const handleDelete = async () => {
     await deleteTask(task.id);
@@ -376,7 +387,7 @@ const TaskCardInner = ({
                 </Button>
 
                 {/* Delete Task button */}
-                {canEditOrDelete && (
+                {canDelete && (
                   <Button
                     size="sm"
                     variant="outline"

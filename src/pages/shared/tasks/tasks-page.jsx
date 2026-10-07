@@ -57,20 +57,32 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
       : (Array.isArray(taskList?.data) ? taskList.data : []);
 
     if (rawList && rawList.length > 0) {
-      const mappedTasks = rawList.map((t) => ({
-        id: t.id,
-        title: t.title,
-        description: t.description,
-        assignee: t.assignee?.role || (t.assigned_to === 1 ? "director" : "owner"),
-        assignedToId: t.assigned_to,
-        creatorId: t.created_by,
-        assignedBy: t.creator?.role || (t.created_by === 2 ? "owner" : "director"),
-        priority: t.priority || "medium",
-        status: t.status === "pending" ? "open" : t.status,
-        due: t.due_date,
-        createdAt: t.created_at,
-        raw: t,
-      }));
+      const mappedTasks = rawList.map((t) => {
+        const creatorRole = (
+          t.creator?.role ||
+          t.creator_role ||
+          t.created_by_role ||
+          (t.created_by === 2 ? "owner" : t.created_by === 1 ? "director" : "")
+        ).toLowerCase();
+
+        const assignedBy = t.creator?.role || t.created_by_role || (t.created_by === 2 ? "owner" : "director");
+
+        return {
+          id: t.id,
+          title: t.title,
+          description: t.description,
+          assignee: t.assignee?.role || (t.assigned_to === 1 ? "director" : "owner"),
+          assignedToId: t.assigned_to,
+          creatorId: t.created_by,
+          creatorRole: creatorRole || assignedBy,
+          assignedBy: assignedBy,
+          priority: t.priority || "medium",
+          status: t.status === "pending" ? "open" : t.status,
+          due: t.due_date,
+          createdAt: t.created_at,
+          raw: t,
+        };
+      });
       setTasks(mappedTasks);
     } else {
       setTasks([]);
