@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
-import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent } from 'lucide-react';
+import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
@@ -49,9 +49,10 @@ const directorTabs = [
   { id: "budget", label: "My Budget", icon: DollarSign },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
+  { id: "data-import", label: "Data Import", icon: UploadCloud },
 ];
 
-const bottomTabs = [
+const profileTabs = [
   { id: "profile", label: "Profile", icon: UserCircle },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -116,6 +117,7 @@ const DashboardLayout = () => {
   const [notifFilter, setNotifFilter] = useState("all");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const notifRef = useRef(null);
+  const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -228,6 +230,18 @@ const DashboardLayout = () => {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [notifOpen]);
 
+  // Click-outside handler for profile dropdown
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const handleClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showProfileMenu]);
+
   // Notif helpers
   const notifStats = useMemo(() => ({
     unread: notificationsList.filter((n) => !n.read).length,
@@ -271,9 +285,9 @@ const DashboardLayout = () => {
     <div className="min-h-screen text-white flex">
       {/* Sidebar */}
       <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
-        <div className="p-6 h-full flex flex-col">
+        <div className="px-4 py-4 h-full flex flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-4 px-2">
             <img src={logo} alt="Logo" className="h-14 w-auto scale-145" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-gray-900">OwnerPulse</h1>
@@ -282,7 +296,7 @@ const DashboardLayout = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="space-y-1 flex-1 overflow-y-auto no-scrollbar">
+          <nav className="flex-1 flex flex-col justify-between gap-0.5 overflow-y-auto no-scrollbar">
             {menuItems.map((item) => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
@@ -293,47 +307,17 @@ const DashboardLayout = () => {
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                  className={`w-full flex-1 min-h-9 max-h-12 flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
                     ? 'bg-[#1E3A5F] text-white font-semibold'
                     : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                     }`}
                 >
-                  <item.icon size={20} />
+                  <item.icon size={18} />
                   {item.label}
                 </NavLink>
               );
             })}
           </nav>
-
-          {/* Profile & Settings */}
-          <nav className="space-y-1 mb-2">
-            {bottomTabs.map((item) => {
-              const destination = `/${role}/${item.id}`;
-              const isActive = currentPath === destination;
-              return (
-                <NavLink
-                  key={item.id}
-                  to={destination}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
-                    ? 'bg-[#1E3A5F] text-white font-semibold'
-                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  <item.icon size={20} />
-                  {item.label}
-                </NavLink>
-              );
-            })}
-          </nav>
-
-          {/* Bottom Section */}
-          <div className="pt-3 border-t border-gray-200">
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl text-sm font-medium transition-all">
-              <LogOut size={20} />
-              Logout
-            </button>
-          </div>
         </div>
       </div>
 
@@ -496,7 +480,7 @@ const DashboardLayout = () => {
               </div>
 
               {/* Profile */}
-              <div className="relative">
+              <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-3 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
@@ -508,6 +492,50 @@ const DashboardLayout = () => {
                     <p className="text-xs text-gray-400 -mt-0.5 capitalize">{role}</p>
                   </div>
                 </button>
+
+                {/* Profile Dropdown */}
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-100 p-1.5"
+                    >
+                      {profileTabs.map((item) => {
+                        const destination = `/${role}/${item.id}`;
+                        const isActive = currentPath === destination;
+                        return (
+                          <NavLink
+                            key={item.id}
+                            to={destination}
+                            onClick={() => setShowProfileMenu(false)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                              ? 'bg-[#1E3A5F] text-white font-semibold'
+                              : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                              }`}
+                          >
+                            <item.icon size={18} />
+                            {item.label}
+                          </NavLink>
+                        );
+                      })}
+                      <div className="mt-1.5 pt-1.5 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            setShowProfileMenu(false);
+                            handleLogout();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-red-500 hover:bg-red-50 rounded-xl text-sm font-medium transition-all"
+                        >
+                          <LogOut size={18} />
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>

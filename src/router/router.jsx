@@ -40,6 +40,7 @@ import ProfilePage from "@/pages/shared/profile/profile-page";
 import SettingsPage from "@/pages/shared/settings/settings-page";
 import BillingPage from "@/pages/shared/billing/billing-page";
 import DiscountsPage from "@/pages/shared/discounts/discounts-page";
+import DataImportPage from "@/pages/shared/data-import/data-import-page";
 
 
 export const router = createBrowserRouter([
@@ -236,6 +237,10 @@ export const router = createBrowserRouter([
           {
             path: 'settings',
             element: <SettingsPage />
+          },
+          {
+            path: 'data-import',
+            element: <DataImportPage />
           },
         ]
       }

@@ -21,7 +21,7 @@ import toast from "react-hot-toast";
 import { useGetCsvFileTypes, useUploadCsv } from "@/hooks/owner-hook/csv-manage.hook";
 
 // Default fallback options provided by the API specs
-const DEFAULT_FILE_TYPES = [
+export const DEFAULT_FILE_TYPES = [
   {
     key: "procare",
     label: "Procare Main (Persons & Accounts)",
@@ -96,7 +96,7 @@ const DEFAULT_FILE_TYPES = [
   },
 ];
 
-const formatFileSize = (bytes) => {
+export const formatFileSize = (bytes) => {
   if (!bytes || bytes === 0) return "0 Bytes";
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
@@ -222,7 +222,7 @@ const CsvUploadModal = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <h2 className="text-base md:text-lg font-bold tracking-wide">
-                  Upload Procare CSV
+                  Data Import
                 </h2>
                 <p className="text-xs text-white/70">
                   Import Procare CSV data files into the system
