@@ -30,7 +30,7 @@ import OwnerOverviewSkeleton from "./components/OwnerOverviewSkeleton";
 import PulseSection from "./components/PulseSection";
 import AtRiskStudentsCard from "./components/AtRiskStudentsCard";
 import MaintenanceCard from "./components/MaintenanceCard";
-import TasksCard from "./components/TasksCard";
+import TaskBoard from "@/components/TaskBoard";
 import BudgetOverviewCard from "./components/BudgetOverviewCard";
 import EnrollmentChart from "./components/EnrollmentChart";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
@@ -42,7 +42,6 @@ import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
-const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -61,7 +60,7 @@ const OverviewPage = () => {
   const [isTargetsModalOpen, setIsTargetsModalOpen] = useState(false);
 
   // Fetch API data
-  const { ownerOverviewData, isLoading } = useGetOwnerOverview();
+  const { ownerOverviewData, isLoading, refetch } = useGetOwnerOverview();
   const { isConnected: isQbConnected, isLoading: isQbStatusLoading } = useGetQuickbookStatus();
   const { getConnectUrl, isPending: isConnectingQb } = useConnectQuickBooks();
 
@@ -75,7 +74,6 @@ const OverviewPage = () => {
   const cashFlowMetrics = ownerOverviewData?.cash_flow_metrics;
   const atRiskList = ownerOverviewData?.at_risk_students || [];
   const openMaintList = ownerOverviewData?.open_maintenance || [];
-  const activeTaskList = ownerOverviewData?.active_tasks || [];
   const budgetOverview = ownerOverviewData?.budget_overview;
   const enrollmentByGrade = ownerOverviewData?.enrollment_by_grade || [];
   const upcomingEvents = ownerOverviewData?.upcoming_events || [];
@@ -321,12 +319,14 @@ const OverviewPage = () => {
         />
       </div>
 
-      {/* Middle Row — At-Risk + Maintenance + Tasks */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* Middle Row — At-Risk + Maintenance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} fmtDate={fmtDate} onNavigate={go} />
         <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} onNavigate={go} />
-        <TasksCard tasks={activeTaskList} highPriorityCount={tasksKpi.high_priority} fmtDate={fmtDate} daysUntil={daysUntil} onNavigate={go} />
       </div>
+
+      {/* Task ownership board */}
+      <TaskBoard data={ownerOverviewData?.task_board} role="owner" onNavigate={go} onRefresh={refetch} />
 
       {/* Bottom Section — Budget + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
