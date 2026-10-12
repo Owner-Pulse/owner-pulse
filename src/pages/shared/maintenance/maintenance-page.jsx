@@ -49,8 +49,9 @@ const MaintenancePage = () => {
   const [showForm, setShowForm] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [ownerTab, setOwnerTab] = useState("all");
-  // Director tab stays unset until the list loads, then defaults by what is open
-  const [directorTab, setDirectorTab] = useState(null);
+  const [directorTab, setDirectorTab] = useState("assigned_to_me");
+  // Until the director picks a tab, the first load decides the default
+  const directorTabResolved = useRef(false);
   const [deleteItem, setDeleteItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
 
@@ -59,8 +60,9 @@ const MaintenancePage = () => {
     if (filterPriority !== "all") p.priority = filterPriority;
     if (filterStatus !== "all") p.status = filterStatus;
     if (isOwner && ownerTab !== "all") p.direction = ownerTab;
+    if (!isOwner) p.direction = directorTab;
     return p;
-  }, [filterPriority, filterStatus, isOwner, ownerTab]);
+  }, [filterPriority, filterStatus, isOwner, ownerTab, directorTab]);
 
   // Role-based data fetching — only the relevant hook fires
   const directorQuery = useGetDirectorMaintenanceList(isOwner ? undefined : params);
@@ -130,7 +132,8 @@ const MaintenancePage = () => {
       priority: r.priority,
       status: r.status,
       logged: r.created_at || new Date().toISOString(),
-      estCost: Number(r.cost) || 0,
+      // null = no cost entered yet
+      estCost: r.cost == null || r.cost === "" ? null : Number(String(r.cost).replace(/[^0-9.-]+/g, "")) || 0,
       submittedBy: r.creator?.name || r.director?.name || "Director",
       byLabel: r.direction === "assigned_to_director" || r.direction === "assigned_to_me" ? "Assigned by" : "Submitted by",
       direction: r.direction,
@@ -140,18 +143,20 @@ const MaintenancePage = () => {
   }, [maintenanceData]);
 
   // Assigned to me when it has open items, otherwise Sent to Owner
-  const hasOpenAssigned = mappedRequests.some((r) => r.direction === "assigned_to_me" && !isDoneStatus(r.status));
+  const hasOpenAssigned = mappedRequests.some((r) => !isDoneStatus(r.status));
   useEffect(() => {
-    if (!isOwner && directorTab === null && maintenanceData) {
-      setDirectorTab(hasOpenAssigned ? "assigned_to_me" : "sent_to_owner");
-    }
-  }, [isOwner, directorTab, maintenanceData, hasOpenAssigned]);
-  const activeDirectorTab = directorTab ?? "assigned_to_me";
+    if (isOwner || directorTabResolved.current || !maintenanceData) return;
+    directorTabResolved.current = true;
+    if (!hasOpenAssigned) setDirectorTab("sent_to_owner");
+  }, [isOwner, maintenanceData, hasOpenAssigned]);
+
+  const changeDirectorTab = (tab) => {
+    directorTabResolved.current = true;
+    setDirectorTab(tab);
+  };
 
   const filteredRequests = useMemo(() => {
     return mappedRequests.filter((r) => {
-      // Requests without a direction predate it and were all sent by the director
-      if (!isOwner && (r.direction || "sent_to_owner") !== activeDirectorTab) return false;
       const isDone = isDoneStatus(r.status);
       if (filterStatus === "all") {
         if (isDone) return false;
@@ -164,7 +169,7 @@ const MaintenancePage = () => {
       }
       return true;
     });
-  }, [mappedRequests, filterStatus, isOwner, activeDirectorTab]);
+  }, [mappedRequests, filterStatus]);
 
   const sorted = useMemo(() => {
     const order = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -269,8 +274,8 @@ const MaintenancePage = () => {
           filteredCount={sorted.length}
           totalCount={stats.total}
           tabs={isOwner ? OWNER_TABS : DIRECTOR_TABS}
-          activeTab={isOwner ? ownerTab : activeDirectorTab}
-          onTabChange={isOwner ? setOwnerTab : setDirectorTab}
+          activeTab={isOwner ? ownerTab : directorTab}
+          onTabChange={isOwner ? setOwnerTab : changeDirectorTab}
         />
       </motion.div>
 
@@ -316,7 +321,7 @@ const MaintenancePage = () => {
             <p className="text-xs text-gray-400 mt-1">
               {isOwner
                 ? "Adjust filters to see more results"
-                : activeDirectorTab === "assigned_to_me"
+                : directorTab === "assigned_to_me"
                   ? "Nothing assigned to you by the Owner matches these filters"
                   : 'Click "Report Issue" to submit a new maintenance request'}
             </p>

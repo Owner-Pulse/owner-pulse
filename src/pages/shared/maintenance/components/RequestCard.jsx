@@ -66,6 +66,9 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
               )}
             </div>
             <div className="text-right shrink-0 flex flex-col items-end gap-1">
+              {req.estCost == null && (
+                <span className="text-[10px] font-medium text-gray-400">No cost yet</span>
+              )}
               {req.estCost > 0 && (
                 <div>
                   <span className="text-sm font-bold text-gray-900">{fmtMoney(req.estCost)}</span>

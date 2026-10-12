@@ -35,8 +35,9 @@ const AssignMaintenanceForm = ({ onClose }) => {
       priority: form.priority,
       location: form.location.trim(),
       description: form.description.trim(),
-      cost: String(Number(form.cost) || 0),
     };
+    // An empty cost is left out, not sent as 0
+    if (String(form.cost).trim() !== "") payload.cost = String(form.cost).trim();
     // No director_id means All Directors
     if (form.directorId !== ALL_DIRECTORS) payload.director_id = Number(form.directorId);
 
