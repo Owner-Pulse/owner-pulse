@@ -16,7 +16,7 @@ import CoverageCard from "./components/CoverageCard";
 import ComplianceCard from "./components/ComplianceCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import ExpensesCard from "./components/ExpensesCard";
-import TasksCard from "./components/TasksCard";
+import TaskBoard from "@/components/TaskBoard";
 import OwnerDependenceCard from "./components/OwnerDependenceCard";
 
 const containerVariants = {
@@ -33,7 +33,7 @@ const DirectorOverviewPage = () => {
   const go = (path) => navigate(path);
 
   // Fetch Director Overview Data
-  const { directorOverviewData, isLoading } = useGetDirectorOverview();
+  const { directorOverviewData, isLoading, refetch } = useGetDirectorOverview();
 
   // If loading, render Skeleton Loader
   if (isLoading) {
@@ -148,7 +148,7 @@ const DirectorOverviewPage = () => {
       <ExpensesCard pettyCashData={pettyCashData} onNavigate={go} />
 
       {/* Section 8: Pending Tasks */}
-      <TasksCard data={pendingTasksData} onNavigate={go} />
+      <TaskBoard data={pendingTasksData} role="director" onNavigate={go} onRefresh={refetch} />
 
       {/* Owner Dependence Index */}
       <OwnerDependenceCard data={pendingTasksData?.owner_dependence_index ?? pendingTasksData?.over_escalation_rate} />

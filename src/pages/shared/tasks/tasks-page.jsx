@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   ClipboardList,
@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ListTodo,
   Plus,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KpiCard from "./components/KpiCard";
@@ -43,13 +44,19 @@ const TasksPage = () => {
   return <OwnerTasksLoader currentRole={currentRole} user={user} />;
 };
 
+const isDone = (status) => status === "done" || status === "completed" || status === "cancelled";
+const sameId = (a, b) => a != null && b != null && Number(a) === Number(b);
+
 const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const [tasks, setTasks] = useState([]);
   const [taskStatuses, setTaskStatuses] = useState({});
-  const [activeTab, setActiveTab] = useState("my");
+  const [activeTab, setActiveTab] = useState("assigned");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
-  const [filterOrigin, setFilterOrigin] = useState("all");
+
+  const isDirector = currentRole === "director";
+  const sentTarget = isDirector ? "Owner" : "Director";
+  const sentLabel = `Sent to ${sentTarget}`;
 
   useEffect(() => {
     const rawList = Array.isArray(taskList)
@@ -58,24 +65,24 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
 
     if (rawList && rawList.length > 0) {
       const mappedTasks = rawList.map((t) => {
-        const creatorRole = (
-          t.creator?.role ||
-          t.creator_role ||
-          t.created_by_role ||
-          (t.created_by === 2 ? "owner" : t.created_by === 1 ? "director" : "")
-        ).toLowerCase();
-
-        const assignedBy = t.creator?.role || t.created_by_role || (t.created_by === 2 ? "owner" : "director");
+        // created_by / assigned_to arrive as an id or as a { id, role } object
+        const creator = t.creator || (t.created_by && typeof t.created_by === "object" ? t.created_by : null);
+        const assignee = t.assignee || (t.assigned_to && typeof t.assigned_to === "object" ? t.assigned_to : null);
+        const creatorId = creator?.id ?? (typeof t.created_by === "object" ? null : t.created_by);
+        const assignedToId = assignee?.id ?? (typeof t.assigned_to === "object" ? null : t.assigned_to) ?? null;
+        const creatorRole = (creator?.role || "").toLowerCase();
+        // No assignee means the task is for all directors
+        const assigneeRole = (assignee?.role || (assignedToId == null ? "director" : "")).toLowerCase();
 
         return {
           id: t.id,
           title: t.title,
           description: t.description,
-          assignee: t.assignee?.role || (t.assigned_to === 1 ? "director" : "owner"),
-          assignedToId: t.assigned_to,
-          creatorId: t.created_by,
-          creatorRole: creatorRole || assignedBy,
-          assignedBy: assignedBy,
+          assignee: assigneeRole,
+          assignedToId,
+          creatorId,
+          creatorRole,
+          assignedBy: creatorRole,
           priority: t.priority || "medium",
           status: t.status === "pending" ? "open" : t.status,
           due: t.due_date,
@@ -94,29 +101,27 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   };
 
   const handleAssign = (newTask) => {
-    setTasks((prev) => [...prev, newTask]);
+    // Shown until the refetch replaces it; a task you just assigned is one you sent
+    setTasks((prev) => [...prev, { ...newTask, creatorId: user?.id, creatorRole: currentRole }]);
   };
 
-  const myTasks = useMemo(() => {
-    return tasks.filter((t) => {
-      if (user?.id && t.assignedToId !== undefined && t.assignedToId !== null) {
-        return Number(t.assignedToId) === Number(user.id);
-      }
-      return t.assignee === currentRole;
-    });
-  }, [tasks, currentRole, user]);
+  const isAssignedToMe = useCallback(
+    (t) => sameId(t.assignedToId, user?.id) || (isDirector && t.assignedToId === null),
+    [user?.id, isDirector]
+  );
 
-  const visibleTasks = activeTab === "my" ? myTasks : tasks;
+  const myTasks = useMemo(() => tasks.filter(isAssignedToMe), [tasks, isAssignedToMe]);
+
+  const sentTasks = useMemo(
+    () => tasks.filter((t) => sameId(t.creatorId, user?.id) && !isAssignedToMe(t)),
+    [tasks, user?.id, isAssignedToMe]
+  );
+
+  const visibleTasks = activeTab === "assigned" ? myTasks : activeTab === "sent" ? sentTasks : tasks;
 
   const filtered = useMemo(() => {
-    return visibleTasks.filter((t) => {
-      if (filterPriority !== "all" && t.priority !== filterPriority) return false;
-      const isFromOwner = (t.assignedBy || "").toLowerCase().includes("owner") || t.creatorId === 2 || t.raw?.created_by === 2;
-      if (filterOrigin === "owner" && !isFromOwner) return false;
-      if (filterOrigin === "self" && isFromOwner) return false;
-      return true;
-    });
-  }, [visibleTasks, filterPriority, filterOrigin]);
+    return visibleTasks.filter((t) => filterPriority === "all" || t.priority === filterPriority);
+  }, [visibleTasks, filterPriority]);
 
   const sorted = useMemo(() => {
     const order = { high: 0, medium: 1, low: 2 };
@@ -124,15 +129,24 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   }, [filtered]);
 
   const stats = useMemo(() => {
-    const getStatus = (t) => taskStatuses[t.id] || t.status;
-    const isDone = (status) => status === "done" || status === "completed";
-    const open = tasks.filter((t) => !isDone(getStatus(t))).length;
-    const high = tasks.filter((t) => t.priority === "high" && !isDone(getStatus(t))).length;
-    const myOpen = myTasks.filter((t) => !isDone(getStatus(t))).length;
-    const overdue = tasks.filter((t) => daysUntil(t.due) < 0 && !isDone(getStatus(t))).length;
-    const myOverdue = myTasks.filter((t) => daysUntil(t.due) < 0 && !isDone(getStatus(t))).length;
-    return { open, high, myOpen, overdue, myOverdue, total: tasks.length };
-  }, [tasks, taskStatuses, myTasks]);
+    const isOpen = (t) => !isDone(taskStatuses[t.id] || t.status);
+    const open = tasks.filter(isOpen).length;
+    const high = tasks.filter((t) => t.priority === "high" && isOpen(t)).length;
+    const myOpen = myTasks.filter(isOpen).length;
+    const sentOpen = sentTasks.filter(isOpen).length;
+    const overdue = tasks.filter((t) => daysUntil(t.due) < 0 && isOpen(t)).length;
+    const myOverdue = myTasks.filter((t) => daysUntil(t.due) < 0 && isOpen(t)).length;
+    return { open, high, myOpen, sentOpen, overdue, myOverdue, total: tasks.length };
+  }, [tasks, taskStatuses, myTasks, sentTasks]);
+
+  const emptyMessage =
+    filterPriority !== "all"
+      ? "No tasks match the selected filters."
+      : activeTab === "assigned"
+        ? "No tasks assigned to you yet."
+        : activeTab === "sent"
+          ? `No tasks sent to the ${sentTarget} yet.`
+          : "No tasks yet.";
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -141,7 +155,8 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">Tasks</h1>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            {stats.myOpen} assigned · {stats.open} open · {stats.overdue > 0 && <span className="text-[#8A362C] font-medium">{stats.overdue} overdue</span>}
+            {stats.myOpen} assigned to you · {stats.sentOpen} sent · {stats.open} open
+            {stats.overdue > 0 && <span className="text-[#8A362C] font-medium"> · {stats.overdue} overdue</span>}
           </p>
         </div>
         <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs md:text-sm px-3 shrink-0" onClick={() => setShowAssignModal(true)}>
@@ -151,8 +166,8 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard icon={ListTodo} label="My Tasks" value={stats.myOpen} sub={`Assigned to ${currentRole}`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-        <KpiCard icon={ClipboardList} label="Total Open" value={stats.open} sub={`${stats.total} total tasks`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <KpiCard icon={ListTodo} label="My Tasks" value={stats.myOpen} sub="Open, assigned to you" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+        <KpiCard icon={Send} label="Sent by me" value={stats.sentOpen} sub={`Open, sent to ${sentTarget}`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         <KpiCard icon={Flag} label="High Priority" value={stats.high} sub={stats.high === 1 ? "1 urgent item" : `${stats.high} urgent`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
         <KpiCard icon={AlertTriangle} label="Overdue" value={stats.overdue} sub={stats.myOverdue > 0 ? `${stats.myOverdue} on you` : "All on track"} iconBg={stats.overdue > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"} />
       </div>
@@ -163,8 +178,7 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         onTabChange={setActiveTab}
         filterPriority={filterPriority}
         onFilterChange={setFilterPriority}
-        filterOrigin={filterOrigin}
-        onOriginChange={setFilterOrigin}
+        sentLabel={sentLabel}
         totalCount={sorted.length}
       />
 
@@ -200,6 +214,8 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
             <TaskCard
               key={task.id}
               task={task}
+              isForMe={isAssignedToMe(task)}
+              canManage={sameId(task.creatorId, user?.id)}
               status={status}
               currentRole={currentRole}
               daysUntil={daysUntil}
@@ -209,9 +225,19 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         }) : (
           <div className="py-12 text-center">
             <ClipboardList size={32} className="mx-auto text-gray-300 mb-2" />
-            <p className="text-sm text-gray-500">
-              {activeTab === "my" ? "No tasks assigned to you yet." : "No tasks match the selected filters."}
-            </p>
+            <p className="text-sm text-gray-500">{emptyMessage}</p>
+            {activeTab === "assigned" && sentTasks.length > 0 && (
+              <p className="text-sm text-gray-500 mt-1">
+                You have {sentTasks.length} {sentTasks.length === 1 ? "task" : "tasks"} sent to the {sentTarget}.{" "}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sent")}
+                  className="font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
+                >
+                  View them
+                </button>
+              </p>
+            )}
           </div>
         )}
       </div>

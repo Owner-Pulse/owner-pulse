@@ -8,6 +8,15 @@ export const ownerMaintenanceService = {
         }
     },
 
+    create_maintenance: async (axiosInstance, payload) => {
+        try {
+            const response = await axiosInstance.post("/owner/maintenance/store", payload);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     status_change: async (axiosInstance, maintenance_id, data) => {
         try {
             const response = await axiosInstance.post(`/owner/maintenance/status/${maintenance_id}`, data);

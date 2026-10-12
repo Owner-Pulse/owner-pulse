@@ -15,8 +15,20 @@ const STATUS_FILTERS = [
   { id: "done", label: "Completed Maintenance" },
 ];
 
-const FilterBar = ({ filterPriority, filterStatus, onPriorityChange, onStatusChange, filteredCount, totalCount }) => (
+const FilterBar = ({ filterPriority, filterStatus, onPriorityChange, onStatusChange, filteredCount, totalCount, tabs = [], activeTab, onTabChange }) => (
   <div className="flex flex-wrap items-center justify-between gap-3">
+    {tabs.length > 0 && (
+      <div className="w-full">
+        <div className="inline-flex flex-wrap items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+          {tabs.map((tab) => (
+            <button key={tab.id} onClick={() => onTabChange(tab.id)}
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all cursor-pointer ${activeTab === tab.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Priority:</span>
       {PRIORITY_FILTERS.map((f) => (

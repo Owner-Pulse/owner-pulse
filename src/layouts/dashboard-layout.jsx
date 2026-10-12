@@ -5,6 +5,8 @@ import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
 import { useSignout } from '@/hooks/auth/auth.hook';
+import { useGetOwnerOverview } from '@/hooks/owner-hook/overview.hook';
+import { useGetDirectorOverview } from '@/hooks/director-hook/overview.hook';
 import { useGetNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/hooks/notification.hook';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,6 +103,26 @@ const timeAgo = (ts) => {
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
+
+// Unread task comments next to "Tasks" — reads the same cached overview query as the dashboard
+const UnreadCount = ({ count }) =>
+  count > 0 ? (
+    <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+      {count > 99 ? "99+" : count}
+    </span>
+  ) : null;
+
+const OwnerTasksUnread = () => {
+  const { ownerOverviewData } = useGetOwnerOverview();
+  return <UnreadCount count={ownerOverviewData?.task_board?.unread_comments_total ?? 0} />;
+};
+
+const DirectorTasksUnread = () => {
+  const { directorOverviewData } = useGetDirectorOverview();
+  return <UnreadCount count={directorOverviewData?.pending_tasks_and_escalation?.unread_comments_total ?? 0} />;
+};
+
+const TasksUnreadBadge = ({ role }) => (role === "owner" ? <OwnerTasksUnread /> : <DirectorTasksUnread />);
 
 const DashboardLayout = () => {
   const queryClient = useQueryClient();
@@ -314,6 +336,7 @@ const DashboardLayout = () => {
                 >
                   <item.icon size={18} />
                   {item.label}
+                  {item.id === "tasks" && role && <TasksUnreadBadge role={role} />}
                 </NavLink>
               );
             })}

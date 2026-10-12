@@ -43,6 +43,24 @@ export const directorMaintenanceService = {
         }
     },
 
+    advance_status: async (id, axiosInstance) => {
+        try {
+            const response = await axiosInstance.post(`/director/maintenance/status/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    mark_complete: async (id, axiosInstance) => {
+        try {
+            const response = await axiosInstance.post(`/director/maintenance/complete/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     delete_maintenance: async (id, axiosInstance) => {
         try {
             const response = await axiosInstance.delete(`/director/maintenance/delete/${id}`);
