@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HeartPulse, ChevronDown, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PulseRecommendations from "@/components/PulseRecommendations";
+import PulseSetup, { PulsePartialNote } from "@/components/PulseSetup";
 
 // ─── Design tokens ───────────────────────────────────────────────
 const DARK_NAVY = "#0A0F1E";
@@ -166,6 +167,7 @@ const STATE_DESC = {
   Elevated: "Monitor closely",
   Stressed: "Increased pressure",
   Critical: "Immediate action needed",
+  "No data": "Waiting for data",
 };
 
 function getStateDesc(state) {
@@ -187,14 +189,16 @@ function formatDate() {
 const PulseSection = ({ ownerPulse }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const pulseColor = ownerPulse.state?.color || MONITOR_GREEN;
-  const stateName = ownerPulse.state?.state || "Healthy";
+  const noData = ownerPulse.bpm == null;
+  const pulseColor = noData ? "#9CA3AF" : ownerPulse.state?.color || MONITOR_GREEN;
+  const stateName = noData ? "No data" : ownerPulse.state?.state || "Healthy";
   const desc = getStateDesc(stateName);
-  const composite = ownerPulse.composite || 0;
-  const bpm = ownerPulse.bpm || 68;
+  const composite = ownerPulse.composite;
+  const bpm = ownerPulse.bpm;
+  const subScores = Object.values(ownerPulse.sub_scores || {});
 
   // Beat duration for pulse animation (slowed by ANIM_SLOW_FACTOR)
-  const beatDuration = (60 / Math.max(bpm, 55)) * ANIM_SLOW_FACTOR;
+  const beatDuration = (60 / Math.max(bpm ?? 0, 55)) * ANIM_SLOW_FACTOR;
 
   // Inject keyframes once
   useEffect(() => {
@@ -307,7 +311,7 @@ const PulseSection = ({ ownerPulse }) => {
                 className="text-[10px]"
                 style={{ color: "rgba(255,255,255,0.45)" }}
               >
-                {composite}/100 composite
+                {composite == null ? "No composite yet" : `${composite}/100 composite`}
               </div>
             </div>
 
@@ -330,34 +334,45 @@ const PulseSection = ({ ownerPulse }) => {
             >
               YOUR BUSINESS PULSE
             </div>
-            <motion.div
-              className="flex items-baseline gap-1"
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{
-                duration: beatDuration,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <span
-                className="text-6xl md:text-7xl font-black leading-none tracking-tighter tabular-nums"
-                style={{ color: pulseColor }}
-              >
-                {bpm}
-              </span>
-              <span
-                className="text-xs font-bold uppercase tracking-widest ml-0.5"
-                style={{ color: "rgba(255,255,255,0.5)" }}
-              >
-                BPM
-              </span>
-            </motion.div>
+            {noData ? (
+              <PulseSetup noDataKeys={ownerPulse.noDataKeys} role="owner" className="py-2" />
+            ) : (
+              <>
+                <motion.div
+                  className="flex items-baseline gap-1"
+                  animate={{ scale: [1, 1.02, 1] }}
+                  transition={{
+                    duration: beatDuration,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <span
+                    className="text-6xl md:text-7xl font-black leading-none tracking-tighter tabular-nums"
+                    style={{ color: pulseColor }}
+                  >
+                    {bpm}
+                  </span>
+                  <span
+                    className="text-xs font-bold uppercase tracking-widest ml-0.5"
+                    style={{ color: "rgba(255,255,255,0.5)" }}
+                  >
+                    BPM
+                  </span>
+                </motion.div>
+                <PulsePartialNote
+                  noDataKeys={ownerPulse.noDataKeys}
+                  totalAreas={ownerPulse.totalAreas}
+                  className="mt-1"
+                />
+              </>
+            )}
 
             {/* ECG Waveform */}
             <div className="mt-1.5">
               <ECGCanvas
                 color={pulseColor}
-                bpm={bpm}
+                bpm={bpm ?? 0}
                 baseBg={DARK_NAVY}
               />
             </div>
@@ -420,6 +435,7 @@ const PulseSection = ({ ownerPulse }) => {
                   >
                     <PulseRecommendations
                       recommendations={ownerPulse.recommendations}
+                      noData={noData || subScores.some((s) => s == null)}
                     />
                   </div>
 

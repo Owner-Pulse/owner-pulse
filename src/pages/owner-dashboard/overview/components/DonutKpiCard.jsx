@@ -13,13 +13,13 @@ const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, ind
     <motion.div variants={itemVariants} key={index} onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
       <Card className="bg-white border-none shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
         <CardContent className="p-3">
-          <div className="flex items-center gap-1.5 mb-1">
+          <div className="flex items-start gap-1.5 mb-1">
             {Icon && (
-              <Icon size={14} strokeWidth={2} style={{ color }} aria-hidden />
+              <Icon size={14} strokeWidth={2} style={{ color }} className="shrink-0 mt-px" aria-hidden />
             )}
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider truncate">{label}</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase leading-tight break-words min-w-0">{label}</p>
           </div>
-          <div className="relative flex items-center justify-center h-[75px]">
+          <div className="relative flex items-center justify-center h-[110px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -36,7 +36,7 @@ const DonutKpiCard = ({ label, value, pct, color, sub, subColor, icon: Icon, ind
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute text-base font-extrabold" style={{ color }}>
+            <div className="absolute text-xl font-extrabold" style={{ color }}>
               {centerText !== undefined ? centerText : `${pct}%`}
             </div>
           </div>

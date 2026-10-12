@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router";
 import { useGetOwnerOverview } from "@/hooks/owner-hook/overview.hook";
 import { useConnectQuickBooks, useGetQuickbookStatus } from "@/hooks/owner-hook/quickbookConnect.hook";
+import { getPulseCoverage } from "@/components/PulseSetup";
 import OwnerOverviewSkeleton from "./components/OwnerOverviewSkeleton";
 
 // ─── Extracted Components ─────────────────────────────────────
@@ -82,14 +83,15 @@ const OverviewPage = () => {
 
   // Mapped Pulse from API
   const ownerPulse = {
-    bpm: pulseApi?.bpm ?? 0,
-    composite: Math.round(pulseApi?.composite_score ?? 0),
+    bpm: pulseApi?.bpm ?? null,
+    composite: pulseApi?.composite_score == null ? null : Math.round(pulseApi.composite_score),
     state: {
-      state: pulseApi?.state || "Normal",
-      color: pulseApi?.color || "#3E7A54",
+      state: pulseApi?.state || "No data",
+      color: pulseApi?.color || "#9CA3AF",
     },
     recommendations: pulseApi?.top_3_recommendations || [],
     sub_scores: pulseApi?.sub_scores || {},
+    ...getPulseCoverage(pulseApi),
   };
 
   const pulseHistory = ownerOverviewData?.pulse_history || [

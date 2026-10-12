@@ -277,7 +277,7 @@ const DailyLogPage = () => {
       </motion.div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 xl:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 2xl:grid-cols-8 gap-3">
         {["all", "incident", "removal", "pto", "substitute", "waitlist", "maintenance", "at_risk"].map((typeKey) => (
           <DailyLogStatsCard
             key={typeKey}

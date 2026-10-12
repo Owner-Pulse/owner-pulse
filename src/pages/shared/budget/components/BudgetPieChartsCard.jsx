@@ -18,8 +18,8 @@ const SinglePieChart = ({ title, spent, total, color = "#1E3A5F" }) => {
 
   return (
     <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50 border border-gray-100/80">
-      <h4 className="text-xs font-bold text-gray-700 mb-3">{title}</h4>
-      <div className="relative w-28 h-28 mb-3">
+      <h4 className="text-xs font-bold text-gray-700 mb-3 text-center">{title}</h4>
+      <div className="relative w-40 h-40 lg:w-44 lg:h-44 mb-3">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="42" fill="none" stroke="#E2E8F0" strokeWidth="10" />
           <circle
@@ -34,8 +34,8 @@ const SinglePieChart = ({ title, spent, total, color = "#1E3A5F" }) => {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-extrabold text-gray-900">{spentPct}%</span>
-          <span className="text-[9px] font-semibold text-gray-400">USED</span>
+          <span className="text-3xl font-extrabold text-gray-900 leading-none">{spentPct}%</span>
+          <span className="text-xs font-semibold text-gray-400 mt-1">USED</span>
         </div>
       </div>
       <div className="w-full space-y-1 text-center">

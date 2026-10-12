@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useGetDirectorOverview } from "@/hooks/director-hook/overview.hook";
+import { getPulseCoverage } from "@/components/PulseSetup";
 import DirectorOverviewSkeleton from "./components/DirectorOverviewSkeleton";
 
 // ─── Extracted Components ─────────────────────────────────────
@@ -16,7 +17,7 @@ import ComplianceCard from "./components/ComplianceCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import ExpensesCard from "./components/ExpensesCard";
 import TasksCard from "./components/TasksCard";
-import OverEscalationCard from "./components/OverEscalationCard";
+import OwnerDependenceCard from "./components/OwnerDependenceCard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -50,24 +51,27 @@ const DirectorOverviewPage = () => {
 
   // Formatted Pulse Object for Director
   const directorPulse = {
-    bpm: pulseApi?.bpm ?? 0,
-    composite: Math.round(pulseApi?.composite_score ?? 0),
+    bpm: pulseApi?.bpm ?? null,
+    composite: pulseApi?.composite_score == null ? null : Math.round(pulseApi.composite_score),
     state: {
-      state: pulseApi?.state || "Normal",
-      color: pulseApi?.color || "#3E7A54",
+      state: pulseApi?.state || "No data",
+      color: pulseApi?.color || "#9CA3AF",
     },
     subscores: [
-      { key: "comp", label: "Compliance", score: pulseApi?.sub_scores?.compliance ?? 0, weight: 0.2, icon: "ShieldCheck" },
-      { key: "enroll", label: "Enrollment", score: pulseApi?.sub_scores?.enrollment_health ?? 0, weight: 0.2, icon: "Users" },
-      { key: "late", label: "Late AR", score: pulseApi?.sub_scores?.late_payments_ar ?? 0, weight: 0.2, icon: "DollarSign" },
-      { key: "class", label: "Class Score", score: pulseApi?.sub_scores?.class_score ?? 0, weight: 0.2, icon: "Star" },
-      { key: "cash", label: "Petty Cash", score: pulseApi?.sub_scores?.petty_cash_pace ?? 0, weight: 0.2, icon: "CreditCard" },
+      { key: "comp", label: "Compliance", score: pulseApi?.sub_scores?.compliance ?? null, weight: pulseApi?.weights?.compliance ?? 0.2, icon: "ShieldCheck" },
+      { key: "enroll", label: "Enrollment", score: pulseApi?.sub_scores?.enrollment_health ?? null, weight: pulseApi?.weights?.enrollment_health ?? 0.2, icon: "Users" },
+      { key: "late", label: "Late AR", score: pulseApi?.sub_scores?.late_payments_ar ?? null, weight: pulseApi?.weights?.late_payments_ar ?? 0.2, icon: "DollarSign" },
+      { key: "class", label: "Class Score", score: pulseApi?.sub_scores?.class_score ?? null, weight: pulseApi?.weights?.class_score ?? 0.2, icon: "Star" },
+      { key: "cash", label: "Petty Cash", score: pulseApi?.sub_scores?.petty_cash_pace ?? null, weight: pulseApi?.weights?.petty_cash_pace ?? 0.2, icon: "CreditCard" },
+      { key: "dependence", label: "Owner Dependence", score: pulseApi?.sub_scores?.owner_dependence ?? null, weight: pulseApi?.weights?.owner_dependence ?? 0.05, icon: "UserCheck" },
     ],
     recommendations: pulseApi?.top_3_recommendations || [],
+    ...getPulseCoverage(pulseApi),
   };
 
   const ownerPulseSnapshot = {
-    bpm: pulseApi?.owner_macro_badge?.bpm ?? 0,
+    bpm: pulseApi?.owner_macro_badge?.bpm ?? null,
+    label: pulseApi?.owner_macro_badge?.label ?? "Owner's pulse: No data",
     state: pulseApi?.owner_macro_badge?.state ?? "Normal",
     color: pulseApi?.owner_macro_badge?.color ?? "#3E7A54",
   };
@@ -146,8 +150,8 @@ const DirectorOverviewPage = () => {
       {/* Section 8: Pending Tasks */}
       <TasksCard data={pendingTasksData} onNavigate={go} />
 
-      {/* Over-Escalation Rate */}
-      <OverEscalationCard data={pendingTasksData?.over_escalation_rate} />
+      {/* Owner Dependence Index */}
+      <OwnerDependenceCard data={pendingTasksData?.owner_dependence_index ?? pendingTasksData?.over_escalation_rate} />
     </motion.div>
   );
 };

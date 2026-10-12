@@ -43,7 +43,7 @@ const DailyLogStatsCard = ({ type, count, filterType, onFilter }) => {
       >
         <CardContent className="p-3.5 flex flex-col justify-between h-full min-h-[92px]">
           <div className="flex items-start justify-between gap-1.5">
-            <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wide leading-tight line-clamp-2 min-h-[24px]">
+            <p className="text-[10px] font-extrabold text-gray-400 uppercase leading-tight break-words min-w-0 min-h-[24px]">
               {cfg.label}
             </p>
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg} ${cfg.color}`}>

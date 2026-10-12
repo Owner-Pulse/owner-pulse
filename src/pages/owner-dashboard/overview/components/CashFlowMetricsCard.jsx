@@ -137,7 +137,7 @@ const CashFlowMetricsCard = ({ cashFlowMetrics }) => {
                   <PieChartIcon size={15} className="text-[#3E7A54]" />
                 </div>
               </div>
-              <div className="relative flex items-center justify-center h-[75px] my-1">
+              <div className="relative flex items-center justify-center h-[110px] my-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -154,7 +154,7 @@ const CashFlowMetricsCard = ({ cashFlowMetrics }) => {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute text-lg font-black text-[#3E7A54]">
+                <div className="absolute text-2xl font-black text-[#3E7A54]">
                   {marginPct}%
                 </div>
               </div>

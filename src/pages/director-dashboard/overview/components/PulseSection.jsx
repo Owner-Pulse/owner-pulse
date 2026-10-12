@@ -13,10 +13,12 @@ import {
   Phone,
   Timer,
   CreditCard,
+  UserCheck,
 } from "lucide-react";
 
 // ─── Icon map — resolves icon string to Lucide component ──
 const ICON_MAP = {
+  UserCheck,
   DollarSign,
   ShieldCheck,
   FileText,
@@ -30,11 +32,13 @@ const ICON_MAP = {
 import { Card } from "@/components/ui/card";
 import PulseGauge from "@/components/PulseGauge";
 import PulseRecommendations from "@/components/PulseRecommendations";
+import PulseSetup, { PulsePartialNote } from "@/components/PulseSetup";
 
 // ─── Design tokens ───────────────────────────────────────────────
 const DARK_NAVY = "#0A0F1E";
 const MONITOR_GREEN = "#3E9B67";
 const TEXT_DIM = "#94A3B8";
+const NO_DATA_GREY = "#9CA3AF";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -169,8 +173,10 @@ function ECGCanvas({ color, bpm, baseBg }) {
 const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const pulseColor = directorPulse.state?.color || MONITOR_GREEN;
-  const beatDuration = (60 / Math.max(directorPulse.bpm, 55)) * ANIM_SLOW_FACTOR;
+  const noData = directorPulse.bpm == null;
+  const composite = directorPulse.composite;
+  const pulseColor = noData ? NO_DATA_GREY : directorPulse.state?.color || MONITOR_GREEN;
+  const beatDuration = (60 / Math.max(directorPulse.bpm ?? 0, 55)) * ANIM_SLOW_FACTOR;
 
   return (
     <motion.div variants={itemVariants}>
@@ -225,41 +231,45 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
             </div>
             <div className="flex items-center gap-3">
               {/* Owner pulse badge */}
-              {ownerPulseSnapshot?.bpm && (
+              {(ownerPulseSnapshot?.bpm != null || ownerPulseSnapshot?.label) && (
                 <div
                   className="text-[10px] font-mono flex items-center gap-1"
                   style={{ color: TEXT_DIM }}
                 >
-                  <HeartPulse size={10} color={pulseColor} />
-                  Owner: {ownerPulseSnapshot.bpm}
+                  <HeartPulse size={10} color={pulseColor} className="shrink-0" />
+                  {ownerPulseSnapshot.bpm != null ? `Owner: ${ownerPulseSnapshot.bpm}` : ownerPulseSnapshot.label}
                 </div>
               )}
-              <span className="text-[10px] font-mono" style={{ color: TEXT_DIM }}>
-                {directorPulse.state.state?.toUpperCase() || "HEALTHY"}
+              <span className="text-[10px] font-mono shrink-0" style={{ color: TEXT_DIM }}>
+                {noData ? "NO DATA" : directorPulse.state?.state?.toUpperCase() || "HEALTHY"}
               </span>
             </div>
           </div>
 
           {/* ═══════ BPM DISPLAY ═══════ */}
           <div className="flex flex-col items-center justify-center py-2 relative z-10">
-            <motion.div
-              className="flex items-baseline gap-1"
-              animate={{ scale: [1, 1.03, 1] }}
-              transition={{ duration: beatDuration, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <span
-                className="text-7xl md:text-8xl font-black leading-none tracking-tighter tabular-nums"
-                style={{ color: pulseColor }}
+            {noData ? (
+              <PulseSetup noDataKeys={directorPulse.noDataKeys} role="director" className="py-3" />
+            ) : (
+              <motion.div
+                className="flex items-baseline gap-1"
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: beatDuration, repeat: Infinity, ease: "easeInOut" }}
               >
-                {directorPulse.bpm}
-              </span>
-              <span
-                className="text-sm font-bold uppercase tracking-widest ml-1"
-                style={{ color: TEXT_DIM }}
-              >
-                BPM
-              </span>
-            </motion.div>
+                <span
+                  className="text-7xl md:text-8xl font-black leading-none tracking-tighter tabular-nums"
+                  style={{ color: pulseColor }}
+                >
+                  {directorPulse.bpm}
+                </span>
+                <span
+                  className="text-sm font-bold uppercase tracking-widest ml-1"
+                  style={{ color: TEXT_DIM }}
+                >
+                  BPM
+                </span>
+              </motion.div>
+            )}
 
             {/* Composite bar */}
             <div className="flex items-center gap-2 mt-1">
@@ -267,23 +277,33 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                 className="h-1 rounded-full"
                 style={{
                   width: 80,
-                  background: `linear-gradient(to right, 
-                    ${directorPulse.composite >= 80 ? pulseColor : directorPulse.composite >= 60 ? "#C89B3C" : "#C33B2E"} 
-                    ${directorPulse.composite}%, 
-                    rgba(255,255,255,0.08) ${directorPulse.composite}%)`,
+                  background:
+                    composite == null
+                      ? "rgba(255,255,255,0.08)"
+                      : `linear-gradient(to right,
+                    ${composite >= 80 ? pulseColor : composite >= 60 ? "#C89B3C" : "#C33B2E"}
+                    ${composite}%,
+                    rgba(255,255,255,0.08) ${composite}%)`,
                 }}
               />
               <span className="text-[10px] font-mono" style={{ color: TEXT_DIM }}>
-                {directorPulse.composite}/100
+                {composite == null ? "No data" : `${composite}/100`}
               </span>
             </div>
+            {!noData && (
+              <PulsePartialNote
+                noDataKeys={directorPulse.noDataKeys}
+                totalAreas={directorPulse.totalAreas}
+                className="mt-1.5 text-center"
+              />
+            )}
           </div>
 
           {/* ═══════ ANIMATED ECG WAVEFORM ═══════ */}
           <div className="relative mt-2 mb-1 z-10">
             <ECGCanvas
               color={pulseColor}
-              bpm={directorPulse.bpm}
+              bpm={directorPulse.bpm ?? 0}
               baseBg={DARK_NAVY}
             />
           </div>
@@ -347,6 +367,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                         size="md"
                         showOwnerBadge
                         ownerBpm={ownerPulseSnapshot?.bpm}
+                        ownerLabel={ownerPulseSnapshot?.label}
                       />
                     </div>
 
@@ -359,8 +380,10 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                       </span>
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         {directorPulse.subscores.map((sub) => {
-                          const scoreColor =
-                            sub.score >= 80
+                          const subNoData = sub.score == null;
+                          const scoreColor = subNoData
+                            ? NO_DATA_GREY
+                            : sub.score >= 80
                               ? MONITOR_GREEN
                               : sub.score >= 60
                               ? "#C89B3C"
@@ -373,8 +396,8 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                                 background: "rgba(255,255,255,0.04)",
                                 border: "1px solid rgba(255,255,255,0.06)",
                               }}
-                              title={`${sub.label}: ${sub.score}/100 (${Math.round(
-                                sub.weight * 100
+                              title={`${sub.label}: ${subNoData ? "No data" : `${sub.score}/100`} (${Math.round(
+                                (sub.weight ?? 0) * 100
                               )}% weight)`}
                             >
                               <div
@@ -388,22 +411,22 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                                 return SubIcon ? (
                                   <SubIcon
                                     size={14}
-                                    style={{ color: MONITOR_GREEN }}
+                                    style={{ color: subNoData ? NO_DATA_GREY : MONITOR_GREEN }}
                                   />
                                 ) : null;
                               })()}
                             </div>
                               <div
-                                className="text-sm font-black tabular-nums"
+                                className={`font-black tabular-nums ${subNoData ? "text-xs" : "text-sm"}`}
                                 style={{ color: scoreColor }}
                               >
-                                {sub.score}
+                                {subNoData ? "No data" : sub.score}
                               </div>
                               <div
                                 className="text-[7px] font-bold uppercase tracking-wider text-center leading-tight"
                                 style={{ color: TEXT_DIM }}
                               >
-                                {sub.label.split(" ")[0]}
+                                {sub.label}
                               </div>
                             </div>
                           );
@@ -422,6 +445,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                   >
                     <PulseRecommendations
                       recommendations={directorPulse.recommendations}
+                      noData={noData || directorPulse.subscores.some((s) => s.score == null)}
                     />
                   </div>
                 </div>

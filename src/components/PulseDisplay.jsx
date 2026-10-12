@@ -72,21 +72,24 @@
     const [hoveredSub, setHoveredSub] = useState(null);
     const demoRef = useRef(null);
 
-    const bpm = pulse?.bpm ?? 85;
-    const composite = pulse?.composite ?? 75;
-    const stateInfo = pulse?.state ?? { state: "Healthy", color: "#84CC16", zone: "greenYellow" };
+    const noData = pulse?.bpm == null;
+    const bpm = pulse?.bpm ?? null;
+    const composite = pulse?.composite ?? null;
+    const stateInfo = noData
+      ? { state: "No data", color: "#9CA3AF" }
+      : pulse?.state ?? { state: "Healthy", color: "#84CC16", zone: "greenYellow" };
     const subScores = pulse?.subScores ?? {};
     const weightValues = pulse?.weights ?? {};
-    const isThriving = bpm <= 70;
+    const isThriving = !noData && bpm <= 70;
 
     // ── Stable demo seed (generated once) ───────────────────────
     if (!demoRef.current) {
-      demoRef.current = generateDemoHistory(bpm, 90);
+      demoRef.current = generateDemoHistory(bpm ?? 85, 90);
     }
 
     // ── Heartbeat animation — smoother CSS-based approach ───────
-    const beatDuration = Math.max(0.375, 2.0 - (bpm - 55) * 0.015);
-    const pulseScale = isPulsing ? 1.18 : 1;
+    const beatDuration = Math.max(0.375, 2.0 - ((bpm ?? 85) - 55) * 0.015);
+    const pulseScale = isPulsing && !noData ? 1.18 : 1;
 
     useEffect(() => {
       let pulseTimer = null;
@@ -119,7 +122,7 @@
     // ── Sub-score cards sorted by weight ─────────────────────────
     const sortedSubScores = useMemo(() => {
       return Object.entries(SUB_SCORE_META)
-        .filter(([key]) => subScores[key] !== undefined && subScores[key] !== null)
+        .filter(([key]) => subScores[key] !== undefined)
         .map(([key, meta]) => ({
           key, ...meta,
           score: subScores[key],
@@ -174,7 +177,7 @@
                       stroke={stateInfo.color}
                       strokeWidth="4"
                       strokeLinecap="round"
-                      strokeDasharray={`${(composite / 100) * 326.7} 326.7`}
+                      strokeDasharray={`${((composite ?? 0) / 100) * 326.7} 326.7`}
                       transform="rotate(-90 60 60)"
                       style={{ transition: "stroke-dasharray 0.6s ease" }}
                     />
@@ -184,14 +187,16 @@
                       key={bpm}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="text-5xl md:text-5xl font-black leading-none tabular-nums tracking-tight"
+                      className={`${noData ? "text-2xl" : "text-5xl md:text-5xl"} font-black leading-none tabular-nums tracking-tight`}
                       style={{ color: stateInfo.color }}
                     >
-                      {bpm}
+                      {noData ? "No data" : bpm}
                     </motion.span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] mt-0.5" style={{ color: stateInfo.color, opacity: 0.6 }}>
-                      BPM
-                    </span>
+                    {!noData && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] mt-0.5" style={{ color: stateInfo.color, opacity: 0.6 }}>
+                        BPM
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -205,7 +210,7 @@
 
                 {/* Composite */}
                 <span className="text-[10px] font-medium mt-1.5 text-gray-400">
-                  Composite: {composite}/100
+                  Composite: {composite == null ? "No data" : `${composite}/100`}
                 </span>
 
                 {/* Owner badge (Director view) */}
@@ -254,8 +259,11 @@
                             {sub.label}
                           </div>
                           <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-lg font-black tabular-nums" style={{ color: sub.color }}>
-                              {sub.score}
+                            <span
+                              className={`${sub.score == null ? "text-xs" : "text-lg"} font-black tabular-nums`}
+                              style={{ color: sub.score == null ? "#9CA3AF" : sub.color }}
+                            >
+                              {sub.score ?? "No data"}
                             </span>
                             <span className="text-[9px] text-gray-400 font-medium">/ {sub.weight}%</span>
                           </div>
@@ -263,7 +271,7 @@
                           <div className="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
-                              style={{ width: `${sub.score}%`, backgroundColor: sub.color, opacity: 0.5 }}
+                              style={{ width: `${sub.score ?? 0}%`, backgroundColor: sub.color, opacity: 0.5 }}
                             />
                           </div>
                         </div>
@@ -273,6 +281,9 @@
                 </div>
 
                 {/* ── RECOMMENDATIONS ── */}
+                {noData && displayedRecs.length === 0 && (
+                  <p className="pt-3 border-t border-gray-100 text-xs text-gray-400">Not enough data yet</p>
+                )}
                 {(displayedRecs.length > 0 || isThriving) && (
                   <div className="pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-1.5 mb-2.5">

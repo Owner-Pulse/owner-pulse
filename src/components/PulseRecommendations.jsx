@@ -14,10 +14,12 @@ import {
   Phone,
   Timer,
   CreditCard,
+  UserCheck,
 } from "lucide-react";
 
 // ─── Icon map — resolves icon string name to Lucide component ──
 const ICON_MAP = {
+  UserCheck,
   DollarSign,
   ShieldCheck,
   FileText,
@@ -50,6 +52,7 @@ const DEFAULT_ICON_MAP = {
   staff_callouts: "Users",
   staffCallouts: "Users",
   incidentTrend: "FileText",
+  owner_dependence: "UserCheck",
 };
 
 /**
@@ -58,8 +61,16 @@ const DEFAULT_ICON_MAP = {
  * Props:
  * - recommendations: array of recommendations from API or local engine
  */
-const PulseRecommendations = ({ recommendations = [] }) => {
-  if (!recommendations.length) {
+const PulseRecommendations = ({ recommendations = [], noData = false }) => {
+  if (!recommendations?.length && noData) {
+    return (
+      <p className="text-xs text-center py-2" style={{ color: TEXT_DIM }}>
+        Not enough data yet
+      </p>
+    );
+  }
+
+  if (!recommendations?.length) {
     return (
       <div
         className="p-4 rounded-xl text-center"

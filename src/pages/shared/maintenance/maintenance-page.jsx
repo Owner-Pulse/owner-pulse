@@ -151,6 +151,7 @@ const MaintenancePage = () => {
       totalEstCost: totalEstCost,
       total: summary.total || 0,
       directorSubmitted: summary.total || 0,
+      costThresholdLimit: summary.cost_threshold_limit ?? null,
     };
   }, [maintenanceData]);
 
@@ -198,6 +199,21 @@ const MaintenancePage = () => {
             sub={`${stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0}% resolved`} iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
       </div>
+
+      {/* Director budget limit (Owner only) */}
+      {isOwner && (
+        <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm px-4 py-3 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+          <span className="text-xs font-medium text-gray-500">Director budget limit</span>
+          {stats.costThresholdLimit == null ? (
+            <>
+              <span className="text-sm font-bold text-gray-400">Not set</span>
+              <span className="text-xs text-gray-500">Set the Director budget limit in Settings</span>
+            </>
+          ) : (
+            <span className="text-sm font-bold text-gray-900">{stats.costThresholdLimit}</span>
+          )}
+        </motion.div>
+      )}
 
       {/* Filters */}
       <motion.div variants={itemVariants}>

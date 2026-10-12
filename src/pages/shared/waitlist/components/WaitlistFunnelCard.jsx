@@ -17,7 +17,7 @@ const WaitlistFunnelCard = ({ stats }) => {
     appliedToOfferRate = 0,
     offerToEnrollRate = 0,
     overallConversionRate = 0,
-    projectedMonthlyRevenue = 0,
+    projectedRevenue,
   } = stats || {};
 
   const stages = [
@@ -76,15 +76,22 @@ const WaitlistFunnelCard = ({ stats }) => {
             </span>
           </div>
 
+          {projectedRevenue !== undefined && (
           <div className="p-3 rounded-xl bg-[#1E3A5F]/[0.05] border border-[#1E3A5F]/15 flex items-center justify-between">
             <div>
               <p className="text-[10px] text-[#1E3A5F] uppercase tracking-wider font-semibold">Pipeline Revenue Forecast</p>
-              <p className="font-extrabold text-sm text-[#1E3A5F]">
-                ${projectedMonthlyRevenue.toLocaleString()}/mo
-              </p>
+              {projectedRevenue == null ? (
+                <>
+                  <p className="font-extrabold text-sm text-gray-400">Not set</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Set tuition per seat on each classroom</p>
+                </>
+              ) : (
+                <p className="font-extrabold text-sm text-[#1E3A5F]">{projectedRevenue}/mo</p>
+              )}
             </div>
-            <span className="text-[10px] text-[#1E3A5F]/80">From Applied + Offered</span>
+            <span className="text-[10px] text-[#1E3A5F]/80 shrink-0 ml-2">From Applied + Offered</span>
           </div>
+          )}
         </div>
       </CardContent>
     </Card>

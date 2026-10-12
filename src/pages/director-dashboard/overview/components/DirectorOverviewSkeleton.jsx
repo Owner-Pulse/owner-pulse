@@ -35,7 +35,7 @@ export const DirectorOverviewSkeleton = () => {
       {/* Expenses */}
       <Skeleton className="h-64 w-full rounded-xl" />
 
-      {/* Tasks + Over-Escalation */}
+      {/* Tasks + Owner Dependence */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Skeleton className="h-60 w-full rounded-xl" />
         <Skeleton className="h-60 w-full rounded-xl" />

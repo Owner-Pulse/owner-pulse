@@ -226,6 +226,7 @@ const WaitlistPage = () => {
       staleItems,
       overallConversionRate,
       touredToAppliedRate,
+      projectedRevenue: summary.projected_revenue,
     };
   }, [payload, mappedWaitlist]);
 
