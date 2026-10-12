@@ -1,0 +1,33 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feature/owner-maintenance",
+    "fix/client-feedback-oct16",
+    "main",
+    "origin",
+    "release/staging-oct",
+    "sifat",
+    "staging",
+    "zobayer"
+  ],
+  "parent": {
+    "feature/owner-maintenance": "main",
+    "fix/client-feedback-oct16": "main",
+    "main": null,
+    "origin": "main",
+    "release/staging-oct": "main",
+    "sifat": "main",
+    "staging": "main",
+    "zobayer": "main"
+  },
+  "order": [
+    "main",
+    "feature/owner-maintenance",
+    "fix/client-feedback-oct16",
+    "origin",
+    "release/staging-oct",
+    "sifat",
+    "staging",
+    "zobayer"
+  ]
+}

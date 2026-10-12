@@ -55,7 +55,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
         location: editItem.location || "",
         issue: editItem.issue || "",
         priority: editItem.priority || "medium",
-        estCost: editItem.estCost || "",
+        estCost: editItem.estCost ?? "",
         assignedTo: initialAssignedTo,
         assignedStaff: initialAssignedStaff,
         assignedOther: initialAssignedOther,
@@ -80,6 +80,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
     setError("");
     if (!form.location.trim()) { setError("Location is required."); return; }
     if (!form.issue.trim()) { setError("Issue description is required."); return; }
+    if (String(form.estCost).trim() === "") { setError("Enter an estimated cost"); return; }
     if (!form.assignedTo) { setError("Please select who this is assigned to."); return; }
     if (form.assignedTo === "staff" && !form.assignedStaff) { setError("Please select a staff member."); return; }
     if (form.assignedTo === "other" && !form.assignedOther.trim()) { setError("Please describe who this is assigned to."); return; }
@@ -92,7 +93,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
         priority: form.priority,
         location: form.location.trim(),
         description: form.issue.trim(),
-        cost: Number(form.estCost) || 0,
+        cost: String(Number(form.estCost) || 0),
         assign_to: assignedLabel,
     };
 
@@ -175,7 +176,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Est. Cost ($)</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Est. Cost ($) *</label>
                 <input type="number" value={form.estCost} onChange={(e) => update("estCost", e.target.value)}
                   placeholder="0.00" min={0}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
