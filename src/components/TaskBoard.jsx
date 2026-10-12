@@ -18,6 +18,10 @@ const COMMENT_PREVIEW_LENGTH = 140;
 // "YYYY-MM-DD" and "YYYY-MM-DD HH:mm:ss" carry no timezone — read them as local time
 const parseDate = (value) => {
   if (!value) return null;
+  if (/T.*(Z|[+-]\d{2}:?\d{2})$/.test(String(value))) {
+    const zoned = new Date(value);
+    return isNaN(zoned.getTime()) ? null : zoned;
+  }
   const [datePart, timePart = "00:00:00"] = String(value).replace("T", " ").split(" ");
   const [y, m, d] = datePart.split("-").map(Number);
   const [hh = 0, mm = 0, ss = 0] = timePart.split(":").map((n) => parseInt(n, 10) || 0);
@@ -132,11 +136,15 @@ const TaskItem = ({ task, fromLabel, onOpen }) => {
 };
 
 // ─── Maintenance card ────────────────────────────────────────────
-const MaintenanceItem = ({ item }) => (
+const MaintenanceItem = ({ item, tone = "gold", showAssignee = false }) => (
   <div className="p-2.5 rounded-xl bg-white border border-gray-200/70 shadow-2xs">
     <div className="flex items-start justify-between gap-2">
       <p className="text-xs font-semibold text-gray-900 break-words min-w-0">{item.title}</p>
-      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase text-[#8F6A1F] bg-[#B78A2F]/15 px-1.5 py-0.5 rounded shrink-0">
+      <span
+        className={`inline-flex items-center gap-1 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shrink-0 ${
+          tone === "navy" ? "text-[#1E3A5F] bg-[#1E3A5F]/10" : "text-[#8F6A1F] bg-[#B78A2F]/15"
+        }`}
+      >
         <Wrench size={9} /> Maintenance
       </span>
     </div>
@@ -146,6 +154,9 @@ const MaintenanceItem = ({ item }) => (
         <span className="inline-flex items-center gap-1 font-medium break-words min-w-0">
           <MapPin size={10} className="shrink-0" /> {item.location}
         </span>
+      )}
+      {showAssignee && (
+        <span className="font-semibold text-gray-600 break-words min-w-0">To: {item.assigned_to?.name || "All Directors"}</span>
       )}
     </div>
   </div>
@@ -192,7 +203,7 @@ const TaskCommentsDialog = ({ task, role, userId, onClose }) => {
  * TaskBoard — task ownership board shared by the Owner and Director overviews
  *
  * Props:
- * - data: { director_owned, owner_owned, owner_maintenance, totals, unread_comments_total }
+ * - data: { director_owned, director_maintenance, owner_owned, owner_maintenance, totals, unread_comments_total }
  * - role: "owner" | "director"
  * - onNavigate: (path) => void
  * - onRefresh: refetches the overview after the comments modal closes
@@ -205,8 +216,10 @@ const TaskBoard = ({ data, role = "director", onNavigate = () => {}, onRefresh =
   const directorOwned = data?.director_owned || [];
   const ownerOwned = data?.owner_owned || [];
   const ownerMaintenance = data?.owner_maintenance || [];
+  const directorMaintenance = data?.director_maintenance || [];
   const totals = data?.totals || {};
-  const directorTotal = totals.director_owned ?? directorOwned.length;
+  const directorTotal =
+    (totals.director_owned ?? directorOwned.length) + (totals.director_maintenance ?? directorMaintenance.length);
   const ownerTotal =
     (totals.owner_owned ?? ownerOwned.length) + (totals.owner_maintenance ?? ownerMaintenance.length);
 
@@ -217,6 +230,8 @@ const TaskBoard = ({ data, role = "director", onNavigate = () => {}, onRefresh =
   const fromLabel = (task) => {
     const creator = task.created_by;
     if (!creator) return null;
+    if (creator.role === "owner") return "From Owner";
+    if (creator.role === "director") return "From Director";
     if (ownerIds.has(creator.id)) return "From Owner";
     if (role === "owner" || creator.id === user?.id) return "From Director";
     // Only the Owner can assign a task to all directors
@@ -233,7 +248,7 @@ const TaskBoard = ({ data, role = "director", onNavigate = () => {}, onRefresh =
   };
 
   const hiddenCount = (total, shown) => (total > shown ? total - shown : 0);
-  const directorHidden = hiddenCount(directorTotal, directorOwned.length);
+  const directorHidden = hiddenCount(directorTotal, directorOwned.length + directorMaintenance.length);
   const ownerHidden = hiddenCount(ownerTotal, ownerOwned.length + ownerMaintenance.length);
   const tasksPath = `/${role}/tasks`;
 
@@ -256,7 +271,7 @@ const TaskBoard = ({ data, role = "director", onNavigate = () => {}, onRefresh =
         </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-            {/* LEFT COLUMN: Director owned (Navy Blue Theme) */}
+            {/* LEFT COLUMN: Director owned + owner-assigned maintenance (Navy Blue Theme) */}
             <div className="rounded-2xl bg-[#1E3A5F] overflow-hidden min-w-0">
               <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#2F5482]">
                 <div className="flex items-center gap-2 min-w-0">
@@ -271,11 +286,13 @@ const TaskBoard = ({ data, role = "director", onNavigate = () => {}, onRefresh =
               </div>
 
               <div className="p-3.5 space-y-2">
-                {directorOwned.length > 0 ? (
-                  directorOwned.map((t) => (
-                    <TaskItem key={t.id} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
-                  ))
-                ) : (
+                {directorOwned.map((t) => (
+                  <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
+                ))}
+                {directorMaintenance.map((m) => (
+                  <MaintenanceItem key={`maintenance-${m.id}`} item={m} tone="navy" showAssignee />
+                ))}
+                {directorOwned.length === 0 && directorMaintenance.length === 0 && (
                   <p className="text-xs text-white/85 italic py-3 text-center">No open items currently owned by Director.</p>
                 )}
                 {directorHidden > 0 && (

@@ -44,6 +44,31 @@ export const useGetOwnerMaintenanceList = (params) => {
     };
 };
 
+// create a maintenance request assigned to a director (or all directors)
+export const useCreateOwnerMaintenance = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const {
+        mutateAsync: createMaintenance,
+        isPending,
+    } = useMutation({
+        mutationKey: ["owner-maintenance-create"],
+        mutationFn: (payload) => ownerMaintenanceService.create_maintenance(axiosInstance, payload),
+        onSuccess: (data) => {
+            toast.success(data?.message || "Maintenance request assigned successfully.");
+            queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to assign maintenance request");
+        }
+    });
+
+    return { createMaintenance, isPending };
+};
+
 // update owner maintenance status
 export const useUpdateOwnerMaintenanceStatus = () => {
     const axiosInstance = axiosPrivate();

@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Wrench, AlertTriangle, Clock, CheckCircle2, Plus } from "lucide-react";
+import { Wrench, AlertTriangle, Clock, CheckCircle2, Plus, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
-import { useGetDirectorMaintenanceList, useDeleteDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
+import { useGetDirectorMaintenanceList, useDeleteDirectorMaintenance, useDirectorMaintenanceStatus } from "@/hooks/director-hook/maintenance.hook";
 import { useGetOwnerMaintenanceList, useUpdateOwnerMaintenanceStatus, useCompleteOwnerMaintenance, useDeleteOwnerMaintenance } from "@/hooks/owner-hook/maintenance.hook";
 import KpiCard from "./components/KpiCard";
 import RequestCard from "./components/RequestCard";
 import AddMaintenanceForm from "./components/AddMaintenanceForm";
+import AssignMaintenanceForm from "./components/AssignMaintenanceForm";
 import FilterBar from "./components/FilterBar";
 import CostSummaryCard from "./components/CostSummaryCard";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
@@ -24,6 +25,19 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
+const OWNER_TABS = [
+  { id: "all", label: "All" },
+  { id: "from_director", label: "From Director" },
+  { id: "assigned_to_director", label: "Assigned to Director" },
+];
+
+const DIRECTOR_TABS = [
+  { id: "assigned_to_me", label: "Assigned to me" },
+  { id: "sent_to_owner", label: "Sent to Owner" },
+];
+
+const isDoneStatus = (status) => status === "done" || status === "completed" || status === "resolved";
+
 // ─── Main Component
 
 const MaintenancePage = () => {
@@ -33,6 +47,10 @@ const MaintenancePage = () => {
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showForm, setShowForm] = useState(false);
+  const [showAssignForm, setShowAssignForm] = useState(false);
+  const [ownerTab, setOwnerTab] = useState("all");
+  // Director tab stays unset until the list loads, then defaults by what is open
+  const [directorTab, setDirectorTab] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
 
@@ -40,8 +58,9 @@ const MaintenancePage = () => {
     const p = {};
     if (filterPriority !== "all") p.priority = filterPriority;
     if (filterStatus !== "all") p.status = filterStatus;
+    if (isOwner && ownerTab !== "all") p.direction = ownerTab;
     return p;
-  }, [filterPriority, filterStatus]);
+  }, [filterPriority, filterStatus, isOwner, ownerTab]);
 
   // Role-based data fetching — only the relevant hook fires
   const directorQuery = useGetDirectorMaintenanceList(isOwner ? undefined : params);
@@ -53,6 +72,7 @@ const MaintenancePage = () => {
   const { deleteMaintenance: deleteOwnerMaint, isPending: isDeletingOwner } = useDeleteOwnerMaintenance();
   const { completeMaintenance: completeOwnerMaint } = useCompleteOwnerMaintenance();
   const { updateOwnerMaintenanceStatus } = useUpdateOwnerMaintenanceStatus();
+  const { startMaintenance, completeMaintenance: completeDirectorMaint, pendingId } = useDirectorMaintenanceStatus();
   const isDeleting = isDeletingDirector || isDeletingOwner;
 
   const updateStatus = async (id, status) => {
@@ -111,15 +131,28 @@ const MaintenancePage = () => {
       status: r.status,
       logged: r.created_at || new Date().toISOString(),
       estCost: Number(r.cost) || 0,
-      submittedBy: r.director?.name || "Director",
+      submittedBy: r.creator?.name || r.director?.name || "Director",
+      byLabel: r.direction === "assigned_to_director" || r.direction === "assigned_to_me" ? "Assigned by" : "Submitted by",
+      direction: r.direction,
       assignedTo: r.assign_to,
       assignedLabel: r.assign_to,
     }));
   }, [maintenanceData]);
 
+  // Assigned to me when it has open items, otherwise Sent to Owner
+  const hasOpenAssigned = mappedRequests.some((r) => r.direction === "assigned_to_me" && !isDoneStatus(r.status));
+  useEffect(() => {
+    if (!isOwner && directorTab === null && maintenanceData) {
+      setDirectorTab(hasOpenAssigned ? "assigned_to_me" : "sent_to_owner");
+    }
+  }, [isOwner, directorTab, maintenanceData, hasOpenAssigned]);
+  const activeDirectorTab = directorTab ?? "assigned_to_me";
+
   const filteredRequests = useMemo(() => {
     return mappedRequests.filter((r) => {
-      const isDone = r.status === "done" || r.status === "completed";
+      // Requests without a direction predate it and were all sent by the director
+      if (!isOwner && (r.direction || "sent_to_owner") !== activeDirectorTab) return false;
+      const isDone = isDoneStatus(r.status);
       if (filterStatus === "all") {
         if (isDone) return false;
       } else if (filterStatus === "done" || filterStatus === "completed") {
@@ -131,7 +164,7 @@ const MaintenancePage = () => {
       }
       return true;
     });
-  }, [mappedRequests, filterStatus]);
+  }, [mappedRequests, filterStatus, isOwner, activeDirectorTab]);
 
   const sorted = useMemo(() => {
     const order = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -150,7 +183,8 @@ const MaintenancePage = () => {
       done: summary.done || 0,
       totalEstCost: totalEstCost,
       total: summary.total || 0,
-      directorSubmitted: summary.total || 0,
+      assignedToDirectors: summary.assigned_to_directors || 0,
+      directorSubmitted: Math.max(0, (summary.total || 0) - (summary.assigned_to_directors || 0)),
       costThresholdLimit: summary.cost_threshold_limit ?? null,
     };
   }, [maintenanceData]);
@@ -163,25 +197,30 @@ const MaintenancePage = () => {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Maintenance</h1>
           <p className="text-sm text-gray-500 mt-1">
             {stats.open} open · {stats.critical} critical · {stats.done} completed
-            {!isOwner && <span> · {stats.directorSubmitted} requests submitted</span>}
-            {isOwner && <span> · {stats.directorSubmitted} from directors</span>}
+            {!isOwner && <span> · {stats.total} total requests</span>}
+            {isOwner && <span> · {stats.directorSubmitted} from directors · {stats.assignedToDirectors} assigned to directors</span>}
           </p>
         </div>
         {!isOwner ? (
           <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm" onClick={() => setShowForm(true)}>
             <Plus size={16} className="mr-2" /> Report Issue
           </Button>
-        ) : stats.critical > 0 ? (
-          <>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#8A362C]">
-              <AlertTriangle size={12} /> {stats.critical} critical need attention
-            </span>
-          </>
-        ) : null}
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            {stats.critical > 0 && (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#8A362C]">
+                <AlertTriangle size={12} /> {stats.critical} critical need attention
+              </span>
+            )}
+            <Button className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm" onClick={() => setShowAssignForm(true)}>
+              <Plus size={16} className="mr-2" /> Assign to Director
+            </Button>
+          </div>
+        )}
       </motion.div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 gap-4 ${isOwner ? "md:grid-cols-3 xl:grid-cols-5" : "md:grid-cols-4"}`}>
         <motion.div variants={itemVariants}>
           <KpiCard icon={Wrench} label="Total Requests" value={stats.total} sub={`${stats.open} open`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
         </motion.div>
@@ -198,6 +237,11 @@ const MaintenancePage = () => {
           <KpiCard icon={CheckCircle2} label="Completed" value={stats.done}
             sub={`${stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0}% resolved`} iconBg="bg-[#3E7A54]/10 text-[#2F6042]" />
         </motion.div>
+        {isOwner && (
+          <motion.div variants={itemVariants}>
+            <KpiCard icon={UserCheck} label="Assigned to Director" value={stats.assignedToDirectors} sub="Requests you assigned" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
+          </motion.div>
+        )}
       </div>
 
       {/* Director budget limit (Owner only) */}
@@ -224,6 +268,9 @@ const MaintenancePage = () => {
           onStatusChange={setFilterStatus}
           filteredCount={sorted.length}
           totalCount={stats.total}
+          tabs={isOwner ? OWNER_TABS : DIRECTOR_TABS}
+          activeTab={isOwner ? ownerTab : activeDirectorTab}
+          onTabChange={isOwner ? setOwnerTab : setDirectorTab}
         />
       </motion.div>
 
@@ -251,8 +298,11 @@ const MaintenancePage = () => {
                 req={req}
                 status={status}
                 onUpdateStatus={updateStatus}
-                onDelete={!isOwner ? setDeleteItem : undefined}
-                onEdit={!isOwner ? setEditItem : undefined}
+                onDelete={!isOwner && req.direction !== "assigned_to_me" ? setDeleteItem : undefined}
+                onEdit={!isOwner && req.direction !== "assigned_to_me" ? setEditItem : undefined}
+                onStart={startMaintenance}
+                onComplete={completeDirectorMaint}
+                isActionPending={pendingId === req.id}
                 isOwner={isOwner}
               />
             );
@@ -264,7 +314,11 @@ const MaintenancePage = () => {
             </div>
             <p className="text-sm font-medium text-gray-500">No maintenance requests found</p>
             <p className="text-xs text-gray-400 mt-1">
-              {!isOwner ? 'Click "Report Issue" to submit a new maintenance request' : "Adjust filters to see more results"}
+              {isOwner
+                ? "Adjust filters to see more results"
+                : activeDirectorTab === "assigned_to_me"
+                  ? "Nothing assigned to you by the Owner matches these filters"
+                  : 'Click "Report Issue" to submit a new maintenance request'}
             </p>
           </div>
         )}
@@ -297,6 +351,9 @@ const MaintenancePage = () => {
           }}
         />
       )}
+
+      {/* Owner: assign a request to a director */}
+      {showAssignForm && <AssignMaintenanceForm onClose={() => setShowAssignForm(false)} />}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

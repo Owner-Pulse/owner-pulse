@@ -147,3 +147,39 @@ export const useDeleteDirectorMaintenance = () => {
 
     return { deleteMaintenance, isPending, apiError, isSuccess, isError };
 };
+
+// move an Owner-assigned request forward (open -> in progress -> done) or straight to done
+export const useDirectorMaintenanceStatus = () => {
+    const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
+
+    const onSuccess = (data) => {
+        toast.success(data?.message || "Maintenance status updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+        queryClient.invalidateQueries({ queryKey: ["director-overview"] });
+    };
+    // 422 (already done) and 403 (not assigned to you) carry the reason in the message
+    const onError = (error) => {
+        toast.error(error?.response?.data?.message || "Failed to update maintenance status");
+    };
+
+    const { mutate: startMaintenance, isPending: isStarting, variables: startingId } = useMutation({
+        mutationKey: ["director-maintenance-status"],
+        mutationFn: (id) => directorMaintenanceService.advance_status(id, axiosInstance),
+        onSuccess,
+        onError,
+    });
+
+    const { mutate: completeMaintenance, isPending: isCompleting, variables: completingId } = useMutation({
+        mutationKey: ["director-maintenance-complete"],
+        mutationFn: (id) => directorMaintenanceService.mark_complete(id, axiosInstance),
+        onSuccess,
+        onError,
+    });
+
+    return {
+        startMaintenance,
+        completeMaintenance,
+        pendingId: isStarting ? startingId : isCompleting ? completingId : null,
+    };
+};

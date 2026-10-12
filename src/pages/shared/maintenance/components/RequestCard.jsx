@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown } from "lucide-react";
+import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown, Play } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
@@ -17,7 +17,17 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner }) => {
+// Same colors as the task board: navy for Director items, gold for Owner items
+const DIRECTION_TAGS = {
+  from_director: { label: "From Director", className: "bg-[#B78A2F]/15 text-[#8F6A1F] border-[#B78A2F]/30" },
+  sent_to_owner: { label: "Sent to Owner", className: "bg-[#B78A2F]/15 text-[#8F6A1F] border-[#B78A2F]/30" },
+  assigned_to_director: { label: "Assigned to Director", className: "bg-[#1E3A5F] text-white border-[#1E3A5F]" },
+  assigned_to_me: { label: "Assigned to me", className: "bg-[#1E3A5F] text-white border-[#1E3A5F]" },
+};
+
+const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, onStart, onComplete, isActionPending }) => {
+  const directionTag = DIRECTION_TAGS[req.direction];
+  const isAssignedToMe = req.direction === "assigned_to_me";
   const days = daysSince(req.logged);
   const isDone = status === "done" || status === "completed";
   const borderColor = isDone ? "border-l-[#3E7A54]"
@@ -32,17 +42,22 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="min-w-0 flex-1">
+              {directionTag && (
+                <span className={`inline-flex items-center px-2 py-0.5 mb-1.5 rounded-full border text-[10px] font-extrabold uppercase ${directionTag.className}`}>
+                  {directionTag.label}
+                </span>
+              )}
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h3 className="font-semibold text-gray-900 text-sm">{req.issue}</h3>
+                <h3 className="font-semibold text-gray-900 text-sm break-words min-w-0">{req.issue}</h3>
                 <PriorityTag priority={req.priority} />
                 <StatusTag status={status} />
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1"><MapPin size={10} /> {req.location}</span>
+              <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-gray-500">
+                <span className="flex items-center gap-1 break-words min-w-0"><MapPin size={10} className="shrink-0" /> {req.location}</span>
                 <span className="flex items-center gap-1"><Calendar size={10} /> {fmtDate(req.logged)} ({days}d ago)</span>
               </div>
               <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
-                <User size={10} /> Submitted by {req.submittedBy}
+                <User size={10} /> {req.byLabel || "Submitted by"} {req.submittedBy}
               </div>
               {req.assignedLabel && (
                 <div className="flex items-center gap-1 mt-0.5 text-[10px] font-medium" style={{ color: "#6B7280" }}>
@@ -110,17 +125,43 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner })
             </div>
           )}
           
-          {!isOwner && status === "open" && (
+          {!isOwner && isAssignedToMe && !isDone && (
+            <div className="mt-3 pt-2.5 border-t border-gray-100 flex flex-wrap items-center justify-end gap-2">
+              {status !== "in_progress" && (
+                <button
+                  onClick={() => onStart?.(req.id)}
+                  disabled={isActionPending}
+                  className="h-7 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg border border-[#1E3A5F]/30 bg-[#1E3A5F]/10 text-[#1E3A5F] hover:bg-[#1E3A5F]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Play size={12} /> Start
+                </button>
+              )}
+              <button
+                onClick={() => onComplete?.(req.id)}
+                disabled={isActionPending}
+                className="h-7 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg border border-[#3E7A54]/30 bg-[#3E7A54]/10 text-[#2F6042] hover:bg-[#3E7A54]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle2 size={12} /> Mark done
+              </button>
+            </div>
+          )}
+          {!isOwner && isAssignedToMe && isDone && (
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#2F6042] font-medium">
+              <CheckCircle2 size={10} /> Completed
+            </div>
+          )}
+
+          {!isOwner && !isAssignedToMe && status === "open" && (
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-gray-400">
               <Clock size={10} /> Awaiting owner review
             </div>
           )}
-          {!isOwner && status === "in_progress" && (
+          {!isOwner && !isAssignedToMe && status === "in_progress" && (
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#1E3A5F] font-medium">
               <Clock size={10} /> Being worked on
             </div>
           )}
-          {!isOwner && isDone && (
+          {!isOwner && !isAssignedToMe && isDone && (
             <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[#2F6042] font-medium">
               <CheckCircle2 size={10} /> Resolved by owner
             </div>
