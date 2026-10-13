@@ -19,7 +19,7 @@ export const useGetOwnerMaintenanceList = (params) => {
             ownerMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
-            const pagination = lastPage?.pagination || lastPage?.data?.pagination;
+            const pagination = lastPage?.pagination;
             if (!pagination) return undefined;
             const current = Number(pagination.current_page);
             const last = Number(pagination.last_page);

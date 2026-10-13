@@ -139,19 +139,22 @@ export const EscalationQuestions = ({ value, onChange, errors = {}, disabled = f
  * - isOpen, onClose
  * - defaultTitle: prefilled, editable title
  * - context: optional text sent along and shown to the Owner (e.g. the family or invoice)
+ * - editableContext: let the Director type the context instead of showing a fixed one
  */
-const EscalationPrompt = ({ isOpen, onClose, defaultTitle = "", context = "" }) => {
+const EscalationPrompt = ({ isOpen, onClose, defaultTitle = "", context = "", editableContext = false }) => {
   const { createEscalation, isPending } = useCreateEscalation();
   const [title, setTitle] = useState(defaultTitle);
+  const [contextText, setContextText] = useState(context);
   const [answers, setAnswers] = useState(EMPTY_ESCALATION);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!isOpen) return;
     setTitle(defaultTitle);
+    setContextText(context);
     setAnswers(EMPTY_ESCALATION);
     setErrors({});
-  }, [isOpen, defaultTitle]);
+  }, [isOpen, defaultTitle, context]);
 
   const canSend = title.trim().length > 0 && isEscalationValid(answers) && !isPending;
 
@@ -166,7 +169,7 @@ const EscalationPrompt = ({ isOpen, onClose, defaultTitle = "", context = "" }) 
     setErrors({});
 
     const payload = { title: title.trim(), ...cleanEscalation(answers) };
-    if (context) payload.context = context;
+    if (contextText.trim()) payload.context = contextText.trim();
 
     try {
       await createEscalation(payload);
@@ -212,13 +215,30 @@ const EscalationPrompt = ({ isOpen, onClose, defaultTitle = "", context = "" }) 
                     }`}
                   />
                   <FieldError message={errors.title} />
-                  {context && (
+                  {!editableContext && context && (
                     <p className="mt-2 p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words">
                       {context}
                     </p>
                   )}
-                  <FieldError message={errors.context} />
+                  {!editableContext && <FieldError message={errors.context} />}
                 </div>
+
+                {editableContext && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Context (optional)</label>
+                    <textarea
+                      value={contextText}
+                      onChange={(e) => setContextText(e.target.value)}
+                      placeholder="e.g. the family, invoice or vendor this is about"
+                      rows={2}
+                      disabled={isPending}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none ${
+                        errors.context ? "border-[#AE4A3E]" : "border-gray-200"
+                      }`}
+                    />
+                    <FieldError message={errors.context} />
+                  </div>
+                )}
 
                 <EscalationQuestions value={answers} onChange={changeAnswers} errors={errors} disabled={isPending} />
               </div>

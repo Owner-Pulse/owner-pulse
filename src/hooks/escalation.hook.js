@@ -2,11 +2,9 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { escalationService } from "@/services/escalation.service";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { hasValidationErrors } from "@/lib/escalation";
 
 const PER_PAGE = 20;
-
-// The payload sits under `data` like the other endpoints; fall back to the body itself
-const bodyOf = (page) => (page?.data && !Array.isArray(page.data) ? page.data : page) || {};
 
 // escalation list for either role — status: pending | resolved | all
 export const useGetEscalations = (role, status = "pending") => {
@@ -18,7 +16,7 @@ export const useGetEscalations = (role, status = "pending") => {
             escalationService.get_escalations(axiosInstance, role, { status, page: pageParam, per_page: PER_PAGE }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
-            const pagination = lastPage?.pagination || lastPage?.data?.pagination;
+            const pagination = lastPage?.pagination;
             if (!pagination) return undefined;
             const current = Number(pagination.current_page);
             const last = Number(pagination.last_page);
@@ -28,8 +26,9 @@ export const useGetEscalations = (role, status = "pending") => {
     });
 
     const pages = data?.pages || [];
-    const escalations = pages.flatMap((page) => bodyOf(page).escalations || []);
-    const counts = bodyOf(pages[0]).counts || {};
+    const escalations = pages.flatMap((page) => page?.data?.escalations || []);
+    // counts cover every status, whatever the filter
+    const counts = pages[0]?.data?.counts || {};
 
     return {
         escalations,
@@ -58,7 +57,7 @@ export const usePendingEscalationCount = (role, enabled = true) => {
         enabled: enabled && !!role,
     });
 
-    return bodyOf(data).counts?.pending ?? 0;
+    return data?.data?.counts?.pending ?? 0;
 };
 
 // director: standalone escalation. 422 field errors are shown by the form, so no error toast for those.
@@ -75,7 +74,7 @@ export const useCreateEscalation = () => {
             queryClient.invalidateQueries({ queryKey: ["director-overview"] });
         },
         onError: (error) => {
-            if (error?.response?.status === 422 && error.response.data?.errors) return;
+            if (hasValidationErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to send to the Owner");
         },
     });

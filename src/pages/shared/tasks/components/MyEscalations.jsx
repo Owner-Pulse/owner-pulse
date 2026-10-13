@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowUpRight, ClipboardList, Wrench } from "lucide-react";
+import EscalationPrompt from "@/components/EscalationPrompt";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import EscalationSummary, { EscalationStatusTag } from "@/components/EscalationSummary";
@@ -26,6 +27,7 @@ const fmtDate = (d) => {
 // Director: everything sent to the Owner, with its status and the Owner's note once resolved
 const MyEscalations = () => {
   const [status, setStatus] = useState("all");
+  const [showForm, setShowForm] = useState(false);
   const { escalations, counts, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetEscalations("director", status);
 
@@ -48,6 +50,12 @@ const MyEscalations = () => {
             {f.label} {!isLoading && !isError && <span className="opacity-70">{filterCount[f.key]}</span>}
           </button>
         ))}
+        <Button
+          onClick={() => setShowForm(true)}
+          className="ml-auto bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs px-3 h-8"
+        >
+          <ArrowUpRight size={14} className="mr-1" /> Escalate to Owner
+        </Button>
       </div>
 
       {isLoading ? (
@@ -116,6 +124,9 @@ const MyEscalations = () => {
           );
         })
       )}
+
+      {/* Standalone escalation: title, optional context, the two questions */}
+      <EscalationPrompt isOpen={showForm} onClose={() => setShowForm(false)} editableContext />
 
       {hasNextPage && (
         <div className="flex justify-center pt-1">

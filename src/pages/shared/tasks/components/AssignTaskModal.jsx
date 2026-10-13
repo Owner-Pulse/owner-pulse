@@ -58,6 +58,9 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const onQuestions = isDirector && step === 2;
   const canSend = !isPending && (!onQuestions || isEscalationValid(escalation));
   const taskFieldErrors = TASK_FIELDS.filter((f) => errors[f]);
+  // Messages for anything that has no field of its own on screen
+  const otherErrors = Object.keys(errors).filter((f) => !TASK_FIELDS.includes(f) && !(f in EMPTY_ESCALATION));
+  const boxErrors = onQuestions ? [...taskFieldErrors, ...otherErrors] : otherErrors;
 
   const changeEscalation = (next) => {
     setErrors((prev) => clearEditedErrors(prev, escalation, next));
@@ -89,7 +92,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
     try {
       await createTask(formData);
     } catch (err) {
-      // The hook already shows the message; put each 422 error under its field
+      // Put each 422 error under its field (the hook shows a toast for anything else)
       const fieldErrors = parseValidationErrors(err);
       setErrors(fieldErrors);
       // Nothing wrong with the answers: go back to the fields that need fixing
@@ -208,14 +211,15 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                 <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words">
                   <span className="font-bold text-gray-900">{title.trim()}</span> · due {due}
                 </div>
-                {taskFieldErrors.length > 0 && (
-                  <div className="flex items-start gap-2 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#8A362C] font-medium">
-                    <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-                    <span className="min-w-0 break-words">{taskFieldErrors.map((f) => errors[f]).join(" ")}</span>
-                  </div>
-                )}
                 <EscalationQuestions value={escalation} onChange={changeEscalation} errors={errors} disabled={isPending} />
               </>
+            )}
+
+            {boxErrors.length > 0 && (
+              <div className="flex items-start gap-2 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#8A362C] font-medium">
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                <span className="min-w-0 break-words">{boxErrors.map((f) => errors[f]).join(" ")}</span>
+              </div>
             )}
 
             <div className="flex gap-3 pt-2">

@@ -18,8 +18,6 @@ import {
 
 import toast from "react-hot-toast";
 
-// API field names of the request itself (everything except the escalation answers)
-const FORM_FIELDS = ["location", "description", "priority", "cost", "assign_to"];
 
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },
@@ -158,10 +156,11 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
     } catch (err) {
         const errors = parseValidationErrors(err);
         setFieldErrors(errors);
-        const formErrors = FORM_FIELDS.filter((f) => errors[f]).map((f) => errors[f]);
+        // Everything except the answers (location, cost, ...) goes in the form's own error box
+        const formErrors = Object.keys(errors).filter((f) => !(f in EMPTY_ESCALATION)).map((f) => errors[f]);
         if (formErrors.length > 0) {
-            // Shown in the form's own error box; go back to it when the answers are fine
             setError(formErrors.join(" "));
+            // Go back to the request fields when the answers are fine
             if (!hasEscalationError(errors)) setStep(1);
         } else if (Object.keys(errors).length === 0) {
             toast.error(err?.response?.data?.message || "Maintenance request processing failed");

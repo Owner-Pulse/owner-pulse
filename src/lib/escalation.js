@@ -71,6 +71,10 @@ export const parseValidationErrors = (error) => {
   return out;
 };
 
+// A 422 that names the fields at fault (the forms show those themselves)
+export const hasValidationErrors = (error) =>
+  error?.response?.status === 422 && Object.keys(error.response.data?.errors || {}).length > 0;
+
 // Drop the server message of every answer the user has edited since
 export const clearEditedErrors = (errors, prev, next) => {
   const edited = ESCALATION_FIELDS.filter((f) => prev[f] !== next[f] && errors[f]);
