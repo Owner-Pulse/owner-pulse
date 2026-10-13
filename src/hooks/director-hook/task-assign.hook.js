@@ -14,7 +14,7 @@ export const useGetDirectorTaskList = () => {
     } = useQuery({
         queryKey: ["director-task-list"],
         // The page works on the whole list (tabs, counts), so load every page
-        queryFn: () => fetchAllPages((page) => directorTaskAssignService.get_task_list(axiosInstance, { page })),
+        queryFn: () => fetchAllPages((page) => directorTaskAssignService.get_task_list(axiosInstance, { page, per_page: 100 })),
     });
 
     const taskList = Array.isArray(data) ? data : [];
