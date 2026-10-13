@@ -23,6 +23,7 @@ import { useOwnerTaskActions, useDirectorTaskActions } from "@/hooks/useTaskActi
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import EscalationSummary from "@/components/EscalationSummary";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -399,6 +400,8 @@ const TaskCardInner = ({
                 )}
               </div>
             </div>
+
+            {task.raw?.escalation && <EscalationSummary escalation={task.raw.escalation} className="mt-3" />}
 
             {/* Inline Facebook-style Comments Section */}
             {showComments && (

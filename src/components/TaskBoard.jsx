@@ -7,6 +7,7 @@ import PriorityTag from "@/pages/shared/tasks/components/PriorityTag";
 import TaskCommentsModal from "@/pages/shared/tasks/components/TaskCommentsModal";
 import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import EscalationSummary from "@/components/EscalationSummary";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -130,6 +131,7 @@ const TaskItem = ({ task, fromLabel, onOpen }) => {
         )}
       </div>
 
+      {task.escalation && <EscalationSummary escalation={task.escalation} clamp className="mt-2" />}
       {task.latest_comment && <CommentPreview comment={task.latest_comment} unread={hasUnread} />}
     </div>
   );
@@ -159,6 +161,7 @@ const MaintenanceItem = ({ item, tone = "gold", showAssignee = false }) => (
         <span className="font-semibold text-gray-600 break-words min-w-0">To: {item.assigned_to?.name || "All Directors"}</span>
       )}
     </div>
+    {item.escalation && <EscalationSummary escalation={item.escalation} clamp className="mt-2" />}
   </div>
 );
 

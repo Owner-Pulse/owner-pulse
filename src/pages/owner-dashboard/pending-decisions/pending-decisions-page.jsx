@@ -1,40 +1,31 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Clock,
   CheckCheck,
-  Send,
-  UserCheck,
-  FileSignature,
-  Phone,
-  Users,
-  HelpCircle,
+  ClipboardList,
+  Wrench,
+  User,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getEscalations, updateEscalationStatus } from "@/lib/escalation-store";
+import EscalationSummary, { EscalationStatusTag } from "@/components/EscalationSummary";
+import { useGetEscalations, useResolveEscalation } from "@/hooks/escalation.hook";
 
-// ─── Action Icon Map ──────────────────────────────────────────────
-const ACTION_ICONS = {
-  approve_reject: { icon: CheckCircle2, label: "Approve / Reject", color: "text-blue-600", bg: "bg-blue-50" },
-  decide_options: { icon: HelpCircle, label: "Decide between options", color: "text-purple-600", bg: "bg-purple-50" },
-  call_vendor: { icon: Phone, label: "Call a vendor", color: "text-amber-600", bg: "bg-amber-50" },
-  call_parent: { icon: Users, label: "Call a parent / family", color: "text-emerald-600", bg: "bg-emerald-50" },
-  sign_document: { icon: FileSignature, label: "Sign or authorize a document", color: "text-orange-600", bg: "bg-orange-50" },
-  other: { icon: Send, label: "Other", color: "text-gray-600", bg: "bg-gray-50" },
+const ITEM_TYPES = {
+  task: { label: "Task", icon: ClipboardList },
+  maintenance: { label: "Maintenance", icon: Wrench },
+  standalone: { label: "Standalone", icon: ArrowUpRight },
 };
 
-const WHY_LABELS = {
-  approval: "Approval needed",
-  outside_authority: "Outside my authority",
-  financial_limit: "Financial decision above my limit",
-  safety_legal: "Safety / legal / regulatory",
-  other: "Other",
-};
+const FILTERS = [
+  { key: "pending", label: "Pending" },
+  { key: "resolved", label: "Resolved" },
+  { key: "all", label: "All" },
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,133 +36,148 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", {
-  month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-});
+const fmtDate = (d) => {
+  const date = d ? new Date(d) : null;
+  if (!date || isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
+const StatCard = ({ icon: Icon, value, label, iconClass, valueClass }) => (
+  <motion.div variants={itemVariants}>
+    <Card className="bg-white border-none shadow-sm">
+      <CardContent className="p-4 text-center">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${iconClass}`}>
+          <Icon size={16} />
+        </div>
+        <p className={`text-2xl font-extrabold ${valueClass}`}>{value}</p>
+        <p className="text-xs text-gray-500 font-medium">{label}</p>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
+
+const DecisionCard = ({ escalation, onResolve, isSaving }) => {
+  const [note, setNote] = useState("");
+  const isPending = escalation.status === "pending";
+  const type = ITEM_TYPES[escalation.item?.type] || ITEM_TYPES.standalone;
+  const TypeIcon = type.icon;
+
+  const resolve = (status) => onResolve({ id: escalation.id, status, owner_note: note.trim() });
+
+  return (
+    <Card className={`bg-white border-none shadow-sm ${isPending ? "ring-2 ring-[#B78A2F]/30" : ""}`}>
+      <CardContent className="p-4 md:p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[#1E3A5F] text-[9px] font-extrabold uppercase">
+                <TypeIcon size={9} /> {type.label}
+              </span>
+              <EscalationStatusTag status={escalation.status} />
+            </div>
+            <h3 className="text-sm md:text-base font-bold text-gray-900 break-words">
+              {escalation.item?.title || "Untitled"}
+            </h3>
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500 min-w-0">
+              <User size={11} className="shrink-0" />
+              <span className="break-words min-w-0">From {escalation.director?.name || "Director"}</span>
+            </p>
+          </div>
+          <span className="text-[10px] text-gray-400 shrink-0 text-right">{fmtDate(escalation.created_at)}</span>
+        </div>
+
+        {escalation.context && (
+          <p className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words whitespace-pre-wrap">
+            {escalation.context}
+          </p>
+        )}
+
+        <EscalationSummary escalation={escalation} showStatus={false} />
+
+        {isPending ? (
+          <div className="space-y-2">
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Note for the Director (optional)"
+              rows={2}
+              disabled={isSaving}
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none"
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                onClick={() => resolve("approved")}
+                disabled={isSaving}
+                className="bg-[#3E7A54] hover:bg-[#2F6042] text-white text-xs md:text-sm px-2"
+              >
+                <CheckCircle2 size={14} className="mr-1 shrink-0" /> Approve
+              </Button>
+              <Button
+                onClick={() => resolve("rejected")}
+                disabled={isSaving}
+                variant="outline"
+                className="border-[#AE4A3E]/40 text-[#8A362C] hover:bg-[#AE4A3E]/10 text-xs md:text-sm px-2"
+              >
+                <XCircle size={14} className="mr-1 shrink-0" /> Reject
+              </Button>
+              <Button
+                onClick={() => resolve("acknowledged")}
+                disabled={isSaving}
+                variant="outline"
+                className="text-gray-600 text-xs md:text-sm px-2"
+              >
+                <CheckCheck size={14} className="mr-1 shrink-0" /> Acknowledge
+              </Button>
+            </div>
+          </div>
+        ) : (
+          escalation.resolved_at && (
+            <p className="text-[10px] text-gray-400">Resolved {fmtDate(escalation.resolved_at)}</p>
+          )
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const PendingDecisionsPage = () => {
-  const [escalations, setEscalations] = useState(getEscalations);
   const [filterStatus, setFilterStatus] = useState("pending");
+  const { escalations, counts, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGetEscalations("owner", filterStatus);
+  const { resolveEscalation, pendingId } = useResolveEscalation();
 
-  // Refresh on mount + storage events
-  useEffect(() => {
-    const refresh = () => setEscalations(getEscalations());
-    refresh();
-    window.addEventListener("storage", refresh);
-    return () => window.removeEventListener("storage", refresh);
-  }, []);
-
-  const handleAction = (id, status) => {
-    updateEscalationStatus(id, status);
-    setEscalations(getEscalations());
-  };
-
-  const filtered = useMemo(() => {
-    if (filterStatus === "pending") return escalations.filter((e) => e.status === "pending");
-    if (filterStatus === "resolved") return escalations.filter((e) => e.status !== "pending");
-    return escalations;
-  }, [escalations, filterStatus]);
-
-  const sorted = useMemo(() =>
-    [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-  [filtered]);
-
-  const stats = useMemo(() => ({
-    pending: escalations.filter((e) => e.status === "pending").length,
-    approved: escalations.filter((e) => e.status === "approved").length,
-    rejected: escalations.filter((e) => e.status === "rejected").length,
-    total: escalations.length,
-  }), [escalations]);
+  const total = counts.pending + counts.approved + counts.rejected + counts.acknowledged;
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-            Pending Decisions
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {stats.pending > 0
-              ? `${stats.pending} escalation${stats.pending > 1 ? "s" : ""} awaiting your decision`
-              : stats.total > 0
-                ? "All escalations resolved"
-                : "No escalations yet"
-            }
-          </p>
-        </div>
+      <motion.div variants={itemVariants}>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">Pending Decisions</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {counts.pending > 0
+            ? `${counts.pending} ${counts.pending === 1 ? "item is" : "items are"} waiting for your decision`
+            : total > 0
+              ? "Nothing is waiting for your decision"
+              : "Directors have not sent anything yet"}
+        </p>
       </motion.div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <Clock size={16} className="text-amber-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-extrabold text-amber-600">{stats.pending}</p>
-              <p className="text-xs text-gray-500 font-medium">Pending</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-extrabold text-emerald-600">{stats.approved}</p>
-              <p className="text-xs text-gray-500 font-medium">Approved</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                  <XCircle size={16} className="text-red-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-extrabold text-red-600">{stats.rejected}</p>
-              <p className="text-xs text-gray-500 font-medium">Rejected</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card className="bg-white border-none shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <ArrowUpRight size={16} className="text-blue-500" />
-                </div>
-              </div>
-              <p className="text-2xl font-extrabold text-blue-600">{stats.total}</p>
-              <p className="text-xs text-gray-500 font-medium">Total Escalated</p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <StatCard icon={Clock} value={counts.pending} label="Pending" iconClass="bg-[#B78A2F]/10 text-[#8F6A1F]" valueClass="text-[#8F6A1F]" />
+        <StatCard icon={CheckCircle2} value={counts.approved} label="Approved" iconClass="bg-[#3E7A54]/10 text-[#2F6042]" valueClass="text-[#2F6042]" />
+        <StatCard icon={XCircle} value={counts.rejected} label="Rejected" iconClass="bg-[#AE4A3E]/10 text-[#8A362C]" valueClass="text-[#8A362C]" />
+        <StatCard icon={CheckCheck} value={counts.acknowledged} label="Acknowledged" iconClass="bg-gray-100 text-gray-500" valueClass="text-gray-700" />
       </div>
 
       {/* Filter Chips */}
       <motion.div variants={itemVariants} className="flex items-center gap-2">
-        {[
-          { key: "pending", label: "Pending" },
-          { key: "resolved", label: "Resolved" },
-          { key: "all", label: "All" },
-        ].map((f) => (
+        {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilterStatus(f.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              filterStatus === f.key
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              filterStatus === f.key ? "bg-[#1E3A5F] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
             {f.label}
@@ -181,127 +187,54 @@ const PendingDecisionsPage = () => {
 
       {/* Escalation Cards */}
       <div className="space-y-3">
-        {sorted.length === 0 ? (
-          <motion.div variants={itemVariants} className="py-16 text-center">
+        {isLoading ? (
+          [1, 2, 3].map((i) => (
+            <div key={i} className="bg-white shadow-sm rounded-xl p-5 animate-pulse space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
+              <div className="h-3 bg-gray-100 rounded w-1/4" />
+              <div className="h-16 bg-gray-100 rounded" />
+            </div>
+          ))
+        ) : isError ? (
+          <div className="py-16 text-center">
+            <p className="text-sm font-medium text-gray-500">Could not load decisions.</p>
+            <button onClick={() => refetch()} className="mt-2 text-xs font-semibold text-[#1E3A5F] hover:underline cursor-pointer">
+              Try again
+            </button>
+          </div>
+        ) : escalations.length === 0 ? (
+          <div className="py-16 text-center">
             <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CheckCheck size={28} className="text-gray-300" />
             </div>
-            <p className="text-sm font-medium text-gray-500">All caught up!</p>
+            <p className="text-sm font-medium text-gray-500">
+              {filterStatus === "pending" ? "All caught up" : "Nothing here yet"}
+            </p>
             <p className="text-xs text-gray-400 mt-1">
               {filterStatus === "pending"
-                ? "No items currently awaiting your decision"
-                : "No resolved escalations yet"}
+                ? "No items are waiting for your decision"
+                : filterStatus === "resolved"
+                  ? "Decisions you make will be listed here"
+                  : "Items sent by Directors will be listed here"}
             </p>
-          </motion.div>
+          </div>
         ) : (
-          sorted.map((item) => {
-            const actionInfo = ACTION_ICONS[item.action] || ACTION_ICONS.other;
-            const ActionIcon = actionInfo.icon;
-            const isPending = item.status === "pending";
+          escalations.map((escalation) => (
+            <DecisionCard
+              key={escalation.id}
+              escalation={escalation}
+              onResolve={resolveEscalation}
+              isSaving={pendingId === escalation.id}
+            />
+          ))
+        )}
 
-            return (
-              <motion.div key={item.id} variants={itemVariants}>
-                <Card className={`bg-white border-none shadow-sm transition-all ${
-                  isPending ? "ring-2 ring-amber-200" : "opacity-75"
-                }`}>
-                  <CardContent className="p-5">
-                    {/* Status badge */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        item.status === "pending" ? "bg-amber-100 text-amber-700" :
-                        item.status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                        item.status === "rejected" ? "bg-red-100 text-red-700" :
-                        "bg-gray-100 text-gray-600"
-                      }`}>
-                        {item.status === "pending" ? "Pending" :
-                         item.status === "approved" ? "Approved" :
-                         item.status === "rejected" ? "Rejected" : "Acknowledged"}
-                      </span>
-                      <span className="text-[10px] text-gray-400">{fmtDate(item.createdAt)}</span>
-                    </div>
-
-                    {/* The two answers at the top (Section 5.4 requirement) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-100">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-blue-600 mb-1">Why Owner</p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {WHY_LABELS[item.why] || item.why}
-                        </p>
-                        {item.whyOther && (
-                          <p className="text-xs text-gray-500 mt-1">"{item.whyOther}"</p>
-                        )}
-                      </div>
-                      <div className="p-3 rounded-xl bg-purple-50 border border-purple-100">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-purple-600 mb-1">Action needed</p>
-                        <div className="flex items-center gap-2">
-                          <ActionIcon size={14} className={actionInfo.color} />
-                          <p className="text-sm font-semibold text-gray-900">{actionInfo.label}</p>
-                        </div>
-                        {item.actionOther && (
-                          <p className="text-xs text-gray-500 mt-1">"{item.actionOther}"</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Item description */}
-                    {item.itemDescription && (
-                      <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 mb-4">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Details</p>
-                        <p className="text-xs text-gray-700">{item.itemDescription}</p>
-                      </div>
-                    )}
-
-                    {/* Owner actions for pending items */}
-                    {isPending && (
-                      <div className="flex items-center gap-3">
-                        <Button
-                          onClick={() => handleAction(item.id, "approved")}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm"
-                        >
-                          <CheckCircle2 size={14} className="mr-1.5" /> Approve
-                        </Button>
-                        <Button
-                          onClick={() => handleAction(item.id, "rejected")}
-                          variant="outline"
-                          className="flex-1 border-red-200 text-red-600 hover:bg-red-50 text-xs md:text-sm"
-                        >
-                          <XCircle size={14} className="mr-1.5" /> Reject
-                        </Button>
-                        <Button
-                          onClick={() => handleAction(item.id, "acknowledged")}
-                          variant="outline"
-                          className="flex-1 text-gray-500 text-xs md:text-sm"
-                        >
-                          <CheckCheck size={14} className="mr-1.5" /> Acknowledge
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Show outcome for resolved items */}
-                    {!isPending && (
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                        {item.status === "approved" ? (
-                          <CheckCircle2 size={14} className="text-emerald-500" />
-                        ) : item.status === "rejected" ? (
-                          <XCircle size={14} className="text-red-500" />
-                        ) : (
-                          <CheckCheck size={14} className="text-gray-400" />
-                        )}
-                        <span className="text-xs font-medium text-gray-600">
-                          {item.status === "approved" ? "Approved — decision logged" :
-                           item.status === "rejected" ? "Rejected — Director notified" :
-                           "Acknowledged — no action needed"}
-                        </span>
-                        {item.updatedAt && (
-                          <span className="text-[9px] text-gray-400 ml-auto">{fmtDate(item.updatedAt)}</span>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })
+        {hasNextPage && (
+          <div className="flex justify-center pt-1">
+            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="bg-white text-xs">
+              {isFetchingNextPage ? "Loading…" : "Load more"}
+            </Button>
+          </div>
         )}
       </div>
     </motion.div>

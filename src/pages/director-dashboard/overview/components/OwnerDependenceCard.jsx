@@ -17,7 +17,17 @@ const BREAKDOWN_LABELS = {
   at_risk_students: "At-Risk",
   student_removals: "Removals",
   director_tasks: "Tasks to Owner",
+  standalone_escalations: "Standalone",
 };
+
+// Why items were sent to the Owner — one color per reason
+const REASON_CHIPS = [
+  { key: "approval", label: "Approval", className: "bg-[#1E3A5F]/10 text-[#1E3A5F]" },
+  { key: "outside_authority", label: "Outside authority", className: "bg-purple-100 text-purple-800" },
+  { key: "financial_limit", label: "Financial limit", className: "bg-[#B78A2F]/15 text-[#8F6A1F]" },
+  { key: "safety_legal", label: "Safety / legal", className: "bg-[#AE4A3E]/10 text-[#8A362C]" },
+  { key: "other", label: "Other", className: "bg-gray-100 text-gray-600" },
+];
 
 const OwnerDependenceCard = ({ data }) => {
   const totalLoggedItems = data?.total_logged_items ?? 0;
@@ -30,6 +40,8 @@ const OwnerDependenceCard = ({ data }) => {
     .filter(([key]) => sources[key] > 0)
     .map(([key, label]) => `${label} ${sources[key]}`)
     .join(" · ");
+  const byReason = sources.escalations_by_reason || data?.escalations_by_reason || {};
+  const reasonChips = REASON_CHIPS.filter((chip) => byReason[chip.key] > 0);
   const escalatedDetail = [
     sources.director_tasks > 0 && `${sources.director_tasks} tasks`,
     sources.maintenance_high_critical > 0 && `${sources.maintenance_high_critical} urgent maintenance`,
@@ -86,6 +98,17 @@ const OwnerDependenceCard = ({ data }) => {
 
           {breakdown && (
             <p className="text-[11px] text-gray-500 font-medium break-words">{breakdown}</p>
+          )}
+
+          {reasonChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Reasons</span>
+              {reasonChips.map((chip) => (
+                <span key={chip.key} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${chip.className}`}>
+                  {chip.label} <span className="tabular-nums">{byReason[chip.key]}</span>
+                </span>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

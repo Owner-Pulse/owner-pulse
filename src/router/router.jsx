@@ -19,6 +19,7 @@ import ScholarshipsPage from "@/pages/owner-dashboard/scholarships/scholarships-
 import StaffPage from "@/pages/owner-dashboard/staff/staff-page";
 import DirectorManagementPage from "@/pages/owner-dashboard/director-management/director-management-page";
 import OwnerPayrollPage from "@/pages/owner-dashboard/payroll/payroll-page";
+import PendingDecisionsPage from "@/pages/owner-dashboard/pending-decisions/pending-decisions-page";
 
 // ─── Director Pages ───
 import DirectorOverviewPage from "@/pages/director-dashboard/overview/director-overview-page";
@@ -120,6 +121,10 @@ export const router = createBrowserRouter([
               {
                 path: 'payroll',
                 element: <OwnerPayrollPage />
+              },
+              {
+                path: 'pending-decisions',
+                element: <PendingDecisionsPage />
               },
             ]
           },
