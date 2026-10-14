@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
-import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud, Gavel } from 'lucide-react';
+import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud, Gavel, ReceiptText } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
@@ -21,6 +21,7 @@ const ownerTabs = [
   { id: "enrollment", label: "Enrollment", icon: Users },
   { id: "classrooms", label: "Classrooms", icon: BookOpen },
   { id: "cashflow", label: "Cash Flow", icon: DollarSign },
+  { id: "weekly-reports", label: "Weekly Report & Deposits", icon: ReceiptText },
   { id: "compliance", label: "Compliance", icon: AlertTriangle },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   // { id: "class-scores", label: "CLASS Scores", icon: BookOpen },
@@ -49,6 +50,7 @@ const directorTabs = [
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },
+  { id: "weekly-reports", label: "Weekly Report & Deposits", icon: ReceiptText },
   { id: "budget", label: "My Budget", icon: DollarSign },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
@@ -328,7 +330,7 @@ const DashboardLayout = () => {
             {menuItems.map((item) => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
-              const isActive = currentPath === destination;
+              const isActive = currentPath === destination || currentPath.startsWith(`${destination}/`);
 
               return (
                 <NavLink
@@ -535,7 +537,7 @@ const DashboardLayout = () => {
                     >
                       {profileTabs.map((item) => {
                         const destination = `/${role}/${item.id}`;
-                        const isActive = currentPath === destination;
+                        const isActive = currentPath === destination || currentPath.startsWith(`${destination}/`);
                         return (
                           <NavLink
                             key={item.id}

@@ -40,6 +40,7 @@ import LatestPayrollSubmissionCard from "./components/LatestPayrollSubmissionCar
 import CsvUploadModal from "./components/CsvUploadModal";
 import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 import CollectionsCard from "@/components/collections/CollectionsCard";
+import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -240,6 +241,9 @@ const OverviewPage = () => {
 
       {/* Collections */}
       <CollectionsCard role="owner" data={ownerOverviewData?.collections} />
+
+      {/* Weekly report & deposits */}
+      <WeeklyDepositsCard data={ownerOverviewData?.weekly_report} />
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

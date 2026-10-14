@@ -66,6 +66,13 @@ export const mondayOf = (date) => {
 
 export const thisMonday = () => toYmd(mondayOf(new Date()));
 
+export const addDaysYmd = (ymd, days) => {
+  const d = parseDay(ymd);
+  if (!d) return "";
+  d.setDate(d.getDate() + days);
+  return toYmd(d);
+};
+
 // any picked day → the Monday of its week
 export const normalizeWeek = (ymd) => {
   const d = parseDay(ymd);

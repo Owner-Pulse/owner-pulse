@@ -42,6 +42,9 @@ import SettingsPage from "@/pages/shared/settings/settings-page";
 import BillingPage from "@/pages/shared/billing/billing-page";
 import DiscountsPage from "@/pages/shared/discounts/discounts-page";
 import DataImportPage from "@/pages/shared/data-import/data-import-page";
+import WeeklyReportsPage from "@/pages/shared/weekly-reports/weekly-reports-page";
+import WeeklyReportDetailPage from "@/pages/shared/weekly-reports/weekly-report-detail-page";
+import WeeklyReportFormPage from "@/pages/shared/weekly-reports/weekly-report-form-page";
 
 
 export const router = createBrowserRouter([
@@ -126,6 +129,14 @@ export const router = createBrowserRouter([
                 path: 'pending-decisions',
                 element: <PendingDecisionsPage />
               },
+              {
+                path: 'weekly-reports',
+                element: <WeeklyReportsPage />
+              },
+              {
+                path: 'weekly-reports/:id',
+                element: <WeeklyReportDetailPage />
+              },
             ]
           },
           // Shared pages under owner
@@ -207,6 +218,22 @@ export const router = createBrowserRouter([
               {
                 path: 'compliance',
                 element: <DirectorCompliancePage />
+              },
+              {
+                path: 'weekly-reports',
+                element: <WeeklyReportsPage />
+              },
+              {
+                path: 'weekly-reports/new',
+                element: <WeeklyReportFormPage />
+              },
+              {
+                path: 'weekly-reports/:id',
+                element: <WeeklyReportDetailPage />
+              },
+              {
+                path: 'weekly-reports/:id/edit',
+                element: <WeeklyReportFormPage />
               },
             ]
           },
