@@ -32,7 +32,7 @@
     enrollmentHealth:    { icon: Users,         label: "Enrollment",    color: "#2563EB" },
     discretionaryBudget: { icon: Wallet,        label: "Discretionary", color: "#EC4899" },
     staffCallouts:       { icon: UserCheck,     label: "Callouts",      color: "#F97316" },
-    latePayments:        { icon: DollarSign,    label: "AR Aging",      color: "#8B5CF6" },
+    latePayments:        { icon: DollarSign,    label: "Collections",   color: "#8B5CF6" },
     compliance:          { icon: ShieldCheck,   label: "Compliance",    color: "#10B981" },
     maintenance:         { icon: Wrench,        label: "Maintenance",   color: "#F59E0B" },
     incidentTrend:       { icon: AlertTriangle, label: "Incidents",     color: "#EF4444" },

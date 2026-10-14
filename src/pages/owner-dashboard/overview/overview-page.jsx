@@ -39,6 +39,7 @@ import CashFlowMetricsCard from "./components/CashFlowMetricsCard";
 import LatestPayrollSubmissionCard from "./components/LatestPayrollSubmissionCard";
 import CsvUploadModal from "./components/CsvUploadModal";
 import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
+import CollectionsCard from "@/components/collections/CollectionsCard";
 
 const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -236,6 +237,9 @@ const OverviewPage = () => {
 
       {/* Cash Flow Metrics */}
       <CashFlowMetricsCard cashFlowMetrics={cashFlowMetrics} />
+
+      {/* Collections */}
+      <CollectionsCard role="owner" data={ownerOverviewData?.collections} />
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
