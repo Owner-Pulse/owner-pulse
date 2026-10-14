@@ -6,7 +6,7 @@ import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
 import { useUpdateOwnerMaintenance } from "@/hooks/owner-hook/maintenance.hook";
 
-import { EscalationQuestions } from "@/components/EscalationPrompt";
+import { EscalationQuestions, escalationModal } from "@/components/EscalationPrompt";
 import {
   EMPTY_ESCALATION,
   cleanEscalation,
@@ -169,12 +169,14 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
   };
 
 
+  // The questions step opens up to the wide two-column layout on desktop
+  const modal = escalationModal(onQuestions);
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        className={modal.panel} onClick={(e) => e.stopPropagation()}>
+          <div className={`flex items-center justify-between ${modal.header}`}>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
                 {editItem ? "Edit Maintenance Request" : "New Maintenance Request"}
@@ -192,14 +194,20 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className={modal.form}>
+            <div className={modal.body}>
             {onQuestions && (
-              <>
-                <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words">
-                  <span className="font-bold text-gray-900">{form.location.trim()}</span> · {form.issue.trim()}
-                </div>
-                <EscalationQuestions value={escalation} onChange={changeEscalation} errors={fieldErrors} disabled={isPending} />
-              </>
+              <EscalationQuestions
+                value={escalation}
+                onChange={changeEscalation}
+                errors={fieldErrors}
+                disabled={isPending}
+                leading={
+                  <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words">
+                    <span className="font-bold text-gray-900">{form.location.trim()}</span> · {form.issue.trim()}
+                  </div>
+                }
+              />
             )}
 
             {!onQuestions && (
@@ -273,8 +281,9 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
                 <AlertTriangle size={14} className="shrink-0" /> {error}
               </div>
             )}
+            </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className={modal.footer}>
               {onQuestions ? (
                 <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={isPending} className="flex-1">
                   <ArrowLeft size={16} className="mr-2" /> Back
@@ -298,7 +307,6 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
               )}
             </div>
           </form>
-        </div>
       </motion.div>
     </div>
   );
