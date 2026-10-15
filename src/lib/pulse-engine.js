@@ -1261,7 +1261,7 @@ function clamp(value, min = 0, max = 100) {
 const SUB_LABELS = {
   bigFinancialHealth: 'Big Financial Health',
   compliance: 'Compliance',
-  latePayments: 'Late Payments / AR',
+  latePayments: 'Collections',
   enrollmentHealth: 'Enrollment Health',
   classScore: 'CLASS Score',
   maintenance: 'Maintenance',

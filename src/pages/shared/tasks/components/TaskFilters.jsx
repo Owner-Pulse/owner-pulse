@@ -15,29 +15,40 @@ const TaskFilters = ({
   onFilterChange,
   sentLabel = "Sent by me",
   totalCount,
+  extraTabs = [],
 }) => {
+  // Extra tabs show their own list, so the task priority filter and count do not apply
+  const onExtraTab = extraTabs.some((tab) => tab.id === activeTab);
+
   return (
     <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 md:gap-3">
       {/* Tab filter: Assigned to me / Sent by me / All */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 max-w-full overflow-x-auto no-scrollbar">
         {[
           { id: "assigned", label: "Assigned to me" },
           { id: "sent", label: sentLabel },
           { id: "all", label: "All" },
+          ...extraTabs,
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               activeTab === tab.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {tab.label}
+            {tab.count > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-[#B78A2F]/20 text-[#8F6A1F] text-[9px] font-extrabold">
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       {/* Priority Filter */}
+      {!onExtraTab && (
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Priority:
@@ -56,10 +67,13 @@ const TaskFilters = ({
           </button>
         ))}
       </div>
+      )}
 
-      <span className="text-[10px] md:text-xs text-gray-400 ml-auto font-medium">
-        {totalCount} tasks
-      </span>
+      {!onExtraTab && (
+        <span className="text-[10px] md:text-xs text-gray-400 ml-auto font-medium">
+          {totalCount} tasks
+        </span>
+      )}
     </motion.div>
   );
 };

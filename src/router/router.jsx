@@ -19,6 +19,7 @@ import ScholarshipsPage from "@/pages/owner-dashboard/scholarships/scholarships-
 import StaffPage from "@/pages/owner-dashboard/staff/staff-page";
 import DirectorManagementPage from "@/pages/owner-dashboard/director-management/director-management-page";
 import OwnerPayrollPage from "@/pages/owner-dashboard/payroll/payroll-page";
+import PendingDecisionsPage from "@/pages/owner-dashboard/pending-decisions/pending-decisions-page";
 
 // ─── Director Pages ───
 import DirectorOverviewPage from "@/pages/director-dashboard/overview/director-overview-page";
@@ -41,6 +42,9 @@ import SettingsPage from "@/pages/shared/settings/settings-page";
 import BillingPage from "@/pages/shared/billing/billing-page";
 import DiscountsPage from "@/pages/shared/discounts/discounts-page";
 import DataImportPage from "@/pages/shared/data-import/data-import-page";
+import WeeklyReportsPage from "@/pages/shared/weekly-reports/weekly-reports-page";
+import WeeklyReportDetailPage from "@/pages/shared/weekly-reports/weekly-report-detail-page";
+import WeeklyReportFormPage from "@/pages/shared/weekly-reports/weekly-report-form-page";
 
 
 export const router = createBrowserRouter([
@@ -120,6 +124,18 @@ export const router = createBrowserRouter([
               {
                 path: 'payroll',
                 element: <OwnerPayrollPage />
+              },
+              {
+                path: 'pending-decisions',
+                element: <PendingDecisionsPage />
+              },
+              {
+                path: 'weekly-reports',
+                element: <WeeklyReportsPage />
+              },
+              {
+                path: 'weekly-reports/:id',
+                element: <WeeklyReportDetailPage />
               },
             ]
           },
@@ -202,6 +218,22 @@ export const router = createBrowserRouter([
               {
                 path: 'compliance',
                 element: <DirectorCompliancePage />
+              },
+              {
+                path: 'weekly-reports',
+                element: <WeeklyReportsPage />
+              },
+              {
+                path: 'weekly-reports/new',
+                element: <WeeklyReportFormPage />
+              },
+              {
+                path: 'weekly-reports/:id',
+                element: <WeeklyReportDetailPage />
+              },
+              {
+                path: 'weekly-reports/:id/edit',
+                element: <WeeklyReportFormPage />
               },
             ]
           },
