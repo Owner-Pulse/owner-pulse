@@ -1,12 +1,12 @@
 import React from "react";
 import { UserMinus, Trash } from "lucide-react";
+import { daysFromToday } from "@/lib/datetime";
 
 const RemovalCard = ({ removal }) => {
   if (!removal) return null;
 
-  const dateObj = new Date(removal.date || removal.effective_date || removal.created_at || Date.now());
-  const validDate = isNaN(dateObj.getTime()) ? new Date() : dateObj;
-  const elapsedDays = Math.max(0, Math.ceil((new Date() - validDate) / 86400000));
+  const dateValue = removal.date || removal.effective_date || removal.created_at || Date.now();
+  const elapsedDays = Math.max(0, -daysFromToday(dateValue));
   const remainingDays = Math.max(0, 60 - elapsedDays);
 
   const studentName = removal.student || removal.student_full_name || "Unknown Student";

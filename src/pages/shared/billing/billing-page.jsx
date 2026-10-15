@@ -4,15 +4,16 @@ import { DollarSign, AlertTriangle, Clock, Users, CheckCircle2 } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EscalationPrompt from "@/components/EscalationPrompt";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 import AgingKpiCard from "./components/AgingKpiCard";
 import AgingChartCard from "./components/AgingChartCard";
 import AgingSummaryCard from "./components/AgingSummaryCard";
 import FilterBar from "./components/FilterBar";
 import FamilyCard from "./components/FamilyCard";
+import { daysBetween, todayYmd } from "@/lib/datetime";
 
-const TODAY = new Date("2026-05-11");
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-const daysSince = (d) => Math.floor((TODAY - new Date(d)) / 86400000);
+const daysSince = (d) => daysBetween(d, todayYmd()) || 0;
 
 const AGING_BUCKETS = [
   { key: "1-7", label: "1–7 days", min: 1, max: 7 },
@@ -40,9 +41,6 @@ const getAgingBucket = (dueDate) => {
   return bucket || AGING_BUCKETS[AGING_BUCKETS.length - 1];
 };
 
-const getUser = () =>
-  JSON.parse(localStorage.getItem("user") || '{"role":"owner","name":"School Owner"}');
-
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -53,12 +51,11 @@ const itemVariants = {
 };
 
 const BillingPage = () => {
-  const user = getUser();
-  const isOwner = user.role === "owner";
+  const { user } = useGetUser();
+  const isOwner = user?.role !== "director";
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBucket, setFilterBucket] = useState("all");
   const [followedUp, setFollowedUp] = useState({});
-  const [escalationOpen, setEscalationOpen] = useState(false);
   const [escalationItem, setEscalationItem] = useState(null);
 
   const totalPastDue = useMemo(() => LATE_FAMILIES.reduce((a, f) => a + f.amount, 0), []);
@@ -210,7 +207,7 @@ const BillingPage = () => {
               isOwner={isOwner}
               followedUp={followedUp}
               onMarkFollowUp={markFollowUp}
-              onEscalate={(item) => { setEscalationItem(item); setEscalationOpen(true); }}
+              onEscalate={setEscalationItem}
             />
           ))
         )}
@@ -222,12 +219,12 @@ const BillingPage = () => {
         )}
       </motion.div>
 
-      {/* Escalation Prompt */}
+      {/* Standalone escalation — the family and the past-due balance go along as context */}
       <EscalationPrompt
-        isOpen={escalationOpen}
-        onClose={() => { setEscalationOpen(false); setEscalationItem(null); }}
-        onSubmit={(data) => { setEscalationOpen(false); setEscalationItem(null); }}
-        itemDescription={escalationItem ? `${escalationItem.name} · ${escalationItem.student} · $${escalationItem.amount} past due (${escalationItem.notes || "No notes"})` : ""}
+        isOpen={!!escalationItem}
+        onClose={() => setEscalationItem(null)}
+        defaultTitle={escalationItem ? `Past-due balance: ${escalationItem.name}` : ""}
+        context={escalationItem ? `${escalationItem.name} · ${escalationItem.student} (${escalationItem.grade}) · ${fmtMoney(escalationItem.amount)} past due since ${escalationItem.dueDate}${escalationItem.notes ? ` · ${escalationItem.notes}` : ""}` : ""}
       />
     </motion.div>
   );

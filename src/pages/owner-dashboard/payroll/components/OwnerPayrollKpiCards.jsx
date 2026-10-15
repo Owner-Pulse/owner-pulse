@@ -1,9 +1,10 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, Clock, CheckCircle2, FileSpreadsheet } from "lucide-react";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "None";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "None";
 
 const OwnerPayrollKpiCards = ({ metrics, nextPendingPeriod, daysRemaining, historyCount }) => {
   const nextDueDateText = metrics?.next_due_date

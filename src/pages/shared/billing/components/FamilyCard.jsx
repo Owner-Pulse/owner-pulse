@@ -2,10 +2,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import { DollarSign, Send, CheckCircle2, ArrowUpRight, Phone, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
 
-const TODAY = new Date("2026-05-11");
-const daysSince = (d) => Math.floor((TODAY - new Date(d)) / 86400000);
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const daysSince = (d) => daysBetween(d, todayYmd()) || 0;
+const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric", year: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
 
 const AGING_BUCKETS = [

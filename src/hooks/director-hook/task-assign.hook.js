@@ -2,6 +2,8 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { directorTaskAssignService } from "@/services/director-service/task-assign.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { fetchAllPages } from "@/lib/fetch-all-pages";
+import { hasValidationErrors } from "@/lib/escalation";
 
 // get all director task list
 export const useGetDirectorTaskList = () => {
@@ -11,11 +13,11 @@ export const useGetDirectorTaskList = () => {
         data, isLoading: isTaskListLoading, refetch: refetchTaskList
     } = useQuery({
         queryKey: ["director-task-list"],
-        queryFn: () => directorTaskAssignService.get_task_list(axiosInstance),
+        // The page works on the whole list (tabs, counts), so load every page
+        queryFn: () => fetchAllPages((page) => directorTaskAssignService.get_task_list(axiosInstance, { page, per_page: 100 })),
     });
 
-    const rawData = data?.data;
-    const taskList = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData?.data : []);
+    const taskList = Array.isArray(data) ? data : [];
 
     return {
         taskList,
@@ -43,6 +45,8 @@ export const useCreateDirectorTask = () => {
             queryClient.invalidateQueries(["director-task-list"]);
         },
         onError: (error) => {
+            // 422 field errors are shown under their fields by the form
+            if (hasValidationErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to create task");
         }
     });

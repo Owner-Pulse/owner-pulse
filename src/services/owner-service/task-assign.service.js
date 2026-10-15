@@ -1,7 +1,7 @@
 export const ownerTaskAssignService = {
-    get_task_list: async (axiosInstance) => {
+    get_task_list: async (axiosInstance, params) => {
         try {
-            const response = await axiosInstance.get("/owner/task");
+            const response = await axiosInstance.get("/owner/task", { params });
             return response.data;
         } catch (error) {
             throw error;

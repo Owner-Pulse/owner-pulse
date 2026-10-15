@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
-import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud } from 'lucide-react';
+import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud, Gavel, ReceiptText } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
 import { useSignout } from '@/hooks/auth/auth.hook';
 import { useGetOwnerOverview } from '@/hooks/owner-hook/overview.hook';
 import { useGetDirectorOverview } from '@/hooks/director-hook/overview.hook';
+import { usePendingEscalationCount } from '@/hooks/escalation.hook';
 import { useGetNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/hooks/notification.hook';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,12 +15,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { initEcho, listenToNotifications, requestNotificationPermission, setupNotificationTapListener } from '@/lib/reverb-connection';
 import { getToken, removeToken } from '@/lib/token';
+import { formatDate } from "@/lib/datetime";
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
   { id: "enrollment", label: "Enrollment", icon: Users },
   { id: "classrooms", label: "Classrooms", icon: BookOpen },
   { id: "cashflow", label: "Cash Flow", icon: DollarSign },
+  { id: "weekly-reports", label: "Weekly Report & Deposits", icon: ReceiptText },
   { id: "compliance", label: "Compliance", icon: AlertTriangle },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   // { id: "class-scores", label: "CLASS Scores", icon: BookOpen },
@@ -34,7 +37,7 @@ const ownerTabs = [
   { id: "pto", label: "PTO", icon: Calendar },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
   { id: "director-management", label: "Director Management", icon: Shield },
-  // { id: "pending-decisions", label: "Decisions", icon: AlertTriangle },
+  { id: "pending-decisions", label: "Decisions", icon: Gavel },
 ];
 
 const directorTabs = [
@@ -48,6 +51,7 @@ const directorTabs = [
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },
+  { id: "weekly-reports", label: "Weekly Report & Deposits", icon: ReceiptText },
   { id: "budget", label: "My Budget", icon: DollarSign },
   { id: "waitlist", label: "Waitlist", icon: Calendar },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
@@ -101,7 +105,7 @@ const timeAgo = (ts) => {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDate(ts, { month: "short", day: "numeric" });
 };
 
 // Unread task comments next to "Tasks" — reads the same cached overview query as the dashboard
@@ -123,6 +127,9 @@ const DirectorTasksUnread = () => {
 };
 
 const TasksUnreadBadge = ({ role }) => (role === "owner" ? <OwnerTasksUnread /> : <DirectorTasksUnread />);
+
+// Escalations waiting for the Owner's decision, next to "Decisions"
+const PendingDecisionsBadge = () => <UnreadCount count={usePendingEscalationCount("owner")} />;
 
 const DashboardLayout = () => {
   const queryClient = useQueryClient();
@@ -231,6 +238,8 @@ const DashboardLayout = () => {
 
         // Invalidate queries to refresh notification list and badge count
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        // A new escalation or the Owner's decision arrives as a notification
+        queryClient.invalidateQueries({ queryKey: ["escalations"] });
       });
     }
 
@@ -322,7 +331,7 @@ const DashboardLayout = () => {
             {menuItems.map((item) => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
-              const isActive = currentPath === destination;
+              const isActive = currentPath === destination || currentPath.startsWith(`${destination}/`);
 
               return (
                 <NavLink
@@ -337,6 +346,7 @@ const DashboardLayout = () => {
                   <item.icon size={18} />
                   {item.label}
                   {item.id === "tasks" && role && <TasksUnreadBadge role={role} />}
+                  {item.id === "pending-decisions" && role === "owner" && <PendingDecisionsBadge />}
                 </NavLink>
               );
             })}
@@ -528,7 +538,7 @@ const DashboardLayout = () => {
                     >
                       {profileTabs.map((item) => {
                         const destination = `/${role}/${item.id}`;
-                        const isActive = currentPath === destination;
+                        const isActive = currentPath === destination || currentPath.startsWith(`${destination}/`);
                         return (
                           <NavLink
                             key={item.id}

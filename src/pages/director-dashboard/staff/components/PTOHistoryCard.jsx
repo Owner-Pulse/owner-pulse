@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { daysFromToday, formatDate } from "@/lib/datetime";
 
-const TODAY = new Date("2026-05-11");
 const fmtDate = (d) => {
   if (!d) return "";
   try {
-    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return formatDate(d, { month: "short", day: "numeric", year: "numeric" });
   } catch {
     return d;
   }
@@ -15,7 +15,8 @@ const fmtDate = (d) => {
 const fmtRelative = (d) => {
   if (!d) return "";
   try {
-    const diff = Math.ceil((new Date(d) - TODAY) / 86400000);
+    const diff = daysFromToday(d);
+    if (diff === null) return d;
     if (diff === 0) return "Today";
     if (diff === -1) return "Yesterday";
     return `${Math.abs(diff)} days ago`;

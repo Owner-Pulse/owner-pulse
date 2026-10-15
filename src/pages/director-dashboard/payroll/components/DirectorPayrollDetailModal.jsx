@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetDirectorPayrollHistoryDetails } from "@/hooks/payroll/payroll.hook";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const ITEM_TYPE_CONFIG = {
   pto: { label: "PTO Leave", bg: "bg-blue-50 text-blue-700 border-blue-200", icon: Clock },

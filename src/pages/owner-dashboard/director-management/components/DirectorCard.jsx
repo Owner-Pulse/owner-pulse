@@ -2,9 +2,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, Clock, AlertTriangle, ChevronRight, User, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate as formatNyDate } from "@/lib/datetime";
 
 const formatDate = (d) =>
-  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  formatNyDate(d, { month: "short", day: "numeric", year: "numeric" });
 
 const DirectorCard = ({ director, onClick, onViewActivity }) => {
   const name = director?.name || "Unknown";

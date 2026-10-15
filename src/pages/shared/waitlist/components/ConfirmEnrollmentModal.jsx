@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
+import { todayYmd } from "@/lib/datetime";
 
 const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, onSubmit, isPending = false }) => {
   const { classrooms } = useGetAllClassrooms();
@@ -33,7 +34,7 @@ const ConfirmEnrollmentModal = ({ isOpen, onClose, entry, onConfirmEnrollment, o
         gender: entry.gender || "Male",
         finalRoom: entry.program || entry.classroom || classrooms[0]?.classroom_name || "Main Classroom",
         status: "Active",
-        actualStart: entry.startDateOffered || new Date().toISOString().split("T")[0],
+        actualStart: entry.startDateOffered || todayYmd(),
         allergies: entry.allergies || "",
         parentName: entry.parentName || entry.parent || "",
         phone: entry.phone || "",

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { useGetClassroom, useGetSingleClassroom } from "@/hooks/classroom/classroom.hook";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { todayYmd, ymdOf } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 15 },
@@ -97,10 +98,12 @@ const OwnerClassroomDetailPage = () => {
   const displayRoster = apiRoster.map((s) => {
     let ageStr = "—";
     if (s.date_of_birth) {
-      const dobDate = new Date(s.date_of_birth);
-      if (!isNaN(dobDate.getTime())) {
-        const ageYears = Math.floor((new Date() - dobDate) / (365.25 * 24 * 60 * 60 * 1000));
-        ageStr = `${ageYears}yo`;
+      const dob = ymdOf(s.date_of_birth);
+      if (dob) {
+        const [birthYear, birthMonth, birthDay] = dob.split("-").map(Number);
+        const [year, month, day] = todayYmd().split("-").map(Number);
+        const age = year - birthYear - (month < birthMonth || (month === birthMonth && day < birthDay) ? 1 : 0);
+        ageStr = `${age}yo`;
       }
     }
     return {

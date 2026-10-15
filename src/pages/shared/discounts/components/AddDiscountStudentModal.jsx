@@ -6,6 +6,7 @@ import { useGetStudentsByProcareClassroom } from "@/hooks/director-hook/student-
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import SearchableStudentSelect, { getStudentId, getStudentName } from "@/pages/director-dashboard/students/components/SearchableStudentSelect";
 import { getFileUrl } from "@/utils/file.utils";
+import { todayYmd } from "@/lib/datetime";
 
 const AddDiscountStudentModal = ({
   isOpen,
@@ -123,7 +124,7 @@ const AddDiscountStudentModal = ({
         school_weeks: 43,
         school_months: 10,
         academic_year: "2025-2026",
-        start_date: new Date().toISOString().split("T")[0],
+        start_date: todayYmd(),
         end_date: "",
         reason: "",
         notes: "",

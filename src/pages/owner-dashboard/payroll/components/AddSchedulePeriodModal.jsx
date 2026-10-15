@@ -25,7 +25,7 @@ const AddSchedulePeriodModal = ({ isOpen, onClose }) => {
         setModalError("All dates are required for a single cycle.");
         return;
       }
-      if (new Date(startDate) > new Date(endDate)) {
+      if (startDate > endDate) {
         setModalError("Start date cannot be after end date.");
         return;
       }

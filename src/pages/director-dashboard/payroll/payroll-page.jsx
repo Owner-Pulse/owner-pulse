@@ -36,6 +36,7 @@ import {
 } from "@/hooks/payroll/payroll.hook";
 import { useGetAllStaffs } from "@/hooks/classroom/classroom.hook";
 import { getStaffName, getStaffId } from "@/pages/owner-dashboard/classrooms/components/SearchableStaffSelect";
+import { daysBetween as calendarDaysBetween, daysFromToday, formatDate } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,12 +48,12 @@ const itemVariants = {
 };
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const daysBetween = (start, end) => {
   if (!start) return 0;
   if (!end || end === start) return 1;
-  return Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
+  return Math.max(1, (calendarDaysBetween(start, end) || 0) + 1);
 };
 
 const PayrollPage = () => {
@@ -103,12 +104,7 @@ const PayrollPage = () => {
     }
     const due = activePeriod.submission_due_date || activePeriod.dueDate || activePeriod.end_date || activePeriod.endDate;
     if (!due) return 0;
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const dueDt = new Date(due);
-    dueDt.setHours(0, 0, 0, 0);
-    const diff = dueDt - now;
-    return Math.max(0, Math.ceil(diff / 86400000));
+    return Math.max(0, daysFromToday(due) || 0);
   }, [activePeriod]);
 
   // Helper to find staff name by ID

@@ -4,6 +4,7 @@ import { HeartPulse, ChevronDown, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PulseRecommendations from "@/components/PulseRecommendations";
 import PulseSetup, { PulsePartialNote } from "@/components/PulseSetup";
+import { formatDate as formatNyDate } from "@/lib/datetime";
 
 // ─── Design tokens ───────────────────────────────────────────────
 const DARK_NAVY = "#0A0F1E";
@@ -175,14 +176,11 @@ function getStateDesc(state) {
 }
 
 function formatDate() {
-  const d = new Date();
-  return d
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    })
-    .toUpperCase();
+  return formatNyDate(new Date(), {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).toUpperCase();
 }
 
 // ─── Pulse Section Component ──────────────────────────────────────

@@ -7,6 +7,8 @@ import PriorityTag from "@/pages/shared/tasks/components/PriorityTag";
 import TaskCommentsModal from "@/pages/shared/tasks/components/TaskCommentsModal";
 import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import EscalationSummary from "@/components/EscalationSummary";
+import { formatDate, toDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -15,34 +17,19 @@ const itemVariants = {
 
 const COMMENT_PREVIEW_LENGTH = 140;
 
-// "YYYY-MM-DD" and "YYYY-MM-DD HH:mm:ss" carry no timezone — read them as local time
-const parseDate = (value) => {
-  if (!value) return null;
-  if (/T.*(Z|[+-]\d{2}:?\d{2})$/.test(String(value))) {
-    const zoned = new Date(value);
-    return isNaN(zoned.getTime()) ? null : zoned;
-  }
-  const [datePart, timePart = "00:00:00"] = String(value).replace("T", " ").split(" ");
-  const [y, m, d] = datePart.split("-").map(Number);
-  const [hh = 0, mm = 0, ss = 0] = timePart.split(":").map((n) => parseInt(n, 10) || 0);
-  const date = new Date(y, (m || 1) - 1, d || 1, hh, mm, ss);
-  return isNaN(date.getTime()) ? null : date;
-};
-
 const fmtDate = (value) => {
-  const date = parseDate(value);
-  return date ? date.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+  return formatDate(value, { month: "short", day: "numeric" });
 };
 
 const timeAgo = (value) => {
-  const date = parseDate(value);
+  const date = toDate(value);
   if (!date) return "";
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDate(value, { month: "short", day: "numeric" });
 };
 
 // ─── Latest comment preview ──────────────────────────────────────
@@ -130,6 +117,7 @@ const TaskItem = ({ task, fromLabel, onOpen }) => {
         )}
       </div>
 
+      {task.escalation && <EscalationSummary escalation={task.escalation} clamp className="mt-2" />}
       {task.latest_comment && <CommentPreview comment={task.latest_comment} unread={hasUnread} />}
     </div>
   );
@@ -159,6 +147,7 @@ const MaintenanceItem = ({ item, tone = "gold", showAssignee = false }) => (
         <span className="font-semibold text-gray-600 break-words min-w-0">To: {item.assigned_to?.name || "All Directors"}</span>
       )}
     </div>
+    {item.escalation && <EscalationSummary escalation={item.escalation} clamp className="mt-2" />}
   </div>
 );
 
