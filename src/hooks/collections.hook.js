@@ -2,7 +2,7 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { collectionsService } from "@/services/collections.service";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { hasValidationErrors } from "@/lib/escalation";
+import { hasFieldErrors } from "@/lib/api-errors";
 
 const HISTORY_PER_PAGE = 20;
 
@@ -61,7 +61,7 @@ export const useSaveCollections = (role) => {
             queryClient.invalidateQueries({ queryKey: ["director-overview"] });
         },
         onError: (error) => {
-            if (hasValidationErrors(error)) return;
+            if (hasFieldErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to save collections");
         },
     });
