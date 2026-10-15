@@ -93,9 +93,26 @@ export const toDate = (value) => {
   return isNaN(d) ? null : d;
 };
 
+// dev only: one warning per calling line (in practice one per field) for a value that could not be read
+const warned = new Set();
+const warnUnreadable = (value) => {
+  if (!import.meta.env.DEV) return;
+  // frames 4-5: the caller and the line that calls it (a local fmtDate wrapper is often in between)
+  const frames = (new Error().stack || "").split("\n").slice(4, 6).map((f) => f.trim());
+  const caller = frames.join(" <- ") || String(value).replace(/\d/g, "9");
+  if (warned.has(caller)) return;
+  warned.add(caller);
+  console.warn(`[datetime] unrecognised date format, shown as sent: ${JSON.stringify(value)} (${caller})`);
+};
+
+// an unreadable value is shown as it came, never as a blank
 const format = (value, options) => {
+  if (value === null || value === undefined || value === "") return "";
   const d = toDate(value);
-  if (!d) return "";
+  if (!d) {
+    warnUnreadable(value);
+    return String(value);
+  }
   const timeZone = isDateOnly(String(value)) ? "UTC" : APP_TIME_ZONE;
   return d.toLocaleString("en-US", { ...options, timeZone });
 };
