@@ -1,5 +1,5 @@
 // Helpers for the weekly Collections balance (owner + director overview card, entry modal, history)
-import { COLORS } from "@/lib/theme-tokens";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 import { getFieldErrors } from "@/lib/api-errors";
 import {
   addDaysYmd as nyAddDaysYmd,
@@ -14,9 +14,9 @@ import {
 
 // Going up is bad (more money owed), going down is good (we are collecting)
 export const DIRECTION_META = {
-  up: { color: COLORS.danger, text: "text-[#8A362C]", bg: "bg-[#AE4A3E]/10", label: "Up" },
-  down: { color: COLORS.good, text: "text-[#2F6042]", bg: "bg-[#3E7A54]/10", label: "Down" },
-  flat: { color: "#94A0B5", text: "text-gray-500", bg: "bg-gray-100", label: "Flat" },
+  up: { color: STATUS.problem.hex, text: STATUS.problem.text, bg: STATUS.problem.soft, label: "Up" },
+  down: { color: STATUS.good.hex, text: STATUS.good.text, bg: STATUS.good.soft, label: "Down" },
+  flat: { color: ACCENTS.collections.hex, text: ACCENTS.collections.text, bg: ACCENTS.collections.soft, label: "Flat" },
 };
 
 const toNumber = (value) => {
