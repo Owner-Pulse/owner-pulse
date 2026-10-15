@@ -1,6 +1,7 @@
 // Shared option lists, limits and helpers for the Director → Owner escalation questions
 
 import { getFieldErrors, hasFieldErrors } from "@/lib/api-errors";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
 export const DECISION_OPTIONS = [
   { value: "approve_reject", label: "Approve / Reject" },
@@ -36,10 +37,10 @@ export const decisionLabel = (value) => labelOf(DECISION_OPTIONS, value);
 export const reasonLabel = (value) => labelOf(REASON_OPTIONS, value);
 
 export const STATUS_META = {
-  pending: { label: "Decision needed", short: "Pending", className: "bg-[#B78A2F]/15 text-[#8F6A1F] border-[#B78A2F]/30" },
-  approved: { label: "Approved", short: "Approved", className: "bg-[#3E7A54]/10 text-[#2F6042] border-[#3E7A54]/30" },
-  rejected: { label: "Rejected", short: "Rejected", className: "bg-[#AE4A3E]/10 text-[#8A362C] border-[#AE4A3E]/30" },
-  acknowledged: { label: "Acknowledged", short: "Acknowledged", className: "bg-gray-100 text-gray-600 border-gray-200" },
+  pending: { label: "Decision needed", short: "Pending", className: STATUS.watch.badge },
+  approved: { label: "Approved", short: "Approved", className: STATUS.good.badge },
+  rejected: { label: "Rejected", short: "Rejected", className: STATUS.problem.badge },
+  acknowledged: { label: "Acknowledged", short: "Acknowledged", className: ACCENTS.operations.icon },
 };
 
 export const statusMeta = (status) => STATUS_META[status] || STATUS_META.pending;

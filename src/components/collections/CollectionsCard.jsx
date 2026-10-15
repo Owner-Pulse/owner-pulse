@@ -5,7 +5,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { COLORS } from "@/lib/theme-tokens";
+import CardAccent from "@/components/ui/card-accent";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 import { useGetCollections } from "@/hooks/collections.hook";
 import {
   DIRECTION_META,
@@ -102,7 +103,8 @@ const TrendChart = ({ points, color }) => {
 };
 
 const CardSkeleton = () => (
-  <Card className="bg-white border-none shadow-sm p-5">
+  <Card className="relative bg-white border-none shadow-sm p-5">
+    <CardAccent group="none" />
     <Skeleton className="h-4 w-28" />
     <div className="grid md:grid-cols-2 gap-6 mt-4">
       <div className="space-y-3">
@@ -130,7 +132,11 @@ const CollectionsCard = ({ role, data }) => {
 
   const points = useMemo(() => trendPoints(collections?.trend), [collections?.trend]);
   const trendDir = trendDirection(points);
-  const lineColor = trendDir === "up" ? COLORS.danger : trendDir === "down" ? COLORS.good : COLORS.navy;
+  const lineColor = trendDir === "up"
+    ? STATUS.problem.hex
+    : trendDir === "down"
+    ? STATUS.good.hex
+    : ACCENTS.collections.hex;
   const hasTrend = points.filter((p) => p.balance !== null).length > 0;
 
   if (data === undefined && isLoading) return <CardSkeleton />;
@@ -142,11 +148,12 @@ const CollectionsCard = ({ role, data }) => {
 
   return (
     <motion.div variants={itemVariants} id="collections-card" className="scroll-mt-20">
-      <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
+      <Card className="relative bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
+        <CardAccent group={isEmpty ? "none" : "collections"} />
         {/* Header */}
         <div className="flex items-center justify-between gap-2 px-4 sm:px-5 pt-4">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 min-w-0">
-            <span className="p-1.5 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] shrink-0">
+            <span className={`p-1.5 rounded-lg shrink-0 ${isEmpty ? "bg-gray-100 text-gray-600" : ACCENTS.collections.icon}`}>
               <PiggyBank size={16} />
             </span>
             Collections
@@ -156,14 +163,14 @@ const CollectionsCard = ({ role, data }) => {
               <button
                 type="button"
                 onClick={() => setHistoryOpen(true)}
-                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-[#1E3A5F] hover:bg-[#1E3A5F]/[0.06] transition-colors cursor-pointer"
+                className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold ${ACCENTS.collections.text} ${ACCENTS.collections.hover} transition-colors cursor-pointer`}
               >
                 <History size={13} /> History
               </button>
               <button
                 type="button"
                 onClick={() => setEntryOpen(true)}
-                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-[#1E3A5F] hover:bg-[#1E3A5F]/[0.06] transition-colors cursor-pointer"
+                className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold ${ACCENTS.collections.text} ${ACCENTS.collections.hover} transition-colors cursor-pointer`}
               >
                 <Pencil size={13} /> Update
               </button>
@@ -174,14 +181,14 @@ const CollectionsCard = ({ role, data }) => {
         {isEmpty ? (
           /* Empty state */
           <div className="px-5 py-8 flex flex-col items-center text-center">
-            <div className="p-3 rounded-2xl bg-[#1E3A5F]/[0.06] text-[#1E3A5F]">
+            <div className={`p-3 rounded-2xl ${STATUS.none.soft} ${STATUS.none.text}`}>
               <PiggyBank size={26} />
             </div>
             <p className="text-sm font-semibold text-gray-900 mt-3">No collections entered yet</p>
             <p className="text-xs text-gray-500 mt-1 max-w-xs">
               Enter the balance in collections once a week to track how much is still owed.
             </p>
-            <Button onClick={() => setEntryOpen(true)} className="mt-4 h-9 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+            <Button onClick={() => setEntryOpen(true)} className={`mt-4 h-9 ${ACCENTS.collections.bar} hover:brightness-90 text-white`}>
               <Plus size={15} className="mr-1.5" /> Enter this week
             </Button>
           </div>
@@ -189,15 +196,15 @@ const CollectionsCard = ({ role, data }) => {
           <>
             {/* Director reminder */}
             {needsThisWeek && role === "director" && (
-              <div className="mx-4 sm:mx-5 mt-3 p-3 rounded-xl bg-[#B78A2F]/10 border border-[#B78A2F]/30 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className={`mx-4 sm:mx-5 mt-3 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 ${STATUS.watch.soft} ${STATUS.watch.border}`}>
                 <div className="flex items-start gap-2 flex-1 min-w-0">
-                  <BellRing size={16} className="text-[#8F6A1F] shrink-0 mt-0.5" />
+                    <BellRing size={16} className={`${STATUS.watch.text} shrink-0 mt-0.5`} />
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-[#8F6A1F]">Enter this week's collections</p>
-                    <p className="text-[11px] text-[#8F6A1F]/80">The latest balance is from the week of {fmtWeek(current.week_start)}.</p>
+                      <p className={`text-sm font-bold ${STATUS.watch.text}`}>Enter this week's collections</p>
+                      <p className={`text-[11px] ${STATUS.watch.text}`}>The latest balance is from the week of {fmtWeek(current.week_start)}.</p>
                   </div>
                 </div>
-                <Button onClick={() => setEntryOpen(true)} className="h-8 px-3 text-xs bg-[#B78A2F] hover:bg-[#8F6A1F] text-white shrink-0 self-start sm:self-auto">
+                  <Button onClick={() => setEntryOpen(true)} className={`h-8 px-3 text-xs border shrink-0 self-start sm:self-auto ${STATUS.watch.badge}`}>
                   <Plus size={14} className="mr-1" /> Enter this week
                 </Button>
               </div>
@@ -239,7 +246,7 @@ const CollectionsCard = ({ role, data }) => {
             <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 border-t border-gray-100 text-[11px] text-gray-500 flex flex-wrap gap-x-2 gap-y-0.5">
               <span className="font-semibold text-gray-600">Week of {fmtWeek(current.week_start, { year: true })}</span>
               {current.entered_by?.name && <span>· Entered by {current.entered_by.name}</span>}
-              {needsThisWeek && role !== "director" && <span className="text-[#8F6A1F] font-medium">· This week not entered yet</span>}
+              {needsThisWeek && role !== "director" && <span className={`${STATUS.watch.text} font-medium`}>· This week not entered yet</span>}
             </div>
           </>
         )}

@@ -42,6 +42,7 @@ import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
 import { formatDate } from "@/lib/datetime";
+import { PULSE_STATUS_COLORS, STATUS, statusFromPct, statusFromPulseLabel } from "@/lib/theme-tokens";
 
 const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -88,7 +89,7 @@ const OverviewPage = () => {
     composite: pulseApi?.composite_score == null ? null : Math.round(pulseApi.composite_score),
     state: {
       state: pulseApi?.state || "No data",
-      color: pulseApi?.color || "#9CA3AF",
+      color: PULSE_STATUS_COLORS[statusFromPulseLabel(pulseApi?.state)],
     },
     recommendations: pulseApi?.top_3_recommendations || [],
     sub_scores: pulseApi?.sub_scores || {},
@@ -130,10 +131,7 @@ const OverviewPage = () => {
       ? (complianceCompliant / complianceTotal) * 100
       : 0
   );
-  const complianceColor =
-    compliancePct < 50 ? "#AE4A3E" : compliancePct >= 80 ? "#3E7A54" : "#B78A2F";
-  const complianceSubColor =
-    compliancePct < 50 ? "text-[#8A362C]" : compliancePct >= 80 ? "text-[#2F6042]" : "text-[#8F6A1F]";
+  const complianceStatus = complianceTotal > 0 ? statusFromPct(compliancePct) : "none";
 
   const enrolledOpenSeats = enrolledData.open_seats ?? enrolledData.open_spots ?? Math.max(0, enrolledData.capacity - enrolledData.count);
 
@@ -181,7 +179,7 @@ const OverviewPage = () => {
             {isQbStatusLoading ? (
               <Skeleton className="h-4 w-16 rounded-full" />
             ) : isQbConnected ? (
-              <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 bg-[#3E7A54]/10 text-[#2F6042] text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium">
+              <span className={`inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 ${STATUS.good.badge} text-[9px] md:text-xs rounded-full whitespace-nowrap font-medium`}>
                 <CheckIcon size={10} /> Synced
               </span>
             ) : (
@@ -202,8 +200,8 @@ const OverviewPage = () => {
           {isQbStatusLoading ? (
             <Skeleton className="h-9 w-40 rounded-xl" />
           ) : isQbConnected ? (
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2CA01C]/10 border border-[#2CA01C]/30 text-[#207514] text-xs md:text-sm font-semibold rounded-xl shadow-sm">
-              <CheckIcon size={14} className="text-[#207514]" /> Connected
+            <div className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 ${STATUS.good.badge} text-xs md:text-sm font-semibold rounded-xl shadow-sm`}>
+              <CheckIcon size={14} className={STATUS.good.text} /> Connected
             </div>
           ) : (
             <Button 
@@ -252,46 +250,48 @@ const OverviewPage = () => {
           label="Enrolled"
           value={`${enrolledData.count}/${enrolledData.capacity}`}
           pct={Math.min(100, Math.round(enrolledData.capacity_pct || (enrolledData.capacity > 0 ? (enrolledData.count / enrolledData.capacity) * 100 : 0)))}
-          color="#1E3A5F"
+          accent="students"
+          status={enrolledData.capacity > 0 ? statusFromPct(enrolledData.capacity_pct || (enrolledData.count / enrolledData.capacity) * 100, { good: 80, watch: 60 }) : "none"}
+          noData={enrolledData.capacity <= 0}
           sub={`${enrolledOpenSeats} open seats · ${enrolledData.yoy_growth || "0%"} y/y`}
-          subColor="text-[#2F6042]"
           icon={kpiIcon.Users}
         />
         <DonutKpiCard
           label="Revenue"
           value={revenueDataKpi.formatted_full || revenueDataKpi.formatted || fmtMoney(revenueDataKpi.amount)}
           pct={revenueDataKpi.pct ?? (revenueDataKpi.amount > 0 ? 85 : 0)}
-          color="#3E7A54"
+          accent="finance"
+          noData={!kpiCards?.revenue}
           sub={`${revenueDataKpi.mom_growth || "0%"} MoM`}
-          subColor="text-[#2F6042]"
           icon={kpiIcon.DollarSign}
         />
         <DonutKpiCard
           label="Waitlist"
           value={`${waitlistKpi.count} Leads`}
           pct={Math.round(waitlistKpi.waitlist_ratio_pct || 0)}
-          color="#1E3A5F"
+          accent="students"
+          noData={!kpiCards?.waitlist}
           sub={`${waitlistKpi.open_seats ?? waitlistKpi.open_spots ?? 0} open seats · ${waitlistKpi.conversion_rate_pct ?? 0}% conv`}
-          subColor="text-gray-400"
           icon={kpiIcon.ClipboardList}
         />
-        <DonutKpiCard label="Tasks Done" value={`${tasksKpi.completed}/${tasksKpi.total}`} pct={tasksKpi.total ? Math.round((tasksKpi.completed / tasksKpi.total) * 100) : 0} color="#B78A2F" sub={`${tasksKpi.high_priority} high priority`} subColor="text-[#8F6A1F]" icon={kpiIcon.CheckCircle2} />
+        <DonutKpiCard label="Tasks Done" value={`${tasksKpi.completed}/${tasksKpi.total}`} pct={tasksKpi.total ? Math.round((tasksKpi.completed / tasksKpi.total) * 100) : 0} accent="operations" status={tasksKpi.total ? statusFromPct((tasksKpi.completed / tasksKpi.total) * 100) : "none"} noData={!kpiCards?.tasks_done || !tasksKpi.total} sub={`${tasksKpi.high_priority} high priority`} icon={kpiIcon.CheckCircle2} />
       </div>
 
       {/* KPI Row 2 — Donut Charts */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <DonutKpiCard label="Maintenance" value={`${maintKpi.resolved}/${maintKpi.total}`} pct={maintKpi.total ? Math.round((maintKpi.resolved / maintKpi.total) * 100) : 0} color="#AE4A3E" sub={`${maintKpi.critical_count} critical`} subColor="text-[#8A362C]" icon={kpiIcon.Wrench} />
+        <DonutKpiCard label="Maintenance" value={`${maintKpi.resolved}/${maintKpi.total}`} pct={maintKpi.total ? Math.round((maintKpi.resolved / maintKpi.total) * 100) : 0} accent="operations" status={maintKpi.total ? statusFromPct((maintKpi.resolved / maintKpi.total) * 100) : "none"} noData={!kpiCards?.maintenance || !maintKpi.total} sub={`${maintKpi.critical_count} critical`} icon={kpiIcon.Wrench} />
         <DonutKpiCard
           label="At-Risk"
           value={`${atRiskKpi.intervening} Students`}
           centerText={atRiskKpi.total ? `${atRiskKpi.intervening}/${atRiskKpi.total}` : `${atRiskKpi.intervening}`}
           pct={atRiskKpi.total ? Math.round((atRiskKpi.intervening / atRiskKpi.total) * 100) : 0}
-          color="#AE4A3E"
+          accent="students"
+          status={atRiskKpi.total ? statusFromPct((atRiskKpi.intervening / atRiskKpi.total) * 100, { higherIsBetter: false, good: 10, watch: 25 }) : "none"}
+          noData={!kpiCards?.at_risk_students || !atRiskKpi.total}
           sub="intervening"
-          subColor="text-[#8A362C]"
           icon={kpiIcon.AlertTriangle}
         />
-        <DonutKpiCard label="PTO Used" value={`${ptoKpi.days_used}/${ptoKpi.total_allowance}`} pct={Math.round(ptoKpi.used_pct)} color="#1E3A5F" sub={`${ptoKpi.subs_count} subs this mo`} subColor="text-gray-400" icon={kpiIcon.Calendar} />
+        <DonutKpiCard label="PTO Used" value={`${ptoKpi.days_used}/${ptoKpi.total_allowance}`} pct={Math.round(ptoKpi.used_pct)} accent="staff" noData={!kpiCards?.pto_used || !ptoKpi.total_allowance} sub={`${ptoKpi.subs_count} subs this mo`} icon={kpiIcon.Calendar} />
       </div>
 
       {/* KPI Row 3 — Compliance, Director Discretionary Budget, Discounts */}
@@ -300,29 +300,31 @@ const OverviewPage = () => {
           label="Compliance"
           value={`${complianceCompliant}/${complianceTotal}`}
           pct={compliancePct}
-          color={complianceColor}
+          accent="operations"
+          status={complianceStatus}
+          noData={complianceStatus === "none"}
           sub={`${complianceNeedAttention} need attention`}
-          subColor={complianceSubColor}
           icon={kpiIcon.ShieldCheck}
           onClick={() => navigate("/owner/compliance")}
         />
-        <DonutKpiCard label="Director Discretionary Budget" value={fmtMoney(pettyCashKpi.spent)} pct={Math.round(pettyCashKpi.used_pct)} color="#1E3A5F" sub={`${fmtMoney(pettyCashKpi.remaining)} left`} subColor={pettyCashKpi.remaining > 0 ? "text-[#2F6042]" : "text-[#8A362C]"} icon={kpiIcon.Wallet} />
+        <DonutKpiCard label="Director Discretionary Budget" value={fmtMoney(pettyCashKpi.spent)} pct={Math.round(pettyCashKpi.used_pct)} accent="finance" noData={!kpiCards?.petty_cash || !pettyCashKpi.budget} sub={`${fmtMoney(pettyCashKpi.remaining)} left`} icon={kpiIcon.Wallet} />
         <DonutKpiCard
           label="Discounts"
           value={discountsKpi.formatted_monthly_amount || discountsKpi.formatted_total_amount || (fmtMoney(discountsKpi.total_amount) + "/mo")}
           pct={Math.round(discountsKpi.pct_share || discountsKpi.discount_percentage || 0)}
-          color="#1E3A5F"
+          accent="finance"
+          noData={!kpiCards?.discounts}
           sub={`${discountsKpi.active_discounts ?? discountsKpi.students_count ?? 0} active (${discountsKpi.pct_share ?? discountsKpi.discount_percentage ?? 0}% share)`}
-          subColor="text-gray-400"
           icon={kpiIcon.Tag}
         />
         <DonutKpiCard 
           label="Payroll Cycles" 
           value={`${payrollKpi.filed_count} filed`} 
           pct={Math.round(payrollKpi.progress_pct)} 
-          color="#1E3A5F" 
+          accent="staff"
+          status={kpiCards?.payroll_cycles ? statusFromPct(payrollKpi.progress_pct) : "none"}
+          noData={!kpiCards?.payroll_cycles}
           sub={`Next due in ${payrollKpi.next_due_days}d`} 
-          subColor="text-gray-400" 
           icon={kpiIcon.ClipboardList}
           onClick={() => navigate("/owner/payroll")}
         />
@@ -330,12 +332,12 @@ const OverviewPage = () => {
 
       {/* Middle Row — At-Risk + Maintenance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} fmtDate={fmtDate} onNavigate={go} />
-        <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} onNavigate={go} />
+        <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} noData={!kpiCards?.at_risk_students} fmtDate={fmtDate} onNavigate={go} />
+        <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} noData={!ownerOverviewData?.open_maintenance} onNavigate={go} />
       </div>
 
       {/* Task ownership board */}
-      <TaskBoard data={ownerOverviewData?.task_board} role="owner" onNavigate={go} onRefresh={refetch} />
+      <TaskBoard data={ownerOverviewData?.task_board} role="owner" noData={!ownerOverviewData?.task_board} onNavigate={go} onRefresh={refetch} />
 
       {/* Bottom Section — Budget + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -343,10 +345,10 @@ const OverviewPage = () => {
           budgetData={budgetDataForCard} budgetPercent={Math.round(schoolBudget.used_pct)} schoolBudgetRemaining={schoolBudget.remaining}
           DIRECTOR_BUDGET_TOTAL={directorPettyCash.total_budget} directorSpent={directorPettyCash.total_spent} directorRemaining={directorPettyCash.remaining}
           pettyCashPercent={Math.round(directorPettyCash.used_pct)} recentExpenses={directorPettyCash.recent_expenses || []} expenseByReason={[]}
-          fmtMoney={fmtMoney} fmtDate={fmtDate} onNavigate={go}
+          fmtMoney={fmtMoney} fmtDate={fmtDate} noData={!budgetOverview} onNavigate={go}
         />
-        <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrollmentByGrade.reduce((sum, g) => sum + (g.available || 0), 0)} />
-        <UpcomingEventsCard events={upcomingEvents} />
+        <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrollmentByGrade.reduce((sum, g) => sum + (g.available || 0), 0)} noData={!Array.isArray(ownerOverviewData?.enrollment_by_grade) || enrollmentByGrade.length === 0} />
+        <UpcomingEventsCard events={upcomingEvents} noData={!ownerOverviewData?.upcoming_events} />
       </div>
 
       {/* Modals */}

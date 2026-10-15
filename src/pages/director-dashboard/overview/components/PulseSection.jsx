@@ -33,12 +33,13 @@ import { Card } from "@/components/ui/card";
 import PulseGauge from "@/components/PulseGauge";
 import PulseRecommendations from "@/components/PulseRecommendations";
 import PulseSetup, { PulsePartialNote } from "@/components/PulseSetup";
+import { COLORS, PULSE_STATUS_COLORS, statusFromPct } from "@/lib/theme-tokens";
 
 // ─── Design tokens ───────────────────────────────────────────────
-const DARK_NAVY = "#0A0F1E";
-const MONITOR_GREEN = "#3E9B67";
+const DARK_NAVY = COLORS.pulseDark;
+const MONITOR_GREEN = PULSE_STATUS_COLORS.good;
 const TEXT_DIM = "#94A3B8";
-const NO_DATA_GREY = "#9CA3AF";
+const NO_DATA_GREY = PULSE_STATUS_COLORS.none;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -176,6 +177,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
   const noData = directorPulse.bpm == null;
   const composite = directorPulse.composite;
   const pulseColor = noData ? NO_DATA_GREY : directorPulse.state?.color || MONITOR_GREEN;
+  const compositeColor = PULSE_STATUS_COLORS[composite == null ? "none" : statusFromPct(composite, { good: 80, watch: 60 })];
   const beatDuration = (60 / Math.max(directorPulse.bpm ?? 0, 55)) * ANIM_SLOW_FACTOR;
 
   return (
@@ -281,7 +283,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                     composite == null
                       ? "rgba(255,255,255,0.08)"
                       : `linear-gradient(to right,
-                    ${composite >= 80 ? pulseColor : composite >= 60 ? "#C89B3C" : "#C33B2E"}
+                    ${compositeColor}
                     ${composite}%,
                     rgba(255,255,255,0.08) ${composite}%)`,
                 }}
@@ -381,13 +383,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         {directorPulse.subscores.map((sub) => {
                           const subNoData = sub.score == null;
-                          const scoreColor = subNoData
-                            ? NO_DATA_GREY
-                            : sub.score >= 80
-                              ? MONITOR_GREEN
-                              : sub.score >= 60
-                              ? "#C89B3C"
-                              : "#C33B2E";
+                          const scoreColor = PULSE_STATUS_COLORS[subNoData ? "none" : statusFromPct(sub.score, { good: 80, watch: 60 })];
                           return (
                             <div
                               key={sub.key}
@@ -403,7 +399,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                               <div
                               className="mb-0.5 p-1.5 rounded-lg"
                               style={{
-                                background: "rgba(62,155,103,0.08)",
+                                background: `${scoreColor}14`,
                               }}
                             >
                               {(() => {
@@ -411,7 +407,7 @@ const PulseSection = ({ directorPulse, ownerPulseSnapshot }) => {
                                 return SubIcon ? (
                                   <SubIcon
                                     size={14}
-                                    style={{ color: subNoData ? NO_DATA_GREY : MONITOR_GREEN }}
+                                    style={{ color: scoreColor }}
                                   />
                                 ) : null;
                               })()}

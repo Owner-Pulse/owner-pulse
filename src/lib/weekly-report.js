@@ -2,6 +2,7 @@
 import { addDaysYmd, normalizeWeek, parseDay } from "@/lib/collections";
 import { getFieldErrors } from "@/lib/api-errors";
 import { daysBetween, formatDate } from "@/lib/datetime";
+import { STATUS } from "@/lib/theme-tokens";
 
 // Room columns of the paper attendance sheet (mapped to classrooms in Owner settings)
 export const REPORT_ROOMS = ["Toddlers", "Two's", "Three", "VPK A", "VPK B", "K-8"];
@@ -47,12 +48,12 @@ export const fmtRange = (start, end) => {
 
 // ─── Check badges ────────────────────────────────────────────────
 export const CHECK_STYLES = {
-  matched: "bg-[#3E7A54]/10 text-[#2F6042] border-[#3E7A54]/30",
-  mismatch: "bg-[#AE4A3E]/10 text-[#8A362C] border-[#AE4A3E]/30",
-  incomplete: "bg-gray-100 text-gray-500 border-gray-200",
-  late: "bg-[#B78A2F]/15 text-[#8F6A1F] border-[#B78A2F]/30",
-  draft: "bg-[#B78A2F]/10 text-[#8F6A1F] border-[#B78A2F]/30",
-  confirmed: "bg-[#1E3A5F]/10 text-[#1E3A5F] border-[#1E3A5F]/25",
+  matched: STATUS.good.badge,
+  mismatch: STATUS.problem.badge,
+  incomplete: STATUS.none.badge,
+  late: STATUS.watch.badge,
+  draft: STATUS.watch.badge,
+  confirmed: STATUS.good.badge,
 };
 
 // status of a check: a string in list rows, { status } in the detail and overview
