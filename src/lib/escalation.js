@@ -1,5 +1,7 @@
 // Shared option lists, limits and helpers for the Director → Owner escalation questions
 
+import { getFieldErrors, hasFieldErrors } from "@/lib/api-errors";
+
 export const DECISION_OPTIONS = [
   { value: "approve_reject", label: "Approve / Reject" },
   { value: "decide_options", label: "Decide between options" },
@@ -61,19 +63,16 @@ export const cleanEscalation = (value) => ({
  * so the same four field names work for the nested and the standalone form.
  */
 export const parseValidationErrors = (error) => {
-  if (error?.response?.status !== 422) return {};
-  const raw = error.response.data?.errors || {};
   const out = {};
-  Object.entries(raw).forEach(([key, messages]) => {
+  Object.entries(getFieldErrors(error)).forEach(([key, message]) => {
     const field = key.replace(/^escalation\./, "");
-    out[field] = Array.isArray(messages) ? messages[0] : String(messages);
+    if (!(field in out)) out[field] = message;
   });
   return out;
 };
 
 // A 422 that names the fields at fault (the forms show those themselves)
-export const hasValidationErrors = (error) =>
-  error?.response?.status === 422 && Object.keys(error.response.data?.errors || {}).length > 0;
+export const hasValidationErrors = hasFieldErrors;
 
 // Drop the server message of every answer the user has edited since
 export const clearEditedErrors = (errors, prev, next) => {
