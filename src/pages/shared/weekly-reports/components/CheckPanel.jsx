@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle2, CircleDashed, Clock, CreditCard, Banknote, XCircle } from "lucide-react";
 import { fmtMoney, fmtSignedMoney } from "@/lib/collections";
-import { CASH_SOURCES, checkStatus, liveCardCheck, liveCashCheck, toNum } from "@/lib/weekly-report";
+import { CASH_SOURCES, DEPOSIT_GRACE_DAYS, checkStatus, liveCardCheck, liveCashCheck, toNum } from "@/lib/weekly-report";
 
 const TONE = {
   matched: { box: "bg-[#3E7A54]/[0.07] border-[#3E7A54]/30", text: "text-[#2F6042]", icon: CheckCircle2 },
@@ -18,6 +18,9 @@ export const cashFromForm = (form) => {
     reference: live.reference?.label,
     rows: CASH_SOURCES.map((s) => ({ ...s, value: live.values[s.key], difference: diffKeys[s.key] ?? null })),
     messages: [],
+    maxDifference: live.maxDifference,
+    late: live.late,
+    lateDays: live.lateDays,
   };
 };
 
@@ -37,12 +40,13 @@ export const cashFromReport = (report) => {
     reference: ref?.label,
     rows: CASH_SOURCES.map((s) => {
       const value = toNum(values[s.key]);
-      const difference = ref && value !== null && s.key !== ref.key ? value - toNum(values[ref.key]) : null;
-      return { ...s, value, difference: difference && Math.abs(difference) > 0.005 ? difference : null };
+      const difference = ref && value !== null && s.key !== ref.key ? Math.round((value - toNum(values[ref.key])) * 100) / 100 : null;
+      return { ...s, value, difference: difference && Math.abs(difference) > 0.01 ? difference : null };
     }),
-    messages: check.messages || [],
+    // the late deposit has its own line below, so its server message is not repeated
+    messages: (check.messages || []).filter((m) => !(check.late_deposit && /bank deposit was made/i.test(m))),
     maxDifference: check.max_difference,
-    late: !!(check.late_deposit ?? report?.late_deposit),
+    late: !!check.late_deposit,
     lateDays: check.deposit_days_after_week,
   };
 };
@@ -91,6 +95,9 @@ const CashSummary = ({ cash }) => {
       {cash.status === "mismatch" && cash.reference && (
         <p className="text-[10px] text-[#8A362C]/80 mt-2">Differences are compared to {cash.reference.toLowerCase()}.</p>
       )}
+      {cash.status === "mismatch" && cash.maxDifference != null && (
+        <p className="text-[11px] font-semibold text-[#8A362C] mt-1">Largest difference {fmtMoney(cash.maxDifference, { cents: true })}</p>
+      )}
       {cash.messages?.length > 0 && (
         <ul className="mt-2 space-y-0.5">
           {cash.messages.map((m, i) => (
@@ -99,8 +106,9 @@ const CashSummary = ({ cash }) => {
         </ul>
       )}
       {cash.late && (
-        <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-[#8F6A1F]">
-          <Clock size={12} /> Late deposit{cash.lateDays ? `: ${cash.lateDays} days after the week` : ""}
+        <p className="mt-2 p-2 rounded-lg bg-[#B78A2F]/10 border border-[#B78A2F]/30 flex items-start gap-1.5 text-[11px] font-semibold text-[#8F6A1F]">
+          <Clock size={12} className="shrink-0 mt-0.5" />
+          Late deposit: made {cash.lateDays} days after the week ended (allowed: {DEPOSIT_GRACE_DAYS}).
         </p>
       )}
     </div>

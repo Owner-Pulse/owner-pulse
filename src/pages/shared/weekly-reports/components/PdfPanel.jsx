@@ -18,11 +18,11 @@ export const useObjectUrl = (blob) => {
   return url;
 };
 
-// the report's PDF from the server (auth header → blob), or a local file picked in the form
-export const useReportPdfUrl = ({ role, reportId, hasFile, localFile }) => {
-  const { blob, isLoading, isError } = useWeeklyReportFile(role, reportId, !localFile && !!hasFile);
+// the report's PDF from the server at file.url (auth header → blob), or a local file picked in the form
+export const useReportPdfUrl = ({ fileUrl, localFile }) => {
+  const { blob, isLoading, isError } = useWeeklyReportFile(fileUrl, !localFile);
   const url = useObjectUrl(localFile || blob || null);
-  return { url, isLoading: !localFile && !!hasFile && isLoading, isError: !localFile && isError };
+  return { url, isLoading: !localFile && !!fileUrl && isLoading, isError: !localFile && isError };
 };
 
 export const openPdf = (url) => {

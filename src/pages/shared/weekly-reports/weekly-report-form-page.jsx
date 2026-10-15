@@ -26,8 +26,8 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import {
   useConfirmWeeklyReport,
   useGetWeeklyReport,
-  useGetWeeklyReports,
   useSaveWeeklyReport,
+  useWeeklyReportForWeek,
 } from "@/hooks/weekly-report.hook";
 import { fmtMoney, normalizeWeek, thisMonday, toYmd } from "@/lib/collections";
 import {
@@ -44,7 +44,7 @@ import {
 } from "@/lib/weekly-report";
 import AttendanceGrid from "./components/AttendanceGrid";
 import CheckPanel, { cardFromForm, cashFromForm } from "./components/CheckPanel";
-import { CardBadge, CashBadge } from "./components/CheckBadges";
+import { CardBadge, CashBadge, LateBadge } from "./components/CheckBadges";
 import { CountInput, Field, FieldError, MoneyInput, Section, TextArea, TextInput, inputClass } from "./components/FormBits";
 import { OpenPdfButton, PdfFrame, useReportPdfUrl } from "./components/PdfPanel";
 
@@ -65,11 +65,12 @@ const WeeklyReportFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { report, isLoading } = useGetWeeklyReport("director", id);
-  const { reports } = useGetWeeklyReports("director");
   const { saveDraft, isPending: isSaving } = useSaveWeeklyReport();
   const { confirmReport, isPending: isConfirming } = useConfirmWeeklyReport("director");
 
   const [form, setForm] = useState(() => location.state?.form || emptyForm(thisMonday()));
+  // another report already covers the picked week (new form only)
+  const { report: weekClash } = useWeeklyReportForWeek("director", form.week_start, !id);
   const [pdf, setPdf] = useState({ file: null, uploaded: false });
   const [errors, setErrors] = useState({});
   const [dirty, setDirty] = useState(false);
@@ -99,18 +100,13 @@ const WeeklyReportFormPage = () => {
   const liveCash = liveCashCheck(form);
   const liveCard = liveCardCheck(form);
 
-  const hasServerFile = !!(report?.has_file || report?.file);
+  const hasServerFile = !!report?.file;
   const { url: pdfUrl, isLoading: pdfLoading, isError: pdfError } = useReportPdfUrl({
-    role: "director",
-    reportId: id,
-    hasFile: hasServerFile,
+    fileUrl: report?.file?.url,
     localFile: pdf.file,
   });
   const hasPdf = !!pdf.file || hasServerFile;
   const pdfName = pdf.file?.name || report?.file?.original_name;
-
-  // another report already covers the picked week (new form only)
-  const weekClash = !id ? reports.find((r) => normalizeWeek(r.week_start) === form.week_start) : null;
 
   const busy = isSaving || isConfirming;
 
@@ -218,13 +214,14 @@ const WeeklyReportFormPage = () => {
   const handleConfirm = async () => {
     let reportId = id;
     if (dirty || !reportId || (pdf.file && !pdf.uploaded)) {
+      // never confirm what was not saved; the field errors are already on the form
       const saved = await save({ silent: true });
-      if (!saved?.id && !reportId) {
+      if (!saved?.id) {
         setConfirmOpen(false);
-        toast.error("Fix the highlighted fields, then confirm.");
+        toast.error("The report could not be saved. Fix the highlighted fields, then confirm.");
         return;
       }
-      reportId = saved?.id || reportId;
+      reportId = saved.id;
     }
     try {
       await confirmReport(reportId);
@@ -501,6 +498,7 @@ const WeeklyReportFormPage = () => {
             <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
               <CashBadge check={liveCash.status} amount={liveCash.maxDifference} />
               <CardBadge check={liveCard.status} amount={liveCard.difference} />
+              {liveCash.late && <LateBadge days={liveCash.lateDays} />}
               <span className={`text-[11px] ml-1 ${saveState?.failed ? "text-[#8A362C] font-semibold" : "text-gray-400"}`}>
                 {isSaving && <Loader2 size={11} className="inline mr-1 animate-spin" />}
                 {saveLabel}

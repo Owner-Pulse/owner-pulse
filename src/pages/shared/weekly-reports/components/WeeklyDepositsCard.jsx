@@ -13,16 +13,16 @@ const itemVariants = {
 };
 
 /**
- * Owner overview — latest weekly report and its deposit checks (overview.weekly_report)
+ * Owner and Director overview — latest weekly report and its deposit checks (overview.weekly_report)
  */
-const WeeklyDepositsCard = ({ data }) => {
+const WeeklyDepositsCard = ({ data, role = "owner" }) => {
   const navigate = useNavigate();
-  const open = () => navigate("/owner/weekly-reports");
+  const open = () => navigate(`/${role}/weekly-reports`);
 
   const latest = data?.latest_week;
   const cashStatus = checkStatus(data?.cash_check);
   const cardStatus = checkStatus(data?.card_check);
-  const late = !!(data?.cash_check?.late_deposit ?? data?.late_deposit);
+  const late = !!data?.cash_check?.late_deposit;
   const cashDiff = toNum(data?.cash_check?.max_difference);
   const cardDiff = toNum(data?.card_check?.difference);
 

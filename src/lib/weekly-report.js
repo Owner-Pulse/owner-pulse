@@ -7,8 +7,12 @@ export const REPORT_ROOMS = ["Toddlers", "Two's", "Three", "VPK A", "VPK B", "K-
 
 export const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
-// Two amounts closer than a cent are the same
-const TOLERANCE = 0.005;
+// Same rules as the server: amounts further apart than this are a mismatch,
+// and a bank deposit more than DEPOSIT_GRACE_DAYS after the week end is late
+const TOLERANCE = 0.01;
+export const DEPOSIT_GRACE_DAYS = 3;
+
+const round2 = (n) => Math.round(n * 100) / 100;
 
 export const MAX_PDF_MB = 20;
 
@@ -49,7 +53,7 @@ export const CHECK_STYLES = {
   confirmed: "bg-[#1E3A5F]/10 text-[#1E3A5F] border-[#1E3A5F]/25",
 };
 
-// status of a check that may arrive as a string or as { status }
+// status of a check: a string in list rows, { status } in the detail and overview
 export const checkStatus = (check) => (typeof check === "string" ? check : check?.status) || "incomplete";
 
 // ─── Live checks (form) ──────────────────────────────────────────
@@ -66,37 +70,54 @@ export const sumCashDays = (cashDays) =>
 
 export const anyCashDay = (cashDays) => Object.values(cashDays || {}).some((v) => toNum(v) !== null);
 
+// days from the week end to the bank deposit (negative when before), or null
+export const depositDaysAfter = (weekEnd, depositDate) => {
+  const end = parseDay(weekEnd);
+  const deposit = parseDay(depositDate);
+  if (!end || !deposit) return null;
+  return Math.round((deposit - end) / 86400000);
+};
+
 /**
- * Compare every filled cash number. The reference is the first filled one
- * (daily cash, then receipts book, ...). status: matched | mismatch | incomplete
+ * Compare every filled cash number, as the server does: mismatch when the largest minus
+ * the smallest is over a cent. Per-row differences are shown against the first filled
+ * number (daily cash, then receipts book, ...). status: matched | mismatch | incomplete
  */
 export const liveCashCheck = (form) => {
   const values = {
-    daily_cash_total: anyCashDay(form.cash_days) ? sumCashDays(form.cash_days) : null,
+    daily_cash_total: anyCashDay(form.cash_days) ? round2(sumCashDays(form.cash_days)) : null,
     receipts_book_total: toNum(form.receipts_book_total),
     procare_cash_total: toNum(form.procare_cash_total),
     deposit_slip_cash: toNum(form.deposit_slip_cash),
     bank_deposit_amount: toNum(form.bank_deposit_amount),
   };
   const filled = CASH_SOURCES.filter((s) => values[s.key] !== null);
-  if (filled.length < 2) return { status: "incomplete", values, filled, reference: filled[0] || null, diffs: [] };
+  const lateDays = depositDaysAfter(fridayOf(form.week_start), form.bank_deposit_date);
+  const late = lateDays !== null && lateDays > DEPOSIT_GRACE_DAYS;
+
+  if (filled.length < 2)
+    return { status: "incomplete", values, filled, reference: filled[0] || null, diffs: [], maxDifference: null, late, lateDays };
 
   const reference = filled[0];
   const refValue = values[reference.key];
   const diffs = filled
     .slice(1)
-    .map((s) => ({ ...s, value: values[s.key], difference: values[s.key] - refValue }))
+    .map((s) => ({ ...s, value: values[s.key], difference: round2(values[s.key] - refValue) }))
     .filter((d) => Math.abs(d.difference) > TOLERANCE);
+  const filledValues = filled.map((s) => values[s.key]);
+  const maxDifference = round2(Math.max(...filledValues) - Math.min(...filledValues));
 
   return {
     // green when every filled number agrees, even if some are still blank
-    status: diffs.length ? "mismatch" : "matched",
+    status: maxDifference > TOLERANCE ? "mismatch" : "matched",
     complete: filled.length === CASH_SOURCES.length,
     values,
     filled,
     reference,
     diffs,
-    maxDifference: diffs.reduce((m, d) => Math.max(m, Math.abs(d.difference)), 0),
+    maxDifference,
+    late,
+    lateDays,
   };
 };
 
@@ -104,7 +125,7 @@ export const liveCardCheck = (form) => {
   const cover = toNum(form.credit_card_total);
   const procare = toNum(form.procare_card_total);
   if (cover === null || procare === null) return { status: "incomplete", cover, procare, difference: null };
-  const difference = cover - procare;
+  const difference = round2(cover - procare);
   return { status: Math.abs(difference) > TOLERANCE ? "mismatch" : "matched", cover, procare, difference };
 };
 
@@ -144,8 +165,8 @@ export const formFromReport = (report) => {
     if (d?.day) form.cash_days[String(d.day).slice(0, 10)] = str(d.amount);
   });
 
-  // detail shape: headcount { days[], rooms[] { room_label, counts[5] } }
-  const days = report?.headcount?.days?.length ? report.headcount.days : weekDays(form.week_start).map((d) => d.date);
+  // detail shape: headcount { days[5], rooms[] { room_label, counts[5], total }, day_totals[5], total }
+  const days = report?.headcount?.days || [];
   (report?.headcount?.rooms || []).forEach((room) => {
     (room.counts || []).forEach((count, i) => {
       const date = days[i] ? String(days[i]).slice(0, 10) : null;
@@ -188,10 +209,12 @@ export const buildPayload = (form, file = null) => {
 
   if (!file) return { payload: body, listIndex };
 
-  // multipart: nested lists as cash_days[0][day]; empty values as "" (null on the server)
+  // multipart: nested lists as cash_days[0][day]; empty values as "" (null on the server).
+  // An empty list is sent as "" too, so the server still clears the old rows.
   const fd = new FormData();
   Object.entries(body).forEach(([key, value]) => {
     if (Array.isArray(value)) {
+      if (value.length === 0) fd.append(key, "");
       value.forEach((row, i) => Object.entries(row).forEach(([k, v]) => fd.append(`${key}[${i}][${k}]`, v ?? "")));
     } else {
       fd.append(key, value ?? "");
@@ -213,6 +236,16 @@ export const mapReportErrors = (error, listIndex = {}) => {
     else out[key] = message;
   });
   return out;
+};
+
+// The server's attendance totals (detail headcount) in gridTotals' shape
+export const serverGridTotals = (headcount) => {
+  if (!headcount?.days) return null;
+  const rowTotals = {};
+  const colTotals = {};
+  headcount.days.forEach((date, i) => (rowTotals[String(date).slice(0, 10)] = headcount.day_totals?.[i] ?? null));
+  (headcount.rooms || []).forEach((room) => (colTotals[room.room_label] = room.total));
+  return { rowTotals, colTotals, total: headcount.total };
 };
 
 // Attendance totals for a grid of { [cellKey]: value }

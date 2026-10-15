@@ -19,6 +19,7 @@ import ExpensesCard from "./components/ExpensesCard";
 import TaskBoard from "@/components/TaskBoard";
 import OwnerDependenceCard from "./components/OwnerDependenceCard";
 import CollectionsCard from "@/components/collections/CollectionsCard";
+import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -154,6 +155,9 @@ const DirectorOverviewPage = () => {
 
       {/* Collections */}
       <CollectionsCard role="director" data={directorOverviewData?.collections} />
+
+      {/* Weekly deposits */}
+      {directorOverviewData?.weekly_report && <WeeklyDepositsCard role="director" data={directorOverviewData.weekly_report} />}
 
       {/* Section 3 + 4: Enrollment + Coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

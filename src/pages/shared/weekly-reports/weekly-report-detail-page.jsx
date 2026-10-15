@@ -26,7 +26,7 @@ import {
   useUpdateWeeklyReportNotes,
 } from "@/hooks/weekly-report.hook";
 import { fmtMoney, fmtUpdatedAt, fmtWeek, parseFieldErrors } from "@/lib/collections";
-import { fmtRange, formFromReport, sumCashDays, toNum, weekDays } from "@/lib/weekly-report";
+import { fmtRange, formFromReport, serverGridTotals, toNum, weekDays } from "@/lib/weekly-report";
 import AttendanceGrid from "./components/AttendanceGrid";
 import CheckPanel, { cardFromReport, cashFromReport } from "./components/CheckPanel";
 import { CardBadge, CashBadge, LateBadge, StatusBadge } from "./components/CheckBadges";
@@ -68,17 +68,15 @@ const WeeklyReportDetailPage = () => {
   const [ownerNotes, setOwnerNotes] = useState("");
   const [notesError, setNotesError] = useState(null);
 
-  // PUT /owner/.../notes edits owner_notes when the report has it, otherwise the shared notes
-  const ownerNotesKey = report && "owner_notes" in report ? "owner_notes" : "notes";
-  const sharedNotes = ownerNotesKey === "notes";
+  // the Owner's notes are kept apart from the Director's notes
   useEffect(() => {
-    if (report) setOwnerNotes(report[ownerNotesKey] || "");
-  }, [report, ownerNotesKey]);
+    if (report) setOwnerNotes(report.owner_notes || "");
+  }, [report]);
 
   const form = useMemo(() => (report ? formFromReport(report) : null), [report]);
   const days = useMemo(() => weekDays(report?.week_start), [report?.week_start]);
-  const hasFile = !!(report?.file || report?.has_file);
-  const { url: pdfUrl, isLoading: pdfLoading, isError: pdfError } = useReportPdfUrl({ role, reportId: id, hasFile });
+  const hasFile = !!report?.file;
+  const { url: pdfUrl, isLoading: pdfLoading, isError: pdfError } = useReportPdfUrl({ fileUrl: report?.file?.url });
 
   if (isLoading) {
     return (
@@ -104,7 +102,7 @@ const WeeklyReportDetailPage = () => {
   const isConfirmed = report.status === "confirmed";
   const cash = cashFromReport(report);
   const card = cardFromReport(report);
-  const dailyCash = (report.cash_days || []).length ? sumCashDays(form.cash_days) : null;
+  const dailyCash = toNum(report.cash_check?.values?.daily_cash_total);
 
   const saveOwnerNotes = async () => {
     setNotesError(null);
@@ -172,7 +170,7 @@ const WeeklyReportDetailPage = () => {
       </Section>
 
       <Section tone="attendance" icon={Users} title="Attendance">
-        <AttendanceGrid days={days} cells={form.headcount} />
+        <AttendanceGrid days={days} cells={form.headcount} totals={serverGridTotals(report.headcount)} />
       </Section>
 
       <Section tone="collections" icon={PiggyBank} title="Collections" hint="From the Account Balance Summary">
@@ -184,23 +182,22 @@ const WeeklyReportDetailPage = () => {
       <Section tone="notes" icon={NotebookPen} title="Staff & notes">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Value label="Absent staff" value={report.absent_staff} />
-          {/* when the Owner edits the same notes field, the editor below replaces this */}
-          {!(role === "owner" && sharedNotes) && <Value label="Director notes" value={report.notes} />}
+          <Value label="Director notes" value={report.notes} />
         </div>
-        {role === "director" && !sharedNotes && report.owner_notes && (
+        {role === "director" && report.owner_notes && (
           <div className="mt-2">
             <Value label="Owner notes" value={report.owner_notes} />
           </div>
         )}
         {role === "owner" && (
           <div className="mt-3">
-            <label htmlFor="owner-notes" className="block text-xs font-semibold text-gray-500 mb-1.5">{sharedNotes ? "Notes" : "Owner notes"}</label>
+            <label htmlFor="owner-notes" className="block text-xs font-semibold text-gray-500 mb-1.5">Owner notes</label>
             <TextArea id="owner-notes" value={ownerNotes} onChange={setOwnerNotes} error={notesError} disabled={isSavingNotes} placeholder="Add a note for this week" />
             <FieldError message={notesError} />
             <div className="flex justify-end mt-2">
               <Button
                 onClick={saveOwnerNotes}
-                disabled={isSavingNotes || ownerNotes === (report[ownerNotesKey] || "")}
+                disabled={isSavingNotes || ownerNotes === (report.owner_notes || "")}
                 className="h-9 bg-[#1E3A5F] hover:bg-[#15294A] text-white"
               >
                 <Save size={14} className="mr-1.5" /> {isSavingNotes ? "Saving..." : "Save notes"}
@@ -257,6 +254,11 @@ const WeeklyReportDetailPage = () => {
                 </Button>
               </>
             )}
+            {role === "owner" && !isConfirmed && (
+              <Button onClick={() => setConfirmOpen(true)} className="h-9 bg-[#3E7A54] hover:bg-[#2F6042] text-white">
+                <CheckCircle2 size={14} className="mr-1.5" /> Confirm
+              </Button>
+            )}
             {role === "owner" && isConfirmed && (
               <Button variant="outline" onClick={() => setReopenOpen(true)} className="h-9 border-[#B78A2F]/40 text-[#8F6A1F] hover:bg-[#B78A2F]/10">
                 <RotateCcw size={14} className="mr-1.5" /> Reopen
@@ -282,7 +284,11 @@ const WeeklyReportDetailPage = () => {
         onClose={() => !isConfirming && setConfirmOpen(false)}
         onConfirm={confirm}
         title="Confirm this weekly report?"
-        message="It is sent to the Owner and can't be edited after this unless the Owner reopens it."
+        message={
+          role === "owner"
+            ? "The Director's draft is confirmed as it is: attendance and Collections are updated. You can reopen it later if it needs changes."
+            : "It is sent to the Owner and can't be edited after this unless the Owner reopens it."
+        }
         confirmText="Confirm report"
         type="success"
         isLoading={isConfirming}

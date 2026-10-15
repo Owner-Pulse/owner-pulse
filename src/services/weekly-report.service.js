@@ -19,10 +19,10 @@ export const weeklyReportService = {
         }
     },
 
-    // the attached PDF — needs the auth header, so it is read as a blob
-    get_file: async (axiosInstance, role, id) => {
+    // the attached PDF at the report's file.url — needs the auth header, so it is read as a blob
+    get_file: async (axiosInstance, url) => {
         try {
-            const response = await axiosInstance.get(`/${role}/weekly-reports/${id}/file`, { responseType: "blob" });
+            const response = await axiosInstance.get(url, { responseType: "blob" });
             return response.data;
         } catch (error) {
             throw error;
@@ -59,18 +59,9 @@ export const weeklyReportService = {
         }
     },
 
-    update_notes: async (axiosInstance, id, notes) => {
+    update_notes: async (axiosInstance, id, ownerNotes) => {
         try {
-            const response = await axiosInstance.put(`/owner/weekly-reports/${id}/notes`, { notes });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    get_headcount: async (axiosInstance, role, weeks = 12) => {
-        try {
-            const response = await axiosInstance.get(`/${role}/headcount`, { params: { weeks } });
+            const response = await axiosInstance.put(`/owner/weekly-reports/${id}/notes`, { owner_notes: ownerNotes });
             return response.data;
         } catch (error) {
             throw error;
@@ -86,7 +77,7 @@ export const weeklyReportService = {
         }
     },
 
-    // mappings[] {room_label, classroom_id or null}
+    // mappings[] {room_label, classroom_id or null} — only the rooms being changed
     save_room_mappings: async (axiosInstance, mappings) => {
         try {
             const response = await axiosInstance.put("/owner/report-room-mappings", { mappings });

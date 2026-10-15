@@ -10,9 +10,11 @@ const dayLabel = (d) => {
 /**
  * Attendance (headcount) grid — rows Mon–Fri, columns the report rooms, live totals.
  * Editable when `onChange` is given; `errors` is keyed "headcount|<room>|<date>".
+ * `totals` (the server's, read-only view) replaces the live totals.
  */
-const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false }) => {
-  const { rowTotals, colTotals, total } = gridTotals(cells, days);
+const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false, totals = null }) => {
+  const { rowTotals, colTotals, total } = totals || gridTotals(cells, days);
+  const show = (n) => (n === null || n === undefined ? "—" : n);
   const editable = !!onChange;
 
   return (
@@ -60,7 +62,7 @@ const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false }
                 );
               })}
               <td className="py-1 pl-2 text-center">
-                <span className="inline-block w-full min-w-10 py-1.5 rounded-lg bg-[#1E3A5F]/[0.06] font-bold text-[#1E3A5F] tabular-nums">{rowTotals[d.date]}</span>
+                <span className="inline-block w-full min-w-10 py-1.5 rounded-lg bg-[#1E3A5F]/[0.06] font-bold text-[#1E3A5F] tabular-nums">{show(rowTotals[d.date])}</span>
               </td>
             </tr>
           ))}
@@ -68,11 +70,11 @@ const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false }
             <td className="sticky left-0 z-10 bg-white pt-2 pr-2 font-bold text-[#1E3A5F] uppercase text-[10px] tracking-wide">Total</td>
             {REPORT_ROOMS.map((room) => (
               <td key={room} className="pt-2 px-1 text-center">
-                <span className="inline-block w-full py-1.5 rounded-lg bg-[#B78A2F]/10 font-bold text-[#8F6A1F] tabular-nums">{colTotals[room]}</span>
+                <span className="inline-block w-full py-1.5 rounded-lg bg-[#B78A2F]/10 font-bold text-[#8F6A1F] tabular-nums">{show(colTotals[room])}</span>
               </td>
             ))}
             <td className="pt-2 pl-2 text-center">
-              <span className="inline-block w-full py-1.5 rounded-lg bg-[#1E3A5F] font-bold text-white tabular-nums">{total}</span>
+              <span className="inline-block w-full py-1.5 rounded-lg bg-[#1E3A5F] font-bold text-white tabular-nums">{show(total)}</span>
             </td>
           </tr>
         </tbody>

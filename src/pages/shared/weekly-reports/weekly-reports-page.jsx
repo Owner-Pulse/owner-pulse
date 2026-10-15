@@ -30,8 +30,6 @@ const Total = ({ label, value, tone }) => (
 
 const ReportCard = ({ report, onOpen }) => {
   const totals = report.totals || {};
-  const cashDiff = report.cash_check?.max_difference ?? report.cash_max_difference ?? report.cash_difference;
-  const cardDiff = report.card_check?.difference ?? report.card_difference;
   const accent =
     report.cash_check_status === "mismatch" || report.card_check_status === "mismatch"
       ? "bg-[#AE4A3E]"
@@ -65,13 +63,15 @@ const ReportCard = ({ report, onOpen }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Total label="Cash deposited" value={totals.cash} tone="text-[#2F6042]" />
-            <Total label="Card total" value={totals.credit_cards} tone="text-[#1E3A5F]" />
+            <Total label="Cash deposited" value={totals.total_deposited} tone="text-[#2F6042]" />
+            <Total label="Card payments" value={totals.credit_cards} tone="text-[#1E3A5F]" />
+            <Total label="Bank deposit" value={totals.bank_deposit} tone="text-gray-900" />
+            <Total label="In collections" value={totals.collections_balance} tone="text-gray-900" />
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            <CashBadge check={report.cash_check_status} amount={cashDiff} />
-            <CardBadge check={report.card_check_status} amount={cardDiff} />
+            <CashBadge check={report.cash_check_status} amount={report.cash_max_difference} />
+            <CardBadge check={report.card_check_status} amount={report.card_difference} />
             {report.late_deposit && <LateBadge />}
           </div>
 

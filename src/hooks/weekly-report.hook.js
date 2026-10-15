@@ -2,10 +2,12 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { weeklyReportService } from "@/services/weekly-report.service";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { hasFieldErrors } from "@/lib/api-errors";
+import { getFieldErrors, hasFieldErrors } from "@/lib/api-errors";
 
 const PER_PAGE = 20;
-const NO_MAPPINGS = [];
+// about ten years of weeks
+const ALL_WEEKS = 520;
+const NO_LIST = [];
 
 const refreshAll = (queryClient) => {
     queryClient.invalidateQueries({ queryKey: ["weekly-reports"] });
@@ -37,6 +39,22 @@ export const useGetWeeklyReports = (role) => {
     return { reports, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage };
 };
 
+// every report's week in one request (the list has no week filter), to spot a week that already has a report
+export const useWeeklyReportForWeek = (role, weekStart, enabled = true) => {
+    const axiosInstance = axiosPrivate();
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["weekly-reports", role, "all-weeks"],
+        queryFn: () => weeklyReportService.get_reports(axiosInstance, role, { page: 1, per_page: ALL_WEEKS }),
+        enabled: enabled && !!role,
+    });
+
+    const rows = Array.isArray(data?.data) ? data.data : NO_LIST;
+    const report = weekStart ? rows.find((r) => r.week_start === weekStart) || null : null;
+
+    return { report, isLoading };
+};
+
 export const useGetWeeklyReport = (role, id) => {
     const axiosInstance = axiosPrivate();
 
@@ -49,14 +67,14 @@ export const useGetWeeklyReport = (role, id) => {
     return { report: data?.data, isLoading, isError, refetch };
 };
 
-// the PDF as a blob (the viewer turns it into an object URL)
-export const useWeeklyReportFile = (role, id, enabled = true) => {
+// the PDF at the report's file.url, as a blob (the viewer turns it into an object URL)
+export const useWeeklyReportFile = (url, enabled = true) => {
     const axiosInstance = axiosPrivate();
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["weekly-reports", role, "file", String(id)],
-        queryFn: () => weeklyReportService.get_file(axiosInstance, role, id),
-        enabled: enabled && !!role && !!id,
+        queryKey: ["weekly-reports", "file", url],
+        queryFn: () => weeklyReportService.get_file(axiosInstance, url),
+        enabled: enabled && !!url,
         staleTime: 10 * 60 * 1000,
     });
 
@@ -94,14 +112,13 @@ export const useConfirmWeeklyReport = (role) => {
         mutationFn: (id) => weeklyReportService.confirm(axiosInstance, role, id),
         onSuccess: (data) => {
             toast.success(data?.message || "Weekly report confirmed");
-            const warnings = data?.warnings ?? data?.data?.warnings ?? [];
-            warnings.forEach((w) =>
-                toast(typeof w === "string" ? w : w?.message || String(w), { icon: "⚠️", duration: 7000 })
-            );
+            (data?.data?.warnings || []).forEach((w) => toast(w, { icon: "⚠️", duration: 7000 }));
             refreshAll(queryClient);
         },
         onError: (error) => {
-            toast.error(error?.response?.data?.message || "Failed to confirm the report");
+            // a 422 lists what is missing (e.g. the cash figures); show those, not just the headline
+            const reasons = Object.values(getFieldErrors(error));
+            toast.error(reasons.length ? reasons.join(" ") : error?.response?.data?.message || "Failed to confirm the report");
         },
     });
 
@@ -147,18 +164,6 @@ export const useUpdateWeeklyReportNotes = () => {
     return { updateNotes, isPending };
 };
 
-export const useGetHeadcount = (role, weeks = 12, enabled = true) => {
-    const axiosInstance = axiosPrivate();
-
-    const { data, isLoading } = useQuery({
-        queryKey: ["weekly-reports", role, "headcount", weeks],
-        queryFn: () => weeklyReportService.get_headcount(axiosInstance, role, weeks),
-        enabled: enabled && !!role,
-    });
-
-    return { headcount: data?.data, isLoading };
-};
-
 export const useRoomMappings = () => {
     const axiosInstance = axiosPrivate();
 
@@ -167,11 +172,12 @@ export const useRoomMappings = () => {
         queryFn: () => weeklyReportService.get_room_mappings(axiosInstance),
     });
 
-    const payload = data?.data;
-    // stable empty list while loading, so effects keyed on it don't loop
-    const mappings = Array.isArray(payload) ? payload : payload?.mappings || NO_MAPPINGS;
+    // { mappings: [{ room_label, classroom: { id, name } | null }], classrooms: [{ id, name }] }
+    // stable empty lists while loading, so effects keyed on them don't loop
+    const mappings = data?.data?.mappings || NO_LIST;
+    const classrooms = data?.data?.classrooms || NO_LIST;
 
-    return { mappings, classrooms: payload?.classrooms, isLoading, isError };
+    return { mappings, classrooms, isLoading, isError };
 };
 
 export const useSaveRoomMappings = () => {

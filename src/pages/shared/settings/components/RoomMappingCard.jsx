@@ -4,8 +4,7 @@ import { ArrowRight, LayoutGrid, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetHeadcount, useRoomMappings, useSaveRoomMappings } from "@/hooks/weekly-report.hook";
-import { REPORT_ROOMS } from "@/lib/weekly-report";
+import { useRoomMappings, useSaveRoomMappings } from "@/hooks/weekly-report.hook";
 import { parseFieldErrors } from "@/lib/collections";
 
 const itemVariants = {
@@ -13,41 +12,43 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const classroomName = (c) => c?.classroom_name || c?.name || `Classroom ${c?.id}`;
+const classroomName = (c) => c?.name || `Classroom ${c?.id}`;
 
 /**
  * Owner settings — map each room on the paper attendance sheet to a classroom
  */
 const RoomMappingCard = () => {
-  const { mappings, classrooms: mappingClassrooms, isLoading } = useRoomMappings();
-  // the headcount endpoint lists the classrooms when the mapping endpoint does not
-  const { headcount } = useGetHeadcount("owner", 1, !isLoading && !mappingClassrooms);
+  const { mappings, classrooms, isLoading } = useRoomMappings();
   const { saveMappings, isPending } = useSaveRoomMappings();
   const [values, setValues] = useState({});
   const [errors, setErrors] = useState({});
 
-  const classrooms = mappingClassrooms || headcount?.classrooms || [];
-  const rooms = useMemo(() => {
-    const labels = mappings.map((m) => m.room_label);
-    return labels.length ? labels : REPORT_ROOMS;
-  }, [mappings]);
+  const rooms = useMemo(() => mappings.map((m) => m.room_label), [mappings]);
 
   const initial = useMemo(() => {
     const out = {};
-    mappings.forEach((m) => (out[m.room_label] = m.classroom_id == null ? "" : String(m.classroom_id)));
+    mappings.forEach((m) => (out[m.room_label] = m.classroom?.id == null ? "" : String(m.classroom.id)));
     return out;
   }, [mappings]);
 
   useEffect(() => setValues(initial), [initial]);
 
-  const changed = rooms.some((r) => (values[r] ?? "") !== (initial[r] ?? ""));
+  const changedRooms = rooms.filter((r) => (values[r] ?? "") !== (initial[r] ?? ""));
 
+  // only the rooms that changed are sent, so other mappings are never reset
   const save = async () => {
     setErrors({});
     try {
-      await saveMappings(rooms.map((room) => ({ room_label: room, classroom_id: values[room] ? Number(values[room]) : null })));
+      await saveMappings(changedRooms.map((room) => ({ room_label: room, classroom_id: values[room] ? Number(values[room]) : null })));
     } catch (err) {
-      setErrors(parseFieldErrors(err));
+      // "mappings.N.*" points at the Nth changed room
+      const out = {};
+      Object.entries(parseFieldErrors(err)).forEach(([key, message]) => {
+        const m = key.match(/^mappings\.(\d+)\./);
+        const room = m ? changedRooms[Number(m[1])] : null;
+        out[room ?? key] = message;
+      });
+      setErrors(out);
     }
   };
 
@@ -75,8 +76,8 @@ const RoomMappingCard = () => {
             </div>
           ) : (
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {rooms.map((room, i) => {
-                const error = errors[`mappings.${i}.classroom_id`] || errors[`mappings.${i}.room_label`];
+              {rooms.map((room) => {
+                const error = errors[room];
                 return (
                   <div key={room} className="min-w-0">
                     <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50">
@@ -109,7 +110,7 @@ const RoomMappingCard = () => {
           {errors.mappings && <p className="mt-2 text-[11px] font-medium text-[#8A362C]">{errors.mappings}</p>}
 
           <div className="flex justify-end mt-4">
-            <Button onClick={save} disabled={isPending || isLoading || !changed} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+            <Button onClick={save} disabled={isPending || isLoading || changedRooms.length === 0} className="bg-[#1E3A5F] hover:bg-[#15294A] text-white">
               <Save size={14} className="mr-2" /> {isPending ? "Saving..." : "Save mapping"}
             </Button>
           </div>
