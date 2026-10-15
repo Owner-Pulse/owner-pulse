@@ -4,9 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import toast from "react-hot-toast";
 import { getFieldErrors, hasFieldErrors } from "@/lib/api-errors";
 
-const PER_PAGE = 20;
-// about ten years of weeks
-const ALL_WEEKS = 520;
+const PER_PAGE = 20; // the API allows up to 100
 const NO_LIST = [];
 
 const refreshAll = (queryClient) => {
@@ -39,18 +37,17 @@ export const useGetWeeklyReports = (role) => {
     return { reports, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage };
 };
 
-// every report's week in one request (the list has no week filter), to spot a week that already has a report
-export const useWeeklyReportForWeek = (role, weekStart, enabled = true) => {
+// the report for the week containing `date` (?week= returns that week's report or an empty list)
+export const useWeeklyReportForWeek = (role, date, enabled = true) => {
     const axiosInstance = axiosPrivate();
 
     const { data, isLoading } = useQuery({
-        queryKey: ["weekly-reports", role, "all-weeks"],
-        queryFn: () => weeklyReportService.get_reports(axiosInstance, role, { page: 1, per_page: ALL_WEEKS }),
-        enabled: enabled && !!role,
+        queryKey: ["weekly-reports", role, "week", date],
+        queryFn: () => weeklyReportService.get_reports(axiosInstance, role, { week: date }),
+        enabled: enabled && !!role && !!date,
     });
 
-    const rows = Array.isArray(data?.data) ? data.data : NO_LIST;
-    const report = weekStart ? rows.find((r) => r.week_start === weekStart) || null : null;
+    const report = (Array.isArray(data?.data) ? data.data : NO_LIST)[0] || null;
 
     return { report, isLoading };
 };

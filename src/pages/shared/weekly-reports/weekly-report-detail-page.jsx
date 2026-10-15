@@ -107,6 +107,7 @@ const WeeklyReportDetailPage = () => {
   const saveOwnerNotes = async () => {
     setNotesError(null);
     try {
+      // an empty box clears the Owner's notes
       await updateNotes({ id, notes: ownerNotes.trim() || null });
     } catch (err) {
       setNotesError(parseFieldErrors(err).notes || null);
