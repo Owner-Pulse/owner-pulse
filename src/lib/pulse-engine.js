@@ -359,7 +359,7 @@ export function calcComplianceHealth(items = [], config = {}) {
   // Check for items expiring within 14 days
   const hasExpiringSoon = items.some((i) => {
     if (!i.expires) return false;
-    const daysLeft = daysFromToday(i.expires);
+    const daysLeft = daysFromToday(i.expires) ?? NaN;
     return daysLeft >= 0 && daysLeft <= complianceExpiring14Days;
   });
   if (hasExpiringSoon) return complianceExpiring14Cap;
@@ -367,7 +367,7 @@ export function calcComplianceHealth(items = [], config = {}) {
   // Check for items expiring within 60 days
   const hasExpiring = items.some((i) => {
     if (!i.expires) return false;
-    const daysLeft = daysFromToday(i.expires);
+    const daysLeft = daysFromToday(i.expires) ?? NaN;
     return daysLeft >= 0 && daysLeft <= complianceExpiring60Days;
   });
   if (hasExpiring) return complianceExpiring60Cap;
@@ -726,7 +726,7 @@ export function detectIssues(inputs = {}, config = {}) {
         data: item,
       });
     } else if (item.status === 'expiring') {
-      const daysLeft = daysFromToday(item.expires);
+      const daysLeft = daysFromToday(item.expires) ?? NaN;
       if (daysLeft >= 0 && daysLeft <= thresholdConfig.complianceExpiring14Days) {
         issues.push({
           type: 'compliance.expiring_soon',
@@ -1066,7 +1066,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
   // Renewals coming due in 60-90 days
   for (const item of complianceItems) {
     if (!item.expires) continue;
-    const daysLeft = daysFromToday(item.expires);
+    const daysLeft = daysFromToday(item.expires) ?? NaN;
     if (daysLeft >= 60 && daysLeft <= 90) {
       recommendations.push({
         title: `Plan ahead: ${item.item}`,
@@ -1113,7 +1113,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
   // Upcoming compliance audit windows
   for (const item of complianceItems) {
     if (!item.expires) continue;
-    const daysLeft = daysFromToday(item.expires);
+    const daysLeft = daysFromToday(item.expires) ?? NaN;
     if (daysLeft >= 30 && daysLeft <= 60) {
       recommendations.push({
         title: `${item.item} expires in ${daysLeft} days`,

@@ -2,8 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 import LogEntryCard from "./LogEntryCard";
-import { formatDate } from "@/lib/datetime";
-import { daysFromToday } from "@/lib/datetime";
+import { daysFromToday, formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -50,8 +49,8 @@ const DailyLogGroupList = ({
       if (filterType === "this_week") {
         const dateStr = log.raw_data?.created_at || log.created_at || log.date;
         if (dateStr) {
-          const daysAgo = -daysFromToday(dateStr);
-          if (!Number.isFinite(daysAgo) || daysAgo < 0 || daysAgo > 7) {
+          const daysUntil = daysFromToday(dateStr);
+          if (daysUntil === null || daysUntil > 0 || daysUntil < -7) {
             return false;
           }
         } else if (log.date_group) {

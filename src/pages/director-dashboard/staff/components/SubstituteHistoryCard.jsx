@@ -15,7 +15,8 @@ const fmtDate = (d) => {
 const fmtRelative = (d) => {
   if (!d) return "";
   try {
-    const diff = -daysFromToday(d);
+    const diff = daysFromToday(d);
+    if (diff === null) return d;
     if (diff === 0) return "Today";
     if (diff === -1) return "Yesterday";
     return `${Math.abs(diff)} days ago`;

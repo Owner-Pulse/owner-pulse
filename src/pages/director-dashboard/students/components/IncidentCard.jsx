@@ -3,9 +3,8 @@ import { daysFromToday } from "@/lib/datetime";
 
 const fmtRelative = (d) => {
   if (!d) return "Recently";
-  const daysUntil = daysFromToday(d);
-  if (daysUntil === null) return "Recently";
-  const diff = -daysUntil;
+  const diff = daysFromToday(d);
+  if (diff === null) return "Recently";
   if (diff === 0) return "Today";
   if (diff === -1) return "Yesterday";
   return `${Math.abs(diff)} days ago`;
