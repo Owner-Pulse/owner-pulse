@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { daysFromToday, todayYmd } from "@/lib/datetime";
 
 const COMPLIANCE_STORAGE_KEY = "ownerpulse_compliance_items_v1";
 
@@ -180,11 +181,7 @@ export const INITIAL_COMPLIANCE_ITEMS = [
 
 export const daysUntil = (dateStr) => {
   if (!dateStr) return 0;
-  const target = new Date(dateStr);
-  const today = new Date();
-  target.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-  return Math.ceil((target - today) / 86400000);
+  return daysFromToday(dateStr) || 0;
 };
 
 export const daysSince = (dateStr) => {
@@ -236,7 +233,7 @@ export function useCompliance() {
       ...newItem,
       id: Date.now(),
       status: newItem.expires && daysUntil(newItem.expires) < 0 ? "expired" : newItem.expires && daysUntil(newItem.expires) <= 60 ? "expiring" : "compliant",
-      logs: [{ id: Date.now(), date: new Date().toISOString().slice(0, 10), author: newItem.author || "User", text: "Compliance item created." }],
+      logs: [{ id: Date.now(), date: todayYmd(), author: newItem.author || "User", text: "Compliance item created." }],
       docChecklist: newItem.docChecklist || [],
     };
     setItems((prev) => [itemToAdd, ...prev]);
@@ -250,7 +247,7 @@ export function useCompliance() {
         if (updates.logNote) {
           newLogs.unshift({
             id: Date.now(),
-            date: new Date().toISOString().slice(0, 10),
+            date: todayYmd(),
             author,
             text: updates.logNote,
           });
@@ -289,7 +286,7 @@ export function useCompliance() {
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== itemId) return item;
-        const logs = [{ id: Date.now(), date: new Date().toISOString().slice(0, 10), author, text: text.trim() }, ...(item.logs || [])];
+        const logs = [{ id: Date.now(), date: todayYmd(), author, text: text.trim() }, ...(item.logs || [])];
         return { ...item, logs };
       })
     );

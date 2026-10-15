@@ -1,4 +1,5 @@
 import React from "react";
+import { daysFromToday } from "@/lib/datetime";
 import { motion } from "framer-motion";
 import { 
   AlertTriangle, 
@@ -58,10 +59,8 @@ const LOG_TYPE_CONFIG = {
 const fmtRelative = (d, dateGroup) => {
   if (dateGroup) return dateGroup;
   if (!d) return "Today";
-  const dateObj = new Date(d);
-  if (isNaN(dateObj.getTime())) return d;
-  const TODAY = new Date();
-  const diff = Math.round((dateObj - TODAY) / 86400000);
+  const diff = daysFromToday(d);
+  if (diff === null) return d;
   if (diff === 0) return "Today";
   if (diff === -1) return "Yesterday";
   if (diff > 0) return `In ${diff} days`;

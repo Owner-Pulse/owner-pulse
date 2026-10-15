@@ -11,14 +11,13 @@ import {
 } from "lucide-react";
 import { useGetCsvImports } from "@/hooks/owner-hook/csv-manage.hook";
 import NewImportModal from "./components/NewImportModal";
+import { formatDateTime } from "@/lib/datetime";
 
 const fmtNumber = (n) => Number(n || 0).toLocaleString();
 
 const fmtDateTime = (value) => {
   if (!value) return "—";
-  const d = new Date(String(value).replace(" ", "T"));
-  if (isNaN(d)) return value;
-  return d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return formatDateTime(value) || value;
 };
 
 const STATUS_STYLES = {

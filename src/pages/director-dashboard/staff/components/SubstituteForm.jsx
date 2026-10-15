@@ -4,8 +4,9 @@ import { Send, X, Loader2, ChevronDown, Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MultiDatePicker from "@/components/ui/MultiDatePicker";
 import { useAddSubstitution, useGetPtoStaff } from "@/hooks/director-hook/staff.hook";
+import { todayYmd } from "@/lib/datetime";
 
-const TODAY_STR = new Date().toISOString().split("T")[0];
+const TODAY_STR = todayYmd();
 
 const SubstituteForm = ({ onClose }) => {
   const [form, setForm] = useState({

@@ -7,6 +7,7 @@ import StatusPill from "./StatusPill";
 import SourceTag from "./SourceTag";
 import ProgramBadge from "./ProgramBadge";
 import { daysSince } from "@/hooks/waitlist/useWaitlistStore";
+import { formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -14,7 +15,7 @@ const itemVariants = {
 };
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const SkeletonRow = ({ role }) => (
   <tr className="animate-pulse">

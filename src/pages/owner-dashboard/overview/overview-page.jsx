@@ -39,8 +39,9 @@ import CashFlowMetricsCard from "./components/CashFlowMetricsCard";
 import LatestPayrollSubmissionCard from "./components/LatestPayrollSubmissionCard";
 import CsvUploadModal from "./components/CsvUploadModal";
 import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
+import { formatDate } from "@/lib/datetime";
 
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric" });
 const fmtMoney = (n) => "$" + Math.round(n || 0).toLocaleString();
 
 const containerVariants = {

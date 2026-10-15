@@ -41,6 +41,7 @@ import {
   useRetainAtRisk
 } from "@/hooks/director-hook/student-manage.hook";
 import toast from "react-hot-toast";
+import { todayYmd } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -322,7 +323,7 @@ const StudentManagementPage = () => {
         setAtRiskList((prev) => prev.filter((s) => s.student !== pendingWithdrawStudent.student));
         const newRemoval = {
           id: Date.now(),
-          date: new Date().toISOString().split("T")[0],
+          date: todayYmd(),
           student: pendingWithdrawStudent.student,
           reason: pendingWithdrawStudent.reason || "transferring",
           classroom: pendingWithdrawStudent.grade || "Unknown Classroom",

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
+import { todayYmd } from "@/lib/datetime";
 
 export const LOG_TYPES = [
   { 
@@ -78,7 +79,7 @@ const LogForm = ({ onAdd, onClose, defaultType = null }) => {
   const [logType, setLogType] = useState(defaultType || "incident");
   const [step, setStep] = useState(defaultType ? 1 : 0);
   const [form, setForm] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: todayYmd(),
     severity: "minor",
     area: "Classroom",
     reason: "transferring",
@@ -93,7 +94,7 @@ const LogForm = ({ onAdd, onClose, defaultType = null }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const base = { id: Date.now(), date: form.date || new Date().toISOString().split("T")[0] };
+    const base = { id: Date.now(), date: form.date || todayYmd() };
     
     if (logType === "incident") {
       if (!form.student || !form.classroom) return;

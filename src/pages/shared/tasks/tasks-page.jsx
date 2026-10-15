@@ -16,8 +16,9 @@ import AssignTaskModal from "./components/AssignTaskModal";
 import { useGetTaskList } from "@/hooks/owner-hook/task-assign.hook";
 import { useGetDirectorTaskList } from "@/hooks/director-hook/task-assign.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import { daysFromToday } from "@/lib/datetime";
 
-const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
+const daysUntil = (d) => daysFromToday(d) || 0;
 
 const containerVariants = {
   hidden: { opacity: 0 },

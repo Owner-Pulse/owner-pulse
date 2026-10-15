@@ -2,6 +2,7 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { notificationService } from "@/services/notification.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { toDate } from "@/lib/datetime";
 
 export const useGetNotifications = () => {
     const axiosInstance = axiosPrivate();
@@ -21,7 +22,7 @@ export const useGetNotifications = () => {
         read: Boolean(n.read_at),
         read_at: n.read_at,
         created_at: n.created_at,
-        time: n.created_at ? new Date(n.created_at).getTime() : Date.now(),
+        time: n.created_at ? toDate(n.created_at)?.getTime() ?? 0 : Date.now(),
         critical: Boolean(n.critical || n.is_critical || n.title?.toLowerCase().includes("critical")),
         type: n.type || "general",
         path: n.path || null,

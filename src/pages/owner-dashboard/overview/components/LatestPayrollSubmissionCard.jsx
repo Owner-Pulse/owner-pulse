@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -20,7 +21,7 @@ const itemVariants = {
 
 const fmtDate = (d) => {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", {
+  return formatDate(d, {
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGetAllDirector } from "@/hooks/owner-hook/create-director.hook";
 import { useCreateTask } from "@/hooks/owner-hook/task-assign.hook";
 import { useCreateDirectorTask } from "@/hooks/director-hook/task-assign.hook";
+import { todayYmd } from "@/lib/datetime";
 
 const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const isDirector = currentRole === "director";
@@ -59,7 +60,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
             priority,
             status: "open",
             due,
-            createdAt: new Date().toISOString().split("T")[0],
+            createdAt: todayYmd(),
           });
         }
         onClose();

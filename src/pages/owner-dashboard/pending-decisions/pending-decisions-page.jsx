@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getEscalations, updateEscalationStatus } from "@/lib/escalation-store";
+import { formatDate, toDate } from "@/lib/datetime";
 
 // ─── Action Icon Map ──────────────────────────────────────────────
 const ACTION_ICONS = {
@@ -45,7 +46,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", {
+const fmtDate = (d) => formatDate(d, {
   month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
 });
 
@@ -73,7 +74,10 @@ const PendingDecisionsPage = () => {
   }, [escalations, filterStatus]);
 
   const sorted = useMemo(() =>
-    [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [...filtered].sort(
+      (a, b) =>
+        (toDate(b.createdAt)?.getTime() ?? 0) - (toDate(a.createdAt)?.getTime() ?? 0)
+    ),
   [filtered]);
 
   const stats = useMemo(() => ({

@@ -2,13 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 import LogEntryCard from "./LogEntryCard";
+import { formatDate } from "@/lib/datetime";
+import { daysFromToday } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric", year: "numeric" });
 
 const DailyLogGroupList = ({ 
   groupedByDate = [], 
@@ -48,10 +50,8 @@ const DailyLogGroupList = ({
       if (filterType === "this_week") {
         const dateStr = log.raw_data?.created_at || log.created_at || log.date;
         if (dateStr) {
-          const logTime = new Date(dateStr).getTime();
-          const nowTime = new Date().getTime();
-          const daysDiff = (nowTime - logTime) / (1000 * 60 * 60 * 24);
-          if (isNaN(daysDiff) || daysDiff > 7) {
+          const daysAgo = -daysFromToday(dateStr);
+          if (!Number.isFinite(daysAgo) || daysAgo < 0 || daysAgo > 7) {
             return false;
           }
         } else if (log.date_group) {
