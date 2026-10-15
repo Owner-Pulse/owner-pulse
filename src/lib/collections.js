@@ -1,5 +1,6 @@
 // Helpers for the weekly Collections balance (owner + director overview card, entry modal, history)
 import { COLORS } from "@/lib/theme-tokens";
+import { getFieldErrors } from "@/lib/api-errors";
 
 // Going up is bad (more money owed), going down is good (we are collecting)
 export const DIRECTION_META = {
@@ -120,12 +121,4 @@ export const changeComparedTo = (collections) => {
 };
 
 // Read a 422 response into { field: message }
-export const parseFieldErrors = (error) => {
-  if (error?.response?.status !== 422) return {};
-  const raw = error.response.data?.errors || {};
-  const out = {};
-  Object.entries(raw).forEach(([key, messages]) => {
-    out[key] = Array.isArray(messages) ? messages[0] : String(messages);
-  });
-  return out;
-};
+export const parseFieldErrors = getFieldErrors;
