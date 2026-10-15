@@ -1,6 +1,16 @@
 // Helpers for the weekly Collections balance (owner + director overview card, entry modal, history)
 import { COLORS } from "@/lib/theme-tokens";
 import { getFieldErrors } from "@/lib/api-errors";
+import {
+  addDaysYmd as nyAddDaysYmd,
+  formatDate,
+  formatDateTime,
+  isDateOnly,
+  mondayOf as nyMondayOf,
+  toDate,
+  todayYmd,
+  ymdOf,
+} from "@/lib/datetime";
 
 // Going up is bad (more money owed), going down is good (we are collecting)
 export const DIRECTION_META = {
@@ -43,55 +53,26 @@ export const fmtSignedPct = (value) => {
   return `${rounded > 0 ? "+" : ""}${rounded}%`;
 };
 
-// ─── Weeks (week_start is a "YYYY-MM-DD" Monday, read as a local date) ──
-export const parseDay = (ymd) => {
-  if (!ymd) return null;
-  const [y, m, d] = String(ymd).slice(0, 10).split("-").map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
-};
+// ─── Weeks (week_start is a "YYYY-MM-DD" Monday; "today" and "this week" are New York's) ──
+const dayPart = (value) => (value ? String(value).slice(0, 10) : "");
 
-export const toYmd = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
+// a plain day as a Date (midnight UTC, see datetime.js), or null
+export const parseDay = (ymd) => (isDateOnly(dayPart(ymd)) ? toDate(dayPart(ymd)) : null);
 
-export const mondayOf = (date) => {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const offset = (d.getDay() + 6) % 7; // Mon=0 … Sun=6
-  d.setDate(d.getDate() - offset);
-  return d;
-};
+// the New York calendar day of a moment, e.g. today: toYmd(new Date())
+export const toYmd = (date) => ymdOf(date) || "";
 
-export const thisMonday = () => toYmd(mondayOf(new Date()));
+export const thisMonday = () => nyMondayOf(todayYmd());
 
-export const addDaysYmd = (ymd, days) => {
-  const d = parseDay(ymd);
-  if (!d) return "";
-  d.setDate(d.getDate() + days);
-  return toYmd(d);
-};
+export const addDaysYmd = (ymd, days) => (parseDay(ymd) ? nyAddDaysYmd(dayPart(ymd), days) : "");
 
 // any picked day → the Monday of its week
-export const normalizeWeek = (ymd) => {
-  const d = parseDay(ymd);
-  return d ? toYmd(mondayOf(d)) : "";
-};
+export const normalizeWeek = (ymd) => (parseDay(ymd) ? nyMondayOf(dayPart(ymd)) : "");
 
-export const fmtWeek = (ymd, { year = false } = {}) => {
-  const d = parseDay(ymd);
-  if (!d) return "—";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", ...(year ? { year: "numeric" } : {}) });
-};
+export const fmtWeek = (ymd, { year = false } = {}) =>
+  parseDay(ymd) ? formatDate(dayPart(ymd), { month: "short", day: "numeric", ...(year ? { year: "numeric" } : {}) }) : "—";
 
-export const fmtUpdatedAt = (iso) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-};
+export const fmtUpdatedAt = (iso) => formatDateTime(iso, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 // ─── Card read-outs ──────────────────────────────────────────────
 

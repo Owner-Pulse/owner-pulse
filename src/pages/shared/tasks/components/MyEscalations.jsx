@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import EscalationSummary, { EscalationStatusTag } from "@/components/EscalationSummary";
 import { useGetEscalations } from "@/hooks/escalation.hook";
+import { formatDate } from "@/lib/datetime";
 
 const ITEM_TYPES = {
   task: { label: "Task", icon: ClipboardList },
@@ -18,11 +19,7 @@ const FILTERS = [
   { key: "resolved", label: "Resolved" },
 ];
 
-const fmtDate = (d) => {
-  const date = d ? new Date(d) : null;
-  if (!date || isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-};
+const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric" });
 
 // Director: everything sent to the Owner, with its status and the Owner's note once resolved
 const MyEscalations = () => {

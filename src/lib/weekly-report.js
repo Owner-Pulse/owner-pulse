@@ -1,6 +1,7 @@
 // Weekly Report & Deposits — rooms, weekdays, live cash/card checks and form <-> API mapping
 import { addDaysYmd, normalizeWeek, parseDay } from "@/lib/collections";
 import { getFieldErrors } from "@/lib/api-errors";
+import { daysBetween, formatDate } from "@/lib/datetime";
 
 // Room columns of the paper attendance sheet (mapped to classrooms in Owner settings)
 export const REPORT_ROOMS = ["Toddlers", "Two's", "Three", "VPK A", "VPK B", "K-8"];
@@ -35,12 +36,13 @@ export const fridayOf = (weekStart) => {
 };
 
 export const fmtRange = (start, end) => {
-  const a = parseDay(start);
-  const b = parseDay(end || fridayOf(start));
+  const a = parseDay(start) ? String(start).slice(0, 10) : null;
+  const endDay = end || fridayOf(start);
+  const b = parseDay(endDay) ? String(endDay).slice(0, 10) : null;
   if (!a) return "—";
   const opts = { month: "short", day: "numeric" };
-  if (!b) return a.toLocaleDateString("en-US", opts);
-  return `${a.toLocaleDateString("en-US", opts)} – ${b.toLocaleDateString("en-US", { ...opts, year: "numeric" })}`;
+  if (!b) return formatDate(a, opts);
+  return `${formatDate(a, opts)} – ${formatDate(b, { ...opts, year: "numeric" })}`;
 };
 
 // ─── Check badges ────────────────────────────────────────────────
@@ -71,12 +73,8 @@ export const sumCashDays = (cashDays) =>
 export const anyCashDay = (cashDays) => Object.values(cashDays || {}).some((v) => toNum(v) !== null);
 
 // days from the week end to the bank deposit (negative when before), or null
-export const depositDaysAfter = (weekEnd, depositDate) => {
-  const end = parseDay(weekEnd);
-  const deposit = parseDay(depositDate);
-  if (!end || !deposit) return null;
-  return Math.round((deposit - end) / 86400000);
-};
+export const depositDaysAfter = (weekEnd, depositDate) =>
+  parseDay(weekEnd) && parseDay(depositDate) ? daysBetween(String(weekEnd).slice(0, 10), String(depositDate).slice(0, 10)) : null;
 
 /**
  * Compare every filled cash number, as the server does: mismatch when the largest minus

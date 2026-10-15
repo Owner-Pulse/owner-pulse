@@ -35,6 +35,7 @@ import {
 } from "@/hooks/weekly-report.hook";
 import { fmtMoney, normalizeWeek, thisMonday, toYmd } from "@/lib/collections";
 import { getFieldErrors } from "@/lib/api-errors";
+import { formatTime } from "@/lib/datetime";
 import {
   MAX_PDF_MB,
   buildPayload,
@@ -62,7 +63,7 @@ const containerVariants = {
 const AUTOSAVE_MS = 20000;
 const EXTRACT_TIMEOUT_MS = 2 * 60 * 1000;
 
-const fmtTime = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const fmtTime = (d) => formatTime(d);
 
 /**
  * Director: type in the paper weekly report — /director/weekly-reports/new and /director/weekly-reports/:id/edit

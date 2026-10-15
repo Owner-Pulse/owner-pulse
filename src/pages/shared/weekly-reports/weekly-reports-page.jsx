@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router";
 import { ChevronRight, FileText, Plus, ReceiptText } from "lucide-react";
+import { formatDate } from "@/lib/datetime";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,7 +79,7 @@ const ReportCard = ({ report, onOpen }) => {
           <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
             <span>
               {report.status === "confirmed" && report.confirmed_at
-                ? `Confirmed ${new Date(report.confirmed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                ? `Confirmed ${formatDate(report.confirmed_at, { month: "short", day: "numeric" })}`
                 : "Not confirmed yet"}
             </span>
             <ChevronRight size={14} />

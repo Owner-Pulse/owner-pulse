@@ -1,11 +1,9 @@
 import React from "react";
 import { REPORT_ROOMS, cellKey, gridTotals } from "@/lib/weekly-report";
 import { parseDay } from "@/lib/collections";
+import { formatDate } from "@/lib/datetime";
 
-const dayLabel = (d) => {
-  const date = parseDay(d.date);
-  return date ? `${d.name} ${date.getMonth() + 1}/${date.getDate()}` : d.name;
-};
+const dayLabel = (d) => (parseDay(d.date) ? `${d.name} ${formatDate(d.date, { month: "numeric", day: "numeric" })}` : d.name);
 
 /**
  * Attendance (headcount) grid — rows Mon–Fri, columns the report rooms, live totals.
