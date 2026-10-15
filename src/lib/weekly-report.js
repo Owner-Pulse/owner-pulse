@@ -176,12 +176,57 @@ export const formFromReport = (report) => {
   return form;
 };
 
+const isEmpty = (v) => v === undefined || v === null || String(v).trim() === "";
+
+/**
+ * Fill the form from the values read out of the PDF. Only empty fields are filled;
+ * returns { form, filled } where filled lists the form keys that came from the PDF
+ * (field names, "cash_days|<date>", "headcount|<room>|<date>").
+ * The week is taken from the PDF only when setWeek is true.
+ */
+export const fillFromExtraction = (form, values, { setWeek = false } = {}) => {
+  const next = { ...form, cash_days: { ...form.cash_days }, headcount: { ...form.headcount } };
+  const filled = [];
+
+  const pdfWeek = normalizeWeek(values?.week_start);
+  if (setWeek && pdfWeek && pdfWeek !== form.week_start) {
+    next.week_start = pdfWeek;
+    filled.push("week_start");
+  }
+
+  [...MONEY_FIELDS, ...COUNT_FIELDS, ...TEXT_FIELDS].forEach((f) => {
+    if (isEmpty(values?.[f]) || !isEmpty(next[f])) return;
+    next[f] = f === "bank_deposit_date" ? String(values[f]).slice(0, 10) : String(values[f]);
+    filled.push(f);
+  });
+
+  // rows dated in another week (the user kept a different week) are left out
+  const days = weekDays(next.week_start).map((d) => d.date);
+  (values?.cash_days || []).forEach(({ day, amount }) => {
+    const date = String(day).slice(0, 10);
+    if (!days.includes(date) || isEmpty(amount) || !isEmpty(next.cash_days[date])) return;
+    next.cash_days[date] = String(amount);
+    filled.push(`cash_days|${date}`);
+  });
+
+  (values?.headcount || []).forEach(({ room_label, day, count }) => {
+    const key = cellKey(room_label, String(day).slice(0, 10));
+    if (!days.includes(String(day).slice(0, 10)) || isEmpty(count) || !isEmpty(next.headcount[key])) return;
+    next.headcount[key] = String(count);
+    filled.push(`headcount|${key}`);
+  });
+
+  return { form: next, filled };
+};
+
 /**
  * The draft payload. Lists are sent whole (they replace the previous list).
  * Returns { payload, listIndex } — listIndex maps "cash_days.N" / "headcount.N" back to a form key for 422s.
+ * extractionId attaches the PDF that was already uploaded to be read, instead of sending it again.
  */
-export const buildPayload = (form, file = null) => {
+export const buildPayload = (form, file = null, extractionId = null) => {
   const body = { week_start: form.week_start, week_end: fridayOf(form.week_start) };
+  if (extractionId) body.extraction_id = extractionId;
   MONEY_FIELDS.forEach((f) => (body[f] = toNum(form[f])));
   COUNT_FIELDS.forEach((f) => (body[f] = form[f] === "" ? null : toNum(form[f])));
   TEXT_FIELDS.forEach((f) => (body[f] = form[f].trim() === "" ? null : form[f].trim()));

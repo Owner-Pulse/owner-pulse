@@ -61,9 +61,18 @@ export const inputClass = (hasError) =>
 
 const noSpin = "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
-export const Field = ({ id, label, hint, error, children }) => (
+export const FromPdfTag = () => (
+  <span className="inline-flex items-center shrink-0 whitespace-nowrap px-1.5 py-px rounded-md bg-[#AE4A3E]/10 text-[#8A362C] text-[9px] font-bold uppercase tracking-wide">
+    From PDF
+  </span>
+);
+
+export const Field = ({ id, label, hint, error, fromPdf = false, children }) => (
   <div className="min-w-0">
-    <label htmlFor={id} className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
+    <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-1.5">
+      {label}
+      {fromPdf && <FromPdfTag />}
+    </label>
     {children}
     {hint && !error && <p className="mt-1 text-[11px] text-gray-400">{hint}</p>}
     <FieldError message={error} />

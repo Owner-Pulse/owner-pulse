@@ -40,6 +40,31 @@ export const weeklyReportService = {
         }
     },
 
+    // read a PDF before the draft is saved; 202 { id, status }, or 503 { enabled: false } when reading is off
+    start_extraction: async (axiosInstance, file) => {
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const response = await axiosInstance.post("/director/weekly-reports/extract", fd, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // { id, status: pending | done | failed, error, original_name, values, warnings[] }
+    // week: the week picked by hand (YYYY-MM-DD), used when the PDF's own week can't be read
+    get_extraction: async (axiosInstance, id, week) => {
+        try {
+            const response = await axiosInstance.get(`/director/weekly-reports/extract/${id}`, { params: week ? { week } : undefined });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // returns warnings[]
     confirm: async (axiosInstance, role, id) => {
         try {

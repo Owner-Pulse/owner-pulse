@@ -11,8 +11,9 @@ const dayLabel = (d) => {
  * Attendance (headcount) grid — rows Mon–Fri, columns the report rooms, live totals.
  * Editable when `onChange` is given; `errors` is keyed "headcount|<room>|<date>".
  * `totals` (the server's, read-only view) replaces the live totals.
+ * `fromPdf` holds the cell keys filled from the PDF ("headcount|<room>|<date>").
  */
-const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false, totals = null }) => {
+const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false, totals = null, fromPdf = null }) => {
   const { rowTotals, colTotals, total } = totals || gridTotals(cells, days);
   const show = (n) => (n === null || n === undefined ? "—" : n);
   const editable = !!onChange;
@@ -36,6 +37,7 @@ const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false, 
               {REPORT_ROOMS.map((room) => {
                 const key = cellKey(room, d.date);
                 const hasError = !!errors[`headcount|${key}`];
+                const pdfCell = !!fromPdf?.has(`headcount|${key}`);
                 return (
                   <td key={room} className="py-1 px-1 text-center">
                     {editable ? (
@@ -48,9 +50,9 @@ const AttendanceGrid = ({ days, cells, onChange, errors = {}, disabled = false, 
                         onChange={(e) => onChange(key, e.target.value)}
                         disabled={disabled}
                         aria-label={`${room} on ${dayLabel(d)}`}
-                        title={errors[`headcount|${key}`]}
+                        title={errors[`headcount|${key}`] || (pdfCell ? "From PDF" : undefined)}
                         className={`w-full min-w-12 h-9 rounded-lg border text-center text-sm tabular-nums bg-white focus:outline-none focus:ring-2 focus:ring-[#B78A2F] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                          hasError ? "border-[#AE4A3E] bg-[#AE4A3E]/5" : "border-gray-200"
+                          hasError ? "border-[#AE4A3E] bg-[#AE4A3E]/5" : pdfCell ? "border-dashed border-[#AE4A3E]/50 bg-[#AE4A3E]/[0.04]" : "border-gray-200"
                         }`}
                       />
                     ) : (

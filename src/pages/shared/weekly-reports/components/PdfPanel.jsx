@@ -22,7 +22,7 @@ export const useObjectUrl = (blob) => {
 export const useReportPdfUrl = ({ fileUrl, localFile }) => {
   const { blob, isLoading, isError } = useWeeklyReportFile(fileUrl, !localFile);
   const url = useObjectUrl(localFile || blob || null);
-  return { url, isLoading: !localFile && !!fileUrl && isLoading, isError: !localFile && isError };
+  return { url, blob, isLoading: !localFile && !!fileUrl && isLoading, isError: !localFile && isError };
 };
 
 export const openPdf = (url) => {

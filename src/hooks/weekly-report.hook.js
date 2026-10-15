@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { getFieldErrors, hasFieldErrors } from "@/lib/api-errors";
 
 const PER_PAGE = 20; // the API allows up to 100
+const EXTRACT_POLL_MS = 3000;
 const NO_LIST = [];
 
 const refreshAll = (queryClient) => {
@@ -97,6 +98,34 @@ export const useSaveWeeklyReport = () => {
     });
 
     return { saveDraft, isPending };
+};
+
+// Director: send the PDF to be read
+export const useStartExtraction = () => {
+    const axiosInstance = axiosPrivate();
+
+    const { mutateAsync: startExtraction, isPending } = useMutation({
+        mutationKey: ["start-weekly-report-extraction"],
+        mutationFn: ({ file }) => weeklyReportService.start_extraction(axiosInstance, file),
+    });
+
+    return { startExtraction, isPending };
+};
+
+// polls every 3 seconds while the PDF is being read
+export const useExtraction = (id, week, enabled = true) => {
+    const axiosInstance = axiosPrivate();
+
+    const { data, isError, error } = useQuery({
+        queryKey: ["weekly-report-extraction", id, week],
+        queryFn: () => weeklyReportService.get_extraction(axiosInstance, id, week),
+        enabled: enabled && !!id,
+        refetchInterval: (query) => (query.state.data?.data?.status === "pending" ? EXTRACT_POLL_MS : false),
+        refetchIntervalInBackground: true,
+        retry: 1,
+    });
+
+    return { extraction: data?.data, isError, error };
 };
 
 // confirm — warnings[] come back as toasts
