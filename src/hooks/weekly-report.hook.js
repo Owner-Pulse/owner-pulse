@@ -2,7 +2,7 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { weeklyReportService } from "@/services/weekly-report.service";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { hasValidationErrors } from "@/lib/escalation";
+import { hasFieldErrors } from "@/lib/api-errors";
 
 const PER_PAGE = 20;
 const NO_MAPPINGS = [];
@@ -76,7 +76,7 @@ export const useSaveWeeklyReport = () => {
             refreshAll(queryClient);
         },
         onError: (error, { silent }) => {
-            if (hasValidationErrors(error) || silent) return;
+            if (hasFieldErrors(error) || silent) return;
             toast.error(error?.response?.data?.message || "Failed to save the draft");
         },
     });
@@ -139,7 +139,7 @@ export const useUpdateWeeklyReportNotes = () => {
             queryClient.invalidateQueries({ queryKey: ["weekly-reports"] });
         },
         onError: (error) => {
-            if (hasValidationErrors(error)) return;
+            if (hasFieldErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to save the notes");
         },
     });
@@ -187,7 +187,7 @@ export const useSaveRoomMappings = () => {
             queryClient.invalidateQueries({ queryKey: ["weekly-reports"] });
         },
         onError: (error) => {
-            if (hasValidationErrors(error)) return;
+            if (hasFieldErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to save the room mapping");
         },
     });

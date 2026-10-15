@@ -1,5 +1,6 @@
 // Weekly Report & Deposits — rooms, weekdays, live cash/card checks and form <-> API mapping
 import { addDaysYmd, normalizeWeek, parseDay } from "@/lib/collections";
+import { getFieldErrors } from "@/lib/api-errors";
 
 // Room columns of the paper attendance sheet (mapped to classrooms in Owner settings)
 export const REPORT_ROOMS = ["Toddlers", "Two's", "Three", "VPK A", "VPK B", "K-8"];
@@ -205,11 +206,8 @@ export const buildPayload = (form, file = null) => {
  * "cash_days.2.amount" → errors["cash_days|2026-10-14"], "headcount.5.count" → errors["headcount|VPK A|2026-10-13"]
  */
 export const mapReportErrors = (error, listIndex = {}) => {
-  if (error?.response?.status !== 422) return {};
-  const raw = error.response.data?.errors || {};
   const out = {};
-  Object.entries(raw).forEach(([key, messages]) => {
-    const message = Array.isArray(messages) ? messages[0] : String(messages);
+  Object.entries(getFieldErrors(error)).forEach(([key, message]) => {
     const m = key.match(/^(cash_days|headcount)\.(\d+)/);
     if (m && listIndex[`${m[1]}.${m[2]}`]) out[`${m[1]}|${listIndex[`${m[1]}.${m[2]}`]}`] = message;
     else out[key] = message;
