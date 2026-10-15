@@ -21,6 +21,7 @@ import OwnerDependenceCard from "./components/OwnerDependenceCard";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
 import { formatDate } from "@/lib/datetime";
+import { PULSE_STATUS_COLORS, statusFromPct, statusFromPulseLabel } from "@/lib/theme-tokens";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -58,7 +59,7 @@ const DirectorOverviewPage = () => {
     composite: pulseApi?.composite_score == null ? null : Math.round(pulseApi.composite_score),
     state: {
       state: pulseApi?.state || "No data",
-      color: pulseApi?.color || "#9CA3AF",
+      color: PULSE_STATUS_COLORS[statusFromPulseLabel(pulseApi?.state)],
     },
     subscores: [
       { key: "comp", label: "Compliance", score: pulseApi?.sub_scores?.compliance ?? null, weight: pulseApi?.weights?.compliance ?? 0.2, icon: "ShieldCheck" },
@@ -75,8 +76,10 @@ const DirectorOverviewPage = () => {
   const ownerPulseSnapshot = {
     bpm: pulseApi?.owner_macro_badge?.bpm ?? null,
     label: pulseApi?.owner_macro_badge?.label ?? "Owner's pulse: No data",
-    state: pulseApi?.owner_macro_badge?.state ?? "Normal",
-    color: pulseApi?.owner_macro_badge?.color ?? "#3E7A54",
+    state: pulseApi?.owner_macro_badge?.state ?? "No data",
+    color: pulseApi?.owner_macro_badge?.bpm == null
+      ? PULSE_STATUS_COLORS.none
+      : PULSE_STATUS_COLORS[statusFromPulseLabel(pulseApi?.owner_macro_badge?.state)],
   };
 
   // Top KPI Metrics
@@ -117,7 +120,9 @@ const DirectorOverviewPage = () => {
               : `${enrollmentKpi.total_enrolled} Enrolled Students`
           }
           icon={Users}
-          color="#1E3A5F"
+          accent="students"
+          status={enrollmentKpi.total_capacity > 0 ? statusFromPct(enrollmentKpi.capacity_pct, { good: 80, watch: 60 }) : "none"}
+          noData={!topKpis?.enrollment || enrollmentKpi.total_capacity <= 0}
           onClick={() => go("/director/students")}
         />
         <KpiMetricCard
@@ -125,8 +130,9 @@ const DirectorOverviewPage = () => {
           value={maintKpi.open_tickets}
           sub={`${maintKpi.critical_count} critical items`}
           icon={Wrench}
-          color="#B78A2F"
-          subColor="text-[#8F6A1F]"
+          accent="operations"
+          status={!topKpis?.maintenance ? "none" : maintKpi.critical_count > 0 ? "problem" : "good"}
+          noData={!topKpis?.maintenance}
           onClick={() => go("/director/maintenance")}
         />
         <KpiMetricCard
@@ -134,8 +140,9 @@ const DirectorOverviewPage = () => {
           value={tasksKpi.total_open}
           sub={`${tasksKpi.high_priority_count} high priority`}
           icon={ClipboardList}
-          color="#1E3A5F"
-          subColor="text-[#8F6A1F]"
+          accent="operations"
+          status={!topKpis?.open_tasks ? "none" : tasksKpi.high_priority_count > 3 ? "problem" : tasksKpi.high_priority_count > 0 ? "watch" : "good"}
+          noData={!topKpis?.open_tasks}
           onClick={() => go("/director/tasks")}
         />
         <KpiMetricCard
@@ -149,7 +156,8 @@ const DirectorOverviewPage = () => {
               : "Balance in collections"
           }
           icon={PiggyBank}
-          color="#1E3A5F"
+          accent="collections"
+          noData={!collectionsEntered}
           onClick={scrollToCollections}
         />
       </div>
@@ -169,14 +177,14 @@ const DirectorOverviewPage = () => {
       {/* Sections 5, 6: Compliance + Maintenance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ComplianceCard items={upcomingCompliance} onNavigate={go} />
-        <MaintenanceCard items={openMaintList} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} onNavigate={go} />
+        <MaintenanceCard items={openMaintList} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} noData={!directorOverviewData?.open_maintenance} onNavigate={go} />
       </div>
 
       {/* Expenses & Petty Cash */}
       <ExpensesCard pettyCashData={pettyCashData} onNavigate={go} />
 
       {/* Section 8: Pending Tasks */}
-      <TaskBoard data={pendingTasksData} role="director" onNavigate={go} onRefresh={refetch} />
+      <TaskBoard data={pendingTasksData} role="director" noData={!pendingTasksData} onNavigate={go} onRefresh={refetch} />
 
       {/* Owner Dependence Index */}
       <OwnerDependenceCard data={pendingTasksData?.owner_dependence_index ?? pendingTasksData?.over_escalation_rate} />

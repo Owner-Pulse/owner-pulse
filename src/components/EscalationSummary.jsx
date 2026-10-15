@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { decisionLabel, reasonLabel, statusMeta } from "@/lib/escalation";
+import { ACCENTS } from "@/lib/theme-tokens";
 
 export const EscalationStatusTag = ({ status, className = "" }) => {
   const meta = statusMeta(status);
@@ -56,7 +57,7 @@ const EscalationSummary = ({ escalation, showStatus = true, clamp = false, class
       </div>
       {escalation.owner_note && (
         <div className="flex items-start gap-1.5 pt-1.5 border-t border-gray-200/70 text-[11px] text-gray-700">
-          <MessageSquare size={11} className="shrink-0 mt-0.5 text-[#8F6A1F]" />
+          <MessageSquare size={11} className={`shrink-0 mt-0.5 ${ACCENTS.operations.text}`} />
           <p className="min-w-0 break-words whitespace-pre-wrap">
             <span className="font-bold text-gray-900">Owner's note:</span> {escalation.owner_note}
           </p>

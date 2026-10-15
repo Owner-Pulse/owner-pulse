@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { AlertTriangle, ChevronRight, ReceiptText } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import CardAccent from "@/components/ui/card-accent";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 import { fmtMoney, fmtWeek } from "@/lib/collections";
 import { checkStatus, fmtRange, toNum } from "@/lib/weekly-report";
 import { CardBadge, CashBadge, LateBadge, StatusBadge } from "./CheckBadges";
@@ -23,6 +25,8 @@ const WeeklyDepositsCard = ({ data, role = "owner" }) => {
   const cashStatus = checkStatus(data?.cash_check);
   const cardStatus = checkStatus(data?.card_check);
   const late = !!data?.cash_check?.late_deposit;
+  const hasMismatch = cashStatus === "mismatch" || cardStatus === "mismatch";
+  const warningTone = hasMismatch ? STATUS.problem : STATUS.watch;
   const cashDiff = toNum(data?.cash_check?.max_difference);
   const cardDiff = toNum(data?.card_check?.difference);
 
@@ -38,10 +42,11 @@ const WeeklyDepositsCard = ({ data, role = "owner" }) => {
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow py-0 gap-0">
+      <Card className="relative bg-white border-none shadow-sm hover:shadow-md transition-shadow py-0 gap-0">
+        <CardAccent group={latest ? "finance" : "none"} />
         <div className="flex items-center justify-between gap-2 px-4 sm:px-5 pt-4">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-[#3E7A54]/10 text-[#3E7A54] shrink-0">
+            <span className={`p-1.5 rounded-lg shrink-0 ${latest ? ACCENTS.finance.icon : "bg-gray-100 text-gray-600"}`}>
               <ReceiptText size={16} />
             </span>
             Weekly deposits
@@ -49,7 +54,7 @@ const WeeklyDepositsCard = ({ data, role = "owner" }) => {
           <button
             type="button"
             onClick={open}
-            className="inline-flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-[#1E3A5F] hover:bg-[#1E3A5F]/[0.06] transition-colors cursor-pointer"
+            className={`inline-flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-xs font-semibold ${ACCENTS.finance.text} ${ACCENTS.finance.hover} transition-colors cursor-pointer`}
           >
             All reports <ChevronRight size={13} />
           </button>
@@ -57,10 +62,10 @@ const WeeklyDepositsCard = ({ data, role = "owner" }) => {
 
         <div className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
           {warnings.length > 0 && (
-            <div className="p-3 rounded-xl bg-[#AE4A3E]/[0.07] border border-[#AE4A3E]/25">
+            <div className={`p-3 rounded-xl border ${warningTone.soft} ${warningTone.border}`}>
               {warnings.map((w) => (
-                <p key={w} className="flex items-start gap-1.5 text-xs font-semibold text-[#8A362C]">
-                  <AlertTriangle size={13} className="shrink-0 mt-0.5" /> {w}
+                <p key={w} className={`flex items-start gap-1.5 text-xs font-semibold ${warningTone.text}`}>
+                  <AlertTriangle size={13} className={`shrink-0 mt-0.5 ${warningTone.text}`} /> {w}
                 </p>
               ))}
             </div>

@@ -13,6 +13,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/datetime";
+import CardAccent from "@/components/ui/card-accent";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -41,7 +43,17 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
       : submission?.submitted_by || "Director";
   const submittedAt = submission?.submitted_at || submission?.created_at;
   const staffCount = submission?.staff_count ?? 0;
-  const status = submission?.status || "submitted";
+  const status = submission?.status;
+  const normalizedStatus = String(status || "").toLowerCase();
+  const statusTone = !status
+    ? STATUS.none
+    : /reject|failed|error/.test(normalizedStatus)
+    ? STATUS.problem
+    : /pending|draft|review/.test(normalizedStatus)
+    ? STATUS.watch
+    : /approv|submit|complete|paid/.test(normalizedStatus)
+    ? STATUS.good
+    : STATUS.none;
   const items = Array.isArray(submission?.items) ? submission.items : [];
 
   // Deductions sum
@@ -64,15 +76,14 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl overflow-hidden relative">
-        {/* Subtle decorative top accent border */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#1E3A5F] via-[#2A4C7E] to-[#3E7A54]" />
+      <Card className="relative bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl overflow-hidden">
+        <CardAccent group="staff" />
 
         <CardContent className="p-4 sm:p-5 space-y-4">
           {/* Header row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center shrink-0 text-[#1E3A5F]">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${ACCENTS.staff.icon}`}>
                 <ClipboardCheck size={20} />
               </div>
               <div>
@@ -80,8 +91,8 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
                   <h3 className="text-sm sm:text-base font-bold text-gray-900">
                     Latest Payroll Submission
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3E7A54]/10 text-[#2F6042] border border-[#3E7A54]/20">
-                    {status}
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusTone.badge}`}>
+                    {status || "No status"}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -104,7 +115,7 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
             {/* Pay Period Cycle */}
             <div className="p-3 rounded-xl bg-gray-50/80 border border-gray-100/80 flex flex-col justify-between">
               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
-                <Calendar size={13} className="text-[#1E3A5F]" />
+                <Calendar size={13} className={ACCENTS.staff.text} />
                 <span>Cycle Period</span>
               </div>
               <div>
@@ -118,7 +129,7 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
             {/* Staff Count */}
             <div className="p-3 rounded-xl bg-gray-50/80 border border-gray-100/80 flex flex-col justify-between">
               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
-                <Users size={13} className="text-[#1E3A5F]" />
+                <Users size={13} className={ACCENTS.staff.text} />
                 <span>Staff Count</span>
               </div>
               <div>
@@ -134,11 +145,11 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
             {/* Total Deductions */}
             <div className="p-3 rounded-xl bg-gray-50/80 border border-gray-100/80 flex flex-col justify-between">
               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
-                <DollarSign size={13} className="text-[#3E7A54]" />
+                <DollarSign size={13} className={ACCENTS.staff.text} />
                 <span>Deductions</span>
               </div>
               <div>
-                <p className="text-xs sm:text-sm font-bold text-[#2F6042] leading-tight">
+                <p className={`text-xs sm:text-sm font-bold leading-tight ${ACCENTS.staff.text}`}>
                   ${totalDeductions.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-0.5">Child care & other</p>
@@ -148,7 +159,7 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
             {/* PTO Requested */}
             <div className="p-3 rounded-xl bg-gray-50/80 border border-gray-100/80 flex flex-col justify-between">
               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
-                <Clock size={13} className="text-[#B78A2F]" />
+                <Clock size={13} className={ACCENTS.staff.text} />
                 <span>PTO Logged</span>
               </div>
               <div>
@@ -164,10 +175,10 @@ const LatestPayrollSubmissionCard = ({ submission, onNavigate }) => {
 
           {/* Optional Notes from Director */}
           {notes && (
-            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50/60 border border-amber-100/80 text-xs text-amber-900">
-              <MessageSquare size={14} className="shrink-0 mt-0.5 text-amber-600" />
+            <div className={`flex items-start gap-2 p-2.5 rounded-xl border text-xs ${ACCENTS.operations.soft} ${ACCENTS.operations.border} text-gray-700`}>
+              <MessageSquare size={14} className={`shrink-0 mt-0.5 ${ACCENTS.operations.text}`} />
               <div className="min-w-0">
-                <span className="font-semibold text-amber-950">Director Notes: </span>
+                <span className="font-semibold text-gray-900">Director Notes: </span>
                 <span>{notes}</span>
               </div>
             </div>

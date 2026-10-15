@@ -2,6 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { UserCheck, ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import CardAccent from "@/components/ui/card-accent";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -22,11 +24,11 @@ const BREAKDOWN_LABELS = {
 
 // Why items were sent to the Owner — one color per reason
 const REASON_CHIPS = [
-  { key: "approval", label: "Approval", className: "bg-[#1E3A5F]/10 text-[#1E3A5F]" },
-  { key: "outside_authority", label: "Outside authority", className: "bg-purple-100 text-purple-800" },
-  { key: "financial_limit", label: "Financial limit", className: "bg-[#B78A2F]/15 text-[#8F6A1F]" },
-  { key: "safety_legal", label: "Safety / legal", className: "bg-[#AE4A3E]/10 text-[#8A362C]" },
-  { key: "other", label: "Other", className: "bg-gray-100 text-gray-600" },
+  { key: "approval", label: "Approval", className: ACCENTS.operations.icon },
+  { key: "outside_authority", label: "Outside authority", className: ACCENTS.students.icon },
+  { key: "financial_limit", label: "Financial limit", className: ACCENTS.finance.icon },
+  { key: "safety_legal", label: "Safety / legal", className: STATUS.problem.badge },
+  { key: "other", label: "Other", className: ACCENTS.collections.icon },
 ];
 
 const OwnerDependenceCard = ({ data }) => {
@@ -49,23 +51,24 @@ const OwnerDependenceCard = ({ data }) => {
     .filter(Boolean)
     .join(", ");
 
-  const isHealthy = ratePct <= 20;
-  const accent = !hasData ? "#94A0B5" : isHealthy ? "#2F6042" : "#8A362C";
-  const statusLabel = !hasData ? "No data yet" : isHealthy ? "Healthy (20% or less)" : "High dependence";
+  const status = !hasData ? "none" : ratePct <= 20 ? "good" : ratePct <= 40 ? "watch" : "problem";
+  const tone = STATUS[status];
+  const statusLabel = !hasData ? "No data" : status === "good" ? "Healthy (20% or less)" : status === "watch" ? "Watch (21–40%)" : "High dependence";
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
-        <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-white" style={{ backgroundColor: accent }}>
+      <Card className="relative bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
+        <CardAccent group={hasData ? "operations" : "none"} />
+        <div className={`px-4 py-2.5 flex items-center justify-between gap-2 border-b ${tone.soft} ${tone.border} ${tone.text}`}>
           <div className="flex items-center gap-2 min-w-0">
             <UserCheck size={18} className="shrink-0" />
             <p className="text-sm font-bold break-words">Owner Dependence Index (30-day)</p>
           </div>
-          <span className="text-[10px] font-bold uppercase bg-white/20 px-2 py-0.5 rounded-full shrink-0">
+          <span className={`text-[10px] font-bold uppercase border px-2 py-0.5 rounded-full shrink-0 ${tone.badge}`}>
             {statusLabel}
           </span>
         </div>
-        <CardContent className="p-4 space-y-3 border-l-4" style={{ borderLeftColor: accent }}>
+        <CardContent className={`p-4 space-y-3 border-l-4 ${tone.border}`}>
           <div className="flex items-center justify-between gap-4">
             <p className="text-xs text-gray-500 font-medium">
               Routed to Owner: <strong className="text-gray-900">{escalatedCount}</strong>
@@ -73,24 +76,24 @@ const OwnerDependenceCard = ({ data }) => {
               <strong className="text-gray-900">{totalLoggedItems}</strong>
             </p>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-4xl md:text-5xl font-black leading-none tabular-nums" style={{ color: accent }}>
-                {ratePct}%
+              <span className={`text-4xl md:text-5xl font-black leading-none tabular-nums ${tone.text}`}>
+                {hasData ? `${ratePct}%` : "—"}
               </span>
               {trendDir === "down" && (
-                <span className="p-1 rounded-full bg-emerald-50 text-emerald-700" title="Owner dependence is decreasing">
+                <span className={`p-1 rounded-full ${STATUS.good.soft} ${STATUS.good.text}`} title="Owner dependence is decreasing">
                   <ArrowDownRight size={16} />
                 </span>
               )}
               {trendDir === "up" && (
-                <span className="p-1 rounded-full bg-red-50 text-red-700" title="Owner dependence is increasing">
+                <span className={`p-1 rounded-full ${STATUS.problem.soft} ${STATUS.problem.text}`} title="Owner dependence is increasing">
                   <ArrowUpRight size={16} />
                 </span>
               )}
             </div>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-[#1E3A5F]/[0.03] border border-[#1E3A5F]/10 flex items-start gap-2">
-            <Info size={13} className="text-[#1E3A5F] shrink-0 mt-0.5" />
+          <div className={`p-2.5 rounded-xl border flex items-start gap-2 ${ACCENTS.operations.soft} ${ACCENTS.operations.border}`}>
+            <Info size={13} className={`${ACCENTS.operations.text} shrink-0 mt-0.5`} />
             <p className="text-[11px] text-gray-600 leading-normal font-medium">
               Shows how much the Director relies on the Owner. A lower number means the business runs well without the Owner.
             </p>
