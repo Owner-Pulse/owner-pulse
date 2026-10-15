@@ -13,6 +13,7 @@ import {
   isEscalationValid,
   parseValidationErrors,
 } from "@/lib/escalation";
+import { todayYmd } from "@/lib/datetime";
 
 const TASK_FIELDS = ["title", "priority", "due_date", "assigned_to", "description"];
 
@@ -111,7 +112,7 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
         priority,
         status: "open",
         due,
-        createdAt: new Date().toISOString().split("T")[0],
+        createdAt: todayYmd(),
       });
     }
     onClose();

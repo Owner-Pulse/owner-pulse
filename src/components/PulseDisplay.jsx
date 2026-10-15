@@ -26,6 +26,7 @@
     ResponsiveContainer,
     Tooltip,
   } from "recharts";
+  import { addDaysYmd, daysBetween, nyParts, todayYmd } from "@/lib/datetime";
 
   // ─── Sub-score metadata ────────────────────────────────────────
   const SUB_SCORE_META = {
@@ -106,17 +107,26 @@
 
     // ── History chart data ──────────────────────────────────────
     const chartData = useMemo(() => {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - historyRange);
       const parseDate = (d) => {
-        // Handle both "MM-DD" (demo) and "YYYY-MM-DD" (real snapshots)
-        if (d.length === 5) return new Date(`${new Date().getFullYear()}-${d}`);
-        return new Date(d);
+        if (d.length === 5) {
+          const [month, day] = d.split("-").map(Number);
+          const today = nyParts();
+          const year = month === 12 && today.month === 1 ? today.year - 1 : today.year;
+          return `${year}-${d}`;
+        }
+        return d;
       };
-      const filtered = pulseHistory.filter((d) => parseDate(d.date) >= cutoff);
+      const today = todayYmd();
+      const filtered = pulseHistory.filter((d) => {
+        const age = daysBetween(parseDate(d.date), today);
+        return age !== null && age >= 0 && age <= historyRange;
+      });
       if (filtered.length > 0) return filtered;
       // Fall back to stable demo data
-      return (demoRef.current || []).filter((d) => parseDate(d.date) >= cutoff);
+      return (demoRef.current || []).filter((d) => {
+        const age = daysBetween(parseDate(d.date), today);
+        return age !== null && age >= 0 && age <= historyRange;
+      });
     }, [pulseHistory, historyRange]);
 
     // ── Sub-score cards sorted by weight ─────────────────────────
@@ -474,12 +484,11 @@
   // ─── Generate deterministic demo history (stable across renders via ref) ──
   function generateDemoHistory(currentBpm, days) {
     const data = [];
-    const now = new Date();
+    const today = todayYmd();
     // Start further back from the current BPM for a natural-looking trend
     let bpm = currentBpm + (Math.random() - 0.5) * 10;
     for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
+      const date = addDaysYmd(today, -i);
       // Random walk with mean reversion toward currentBpm
       const reversion = (currentBpm - bpm) * 0.03;
       const noise = (Math.random() - 0.5) * 4;
@@ -489,7 +498,7 @@
         bpm = bpm * 0.4 + currentBpm * 0.6;
       }
       data.push({
-        date: date.toISOString().split("T")[0].slice(5),
+        date: date.slice(5),
         bpm: Math.round(bpm),
       });
     }

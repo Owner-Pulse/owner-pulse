@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar, ShieldCheck, GraduationCap, FileText, Clock, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -20,7 +21,7 @@ const DEFAULT_CONFIG = { icon: Calendar, color: "bg-gray-100 text-gray-500", bgC
 
 const URGENT_BG = "bg-gradient-to-r from-[#1E3A5F] to-[#15294A] text-white";
 
-const fmtDateShort = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtDateShort = (d) => formatDate(d, { month: "short", day: "numeric" });
 
 const UpcomingEventsCard = ({ events = [] }) => (
   <motion.div variants={itemVariants}>

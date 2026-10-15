@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import EscalationSummary from "@/components/EscalationSummary";
+import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
 
-const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtDate = (dateStr) => formatDate(dateStr, { month: "short", day: "numeric" });
 const daysSince = (dateStr) => {
-  const diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+  const diff = daysBetween(dateStr, todayYmd()) || 0;
   return diff < 0 ? 0 : diff;
 };
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();

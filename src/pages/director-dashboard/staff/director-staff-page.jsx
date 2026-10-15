@@ -20,6 +20,7 @@ import StaffRosterTable from "../../owner-dashboard/staff/components/StaffRoster
 import PTOSummaryCard from "../../owner-dashboard/staff/components/PTOSummaryCard";
 import StaffFormModal from "../../owner-dashboard/staff/components/StaffFormModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { daysFromToday } from "@/lib/datetime";
 import { 
   useGetDirectorStaff, 
   useAddStaff, 
@@ -27,8 +28,6 @@ import {
   useDeleteStaff, 
   useGetPtoStaff 
 } from "@/hooks/director-hook/staff.hook";
-
-const TODAY = new Date("2026-05-11");
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -184,8 +183,8 @@ const DirectorStaffManagement = () => {
       };
     }
     const thisWeekCount = substitutes.filter((r) => {
-      const diff = Math.ceil((TODAY - new Date(r.date)) / 86400000);
-      return diff >= 0 && diff <= 7;
+      const daysUntil = daysFromToday(r.date);
+      return daysUntil !== null && daysUntil <= 0 && daysUntil >= -7;
     }).length;
     return {
       total: substitutes.length,

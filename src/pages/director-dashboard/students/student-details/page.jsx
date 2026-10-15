@@ -21,6 +21,7 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useInfiniteStudentsByClass, useUpdateStudent, useWithdrawFromClass } from "@/hooks/director-hook/student-manage.hook";
 import StudentDetailsModal from "../components/StudentDetailsModal";
 import toast from "react-hot-toast";
+import { todayYmd } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 15 },
@@ -177,7 +178,7 @@ const DirectorClassroomDetailPage = () => {
       gender: student.gender || "Male",
       classroom: classroomName,
       status: student.status || "Active",
-      enrollmentDate: student.started || student.start_date || student.enrollmentDate || new Date().toISOString().split("T")[0],
+      enrollmentDate: student.started || student.start_date || student.enrollmentDate || todayYmd(),
       parent: parentContact.parent_name || student.parent || "",
       phone: parentContact.phone || student.phone || "",
       email: parentContact.email || student.email || "",

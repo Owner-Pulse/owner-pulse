@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { todayYmd } from "@/lib/datetime";
 
 const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, onSubmit, isPending = false }) => {
   const [offerDate, setOfferDate] = useState("");
@@ -10,7 +11,7 @@ const OfferSpotModal = ({ isOpen, onClose, entry, onOfferSpot, onSubmit, isPendi
   const [offerNotes, setOfferNotes] = useState("");
 
   useEffect(() => {
-    setOfferDate(new Date().toISOString().slice(0, 10));
+    setOfferDate(todayYmd());
     setStartDate("2026-09-01");
     setOfferNotes("");
   }, [entry, isOpen]);

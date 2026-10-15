@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetSingleStudent } from "@/hooks/director-hook/student-manage.hook";
+import { formatDate } from "@/lib/datetime";
 
 const StudentDetailsModal = ({ studentId, fallbackStudent, onClose }) => {
   const { data: apiResponse, isLoading, isError } = useGetSingleStudent(studentId);
@@ -37,7 +38,7 @@ const StudentDetailsModal = ({ studentId, fallbackStudent, onClose }) => {
   const childId = studentData?.procare_child_id || studentData?.id || fallbackStudent?.child_id || fallbackStudent?.procare_child_id || studentId;
   const personId = studentData?.person_id || person.procare_person_id || fallbackStudent?.person_id;
   const status = studentData?.enrollment_status || fallbackStudent?.status || "Active";
-  const dob = person.date_of_birth ? new Date(person.date_of_birth).toLocaleDateString() : (fallbackStudent?.dob || "N/A");
+  const dob = person.date_of_birth ? formatDate(person.date_of_birth, { month: "numeric", day: "numeric", year: "numeric" }) : (fallbackStudent?.dob || "N/A");
   const gender = person.gender || fallbackStudent?.gender || "N/A";
   const comment = person.comment && person.comment !== "None" ? person.comment : null;
 
@@ -114,7 +115,7 @@ const StudentDetailsModal = ({ studentId, fallbackStudent, onClose }) => {
                     <div className="flex justify-between py-1">
                       <span className="text-gray-400">Status Start Date:</span>
                       <span className="font-semibold text-gray-800">
-                        {studentData?.status_start_date ? new Date(studentData.status_start_date).toLocaleDateString() : "N/A"}
+                        {studentData?.status_start_date ? formatDate(studentData.status_start_date, { month: "numeric", day: "numeric", year: "numeric" }) : "N/A"}
                       </span>
                     </div>
                     {comment && (

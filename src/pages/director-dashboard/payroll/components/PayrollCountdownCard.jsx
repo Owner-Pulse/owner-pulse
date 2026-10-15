@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { daysFromToday, formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -10,11 +11,8 @@ const itemVariants = {
 
 const fmtRelative = (d) => {
   if (!d) return "—";
-  const target = new Date(d);
-  const now = new Date();
-  target.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  const diff = daysFromToday(d);
+  if (diff === null) return "—";
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   if (diff === -1) return "Yesterday";
@@ -39,7 +37,7 @@ const PayrollCountdownCard = ({ periodEnd, payrollDays }) => {
               <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Next Payroll</p>
               <p className="text-base font-bold text-gray-900">
                 {periodEnd
-                  ? new Date(periodEnd).toLocaleDateString("en-US", {
+                  ? formatDate(periodEnd, {
                       weekday: "long",
                       month: "long",
                       day: "numeric",

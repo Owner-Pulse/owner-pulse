@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { Trash2, Edit } from "lucide-react";
 import { useDeletePayrollSchedule } from "@/hooks/payroll/payroll.hook";
 import EditPayrollScheduleModal from "@/pages/owner-dashboard/payroll/components/EditPayrollScheduleModal";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const DirectorPayrollScheduleTable = ({ schedule = [] }) => {
   const { deleteSchedule, isPending } = useDeletePayrollSchedule();

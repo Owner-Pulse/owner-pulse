@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { initEcho, listenToNotifications, requestNotificationPermission, setupNotificationTapListener } from '@/lib/reverb-connection';
 import { getToken, removeToken } from '@/lib/token';
+import { formatDate } from "@/lib/datetime";
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -104,7 +105,7 @@ const timeAgo = (ts) => {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-  return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatDate(ts, { month: "short", day: "numeric" });
 };
 
 // Unread task comments next to "Tasks" — reads the same cached overview query as the dashboard

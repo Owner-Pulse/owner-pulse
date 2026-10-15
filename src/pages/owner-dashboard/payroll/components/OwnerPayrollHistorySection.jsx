@@ -2,22 +2,22 @@ import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { addMonthsYmd, formatDate, todayYmd, ymdOf } from "@/lib/datetime";
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const OwnerPayrollHistorySection = ({ history = [], onSelectPayroll }) => {
   const [showAllHistory, setShowAllHistory] = useState(false);
 
   const filteredHistory = useMemo(() => {
     if (showAllHistory) return history;
-    const twoMonthsAgo = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const cutoff = addMonthsYmd(todayYmd(), -2);
 
     return history.filter((item) => {
       const pEnd = item.cycle_end_date || item.periodEnding || item.submitted_at;
       if (!pEnd) return true;
-      return new Date(pEnd) >= twoMonthsAgo;
+      return ymdOf(pEnd) >= cutoff;
     });
   }, [history, showAllHistory]);
 

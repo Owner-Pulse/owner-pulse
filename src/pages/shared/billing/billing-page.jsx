@@ -10,10 +10,10 @@ import AgingChartCard from "./components/AgingChartCard";
 import AgingSummaryCard from "./components/AgingSummaryCard";
 import FilterBar from "./components/FilterBar";
 import FamilyCard from "./components/FamilyCard";
+import { daysBetween, todayYmd } from "@/lib/datetime";
 
-const TODAY = new Date("2026-05-11");
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
-const daysSince = (d) => Math.floor((TODAY - new Date(d)) / 86400000);
+const daysSince = (d) => daysBetween(d, todayYmd()) || 0;
 
 const AGING_BUCKETS = [
   { key: "1-7", label: "1–7 days", min: 1, max: 7 },

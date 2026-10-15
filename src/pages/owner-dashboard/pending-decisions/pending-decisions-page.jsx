@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import EscalationSummary, { EscalationStatusTag } from "@/components/EscalationSummary";
 import { useGetEscalations, useResolveEscalation } from "@/hooks/escalation.hook";
+import { formatDateTime } from "@/lib/datetime";
 
 const ITEM_TYPES = {
   task: { label: "Task", icon: ClipboardList },
@@ -36,11 +37,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtDate = (d) => {
-  const date = d ? new Date(d) : null;
-  if (!date || isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-};
+const fmtDate = (d) => formatDateTime(d, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 const StatCard = ({ icon: Icon, value, label, iconClass, valueClass }) => (
   <motion.div variants={itemVariants}>

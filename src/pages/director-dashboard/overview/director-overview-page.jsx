@@ -20,6 +20,7 @@ import TaskBoard from "@/components/TaskBoard";
 import OwnerDependenceCard from "./components/OwnerDependenceCard";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
+import { formatDate } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -97,7 +98,7 @@ const DirectorOverviewPage = () => {
             Director Operational Dashboard
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            {formatDate(new Date(), { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
           </p>
         </div>
       </motion.div>

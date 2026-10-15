@@ -17,6 +17,7 @@ import {
 } from "@/lib/escalation";
 
 import toast from "react-hot-toast";
+import { todayYmd } from "@/lib/datetime";
 
 
 const ASSIGNED_TO_OPTIONS = [
@@ -144,7 +145,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
             issue: form.issue.trim(),
             priority: form.priority,
             status: editItem ? editItem.status : "open",
-            logged: editItem ? editItem.logged : new Date().toISOString().split("T")[0],
+            logged: editItem ? editItem.logged : todayYmd(),
             estCost: Number(form.estCost) || 0,
             submittedBy: editItem ? editItem.submittedBy : (user?.name || "Director"),
             assignedTo: form.assignedTo,
