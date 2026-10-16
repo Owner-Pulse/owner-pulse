@@ -14,6 +14,7 @@ import {
   parseValidationErrors,
 } from "@/lib/escalation";
 import { todayYmd } from "@/lib/datetime";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const TASK_FIELDS = ["title", "priority", "due_date", "assigned_to", "description"];
 
@@ -22,6 +23,8 @@ const FieldError = ({ message }) =>
 
 const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const isDirector = currentRole === "director";
+  const { user } = useGetUser();
+  const currentUserId = user?.id ? String(user.id) : "";
   const { allDirector } = useGetAllDirector();
   const { createTask: ownerCreateTask, isPending: ownerPending } = useCreateTask();
   const { createTask: directorCreateTask, isPending: directorPending } = useCreateDirectorTask();
@@ -71,7 +74,9 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fieldsFilled) return;
-    if (isDirector && step === 1) {
+    const assignToSelf = isDirector && currentUserId && String(assignee) === currentUserId;
+
+    if (isDirector && step === 1 && !assignToSelf) {
       setStep(2);
       return;
     }
@@ -159,17 +164,27 @@ const AssignTaskModal = ({ onClose, onAssign, currentRole }) => {
                     <select value={assignee} onChange={(e) => setAssignee(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent appearance-none bg-white font-medium cursor-pointer">
                       {currentRole === "owner" ? (
-                        directorsList && directorsList.length > 0 ? (
-                          directorsList.map((dir) => (
-                            <option key={dir.id} value={dir.id}>
-                              {dir.name || `Director #${dir.id}`}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="1">Director</option>
-                        )
+                        <>
+                          {currentUserId && (
+                            <option value={currentUserId}>Myself</option>
+                          )}
+                          {directorsList && directorsList.length > 0 ? (
+                            directorsList.map((dir) => (
+                              <option key={dir.id} value={dir.id}>
+                                {dir.name || `Director #${dir.id}`}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="1">Director</option>
+                          )}
+                        </>
                       ) : (
-                        <option value="owner">Owner</option>
+                        <>
+                          <option value="owner">Owner</option>
+                          {currentUserId && (
+                            <option value={currentUserId}>Myself</option>
+                          )}
+                        </>
                       )}
                     </select>
                     <FieldError message={errors.assigned_to} />

@@ -68,7 +68,7 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, 
                       <Pencil size={14} />
                     </button>
                   )}
-                  {onDeleteExpense && isDirector && (
+                  {onDeleteExpense && isDirector && exp.is_deletable !== false && !String(exp.id ?? "").startsWith("qb_") && (
                     <button
                       onClick={() => onDeleteExpense(exp)}
                       className="p-1 text-gray-400 hover:text-red-600 rounded transition-all cursor-pointer"

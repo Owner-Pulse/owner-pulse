@@ -152,12 +152,7 @@ const OverviewPage = () => {
   const schoolBudget = budgetOverview?.school_budget || { total_budget: 0, total_spent: 0, remaining: 0, used_pct: 0 };
   const directorPettyCash = budgetOverview?.director_petty_cash || { total_budget: 0, total_spent: 0, remaining: 0, used_pct: 0, recent_expenses: [] };
 
-  const budgetCategories = budgetOverview?.categories || [
-    { name: "Payroll & Benefits", spent: Math.round(schoolBudget.total_spent * 0.7), budget: Math.round(schoolBudget.total_budget * 0.7), percent: 70, color: "#1E3A5F" },
-    { name: "Facilities & Rent", spent: Math.round(schoolBudget.total_spent * 0.15), budget: Math.round(schoolBudget.total_budget * 0.15), percent: 15, color: "#2A4C7E" },
-    { name: "Curriculum & Supplies", spent: Math.round(schoolBudget.total_spent * 0.1), budget: Math.round(schoolBudget.total_budget * 0.1), percent: 10, color: "#4A6B96" },
-    { name: "Director Discretionary", spent: directorPettyCash.total_spent, budget: directorPettyCash.total_budget, percent: Math.round(directorPettyCash.used_pct), color: "#9DB8D9" },
-  ];
+  const budgetCategories = budgetOverview?.categories ?? [];
 
   const budgetDataForCard = {
     total: schoolBudget.total_budget,
@@ -347,6 +342,7 @@ const OverviewPage = () => {
           budgetData={budgetDataForCard} budgetPercent={Math.round(schoolBudget.used_pct)} schoolBudgetRemaining={schoolBudget.remaining}
           DIRECTOR_BUDGET_TOTAL={directorPettyCash.total_budget} directorSpent={directorPettyCash.total_spent} directorRemaining={directorPettyCash.remaining}
           pettyCashPercent={Math.round(directorPettyCash.used_pct)} recentExpenses={directorPettyCash.recent_expenses || []} expenseByReason={[]}
+          categoryAllocations={budgetCategories}
           fmtMoney={fmtMoney} fmtDate={fmtDate} noData={!budgetOverview} onNavigate={go}
         />
         <EnrollmentChart data={formattedEnrollmentData} totalEnrolled={enrolledData.count} totalWaitlist={waitlistKpi.count} openSeats={enrollmentByGrade.reduce((sum, g) => sum + (g.available || 0), 0)} noData={!Array.isArray(ownerOverviewData?.enrollment_by_grade) || enrollmentByGrade.length === 0} />

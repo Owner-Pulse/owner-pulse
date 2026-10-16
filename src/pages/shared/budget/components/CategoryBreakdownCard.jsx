@@ -123,6 +123,9 @@ const CategoryBreakdownCard = ({
                         )}
                       </div>
                       <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{childName}</p>
+                      {budgetedNumeric > 0 && (
+                        <p className="text-[10px] text-gray-500 mt-0.5">Allocated: {budgetedFormatted}</p>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">

@@ -3,6 +3,13 @@ import { payrollService } from "@/services/payroll.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
+const unwrapScheduleList = (payload) => {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  if (Array.isArray(payload)) return payload;
+  return [];
+};
+
 // ─── Owner Hooks ───
 
 export const useGetOwnerPayrollOverview = () => {
@@ -34,7 +41,7 @@ export const useGetOwnerPayrollSchedules = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  const schedules = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+  const schedules = unwrapScheduleList(data);
 
   return {
     schedules,
@@ -122,7 +129,7 @@ export const useGetDirectorPayrollSchedules = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  const schedules = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+  const schedules = unwrapScheduleList(data);
 
   return {
     schedules,

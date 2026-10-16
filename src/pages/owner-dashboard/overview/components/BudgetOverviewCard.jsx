@@ -12,7 +12,7 @@ const itemVariants = {
 };
 
 const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, DIRECTOR_BUDGET_TOTAL,
-  directorSpent, directorRemaining, pettyCashPercent, recentExpenses, expenseByReason, fmtMoney, fmtDate, onNavigate, noData = false }) => (
+  directorSpent, directorRemaining, pettyCashPercent, recentExpenses, expenseByReason, categoryAllocations = [], fmtMoney, fmtDate, onNavigate, noData = false }) => (
   <motion.div variants={itemVariants}>
     <Card className="relative bg-white border-none shadow-sm h-full overflow-hidden">
       <CardAccent group={noData ? "none" : "finance"} />
@@ -41,6 +41,25 @@ const BudgetOverviewCard = ({ budgetData, budgetPercent, schoolBudgetRemaining, 
             <span className={noData ? STATUS.none.text : "text-gray-600"}>{noData ? "No data" : `${budgetPercent}% used`}</span>
             <span className={`font-medium ${noData ? STATUS.none.text : STATUS.good.text}`}>{noData ? "No data" : `$${schoolBudgetRemaining.toLocaleString()} left`}</span>
           </div>
+
+          {categoryAllocations.length > 0 && (
+            <div className={`mt-3 pt-2 border-t ${ACCENTS.finance.border}`}>
+              <p className={`text-[9px] font-semibold uppercase tracking-wider mb-1.5 ${ACCENTS.finance.text}`}>Category allocations</p>
+              <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                {categoryAllocations.slice(0, 6).map((cat) => (
+                  <div key={cat.name} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cat.color || ACCENTS.finance.hex }} />
+                      <p className="text-[10px] font-medium text-gray-700 truncate">{cat.name}</p>
+                    </div>
+                    <span className="text-[9px] font-semibold text-gray-600 shrink-0">
+                      {fmtMoney(cat.spent ?? 0)} / {fmtMoney(cat.budget ?? 0)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={`p-3 rounded-xl border ${noData ? `${STATUS.none.soft} ${STATUS.none.border}` : `${ACCENTS.finance.soft} ${ACCENTS.finance.border}`}`}>
