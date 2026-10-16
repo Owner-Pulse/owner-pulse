@@ -41,6 +41,7 @@ import CsvUploadModal from "./components/CsvUploadModal";
 import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
+import DocumentVaultExpiringCard from "./components/DocumentVaultExpiringCard";
 import { formatDate } from "@/lib/datetime";
 import { PULSE_STATUS_COLORS, STATUS, statusFromPct, statusFromPulseLabel } from "@/lib/theme-tokens";
 
@@ -330,10 +331,11 @@ const OverviewPage = () => {
         />
       </div>
 
-      {/* Middle Row — At-Risk + Maintenance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Middle Row — At-Risk + Maintenance + Document Vault */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} noData={!kpiCards?.at_risk_students} fmtDate={fmtDate} onNavigate={go} />
         <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} noData={!ownerOverviewData?.open_maintenance} onNavigate={go} />
+        <DocumentVaultExpiringCard />
       </div>
 
       {/* Task ownership board */}
