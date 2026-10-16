@@ -41,6 +41,7 @@ import CsvUploadModal from "./components/CsvUploadModal";
 import EnrollmentTargetsModal from "./components/EnrollmentTargetsModal";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
+import DocumentVaultExpiringCard from "./components/DocumentVaultExpiringCard";
 import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric" });
@@ -328,10 +329,11 @@ const OverviewPage = () => {
         />
       </div>
 
-      {/* Middle Row — At-Risk + Maintenance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Middle Row — At-Risk + Maintenance + Document Vault */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         <AtRiskStudentsCard students={atRiskList} activeAtRisk={atRiskKpi.intervening} fmtDate={fmtDate} onNavigate={go} />
         <MaintenanceCard requests={openMaintList} openCount={maintKpi.total} criticalCount={maintKpi.critical_count} onNavigate={go} />
+        <DocumentVaultExpiringCard />
       </div>
 
       {/* Task ownership board */}

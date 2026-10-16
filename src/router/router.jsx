@@ -45,6 +45,8 @@ import DataImportPage from "@/pages/shared/data-import/data-import-page";
 import WeeklyReportsPage from "@/pages/shared/weekly-reports/weekly-reports-page";
 import WeeklyReportDetailPage from "@/pages/shared/weekly-reports/weekly-report-detail-page";
 import WeeklyReportFormPage from "@/pages/shared/weekly-reports/weekly-report-form-page";
+import DocumentVaultListPage from "@/pages/shared/document-vault/document-vault-list-page";
+import DocumentVaultDetailPage from "@/pages/shared/document-vault/document-vault-detail-page";
 
 
 export const router = createBrowserRouter([
@@ -136,6 +138,14 @@ export const router = createBrowserRouter([
               {
                 path: 'weekly-reports/:id',
                 element: <WeeklyReportDetailPage />
+              },
+              {
+                path: 'document-vault',
+                element: <DocumentVaultListPage />
+              },
+              {
+                path: 'document-vault/:id',
+                element: <DocumentVaultDetailPage />
               },
             ]
           },
@@ -234,6 +244,14 @@ export const router = createBrowserRouter([
               {
                 path: 'weekly-reports/:id/edit',
                 element: <WeeklyReportFormPage />
+              },
+              {
+                path: 'document-vault',
+                element: <DocumentVaultListPage />
+              },
+              {
+                path: 'document-vault/:id',
+                element: <DocumentVaultDetailPage />
               },
             ]
           },

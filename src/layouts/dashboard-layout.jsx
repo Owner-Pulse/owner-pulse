@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router';
-import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud, Gavel, ReceiptText } from 'lucide-react';
+import { Bell, Menu, X, Home, Users, BookOpen, DollarSign, AlertTriangle, Settings, LogOut, ClipboardList, Wrench, GraduationCap, Calendar, UserCircle, Shield, Percent, UploadCloud, Gavel, ReceiptText, FileStack } from 'lucide-react';
 import logo from '../assets/Logo.png';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useGetUser } from '@/hooks/auth/user-details.hook';
@@ -24,6 +24,7 @@ const ownerTabs = [
   { id: "cashflow", label: "Cash Flow", icon: DollarSign },
   { id: "weekly-reports", label: "Weekly Report & Deposits", icon: ReceiptText },
   { id: "compliance", label: "Compliance", icon: AlertTriangle },
+  { id: "document-vault", label: "Document Vault", icon: FileStack },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   // { id: "class-scores", label: "CLASS Scores", icon: BookOpen },
   // { id: "internal-reminders", label: "Reminders", icon: Calendar },
@@ -48,6 +49,7 @@ const directorTabs = [
   { id: "students", label: "Students", icon: GraduationCap },
   { id: "discounts", label: "Discounts", icon: Percent },
   { id: "compliance", label: "Compliance", icon: AlertTriangle },
+  { id: "document-vault", label: "Document Vault", icon: FileStack },
   // { id: "billing", label: "Billing / AR", icon: DollarSign },
   { id: "tasks", label: "Tasks", icon: ClipboardList },
   { id: "payroll", label: "Payroll", icon: DollarSign },
