@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useGetCsvImports } from "@/hooks/owner-hook/csv-manage.hook";
 import NewImportModal from "./components/NewImportModal";
+import AdpHoursImportPanel from "./components/AdpHoursImportPanel";
 import { formatDateTime } from "@/lib/datetime";
 
 const fmtNumber = (n) => Number(n || 0).toLocaleString();
@@ -37,6 +38,7 @@ const StatCard = ({ label, value, hint }) => (
 );
 
 const DataImportPage = () => {
+  const [tab, setTab] = useState("procare");
   const [page, setPage] = useState(1);
   const [newImportOpen, setNewImportOpen] = useState(false);
   const [importError, setImportError] = useState(null);
@@ -51,15 +53,40 @@ const DataImportPage = () => {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Data Import</h1>
-        <button
-          onClick={() => setNewImportOpen(true)}
-          className="cursor-pointer flex items-center gap-2 px-5 h-11 rounded-xl bg-[#1E3A5F] hover:bg-[#15294A] text-white text-sm font-semibold shadow-sm transition-colors"
-        >
-          <UploadCloud size={18} /> New Import
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-xl border border-gray-200 p-1 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setTab("procare")}
+              className={`px-4 h-9 rounded-lg text-sm font-semibold ${tab === "procare" ? "bg-white shadow text-[#1E3A5F]" : "text-gray-600"}`}
+            >
+              ProCare CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("adp")}
+              className={`px-4 h-9 rounded-lg text-sm font-semibold ${tab === "adp" ? "bg-white shadow text-[#1E3A5F]" : "text-gray-600"}`}
+            >
+              ADP Hours
+            </button>
+          </div>
+          {tab === "procare" && (
+            <button
+              onClick={() => setNewImportOpen(true)}
+              className="cursor-pointer flex items-center gap-2 px-5 h-11 rounded-xl bg-[#1E3A5F] hover:bg-[#15294A] text-white text-sm font-semibold shadow-sm transition-colors"
+            >
+              <UploadCloud size={18} /> New Import
+            </button>
+          )}
+        </div>
       </div>
+
+      {tab === "adp" ? (
+        <AdpHoursImportPanel />
+      ) : (
+        <>
 
       {/* Failed import notification */}
       {importError && (
@@ -209,6 +236,8 @@ const DataImportPage = () => {
             setImportError(typeof error === "string" ? error : null);
           }}
         />
+      )}
+        </>
       )}
     </div>
   );
