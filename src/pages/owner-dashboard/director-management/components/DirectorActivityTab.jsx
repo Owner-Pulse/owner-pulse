@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useGetDirectorActivity } from "@/hooks/owner-hook/create-director.hook";
+import { formatDate, formatTime as formatNyTime } from "@/lib/datetime";
 
 const ACTIVITY_ICONS = {
   task_comment: { icon: MessageSquare, bg: "bg-blue-50 text-blue-600 border-blue-200" },
@@ -30,8 +31,7 @@ const ACTIVITY_ICONS = {
 
 const formatTime = (ts) => {
   if (!ts) return "";
-  const date = new Date(ts);
-  return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  return formatNyTime(ts, { hour: "2-digit", minute: "2-digit" });
 };
 
 const DirectorActivityTab = ({ directors = [] }) => {
@@ -213,7 +213,7 @@ const DirectorActivityTab = ({ directors = [] }) => {
                           <Clock size={12} /> {act.display_date} at {formatTime(act.timestamp)}
                         </span>
                         <span>•</span>
-                        <span>Timestamp: {act.timestamp ? new Date(act.timestamp).toLocaleDateString() : "N/A"}</span>
+                        <span>Timestamp: {act.timestamp ? formatDate(act.timestamp, { month: "numeric", day: "numeric", year: "numeric" }) : "N/A"}</span>
                       </div>
                     </div>
                   </div>

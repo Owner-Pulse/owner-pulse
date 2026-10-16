@@ -23,28 +23,24 @@ import { useOwnerTaskActions, useDirectorTaskActions } from "@/hooks/useTaskActi
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import EscalationSummary from "@/components/EscalationSummary";
+import { formatDate, formatDateTime } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 };
 
-const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtDate = (d) => formatDate(d, { month: "short", day: "numeric" });
 
 const formatTime = (isoString) => {
   if (!isoString) return "";
-  try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
+  return formatDateTime(isoString, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const UserAvatar = ({ avatar, name, role }) => {
@@ -399,6 +395,8 @@ const TaskCardInner = ({
                 )}
               </div>
             </div>
+
+            {task.raw?.escalation && <EscalationSummary escalation={task.raw.escalation} className="mt-3" />}
 
             {/* Inline Facebook-style Comments Section */}
             {showComments && (

@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { UserCheck, ArrowRight, Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDateSub = (d, formattedDate) => {
   if (formattedDate) return formattedDate;
   if (!d) return "";
   try {
-    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return formatDate(d, { month: "short", day: "numeric" });
   } catch {
     return d;
   }

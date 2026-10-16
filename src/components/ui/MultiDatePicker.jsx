@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Calendar, Plus, X, AlertCircle } from "lucide-react";
+import { formatDate } from "@/lib/datetime";
 
 export const formatDateLabel = (dateStr) => {
   if (!dateStr) return "";
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return dateStr;
-  const dateObj = new Date(y, m - 1, d);
-  return dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return formatDate(dateStr, { month: "short", day: "numeric", year: "numeric" }) || dateStr;
 };
 
 const MultiDatePicker = ({

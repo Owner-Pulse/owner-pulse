@@ -2,6 +2,7 @@ import { axiosPrivate } from "@/lib/axios.private";
 import { directorMaintenanceService } from "@/services/director-service/maintenance.service";
 import { useMutation, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { hasValidationErrors } from "@/lib/escalation";
 
 // get all director maintenance list (using) — infinite scroll
 export const useGetDirectorMaintenanceList = (params) => {
@@ -19,7 +20,7 @@ export const useGetDirectorMaintenanceList = (params) => {
             directorMaintenanceService.get_maintenance_list(axiosInstance, { ...params, page: pageParam, per_page: 50 }),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
-            const pagination = lastPage?.pagination || lastPage?.data?.pagination;
+            const pagination = lastPage?.pagination;
             if (!pagination) return undefined;
             const current = Number(pagination.current_page);
             const last = Number(pagination.last_page);
@@ -63,6 +64,8 @@ export const useCreateDirectorMaintenance = () => {
             queryClient.invalidateQueries(["director-maintenance-list"]);
         },
         onError: (error) => {
+            // 422 field errors are shown by the form
+            if (hasValidationErrors(error)) return;
             toast.error(error?.response?.data?.message || "Failed to create maintenance request");
         }
     });

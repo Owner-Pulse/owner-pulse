@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { DollarSign, ClipboardList, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import DirectorPayrollDetailModal from "./DirectorPayrollDetailModal";
+import { formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -10,7 +11,7 @@ const itemVariants = {
 };
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const PayrollHistoryCard = ({ history }) => {
   const [selectedPayroll, setSelectedPayroll] = useState(null);

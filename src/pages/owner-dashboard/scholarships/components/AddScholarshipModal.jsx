@@ -4,6 +4,7 @@ import { useAddScholarship, useGetScholarshipPrograms } from "@/hooks/owner-hook
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import { useGetStudentsByProcareClassroom } from "@/hooks/director-hook/student-manage.hook";
 import SearchableStudentSelect, { getStudentId, getStudentName } from "@/pages/director-dashboard/students/components/SearchableStudentSelect";
+import { todayYmd } from "@/lib/datetime";
 
 const AddScholarshipModal = ({ isOpen, onClose }) => {
   const { programsData } = useGetScholarshipPrograms();
@@ -28,7 +29,7 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
     program_name: "",
     purchase_amount: "",
     status: "Pending",
-    purchase_date: new Date().toISOString().split("T")[0],
+    purchase_date: todayYmd(),
   });
 
   if (!isOpen) return null;
@@ -82,7 +83,7 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
         program_name: "",
         purchase_amount: "",
         status: "Pending",
-        purchase_date: new Date().toISOString().split("T")[0],
+        purchase_date: todayYmd(),
       });
     } catch (err) {
       // Toast handles error feedback

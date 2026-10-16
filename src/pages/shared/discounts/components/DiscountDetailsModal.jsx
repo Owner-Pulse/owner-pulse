@@ -19,11 +19,12 @@ import {
 } from "lucide-react";
 import { useGetSingleDiscount } from "@/hooks/discount.hook";
 import { getFileUrl } from "@/utils/file.utils";
+import { formatDate as formatNyDate } from "@/lib/datetime";
 
 const formatDate = (isoStr) => {
   if (!isoStr) return "N/A";
   try {
-    return new Date(isoStr).toLocaleDateString("en-US", {
+    return formatNyDate(isoStr, {
       month: "short",
       day: "numeric",
       year: "numeric",

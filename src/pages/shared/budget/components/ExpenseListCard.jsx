@@ -1,18 +1,14 @@
 import React from "react";
 import { Receipt, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return "";
   if (typeof dateStr === "string" && (dateStr.includes("Jan") || dateStr.includes("Feb") || dateStr.includes("Mar") || dateStr.includes("Apr") || dateStr.includes("May") || dateStr.includes("Jun") || dateStr.includes("Jul") || dateStr.includes("Aug") || dateStr.includes("Sep") || dateStr.includes("Oct") || dateStr.includes("Nov") || dateStr.includes("Dec"))) {
     return dateStr;
   }
-  try {
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch (e) {
-    return dateStr;
-  }
+  return formatDate(dateStr, { month: "short", day: "numeric" }) || dateStr;
 };
 
 const fmtMoney = (n) => {
@@ -72,7 +68,7 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, 
                       <Pencil size={14} />
                     </button>
                   )}
-                  {onDeleteExpense && isDirector && (
+                  {onDeleteExpense && isDirector && exp.is_deletable !== false && !String(exp.id ?? "").startsWith("qb_") && (
                     <button
                       onClick={() => onDeleteExpense(exp)}
                       className="p-1 text-gray-400 hover:text-red-600 rounded transition-all cursor-pointer"
@@ -102,4 +98,3 @@ const ExpenseListCard = ({ expenses = [], isDirector, onShowAdd, onEditExpense, 
 );
 
 export default ExpenseListCard;
-

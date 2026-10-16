@@ -47,6 +47,7 @@ import InsuranceWorkflowModal from "./components/InsuranceWorkflowModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import CompleteComplianceModal from "./components/CompleteComplianceModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { formatDate } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -491,7 +492,7 @@ const CompliancePage = () => {
                             </div>
                             {item.is_completed && item.completed_at && (
                               <div className="mt-1 text-[11px] text-[#3E7A54] font-semibold flex items-center gap-1">
-                                <CheckCircle2 size={12} /> Completed on {new Date(item.completed_at).toLocaleDateString()}
+                                <CheckCircle2 size={12} /> Completed on {formatDate(item.completed_at, { month: "numeric", day: "numeric", year: "numeric" })}
                               </div>
                             )}
                             {item.notes && <div className="mt-1 text-[11px] text-gray-500 italic">{item.notes}</div>}
@@ -729,7 +730,7 @@ const CompliancePage = () => {
                             </div>
                             {item.is_completed && item.completed_at && (
                               <div className="mt-1 text-[11px] text-[#3E7A54] font-semibold flex items-center gap-1">
-                                <CheckCircle2 size={12} /> Completed on {new Date(item.completed_at).toLocaleDateString()}
+                                <CheckCircle2 size={12} /> Completed on {formatDate(item.completed_at, { month: "numeric", day: "numeric", year: "numeric" })}
                               </div>
                             )}
                             {item.notes && <div className="mt-1 text-[11px] text-gray-500 italic">{item.notes}</div>}

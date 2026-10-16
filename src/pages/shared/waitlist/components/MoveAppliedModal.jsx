@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, FileText, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { todayYmd } from "@/lib/datetime";
 
 const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, onSubmit, isPending = false }) => {
   const [packetGiven, setPacketGiven] = useState("Yes");
@@ -11,7 +12,7 @@ const MoveAppliedModal = ({ isOpen, onClose, entry, onMoveToApplied, onSubmit, i
 
   useEffect(() => {
     setPacketGiven("Yes");
-    setAppliedDate(new Date().toISOString().slice(0, 10));
+    setAppliedDate(todayYmd());
     setAppliedNotes("");
   }, [entry, isOpen]);
 

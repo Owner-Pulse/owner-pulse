@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import PasswordCard from "./components/PasswordCard";
 import DirectorAccountCard from "./components/DirectorAccountCard";
+import RoomMappingCard from "./components/RoomMappingCard";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 
 const containerVariants = {
@@ -32,6 +33,9 @@ const SettingsPage = () => {
       {role === "owner" && (
         <DirectorAccountCard onNavigate={() => navigate("/owner/director-management")} />
       )}
+
+      {/* Weekly report rooms → classrooms — owners only */}
+      {role === "owner" && <RoomMappingCard />}
     </motion.div>
   );
 };

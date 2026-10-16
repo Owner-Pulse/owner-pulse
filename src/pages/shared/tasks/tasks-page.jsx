@@ -13,11 +13,14 @@ import KpiCard from "./components/KpiCard";
 import TaskCard from "./components/TaskCard";
 import TaskFilters from "./components/TaskFilters";
 import AssignTaskModal from "./components/AssignTaskModal";
+import MyEscalations from "./components/MyEscalations";
+import { usePendingEscalationCount } from "@/hooks/escalation.hook";
 import { useGetTaskList } from "@/hooks/owner-hook/task-assign.hook";
 import { useGetDirectorTaskList } from "@/hooks/director-hook/task-assign.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
+import { daysFromToday } from "@/lib/datetime";
 
-const daysUntil = (d) => Math.ceil((new Date(d) - new Date()) / 86400000);
+const daysUntil = (d) => daysFromToday(d) || 0;
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -55,6 +58,8 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const [filterPriority, setFilterPriority] = useState("all");
 
   const isDirector = currentRole === "director";
+  const pendingEscalations = usePendingEscalationCount("director", isDirector);
+  const showEscalations = isDirector && activeTab === "escalations";
   const sentTarget = isDirector ? "Owner" : "Director";
   const sentLabel = `Sent to ${sentTarget}`;
 
@@ -180,9 +185,14 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         onFilterChange={setFilterPriority}
         sentLabel={sentLabel}
         totalCount={sorted.length}
+        extraTabs={isDirector ? [{ id: "escalations", label: "My escalations", count: pendingEscalations }] : []}
       />
 
+      {/* Director: everything sent to the Owner, with status and the Owner's note */}
+      {showEscalations && <MyEscalations />}
+
       {/* Task Cards */}
+      {!showEscalations && (
       <div className="space-y-2">
         {isTaskListLoading ? (
           <>
@@ -241,6 +251,7 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
           </div>
         )}
       </div>
+      )}
 
       {/* Assign Task Modal */}
       {showAssignModal && (

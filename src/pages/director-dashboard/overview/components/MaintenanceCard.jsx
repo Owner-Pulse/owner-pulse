@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import CardAccent from "@/components/ui/card-accent";
+import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -10,35 +12,36 @@ const itemVariants = {
 };
 
 const dotColor = (priority) => {
-  if (priority === "critical") return "bg-[#AE4A3E]";
-  if (priority === "high") return "bg-[#B78A2F]";
-  if (priority === "medium") return "bg-[#1E3A5F]";
-  return "bg-gray-400";
+  if (priority === "critical") return STATUS.problem.dot;
+  if (priority === "high") return STATUS.watch.dot;
+  if (priority === "medium") return ACCENTS.operations.bar;
+  return STATUS.none.dot;
 };
 
 const badgeColor = (priority) => {
-  if (priority === "critical") return "bg-[#AE4A3E]/10 text-[#8A362C]";
-  if (priority === "high") return "bg-[#B78A2F]/10 text-[#8F6A1F]";
-  if (priority === "medium") return "bg-[#1E3A5F]/5 text-[#1E3A5F]";
-  return "bg-gray-100 text-gray-500";
+  if (priority === "critical") return STATUS.problem.badge;
+  if (priority === "high") return STATUS.watch.badge;
+  if (priority === "medium") return ACCENTS.operations.icon;
+  return STATUS.none.badge;
 };
 
-const MaintenanceCard = ({ items = [], openCount, criticalCount, onNavigate }) => {
+const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false, onNavigate }) => {
   const activeItems = items.filter((m) => m.status !== "done" && m.status !== "completed");
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-white border-none shadow-sm h-full flex flex-col justify-between">
+      <Card className="relative bg-white border-none shadow-sm h-full flex flex-col justify-between">
+        <CardAccent group={noData ? "none" : "operations"} />
         <div>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <Wrench size={16} className="text-[#1E3A5F]" />
+                <Wrench size={16} className={noData ? STATUS.none.text : ACCENTS.operations.text} />
                 Open Maintenance
               </CardTitle>
               <div className="flex items-center gap-2">
                 {criticalCount > 0 && (
-                  <span className="text-[10px] font-medium text-[#8A362C] bg-[#AE4A3E]/10 px-1.5 py-0.5 rounded-full">
+                  <span className={`text-[10px] font-medium border px-1.5 py-0.5 rounded-full ${STATUS.problem.badge}`}>
                     {criticalCount} critical
                   </span>
                 )}
@@ -93,14 +96,14 @@ const MaintenanceCard = ({ items = [], openCount, criticalCount, onNavigate }) =
                 );
               })
             ) : (
-              <p className="text-xs text-gray-400 italic py-4 text-center">No open maintenance requests.</p>
+              <p className={`text-xs italic py-4 text-center ${STATUS.none.text}`}>{noData ? "No maintenance data" : "No open maintenance requests."}</p>
             )}
           </CardContent>
         </div>
         <CardContent className="pt-0">
           <Button
             variant="ghost"
-            className="w-full text-xs text-[#1E3A5F] h-7 mt-1 cursor-pointer hover:bg-[#1E3A5F]/10 font-semibold"
+            className={`w-full text-xs h-7 mt-1 cursor-pointer font-semibold ${ACCENTS.operations.text} hover:bg-[#1E3A5F]/10`}
             onClick={() => onNavigate("/director/maintenance")}
           >
             View all maintenance →

@@ -36,6 +36,7 @@ import {
 } from "@/hooks/payroll/payroll.hook";
 import { useGetAllStaffs } from "@/hooks/classroom/classroom.hook";
 import { getStaffName, getStaffId } from "@/pages/owner-dashboard/classrooms/components/SearchableStaffSelect";
+import { daysBetween as calendarDaysBetween, daysFromToday, formatDate } from "@/lib/datetime";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,12 +48,12 @@ const itemVariants = {
 };
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const daysBetween = (start, end) => {
   if (!start) return 0;
   if (!end || end === start) return 1;
-  return Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
+  return Math.max(1, (calendarDaysBetween(start, end) || 0) + 1);
 };
 
 const PayrollPage = () => {
@@ -66,7 +67,7 @@ const PayrollPage = () => {
 
   // API Hooks
   const { data: directorOverview } = useGetDirectorPayrollOverview();
-  const { schedules: apiSchedules } = useGetDirectorPayrollSchedules();
+  const { schedules: apiSchedules, refetch: refetchSchedules } = useGetDirectorPayrollSchedules();
   const { history: apiHistory } = useGetDirectorPayrollHistory();
   const { submitPayroll: apiSubmitPayroll, isPending: isSubmitting } = useSubmitPayroll();
 
@@ -103,12 +104,7 @@ const PayrollPage = () => {
     }
     const due = activePeriod.submission_due_date || activePeriod.dueDate || activePeriod.end_date || activePeriod.endDate;
     if (!due) return 0;
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const dueDt = new Date(due);
-    dueDt.setHours(0, 0, 0, 0);
-    const diff = dueDt - now;
-    return Math.max(0, Math.ceil(diff / 86400000));
+    return Math.max(0, daysFromToday(due) || 0);
   }, [activePeriod]);
 
   // Helper to find staff name by ID
@@ -411,6 +407,27 @@ const PayrollPage = () => {
       {/* Tab 1: Submit Payroll */}
       {activeTab === "submit" && (
         <>
+          {pendingSchedules.length === 0 && (
+            <motion.div
+              variants={itemVariants}
+              className="bg-[#B78A2F]/10 border border-[#B78A2F]/25 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            >
+              <div>
+                <p className="text-sm font-semibold text-gray-900">No payroll cycles scheduled yet</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Add bi-weekly periods under Payroll Schedule so directors can submit payroll.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setActiveTab("schedule")}
+                className="bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl text-xs font-semibold"
+              >
+                Open Payroll Schedule
+              </Button>
+            </motion.div>
+          )}
+
           <motion.div
             variants={itemVariants}
             className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -498,7 +515,10 @@ const PayrollPage = () => {
       {/* Add Schedule Period Modal */}
       <AddSchedulePeriodModal
         isOpen={isAddPeriodOpen}
-        onClose={() => setIsAddPeriodOpen(false)}
+        onClose={() => {
+          setIsAddPeriodOpen(false);
+          refetchSchedules();
+        }}
       />
     </motion.div>
   );

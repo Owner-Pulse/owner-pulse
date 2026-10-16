@@ -103,6 +103,7 @@ export const useGetBudgetLimit = () => {
 
 export const useDeleteDirectorExpense = () => {
     const axiosInstance = axiosPrivate();
+    const queryClient = useQueryClient();
 
     const {
         data,
@@ -113,6 +114,9 @@ export const useDeleteDirectorExpense = () => {
     } = useMutation({
         mutationKey: ["delete-director-expense"],
         mutationFn: (id) => getBudgetService.deleteExpenseDirector(axiosInstance, id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["budget"] });
+        },
     });
 
     return {

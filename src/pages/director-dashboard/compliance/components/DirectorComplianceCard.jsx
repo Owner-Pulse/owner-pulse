@@ -19,6 +19,7 @@ import StatusPill from "@/pages/owner-dashboard/compliance/components/StatusPill
 import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryTag";
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
 import { itemVariants, clamp } from "./variants";
+import { formatDate } from "@/lib/datetime";
 
 const DirectorComplianceCard = ({
   item,
@@ -84,7 +85,7 @@ const DirectorComplianceCard = ({
               {item.is_completed && item.completed_at && (
                 <div className="mt-1 text-[11px] text-[#3E7A54] font-semibold flex items-center gap-1">
                   <CheckCircle2 size={12} /> Completed on{" "}
-                  {new Date(item.completed_at).toLocaleDateString()}
+                  {formatDate(item.completed_at, { month: "numeric", day: "numeric", year: "numeric" })}
                 </div>
               )}
               {item.notes && (

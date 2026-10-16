@@ -29,8 +29,9 @@ import {
 } from "@/hooks/director-hook/student-manage.hook";
 import { useAddDirectorWaitlist } from "@/hooks/director-hook/waitlist.hook";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
+import { todayYmd } from "@/lib/datetime";
 
-const TODAY = new Date().toISOString().split("T")[0];
+const TODAY = todayYmd();
 
 const containerVariants = {
   hidden: { opacity: 0 },

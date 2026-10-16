@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageSquare, Send, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/datetime";
 
 const TaskCommentsModal = ({
   isOpen,
@@ -28,12 +29,7 @@ const TaskCommentsModal = ({
   };
 
   const fmtTime = (isoString) => {
-    try {
-      const d = new Date(isoString);
-      return isNaN(d.getTime()) ? "Recently" : d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return "Recently";
-    }
+    return formatDateTime(isoString, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) || "Recently";
   };
 
   return (

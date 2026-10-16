@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { todayYmd } from "@/lib/datetime";
 
 const LogTourModal = ({ isOpen, onClose, entry, onLogTour, onSubmit, isPending = false }) => {
   const [tourDate, setTourDate] = useState("");
@@ -11,7 +12,7 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour, onSubmit, isPending =
   const [tourNotes, setTourNotes] = useState("");
 
   useEffect(() => {
-    setTourDate(new Date().toISOString().slice(0, 10));
+    setTourDate(todayYmd());
     setTourTime("10:00");
     setShowedUp("yes");
     setTourNotes("");
@@ -100,7 +101,7 @@ const LogTourModal = ({ isOpen, onClose, entry, onLogTour, onSubmit, isPending =
             {/* Showed Up */}
             {/* Showed Up - Only render if tour date is today or in the past */}
             {(() => {
-              const todayStr = new Date().toISOString().slice(0, 10);
+              const todayStr = todayYmd();
               const isPastOrToday = !tourDate || tourDate <= todayStr;
               if (!isPastOrToday) return null;
               return (

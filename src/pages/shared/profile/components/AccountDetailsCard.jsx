@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Calendar, Clock, Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -33,7 +34,7 @@ const AccountDetailsCard = ({ user:profile }) => {
           <DetailField
             icon={Calendar}
             label="Member Since"
-            value={new Date(profile?.member_since).toLocaleDateString("en-US", {
+            value={formatDate(profile?.member_since, {
               year: "numeric",
               month: "long",
               day: "numeric",
