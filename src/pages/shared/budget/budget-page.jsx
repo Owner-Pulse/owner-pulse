@@ -130,10 +130,9 @@ const BudgetPage = () => {
     try {
       await deleteExpense(targetId);
       toast.success("Expense removed successfully");
-      refetch();
+      await refetch();
     } catch (err) {
-      setLocalDirectorExpenses((prev) => prev.filter((e) => e.id !== targetId));
-      toast.success("Expense removed");
+      toast.error(err?.response?.data?.message || "Could not delete this expense.");
     } finally {
       setExpenseToDelete(null);
     }
@@ -199,16 +198,26 @@ const BudgetPage = () => {
       : null;
 
     if (expensesList) {
-      const mapped = expensesList.map((e, index) => ({
-        id: e.id || index,
-        category: e.category || "Discretionary",
-        description: e.description || e.title,
-        title: e.title || e.description,
-        date: e.date,
-        amount: e.amount || (e.numeric_amount !== undefined ? fmtMoney(e.numeric_amount) : "$0"),
-        numeric_amount: e.numeric_amount || 0,
-        color: e.color || "#1E3A5F",
-      }));
+      const mapped = expensesList.map((e, index) => {
+        const numericAmount =
+          typeof e.numeric_amount === "number"
+            ? e.numeric_amount
+            : typeof e.amount === "number"
+            ? e.amount
+            : 0;
+
+        return {
+          id: e.id ?? index,
+          category: e.category || "Discretionary",
+          description: e.description || e.title,
+          title: e.title || e.description,
+          date: e.date,
+          amount: typeof e.amount === "string" ? e.amount : fmtMoney(numericAmount),
+          numeric_amount: numericAmount,
+          color: e.color || "#1E3A5F",
+          is_deletable: e.is_deletable !== false && !String(e.id ?? "").startsWith("qb_"),
+        };
+      });
       setLocalDirectorExpenses(mapped);
 
       setLocalDirectorCategories((prev) => {
@@ -250,7 +259,14 @@ const BudgetPage = () => {
 
   // Calculated Director Totals
   const directorBudgetTotal = localDirectorCategories.reduce((sum, c) => sum + c.budget, 0);
-  const directorSpent = localDirectorExpenses.reduce((sum, e) => sum + (e.numeric_amount || 0), 0);
+  const directorSpentFromApi =
+    budgetData?.spent_ytd_numeric ??
+    budgetData?.my_budget_summary?.total_spent ??
+    budgetData?.total_spent_numeric;
+  const directorSpent =
+    typeof directorSpentFromApi === "number"
+      ? directorSpentFromApi
+      : localDirectorExpenses.reduce((sum, e) => sum + (e.numeric_amount || 0), 0);
   const directorRemaining = directorBudgetTotal - directorSpent;
   const directorAvgPerExpense = localDirectorExpenses.length > 0 ? directorSpent / localDirectorExpenses.length : 0;
 

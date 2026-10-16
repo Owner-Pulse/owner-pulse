@@ -210,6 +210,14 @@ export const router = createBrowserRouter([
                 element: <DirectorStaffPage />
               },
               {
+                path: 'classrooms',
+                element: <ClassroomsPage />
+              },
+              {
+                path: 'classrooms/:id',
+                element: <OwnerClassroomDetailPage />
+              },
+              {
                 path: 'students',
                 element: <DirectorStudentsPage />
               },

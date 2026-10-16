@@ -67,7 +67,7 @@ const PayrollPage = () => {
 
   // API Hooks
   const { data: directorOverview } = useGetDirectorPayrollOverview();
-  const { schedules: apiSchedules } = useGetDirectorPayrollSchedules();
+  const { schedules: apiSchedules, refetch: refetchSchedules } = useGetDirectorPayrollSchedules();
   const { history: apiHistory } = useGetDirectorPayrollHistory();
   const { submitPayroll: apiSubmitPayroll, isPending: isSubmitting } = useSubmitPayroll();
 
@@ -407,6 +407,27 @@ const PayrollPage = () => {
       {/* Tab 1: Submit Payroll */}
       {activeTab === "submit" && (
         <>
+          {pendingSchedules.length === 0 && (
+            <motion.div
+              variants={itemVariants}
+              className="bg-[#B78A2F]/10 border border-[#B78A2F]/25 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            >
+              <div>
+                <p className="text-sm font-semibold text-gray-900">No payroll cycles scheduled yet</p>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Add bi-weekly periods under Payroll Schedule so directors can submit payroll.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setActiveTab("schedule")}
+                className="bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl text-xs font-semibold"
+              >
+                Open Payroll Schedule
+              </Button>
+            </motion.div>
+          )}
+
           <motion.div
             variants={itemVariants}
             className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -494,7 +515,10 @@ const PayrollPage = () => {
       {/* Add Schedule Period Modal */}
       <AddSchedulePeriodModal
         isOpen={isAddPeriodOpen}
-        onClose={() => setIsAddPeriodOpen(false)}
+        onClose={() => {
+          setIsAddPeriodOpen(false);
+          refetchSchedules();
+        }}
       />
     </motion.div>
   );

@@ -26,27 +26,27 @@ export const classroomService = {
         }
     },
 
-    addClassroom: async (axiosInstance, data) => {
+    addClassroom: async (axiosInstance, data, apiPrefix = "owner") => {
         try {
-            const response = await axiosInstance.post(`/owner/classroom/store`, data);
+            const response = await axiosInstance.post(`/${apiPrefix}/classroom/store`, data);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    updateClassroom: async (axiosInstance, data, id) => {
+    updateClassroom: async (axiosInstance, data, id, apiPrefix = "owner") => {
         try {
-            const response = await axiosInstance.post(`/owner/classroom/update/${id}`, data);
+            const response = await axiosInstance.post(`/${apiPrefix}/classroom/update/${id}`, data);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    deleteClassroom: async (axiosInstance, id) => {
+    deleteClassroom: async (axiosInstance, id, apiPrefix = "owner") => {
         try {
-            const response = await axiosInstance.delete(`/owner/classroom/delete/${id}`);
+            const response = await axiosInstance.delete(`/${apiPrefix}/classroom/delete/${id}`);
             return response.data;
         } catch (error) {
             throw error;
