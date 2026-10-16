@@ -1,3 +1,4 @@
+import { addDaysYmd, daysBetween, daysFromToday, nyParts, todayYmd } from "@/lib/datetime";
 /**
  * OwnerPulse — Pulse Health Score Engine
  * ========================================
@@ -256,7 +257,7 @@ export function calcDiscretionaryBudget(
  * @returns {number} Expected burn percentage (0-100)
  */
 export function getExpectedBudgetBurn(now = new Date()) {
-  const month = now.getMonth(); // 0-based
+  const month = nyParts(now).month - 1;
   const academicMonths = [
     /* Aug=7 */ 7, /* Sep=8 */ 8, /* Oct=9 */ 9,
     /* Nov=10 */ 10, /* Dec=11 */ 11,
@@ -349,8 +350,6 @@ export function calcComplianceHealth(items = [], config = {}) {
     complianceExpiring60Days,
   } = { ...DEFAULT_CONFIG.thresholds, ...config?.thresholds };
 
-  const now = new Date();
-
   // Check for any expired item
   const hasExpired = items.some(
     (i) => i.status === 'expired'
@@ -360,7 +359,7 @@ export function calcComplianceHealth(items = [], config = {}) {
   // Check for items expiring within 14 days
   const hasExpiringSoon = items.some((i) => {
     if (!i.expires) return false;
-    const daysLeft = Math.ceil((new Date(i.expires) - now) / 86400000);
+    const daysLeft = daysFromToday(i.expires) ?? NaN;
     return daysLeft >= 0 && daysLeft <= complianceExpiring14Days;
   });
   if (hasExpiringSoon) return complianceExpiring14Cap;
@@ -368,7 +367,7 @@ export function calcComplianceHealth(items = [], config = {}) {
   // Check for items expiring within 60 days
   const hasExpiring = items.some((i) => {
     if (!i.expires) return false;
-    const daysLeft = Math.ceil((new Date(i.expires) - now) / 86400000);
+    const daysLeft = daysFromToday(i.expires) ?? NaN;
     return daysLeft >= 0 && daysLeft <= complianceExpiring60Days;
   });
   if (hasExpiring) return complianceExpiring60Cap;
@@ -727,9 +726,7 @@ export function detectIssues(inputs = {}, config = {}) {
         data: item,
       });
     } else if (item.status === 'expiring') {
-      const daysLeft = Math.ceil(
-        (new Date(item.expires) - new Date()) / 86400000
-      );
+      const daysLeft = daysFromToday(item.expires) ?? NaN;
       if (daysLeft >= 0 && daysLeft <= thresholdConfig.complianceExpiring14Days) {
         issues.push({
           type: 'compliance.expiring_soon',
@@ -846,9 +843,7 @@ export function calculateIssueImpact(issue, inputs, pulse, role = 'director', co
         items[idx] = {
           ...items[idx],
           status: 'compliant',
-          expires: new Date(
-            Date.now() + 365 * 86400000
-          ).toISOString().split('T')[0],
+          expires: addDaysYmd(todayYmd(), 365),
         };
       }
       break;
@@ -1061,7 +1056,6 @@ export function generateRecommendations(
  */
 export function generateThrivingRecommendations(inputs = {}, config = {}) {
   const recommendations = [];
-  const now = new Date();
   const thresholdConfig = {
     ...DEFAULT_CONFIG.thresholds,
     ...config?.thresholds,
@@ -1072,7 +1066,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
   // Renewals coming due in 60-90 days
   for (const item of complianceItems) {
     if (!item.expires) continue;
-    const daysLeft = Math.ceil((new Date(item.expires) - now) / 86400000);
+    const daysLeft = daysFromToday(item.expires) ?? NaN;
     if (daysLeft >= 60 && daysLeft <= 90) {
       recommendations.push({
         title: `Plan ahead: ${item.item}`,
@@ -1102,9 +1096,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
 
   // CLASS reassessment approaching
   if (inputs.classScore?.lastAssessmentDate) {
-    const daysSince = Math.ceil(
-      (now - new Date(inputs.classScore.lastAssessmentDate)) / 86400000
-    );
+    const daysSince = daysBetween(inputs.classScore.lastAssessmentDate, todayYmd());
     if (daysSince >= 300) {
       recommendations.push({
         title: 'CLASS reassessment approaching',
@@ -1121,7 +1113,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
   // Upcoming compliance audit windows
   for (const item of complianceItems) {
     if (!item.expires) continue;
-    const daysLeft = Math.ceil((new Date(item.expires) - now) / 86400000);
+    const daysLeft = daysFromToday(item.expires) ?? NaN;
     if (daysLeft >= 30 && daysLeft <= 60) {
       recommendations.push({
         title: `${item.item} expires in ${daysLeft} days`,
@@ -1155,7 +1147,7 @@ export function generateThrivingRecommendations(inputs = {}, config = {}) {
  * @returns {object} Snapshot ready for storage
  */
 export function createSnapshot(inputs = {}, ownerPulse = null, directorPulse = null) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayYmd();
 
   return {
     date: today,
@@ -1226,10 +1218,9 @@ export function loadSnapshots() {
  */
 export function getSnapshotHistory(days = 30) {
   const snapshots = loadSnapshots();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
+  const cutoff = addDaysYmd(todayYmd(), -days);
   return snapshots
-    .filter((s) => new Date(s.date) >= cutoff)
+    .filter((s) => s.date >= cutoff)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -1261,7 +1252,7 @@ function clamp(value, min = 0, max = 100) {
 const SUB_LABELS = {
   bigFinancialHealth: 'Big Financial Health',
   compliance: 'Compliance',
-  latePayments: 'Late Payments / AR',
+  latePayments: 'Collections',
   enrollmentHealth: 'Enrollment Health',
   classScore: 'CLASS Score',
   maintenance: 'Maintenance',

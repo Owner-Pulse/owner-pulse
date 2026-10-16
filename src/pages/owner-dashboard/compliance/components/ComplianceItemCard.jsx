@@ -6,9 +6,10 @@ import StatusPill from "./StatusPill";
 import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { formatDate } from "@/lib/datetime";
 
 const fmtDate = (dateStr) =>
-  new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  formatDate(dateStr, { month: "short", day: "numeric", year: "numeric" });
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },

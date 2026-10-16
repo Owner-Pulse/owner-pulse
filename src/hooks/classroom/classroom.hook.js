@@ -4,6 +4,9 @@ import { GetAllClassroom } from "@/services/all-classroom.service";
 import { allStaffsService } from "@/services/all-stuffs.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
+
+const classroomApiPrefix = (role) => (role === "director" ? "director" : "owner");
 
 const DEFAULT_CLASSROOMS = [
     { id: 1, classroom_name: "Ones", capacity: 20 },
@@ -148,12 +151,14 @@ export const useGetSingleClassroom = (id) => {
 
 export const useAddClassroom = () => {
     const queryClient = useQueryClient();
+    const { user } = useGetUser();
+    const apiPrefix = classroomApiPrefix(user?.role);
 
     const { mutateAsync: addClassroom, isPending, isError, error } = useMutation({
         mutationKey: ["add-classroom"],
         mutationFn: (body) => {
             const axiosInstance = axiosPrivate();
-            return classroomService.addClassroom(axiosInstance, body);
+            return classroomService.addClassroom(axiosInstance, body, apiPrefix);
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["classroom"] });
@@ -170,12 +175,14 @@ export const useAddClassroom = () => {
 
 export const useUpdateClassroom = () => {
     const queryClient = useQueryClient();
+    const { user } = useGetUser();
+    const apiPrefix = classroomApiPrefix(user?.role);
 
     const { mutateAsync: updateClassroom, isPending, isError, error } = useMutation({
         mutationKey: ["update-classroom"],
         mutationFn: ({ data, id }) => {
             const axiosInstance = axiosPrivate();
-            return classroomService.updateClassroom(axiosInstance, data, id);
+            return classroomService.updateClassroom(axiosInstance, data, id, apiPrefix);
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["classroom"] });
@@ -192,12 +199,14 @@ export const useUpdateClassroom = () => {
 
 export const useDeleteClassroom = () => {
     const queryClient = useQueryClient();
+    const { user } = useGetUser();
+    const apiPrefix = classroomApiPrefix(user?.role);
 
     const { mutateAsync: deleteClassroom, isPending, isError, error } = useMutation({
         mutationKey: ["delete-classroom"],
         mutationFn: (id) => {
             const axiosInstance = axiosPrivate();
-            return classroomService.deleteClassroom(axiosInstance, id);
+            return classroomService.deleteClassroom(axiosInstance, id, apiPrefix);
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["classroom"] });

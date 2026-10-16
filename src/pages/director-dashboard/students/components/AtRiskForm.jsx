@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import { useGetStudentsByProcareClassroom } from "@/hooks/director-hook/student-manage.hook";
 import SearchableStudentSelect, { getStudentId, getStudentName } from "./SearchableStudentSelect";
+import { todayYmd } from "@/lib/datetime";
 
 const AtRiskForm = ({ onAdd, onClose, isLoading = false }) => {
   const { classrooms } = useGetAllClassrooms();
@@ -29,7 +30,7 @@ const AtRiskForm = ({ onAdd, onClose, isLoading = false }) => {
     reason: "financial",
     grade: "",
     detail: "",
-    flagged: new Date().toISOString().split("T")[0],
+    flagged: todayYmd(),
     status: "intervening"
   });
 

@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
+import { daysBetween, todayYmd } from "@/lib/datetime";
 
 const WAITLIST_STORAGE_KEY = "ownerpulse_waitlist_items_v2";
-
-const TODAY = new Date("2026-08-21");
 
 export const INITIAL_WAITLIST = [
   {
@@ -140,8 +139,7 @@ export const INITIAL_WAITLIST = [
 
 export const daysSince = (dateStr) => {
   if (!dateStr) return 0;
-  const diff = TODAY - new Date(dateStr);
-  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  return Math.max(0, daysBetween(dateStr, todayYmd()) || 0);
 };
 
 export function useWaitlistStore() {
@@ -172,8 +170,8 @@ export function useWaitlistStore() {
       ...newItem,
       id: Date.now(),
       status: "Inquiry",
-      addedDate: new Date().toISOString().slice(0, 10),
-      history: [{ date: new Date().toISOString().slice(0, 10), action: "Added as Inquiry" }],
+      addedDate: todayYmd(),
+      history: [{ date: todayYmd(), action: "Added as Inquiry" }],
     };
     setWaitlist((prev) => [entry, ...prev]);
   };
@@ -185,7 +183,7 @@ export function useWaitlistStore() {
         const newStatus = showedUp === "yes" ? "Toured" : "Lost";
         const noteAdd = tourNotes ? ` Tour Notes: ${tourNotes}` : "";
         const historyItem = {
-          date: tourDate || new Date().toISOString().slice(0, 10),
+          date: tourDate || todayYmd(),
           action: showedUp === "yes" ? `Toured facility on ${tourDate}` : "Did not show up for tour (Marked Lost)",
         };
         return {
@@ -206,7 +204,7 @@ export function useWaitlistStore() {
       prev.map((w) => {
         if (w.id !== id) return w;
         const historyItem = {
-          date: appliedDate || new Date().toISOString().slice(0, 10),
+          date: appliedDate || todayYmd(),
           action: `Moved to Applied (Packet Given: ${packetGiven})`,
         };
         return {
@@ -226,7 +224,7 @@ export function useWaitlistStore() {
       prev.map((w) => {
         if (w.id !== id) return w;
         const historyItem = {
-          date: offerDate || new Date().toISOString().slice(0, 10),
+          date: offerDate || todayYmd(),
           action: `Offered Spot (Start Offered: ${startDate || "TBD"})`,
         };
         return {
@@ -246,7 +244,7 @@ export function useWaitlistStore() {
       prev.map((w) => {
         if (w.id !== id) return w;
         const historyItem = {
-          date: actualStart || new Date().toISOString().slice(0, 10),
+          date: actualStart || todayYmd(),
           action: `Confirmed Enrolled (Start Date: ${actualStart}, Room: ${finalRoom || "Assigned"})`,
         };
         return {
@@ -266,7 +264,7 @@ export function useWaitlistStore() {
       prev.map((w) => {
         if (w.id !== id) return w;
         const historyItem = {
-          date: new Date().toISOString().slice(0, 10),
+          date: todayYmd(),
           action: `Marked Lost: ${reason || "No reason specified"}`,
         };
         return {

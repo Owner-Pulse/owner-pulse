@@ -4,10 +4,12 @@ import { HeartPulse, ChevronDown, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PulseRecommendations from "@/components/PulseRecommendations";
 import PulseSetup, { PulsePartialNote } from "@/components/PulseSetup";
+import { formatDate as formatNyDate } from "@/lib/datetime";
+import { COLORS, PULSE_STATUS_COLORS } from "@/lib/theme-tokens";
 
 // ─── Design tokens ───────────────────────────────────────────────
-const DARK_NAVY = "#0A0F1E";
-const MONITOR_GREEN = "#3E9B67";
+const DARK_NAVY = COLORS.pulseDark;
+const MONITOR_GREEN = PULSE_STATUS_COLORS.good;
 const TEXT_DIM = "#94A3B8";
 
 const itemVariants = {
@@ -175,14 +177,11 @@ function getStateDesc(state) {
 }
 
 function formatDate() {
-  const d = new Date();
-  return d
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    })
-    .toUpperCase();
+  return formatNyDate(new Date(), {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).toUpperCase();
 }
 
 // ─── Pulse Section Component ──────────────────────────────────────
@@ -190,7 +189,7 @@ const PulseSection = ({ ownerPulse }) => {
   const [expanded, setExpanded] = useState(false);
 
   const noData = ownerPulse.bpm == null;
-  const pulseColor = noData ? "#9CA3AF" : ownerPulse.state?.color || MONITOR_GREEN;
+  const pulseColor = noData ? PULSE_STATUS_COLORS.none : ownerPulse.state?.color || MONITOR_GREEN;
   const stateName = noData ? "No data" : ownerPulse.state?.state || "Healthy";
   const desc = getStateDesc(stateName);
   const composite = ownerPulse.composite;

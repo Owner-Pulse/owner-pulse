@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { Mail, Phone, Building2, CheckCircle2, X, Activity, UserCheck, Clock, MessageSquare, ClipboardList, ShieldAlert, Wrench, Calendar, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetDirectorActivity } from "@/hooks/owner-hook/create-director.hook";
+import { formatDate as formatNyDate, formatDateTime } from "@/lib/datetime";
 
 const formatDate = (d) =>
-  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  formatNyDate(d, { month: "short", day: "numeric", year: "numeric" });
 
 const ACTIVITY_ICONS = {
   task_comment: { icon: MessageSquare, bg: "bg-blue-50 text-blue-600" },
@@ -210,7 +211,7 @@ const DirectorDetailModal = ({ director, isLoading, onClose, onUpdateStatus }) =
                             <span className="text-[9px] text-gray-400 shrink-0">{act.display_date}</span>
                           </div>
                           <p className="text-xs text-gray-600 mt-0.5">{act.description}</p>
-                          <p className="text-[9px] text-gray-400 mt-1">{act.timestamp ? new Date(act.timestamp).toLocaleString() : ""}</p>
+                          <p className="text-[9px] text-gray-400 mt-1">{act.timestamp ? formatDateTime(act.timestamp) : ""}</p>
                         </div>
                       </div>
                     );

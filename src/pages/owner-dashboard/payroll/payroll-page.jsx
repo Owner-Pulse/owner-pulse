@@ -16,6 +16,7 @@ import {
   useGetOwnerPayrollSchedules,
   useGetOwnerPayrollSubmissions,
 } from "@/hooks/payroll/payroll.hook";
+import { daysFromToday, toDate } from "@/lib/datetime";
 
 const OwnerPayrollPage = () => {
   const [activeTab, setActiveTab] = useState("history"); // "history" | "schedule"
@@ -41,8 +42,8 @@ const OwnerPayrollPage = () => {
       .filter((p) => (p.status || "").toLowerCase() === "pending")
       .sort(
         (a, b) =>
-          new Date(a.submission_due_date || a.dueDate) -
-          new Date(b.submission_due_date || b.dueDate)
+          (toDate(a.submission_due_date || a.dueDate)?.getTime() ?? 0) -
+          (toDate(b.submission_due_date || b.dueDate)?.getTime() ?? 0)
       );
     return pending[0] || null;
   }, [displaySchedules]);
@@ -54,12 +55,7 @@ const OwnerPayrollPage = () => {
     }
     const due = nextPendingPeriod.submission_due_date || nextPendingPeriod.dueDate || nextPendingPeriod.end_date || nextPendingPeriod.endDate;
     if (!due) return null;
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const dueDt = new Date(due);
-    dueDt.setHours(0, 0, 0, 0);
-    const diffTime = dueDt - now;
-    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    return Math.max(0, daysFromToday(due) || 0);
   }, [nextPendingPeriod]);
 
   return (

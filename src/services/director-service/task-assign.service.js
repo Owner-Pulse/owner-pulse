@@ -1,7 +1,7 @@
 export const directorTaskAssignService = {
-    get_task_list: async (axiosInstance) => {
+    get_task_list: async (axiosInstance, params) => {
         try {
-            const response = await axiosInstance.get("/director/task");
+            const response = await axiosInstance.get("/director/task", { params });
             return response.data;
         } catch (error) {
             throw error;

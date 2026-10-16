@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetDirectorActivity } from "@/hooks/owner-hook/create-director.hook";
+import { formatDate, formatTime as formatNyTime } from "@/lib/datetime";
 
 const ACTIVITY_ICONS = {
   task_comment: { icon: MessageSquare, bg: "bg-blue-50 text-blue-600 border-blue-200" },
@@ -28,8 +29,7 @@ const ACTIVITY_ICONS = {
 
 const formatTime = (ts) => {
   if (!ts) return "";
-  const date = new Date(ts);
-  return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  return formatNyTime(ts, { hour: "2-digit", minute: "2-digit" });
 };
 
 const DirectorActivityModal = ({ isOpen, onClose, director }) => {
@@ -184,7 +184,7 @@ const DirectorActivityModal = ({ isOpen, onClose, director }) => {
                             </span>
                             <span>•</span>
                             <span>
-                              {act.timestamp ? new Date(act.timestamp).toLocaleDateString() : ""}
+                              {act.timestamp ? formatDate(act.timestamp, { month: "numeric", day: "numeric", year: "numeric" }) : ""}
                             </span>
                           </div>
                         </div>

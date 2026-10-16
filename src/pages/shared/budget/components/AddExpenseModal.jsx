@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { todayYmd, ymdOf } from "@/lib/datetime";
 
 const formatForInput = (dStr) => {
-  if (!dStr) return new Date().toISOString().split("T")[0];
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
-  const d = new Date(dStr);
-  if (!isNaN(d.getTime())) {
-    return d.toISOString().split("T")[0];
-  }
-  return new Date().toISOString().split("T")[0];
+  if (!dStr) return todayYmd();
+  return ymdOf(dStr) || todayYmd();
 };
 
 const AddExpenseModal = ({ isOpen, onClose, onAdd, expenseToEdit = null, isPending = false }) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(todayYmd());
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -30,7 +26,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, expenseToEdit = null, isPendi
       } else {
         setAmount("");
         setDescription("");
-        setDate(new Date().toISOString().split("T")[0]);
+        setDate(todayYmd());
       }
       setError("");
     }
@@ -49,7 +45,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdd, expenseToEdit = null, isPendi
     if (success !== false) {
       setAmount("");
       setDescription("");
-      setDate(new Date().toISOString().split("T")[0]);
+      setDate(todayYmd());
       onClose();
     }
   };

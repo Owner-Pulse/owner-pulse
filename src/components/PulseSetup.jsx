@@ -8,6 +8,7 @@ const TEXT_DIM = "#94A3B8";
 
 // ─── Setup items by no_data key ──────────────────────────────────
 // `to` is per role; a missing path renders the item as plain text.
+// `anchor` scrolls to that element on the target page (e.g. the Collections card on the overview).
 const DAILY_ACTIVITY = {
   id: "daily_activity",
   label: "Log daily activity",
@@ -27,8 +28,9 @@ const SETUP_ITEMS = {
   },
   late_payments_ar: {
     id: "late_payments_ar",
-    label: "Connect QuickBooks or upload billing data",
-    to: { owner: "/director/data-import", director: "/director/data-import" },
+    label: "Enter this week's collections",
+    to: { owner: "/owner/overview", director: "/director/overview" },
+    anchor: "collections-card",
   },
   class_score: {
     id: "class_score",
@@ -104,6 +106,10 @@ const PulseSetup = ({ noDataKeys = [], role = "owner", className = "" }) => {
                 {to ? (
                   <Link
                     to={to}
+                    onClick={() =>
+                      item.anchor &&
+                      setTimeout(() => document.getElementById(item.anchor)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50)
+                    }
                     className="inline-flex items-center gap-0.5 underline underline-offset-2 decoration-white/20 hover:text-white transition-colors"
                   >
                     {item.label}

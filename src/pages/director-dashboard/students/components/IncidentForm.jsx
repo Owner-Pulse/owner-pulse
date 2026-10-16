@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import { useGetStudentsByProcareClassroom } from "@/hooks/director-hook/student-manage.hook";
 import SearchableStudentSelect, { getStudentId, getStudentName } from "./SearchableStudentSelect";
+import { todayYmd } from "@/lib/datetime";
 
 const AREAS = ["Classroom", "Playground", "Cafeteria", "Hallway", "Bathroom", "Outside", "Pickup/Dropoff"];
 
@@ -75,7 +76,7 @@ const IncidentForm = ({ onAdd, onClose, isLoading = false }) => {
     setIsSubmitting(true);
     onAdd({
       id: Date.now(),
-      date: new Date().toISOString().split("T")[0],
+      date: todayYmd(),
       student: form.student,
       childId: form.childId,
       procare_child_id: form.childId,

@@ -1,10 +1,10 @@
 import React from "react";
+import { daysFromToday } from "@/lib/datetime";
 
 const fmtRelative = (d) => {
   if (!d) return "Recently";
-  const dateObj = new Date(d);
-  if (isNaN(dateObj.getTime())) return "Recently";
-  const diff = Math.ceil((dateObj - new Date()) / 86400000);
+  const diff = daysFromToday(d);
+  if (diff === null) return "Recently";
   if (diff === 0) return "Today";
   if (diff === -1) return "Yesterday";
   return `${Math.abs(diff)} days ago`;

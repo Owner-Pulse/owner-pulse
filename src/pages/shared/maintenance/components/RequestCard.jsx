@@ -4,10 +4,12 @@ import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDow
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
+import EscalationSummary from "@/components/EscalationSummary";
+import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
 
-const fmtDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtDate = (dateStr) => formatDate(dateStr, { month: "short", day: "numeric" });
 const daysSince = (dateStr) => {
-  const diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+  const diff = daysBetween(dateStr, todayYmd()) || 0;
   return diff < 0 ? 0 : diff;
 };
 const fmtMoney = (n) => "$" + Math.round(n).toLocaleString();
@@ -103,6 +105,8 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
               </div>
             </div>
           </div>
+
+          {req.escalation && <EscalationSummary escalation={req.escalation} className="mt-2" />}
 
           {isOwner && (
             <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">

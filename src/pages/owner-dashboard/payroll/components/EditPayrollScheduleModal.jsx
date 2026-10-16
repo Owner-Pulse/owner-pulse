@@ -34,7 +34,7 @@ const EditPayrollScheduleModal = ({ isOpen, onClose, period }) => {
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
+    if (startDate > endDate) {
       setModalError("Start date cannot be after end date.");
       return;
     }

@@ -3,10 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Leadership dashboard for HCLC — Owner and Director · Asst. Principal views.",
+  "description": "Leadership dashboard for HCLC \u2014 Owner and Director \u00b7 Asst. Principal views.",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node api.js && vite",
+    "build": "node api.js && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

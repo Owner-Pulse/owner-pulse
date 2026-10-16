@@ -9,7 +9,8 @@ const itemVariants = {
 };
 
 const BillingCard = ({ data, onNavigate }) => {
-  const summary = data?.summary || { past_due_total: 30693, formatted: "$30,693.00", families_count: 250 };
+  // billing_late_payments from the Procare billing import (source: procare_import) — not the weekly Collections balance
+  const summary = data?.summary || { past_due_total: 0, formatted: "$0.00", families_count: 0 };
   const familyList = data?.family_list || [];
 
   return (
@@ -19,12 +20,13 @@ const BillingCard = ({ data, onNavigate }) => {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <DollarSign size={16} className="text-[#AE4A3E]" />
-              Billing / Late Payments
+              Late Payments
             </CardTitle>
             <span className="text-xs text-[#1E3A5F] cursor-pointer hover:underline" onClick={() => onNavigate("/director/billing")}>View all</span>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
+          <p className="text-[10px] text-gray-400">From the Procare billing import</p>
           <div className="p-3 rounded-lg bg-[#AE4A3E]/[0.06] border border-[#AE4A3E]/20">
             <p className="text-sm font-extrabold text-[#8A362C]">{summary.formatted}</p>
             <p className="text-[10px] text-[#8A362C]">past due across {summary.families_count} families</p>

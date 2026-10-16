@@ -1,12 +1,24 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Send, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { useCreateDirectorMaintenance, useUpdateDirectorMaintenance } from "@/hooks/director-hook/maintenance.hook";
 import { useUpdateOwnerMaintenance } from "@/hooks/owner-hook/maintenance.hook";
 
+import { EscalationQuestions, escalationModal } from "@/components/EscalationPrompt";
+import {
+  EMPTY_ESCALATION,
+  cleanEscalation,
+  clearEditedErrors,
+  hasEscalationError,
+  isEscalationValid,
+  parseValidationErrors,
+} from "@/lib/escalation";
+
 import toast from "react-hot-toast";
+import { todayYmd } from "@/lib/datetime";
+
 
 const ASSIGNED_TO_OPTIONS = [
   { value: "owner", label: "Owner" },
@@ -75,6 +87,19 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
   const [error, setError] = useState("");
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  // A Director reporting a new issue answers the two escalation questions as step 2
+  const needsEscalation = !editItem && !isOwner;
+  const [step, setStep] = useState(1);
+  const [escalation, setEscalation] = useState(EMPTY_ESCALATION);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const onQuestions = needsEscalation && step === 2;
+  const canSubmit = !isPending && (!onQuestions || isEscalationValid(escalation));
+
+  const changeEscalation = (next) => {
+    setFieldErrors((prev) => clearEditedErrors(prev, escalation, next));
+    setEscalation(next);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -84,6 +109,10 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
     if (!form.assignedTo) { setError("Please select who this is assigned to."); return; }
     if (form.assignedTo === "staff" && !form.assignedStaff) { setError("Please select a staff member."); return; }
     if (form.assignedTo === "other" && !form.assignedOther.trim()) { setError("Please describe who this is assigned to."); return; }
+
+    if (needsEscalation && step === 1) { setStep(2); return; }
+    if (!canSubmit) return;
+    setFieldErrors({});
 
     let assignedLabel = ASSIGNED_TO_OPTIONS.find((o) => o.value === form.assignedTo)?.label || form.assignedTo;
     if (form.assignedTo === "staff") assignedLabel += `: ${form.assignedStaff}`;
@@ -96,6 +125,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
         cost: String(Number(form.estCost) || 0),
         assign_to: assignedLabel,
     };
+    if (needsEscalation) payload.escalation = cleanEscalation(escalation);
 
     try {
         if (editItem) {
@@ -115,7 +145,7 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
             issue: form.issue.trim(),
             priority: form.priority,
             status: editItem ? editItem.status : "open",
-            logged: editItem ? editItem.logged : new Date().toISOString().split("T")[0],
+            logged: editItem ? editItem.logged : todayYmd(),
             estCost: Number(form.estCost) || 0,
             submittedBy: editItem ? editItem.submittedBy : (user?.name || "Director"),
             assignedTo: form.assignedTo,
@@ -125,23 +155,39 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
         
         onClose();
     } catch (err) {
-        toast.error(err?.response?.data?.message || "Maintenance request processing failed");
+        const errors = parseValidationErrors(err);
+        setFieldErrors(errors);
+        // Everything except the answers (location, cost, ...) goes in the form's own error box
+        const formErrors = Object.keys(errors).filter((f) => !(f in EMPTY_ESCALATION)).map((f) => errors[f]);
+        if (formErrors.length > 0) {
+            setError(formErrors.join(" "));
+            // Go back to the request fields when the answers are fine
+            if (!hasEscalationError(errors)) setStep(1);
+        } else if (Object.keys(errors).length === 0) {
+            toast.error(err?.response?.data?.message || "Maintenance request processing failed");
+        }
     }
   };
 
 
+  // The questions step opens up to the wide two-column layout on desktop
+  const modal = escalationModal(onQuestions);
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        className={modal.panel} onClick={(e) => e.stopPropagation()}>
+          <div className={`flex items-center justify-between ${modal.header}`}>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
                 {editItem ? "Edit Maintenance Request" : "New Maintenance Request"}
               </h2>
               <p className="text-sm text-gray-500 mt-0.5">
-                {editItem ? "Update the facility issue details" : "Report a facility issue"}
+                {editItem
+                  ? "Update the facility issue details"
+                  : needsEscalation
+                    ? `Step ${step} of 2 · ${step === 1 ? "Report a facility issue" : "Two questions for the Owner"}`
+                    : "Report a facility issue"}
               </p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
@@ -149,7 +195,24 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className={modal.form}>
+            <div className={modal.body}>
+            {onQuestions && (
+              <EscalationQuestions
+                value={escalation}
+                onChange={changeEscalation}
+                errors={fieldErrors}
+                disabled={isPending}
+                leading={
+                  <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-xs text-gray-600 break-words">
+                    <span className="font-bold text-gray-900">{form.location.trim()}</span> · {form.issue.trim()}
+                  </div>
+                }
+              />
+            )}
+
+            {!onQuestions && (
+            <>
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">Location *</label>
               <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)}
@@ -211,26 +274,40 @@ const AddMaintenanceForm = ({ onAdd, onClose, editItem }) => {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
               </div>
             )}
+            </>
+            )}
 
             {error && (
               <div className="flex items-center gap-2 p-3 bg-[#AE4A3E]/10 rounded-xl text-xs text-[#8A362C] font-medium">
-                <AlertTriangle size={14} /> {error}
+                <AlertTriangle size={14} className="shrink-0" /> {error}
               </div>
             )}
+            </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
-              <Button type="submit" disabled={isPending} className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
-                {isPending ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                ) : (
-                  <Send size={16} className="mr-2" />
-                )}
-                {isPending ? "Submitting..." : editItem ? "Update Request" : "Submit Request"}
-              </Button>
+            <div className={modal.footer}>
+              {onQuestions ? (
+                <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={isPending} className="flex-1">
+                  <ArrowLeft size={16} className="mr-2" /> Back
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
+              )}
+              {needsEscalation && step === 1 ? (
+                <Button type="submit" className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+                  Continue <ArrowRight size={16} className="ml-2" />
+                </Button>
+              ) : (
+                <Button type="submit" disabled={!canSubmit} className="flex-1 bg-[#1E3A5F] hover:bg-[#15294A] text-white">
+                  {isPending ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Send size={16} className="mr-2" />
+                  )}
+                  {isPending ? "Submitting..." : editItem ? "Update Request" : needsEscalation ? "Send to Owner" : "Submit Request"}
+                </Button>
+              )}
             </div>
           </form>
-        </div>
       </motion.div>
     </div>
   );
