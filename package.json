@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Leadership dashboard for HCLC \u2014 Owner and Director \u00b7 Asst. Principal views.",
+  "description": "Leadership dashboard for HCLC — Owner and Director · Asst. Principal views.",
   "scripts": {
     "dev": "node api.js && vite",
     "build": "node api.js && vite build",
@@ -30,6 +30,7 @@
     "framer-motion": "^12.40.0",
     "laravel-echo": "^2.4.0",
     "lucide-react": "^0.383.0",
+    "mammoth": "^1.13.0",
     "pusher-js": "^8.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
