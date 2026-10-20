@@ -280,7 +280,7 @@ const ClassroomsPage = () => {
         onClose={() => setIsConfirmDeleteOpen(false)}
         onConfirm={confirmDeleteClassroom}
         title="Delete Classroom"
-        message="Are you sure you want to delete this classroom? This will purge all financial records, capacity stats, and allocations for this classroom immediately."
+        message="Delete this classroom? Enrolled students and assigned teachers will remain in the system but will no longer be linked to this room."
         confirmText="Delete Classroom"
         cancelText="Keep Classroom"
         type="danger"

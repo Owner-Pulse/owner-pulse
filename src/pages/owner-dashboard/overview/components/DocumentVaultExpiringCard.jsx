@@ -40,9 +40,22 @@ const DocumentVaultExpiringCard = () => {
       ) : (
         <ul className="space-y-2">
           {preview.map((doc) => (
-            <li key={doc.id} className="flex items-center justify-between gap-2 text-xs">
-              <span className="truncate font-medium text-gray-800">{doc.title}</span>
-              <span className="shrink-0 text-gray-500">{doc.expiry_date ? formatDate(doc.expiry_date) : "—"}</span>
+            <li key={doc.id}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (doc.compliance_item_id) {
+                    navigate(`/owner/compliance#compliance-item-${doc.compliance_item_id}`);
+                  } else {
+                    navigate(`/owner/document-vault/${doc.id}`);
+                  }
+                }}
+                className="flex w-full items-center justify-between gap-2 text-left text-xs hover:text-[#1E3A5F]"
+              >
+                <span className="truncate font-medium text-gray-800">{doc.title}</span>
+                <span className="shrink-0 text-gray-500">{doc.expiry_date ? formatDate(doc.expiry_date) : "—"}</span>
+              </button>
             </li>
           ))}
         </ul>

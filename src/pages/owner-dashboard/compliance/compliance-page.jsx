@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -46,7 +46,10 @@ import PulseImpactModal from "./components/PulseImpactModal";
 import InsuranceWorkflowModal from "./components/InsuranceWorkflowModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import CompleteComplianceModal from "./components/CompleteComplianceModal";
+import ComplianceVaultDocuments from "./components/ComplianceVaultDocuments";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import DocumentVaultUploadModal from "@/pages/shared/document-vault/document-vault-upload-modal";
+import { useDocumentVaultCategories } from "@/hooks/document-vault.hook";
 import { formatDate } from "@/lib/datetime";
 
 const containerVariants = {
@@ -87,6 +90,8 @@ const CompliancePage = () => {
   const [togglingChecklistId, setTogglingChecklistId] = useState(null);
   const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
   const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
+  const [attachItem, setAttachItem] = useState(null);
+  const { categories: vaultCategories } = useDocumentVaultCategories("owner");
 
   // Normalize API compliance items including completed_items
   const items = useMemo(() => {
@@ -151,10 +156,18 @@ const CompliancePage = () => {
           author: l.user_name || l.author || "User",
           text: l.note || l.text || "",
         })),
+        documents: c.documents || [],
+        document_proof: c.document_proof || "none",
         raw: c,
       };
     });
   }, [complianceItems, overviewData]);
+
+  useEffect(() => {
+    const id = window.location.hash?.replace("#", "");
+    if (!id) return;
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [items]);
 
   // Compute stats from Overview API
   const stats = useMemo(() => {
@@ -469,7 +482,7 @@ const CompliancePage = () => {
                   const pct = clamp(computedTimePct, 0, 100);
 
                   return (
-                    <motion.div key={item.id} variants={itemVariants}>
+                    <motion.div key={item.id} id={`compliance-item-${item.id}`} variants={itemVariants}>
                       <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border-l-4 p-4 md:p-5 ${
                         item.is_completed
                           ? "border-l-[#3E7A54]"
@@ -564,6 +577,8 @@ const CompliancePage = () => {
                             </div>
                           </div>
                         </div>
+
+                        <ComplianceVaultDocuments item={item} role="owner" onAttach={setAttachItem} />
 
                         {/* Expiration Progress Bar */}
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
@@ -707,7 +722,7 @@ const CompliancePage = () => {
                   const pct = clamp(computedTimePct, 0, 100);
 
                   return (
-                    <motion.div key={item.id} variants={itemVariants}>
+                    <motion.div key={item.id} id={`compliance-item-${item.id}`} variants={itemVariants}>
                       <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border-l-4 p-4 md:p-5 ${
                         item.is_completed
                           ? "border-l-[#3E7A54]"
@@ -802,6 +817,8 @@ const CompliancePage = () => {
                             </div>
                           </div>
                         </div>
+
+                        <ComplianceVaultDocuments item={item} role="owner" onAttach={setAttachItem} />
 
                         {/* Expiration Progress Bar */}
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
@@ -958,6 +975,15 @@ const CompliancePage = () => {
         onClose={() => setIsInsuranceModalOpen(false)}
         insuranceItem={insuranceItem}
         onUpdateWorkflow={() => {}}
+      />
+
+      <DocumentVaultUploadModal
+        isOpen={!!attachItem}
+        onClose={() => setAttachItem(null)}
+        role="owner"
+        categories={vaultCategories}
+        complianceItem={attachItem}
+        onSuccess={() => setAttachItem(null)}
       />
 
       <CompleteComplianceModal

@@ -9,7 +9,7 @@ import {
   GraduationCap,
   NotebookPen,
   Pencil,
-  PiggyBank,
+  DollarSign,
   RotateCcw,
   Save,
   UserRound,
@@ -174,7 +174,7 @@ const WeeklyReportDetailPage = () => {
         <AttendanceGrid days={days} cells={form.headcount} totals={serverGridTotals(report.headcount)} />
       </Section>
 
-      <Section tone="collections" icon={PiggyBank} title="Collections" hint="From the Account Balance Summary">
+      <Section tone="collections" icon={DollarSign} title="Collections" hint="From the Account Balance Summary">
         <div className="sm:max-w-xs">
           <Value label="Total in collections" value={toNum(report.collections_balance)} money strong />
         </div>

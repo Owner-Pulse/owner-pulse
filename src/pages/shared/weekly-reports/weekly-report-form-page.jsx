@@ -14,7 +14,7 @@ import {
   Info,
   Loader2,
   NotebookPen,
-  PiggyBank,
+  DollarSign,
   RefreshCw,
   Save,
   Upload,
@@ -100,6 +100,12 @@ const WeeklyReportFormPage = () => {
   const fileInputRef = useRef(null);
   const formRef = useRef(form);
   formRef.current = form;
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  const pdfRef = useRef(pdf);
+  pdfRef.current = pdf;
+  const extractRef = useRef(extract);
+  extractRef.current = extract;
 
   const reading = !!extract && !extract.applied && !extract.stopped;
   const { extraction, isError: extractionFailed, error: extractionError } = useExtraction(extract?.id, extract?.week, reading);
@@ -313,6 +319,19 @@ const WeeklyReportFormPage = () => {
     return () => clearTimeout(t);
   }, [dirty, busy, reading, form, save]);
 
+  // Back to the list (or any other page) writes the draft first, so the week card shows the numbers just entered.
+  useEffect(() => {
+    return () => {
+      if (!dirtyRef.current || !formRef.current.week_start) return;
+      if (id && initRef.current !== id) return;
+      const currentPdf = pdfRef.current;
+      const newFile = currentPdf.file && !currentPdf.uploaded ? currentPdf.file : null;
+      const extractionId = newFile && extractRef.current?.id ? extractRef.current.id : null;
+      const { payload } = buildPayload(formRef.current, extractionId ? null : newFile, extractionId);
+      saveDraft({ payload, silent: true });
+    };
+  }, [saveDraft]);
+
   const handleConfirm = async () => {
     let reportId = id;
     if (dirty || !reportId || (pdf.file && !pdf.uploaded)) {
@@ -445,7 +464,7 @@ const WeeklyReportFormPage = () => {
         )}
       </Section>
 
-      <Section tone="collections" icon={PiggyBank} title="Collections" hint="From the Account Balance Summary">
+      <Section tone="collections" icon={DollarSign} title="Collections" hint="From the Account Balance Summary">
         <div className="sm:max-w-xs">
           <Field id="collections_balance" fromPdf={fromPdf.has("collections_balance")} label="Total in collections" hint="This updates the Collections card." error={errors.collections_balance}>
             <MoneyInput id="collections_balance" value={form.collections_balance} onChange={set("collections_balance")} error={errors.collections_balance} disabled={busy} />

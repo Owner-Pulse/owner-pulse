@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { PiggyBank, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { DollarSign, Search, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { itemVariants, fmtMoneyShort } from "../cashflow.utils";
 
@@ -31,7 +31,7 @@ const BudgetVsActualCard = ({ categories = [], totalSpent = 0, totalBudget = 0, 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <PiggyBank size={18} className="text-[#1E3A5F]" />
+                <DollarSign size={18} className="text-[#1E3A5F]" />
                 Annual Budget vs Actual
               </CardTitle>
               <CardDescription>

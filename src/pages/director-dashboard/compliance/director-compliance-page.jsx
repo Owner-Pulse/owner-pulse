@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
@@ -18,6 +18,8 @@ import PulseImpactModal from "@/pages/owner-dashboard/compliance/components/Puls
 import DeleteConfirmationModal from "@/pages/owner-dashboard/compliance/components/DeleteConfirmationModal";
 import CompleteComplianceModal from "@/pages/owner-dashboard/compliance/components/CompleteComplianceModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import DocumentVaultUploadModal from "@/pages/shared/document-vault/document-vault-upload-modal";
+import { useDocumentVaultCategories } from "@/hooks/document-vault.hook";
 
 // Local components
 import { containerVariants } from "./components/variants";
@@ -55,6 +57,8 @@ const DirectorCompliancePage = () => {
   const [deleteModalItem, setDeleteModalItem] = useState(null);
   const [togglingChecklistId, setTogglingChecklistId] = useState(null);
   const [isPulseModalOpen, setIsPulseModalOpen] = useState(false);
+  const [attachItem, setAttachItem] = useState(null);
+  const { categories: vaultCategories } = useDocumentVaultCategories("director");
 
   // ── Data Normalization ─────────────────────────────────────────────────────
   const items = useMemo(() => {
@@ -136,10 +140,18 @@ const DirectorCompliancePage = () => {
           author: l.user_name || l.author || "User",
           text: l.note || l.text || "",
         })),
+        documents: c.documents || [],
+        document_proof: c.document_proof || "none",
         raw: c,
       };
     });
   }, [complianceItems, overviewData]);
+
+  useEffect(() => {
+    const id = window.location.hash?.replace("#", "");
+    if (!id) return;
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [items]);
 
   // ── Derived Stats ──────────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -293,6 +305,7 @@ const DirectorCompliancePage = () => {
     onComplete: setConfirmCompleteItem,
     onLog: setLogModalItem,
     onToggleChecklist: handleToggleChecklist,
+    onAttach: setAttachItem,
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -399,6 +412,15 @@ const DirectorCompliancePage = () => {
         item={completeModalItem}
         onComplete={async (id) => completeComplianceItem({ id, data: {} })}
         isLoading={isCompleting}
+      />
+
+      <DocumentVaultUploadModal
+        isOpen={!!attachItem}
+        onClose={() => setAttachItem(null)}
+        role="director"
+        categories={vaultCategories}
+        complianceItem={attachItem}
+        onSuccess={() => setAttachItem(null)}
       />
 
       <ConfirmationModal

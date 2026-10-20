@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 import { AlertTriangle, CheckCircle2, Loader2, UploadCloud } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 import { useAdpHoursImport, useAdpHoursImports, useAdpHoursPreview } from "@/hooks/adp-hours.hook";
+import { FileUploadField } from "@/components/ui/FileUploadButton";
 
 const useImportRole = () => (useLocation().pathname.startsWith("/owner") ? "owner" : "director");
 
@@ -101,15 +102,17 @@ const AdpHoursImportPanel = () => {
               className="mt-1 w-full h-10 px-3 rounded-xl border border-gray-200"
             />
           </label>
-          <label className="block text-sm">
-            <span className="font-semibold text-gray-700">CSV file</span>
-            <input
-              type="file"
+          <div className="text-sm">
+            <FileUploadField
+              label="CSV file"
               accept=".csv,text/csv"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mt-1 w-full text-sm"
+              disabled={busy}
+              resetOnSelect={false}
+              onFileSelect={(selected) => setFile(selected)}
+              fileName={file?.name ?? null}
+              labelClassName="text-sm font-semibold text-gray-700"
             />
-          </label>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

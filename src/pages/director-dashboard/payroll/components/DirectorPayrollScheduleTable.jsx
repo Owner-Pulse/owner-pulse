@@ -35,7 +35,7 @@ const DirectorPayrollScheduleTable = ({ schedule = [] }) => {
           <div>
             <h3 className="text-sm font-bold text-gray-800">Bi-Weekly Submission Schedule</h3>
             <p className="text-xs text-gray-400">
-              View active payroll submission schedules for the academic / fiscal year.
+              Add, edit, or delete payroll cycles. Submitted cycles stay on record for the owner to review.
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ const DirectorPayrollScheduleTable = ({ schedule = [] }) => {
               {schedule.length === 0 && (
                 <tr>
                   <td colSpan="7" className="py-8 text-center text-gray-400 text-xs">
-                    No payroll periods scheduled. Click "Schedule Period" above to generate a cycle.
+                    No payroll cycles yet. Use Schedule Cycle to add one period or a bi-weekly series.
                   </td>
                 </tr>
               )}

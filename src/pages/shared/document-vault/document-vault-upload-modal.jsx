@@ -2,7 +2,7 @@ import React from "react";
 import { useUploadDocumentVault } from "@/hooks/document-vault.hook";
 import VaultDocumentForm from "./vault-document-form";
 
-const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess, initialCategoryId = "" }) => {
+const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess, initialCategoryId = "", complianceItem = null }) => {
   const { upload, isPending, fieldErrors } = useUploadDocumentVault(role);
 
   if (!isOpen) return null;
@@ -14,6 +14,7 @@ const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess
     if (values.expiry_date) fd.append("expiry_date", values.expiry_date);
     if (values.notes) fd.append("notes", values.notes);
     if (values.file) fd.append("file", values.file);
+    if (complianceItem?.id) fd.append("compliance_item_id", String(complianceItem.id));
     try {
       const res = await upload(fd);
       onSuccess?.(res?.data?.id);
@@ -34,10 +35,10 @@ const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess
           onSubmit={submit}
           initial={{
             category_id: initialCategoryId ? String(initialCategoryId) : "",
-            title: "",
+            title: complianceItem?.item || complianceItem?.name || "",
             intent: "track",
             trackBy: "expiry",
-            expiry_date: "",
+            expiry_date: complianceItem?.expires || complianceItem?.expiration_date || "",
             reviewMonths: "12",
             keptNotes: "",
           }}

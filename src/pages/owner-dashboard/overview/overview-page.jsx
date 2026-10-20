@@ -31,6 +31,7 @@ import PulseSection from "./components/PulseSection";
 import AtRiskStudentsCard from "./components/AtRiskStudentsCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import TaskBoard from "@/components/TaskBoard";
+import OwnerDependenceCard from "@/pages/director-dashboard/overview/components/OwnerDependenceCard";
 import BudgetOverviewCard from "./components/BudgetOverviewCard";
 import EnrollmentChart from "./components/EnrollmentChart";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
@@ -335,6 +336,9 @@ const OverviewPage = () => {
 
       {/* Task ownership board */}
       <TaskBoard data={ownerOverviewData?.task_board} role="owner" noData={!ownerOverviewData?.task_board} onNavigate={go} onRefresh={refetch} />
+
+      {/* Owner Dependence Index (same metric as director overview) */}
+      <OwnerDependenceCard data={ownerOverviewData?.owner_dependence_index} />
 
       {/* Bottom Section — Budget + Enrollment + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

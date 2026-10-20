@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-  Users, Wrench, ClipboardList, PiggyBank,
+  Users, Wrench, ClipboardList, DollarSign,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useGetDirectorOverview } from "@/hooks/director-hook/overview.hook";
@@ -155,7 +155,7 @@ const DirectorOverviewPage = () => {
               ? `${collectionsKpi.families_count} families in collections`
               : "Balance in collections"
           }
-          icon={PiggyBank}
+          icon={DollarSign}
           accent="collections"
           noData={!collectionsEntered}
           onClick={scrollToCollections}

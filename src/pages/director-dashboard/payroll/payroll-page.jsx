@@ -283,7 +283,7 @@ const PayrollPage = () => {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Payroll</h1>
           {activeTab === "submit" ? (
             <p className="text-sm text-gray-500 mt-1">
-              Pay period Ending {fmtDate(periodEnding)} · Replaces bi-weekly email to Owner
+              Pay period ending {fmtDate(periodEnding)}. Submit this run for the owner to review.
             </p>
           ) : activeTab === "history" ? (
             <p className="text-sm text-gray-500 mt-1">
@@ -291,7 +291,7 @@ const PayrollPage = () => {
             </p>
           ) : (
             <p className="text-sm text-gray-500 mt-1">
-              Schedule bi-weekly payroll submission periods.
+              Create and update the bi-weekly payroll cycles, then submit each period.
             </p>
           )}
         </div>
@@ -326,23 +326,25 @@ const PayrollPage = () => {
                   : "text-gray-500 hover:text-gray-900"
               }`}
             >
-              Payroll Schedule ({displaySchedules.length})
+              Payroll Cycles ({displaySchedules.length})
             </button>
           </div>
 
-          {activeTab === "submit" ? (
-            payrollDays <= 3 && payrollDays >= 0 ? (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#AE4A3E]">
-                <AlertTriangle size={12} /> {payrollDays}d until due
-              </span>
-            ) : null
-          ) : activeTab === "schedule" ? (
+          {(activeTab === "submit" || activeTab === "schedule") && (
             <Button
-              onClick={() => setIsAddPeriodOpen(true)}
+              onClick={() => {
+                setActiveTab("schedule");
+                setIsAddPeriodOpen(true);
+              }}
               className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-semibold rounded-xl text-xs md:text-sm flex items-center gap-1.5"
             >
-              <Plus size={16} /> Schedule Period
+              <Plus size={16} /> Schedule Cycle
             </Button>
+          )}
+          {activeTab === "submit" && payrollDays <= 3 && payrollDays >= 0 ? (
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#AE4A3E]/10 text-[#AE4A3E]">
+              <AlertTriangle size={12} /> {payrollDays}d until due
+            </span>
           ) : null}
         </div>
       </motion.div>
@@ -413,9 +415,9 @@ const PayrollPage = () => {
               className="bg-[#B78A2F]/10 border border-[#B78A2F]/25 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div>
-                <p className="text-sm font-semibold text-gray-900">No payroll cycles scheduled yet</p>
+                <p className="text-sm font-semibold text-gray-900">No payroll cycles yet</p>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Add bi-weekly periods under Payroll Schedule so directors can submit payroll.
+                  Add a cycle before submitting. The owner reviews the payroll after you send it.
                 </p>
               </div>
               <Button
@@ -423,7 +425,7 @@ const PayrollPage = () => {
                 onClick={() => setActiveTab("schedule")}
                 className="bg-[#1E3A5F] hover:bg-[#15294A] text-white rounded-xl text-xs font-semibold"
               >
-                Open Payroll Schedule
+                Open Payroll Cycles
               </Button>
             </motion.div>
           )}

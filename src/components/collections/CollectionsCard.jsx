@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, BellRing, History, PiggyBank, Plus, Pencil } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, BellRing, History, DollarSign, Plus, Pencil } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -154,7 +154,7 @@ const CollectionsCard = ({ role, data }) => {
         <div className="flex items-center justify-between gap-2 px-4 sm:px-5 pt-4">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 min-w-0">
             <span className={`p-1.5 rounded-lg shrink-0 ${isEmpty ? "bg-gray-100 text-gray-600" : ACCENTS.collections.icon}`}>
-              <PiggyBank size={16} />
+              <DollarSign size={16} />
             </span>
             Collections
           </h3>
@@ -182,7 +182,7 @@ const CollectionsCard = ({ role, data }) => {
           /* Empty state */
           <div className="px-5 py-8 flex flex-col items-center text-center">
             <div className={`p-3 rounded-2xl ${STATUS.none.soft} ${STATUS.none.text}`}>
-              <PiggyBank size={26} />
+              <DollarSign size={26} />
             </div>
             <p className="text-sm font-semibold text-gray-900 mt-3">No collections entered yet</p>
             <p className="text-xs text-gray-500 mt-1 max-w-xs">

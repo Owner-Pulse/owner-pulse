@@ -25,7 +25,7 @@ export const payrollService = {
 
     generate_schedule: async (axiosInstance, params) => {
         try {
-            const response = await axiosInstance.post("/payroll/schedules", params);
+            const response = await axiosInstance.post("/director/payroll/schedules", params);
             return response.data;
         } catch (error) {
             throw error;
@@ -37,7 +37,7 @@ export const payrollService = {
 
     delete_schedule: async (axiosInstance, id) => {
         try {
-            const response = await axiosInstance.delete(`/payroll/schedules/${id}`);
+            const response = await axiosInstance.delete(`/director/payroll/schedules/${id}`);
             return response.data;
         } catch (error) {
             throw error;
@@ -49,7 +49,7 @@ export const payrollService = {
 
     update_schedule: async (axiosInstance, id, data) => {
         try {
-            const response = await axiosInstance.post(`/payroll/schedules/${id}`, data);
+            const response = await axiosInstance.post(`/director/payroll/schedules/${id}`, data);
             return response.data;
         } catch (error) {
             throw error;

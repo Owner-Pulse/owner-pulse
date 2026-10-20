@@ -57,6 +57,9 @@ export const OwnerOverviewSkeleton = () => {
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
 
+      <Skeleton className="h-72 w-full rounded-xl" />
+      <Skeleton className="h-40 w-full rounded-xl" />
+
       {/* Bottom Section Skeletons */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <Skeleton className="h-80 w-full rounded-xl" />

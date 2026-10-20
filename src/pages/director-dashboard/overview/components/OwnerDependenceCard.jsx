@@ -62,7 +62,7 @@ const OwnerDependenceCard = ({ data }) => {
         <div className={`px-4 py-2.5 flex items-center justify-between gap-2 border-b ${tone.soft} ${tone.border} ${tone.text}`}>
           <div className="flex items-center gap-2 min-w-0">
             <UserCheck size={18} className="shrink-0" />
-            <p className="text-sm font-bold break-words">Owner Dependence Index (30-day)</p>
+            <p className="text-sm font-bold break-words">Owner Dependence Index (365-day)</p>
           </div>
           <span className={`text-[10px] font-bold uppercase border px-2 py-0.5 rounded-full shrink-0 ${tone.badge}`}>
             {statusLabel}
