@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, DollarSign, AlertTriangle, Loader2 } from "lucide-react";
+import { X, Save, AlertTriangle, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUpdateCategoryBudgets } from "@/hooks/owner-hook/budget.hook";
+import { useUpdateCategoryBudgets, useDeleteCategoryBudget } from "@/hooks/owner-hook/budget.hook";
+import toast from "react-hot-toast";
 
 const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
 
@@ -16,7 +17,11 @@ const DeclareBudgetModal = ({
   subtitle,
 }) => {
   const { updateCategoryBudget, isPending } = useUpdateCategoryBudgets();
+  const { deleteCategoryBudget, isPending: isDeleting } = useDeleteCategoryBudget();
   const [localCategories, setLocalCategories] = useState([]);
+  const [removedCategories, setRemovedCategories] = useState([]);
+  const [newName, setNewName] = useState("");
+  const [newBudget, setNewBudget] = useState("");
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
@@ -30,6 +35,9 @@ const DeclareBudgetModal = ({
           type: c.type || "school",
         }))
       );
+      setRemovedCategories([]);
+      setNewName("");
+      setNewBudget("");
       setApiError("");
     }
   }, [categories, isOpen]);
@@ -52,21 +60,71 @@ const DeclareBudgetModal = ({
   const exceededBy = Math.max(0, totalAllocated - limitNum);
   const remainingHeadroom = Math.max(0, limitNum - totalAllocated);
 
+  const handleAddRow = () => {
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      setApiError("Enter a category name.");
+      return;
+    }
+    if (localCategories.some((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase())) {
+      setApiError("That category is already in the list.");
+      return;
+    }
+    setLocalCategories((prev) => [
+      ...prev,
+      {
+        name: trimmed,
+        budget: parseFloat(newBudget) || 0,
+        spent: 0,
+        id: null,
+        type: "school",
+        isNew: true,
+      },
+    ]);
+    setNewName("");
+    setNewBudget("");
+    setApiError("");
+  };
+
+  const handleRemoveRow = (index) => {
+    setLocalCategories((prev) => {
+      const target = prev[index];
+      if (target && !target.isNew) {
+        setRemovedCategories((current) => [...current, target]);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isExceeded || isPending) return;
+    if (isExceeded || isPending || isDeleting) return;
+    if (localCategories.length === 0 && removedCategories.length === 0) return;
     setApiError("");
 
-    const payload = {
-      categories: localCategories.map((c) => ({
-        category_name: c.name,
-        budget_limit: Number(c.budget) || 0,
-        type: c.type || "school",
-      })),
-    };
-
     try {
-      await updateCategoryBudget(payload);
+      for (const cat of removedCategories) {
+        await deleteCategoryBudget({
+          id: cat.id || undefined,
+          category_name: cat.name,
+          type: cat.type || "school",
+          remove: true,
+          silent: true,
+        });
+      }
+
+      if (localCategories.length > 0) {
+        await updateCategoryBudget({
+          silent: true,
+          categories: localCategories.map((c) => ({
+            category_name: c.name,
+            budget_limit: Number(c.budget) || 0,
+            type: c.type || "school",
+          })),
+        });
+      }
+
+      toast.success("Budget categories saved.");
       if (onSuccessRefetch) onSuccessRefetch();
       onClose();
     } catch (err) {
@@ -146,16 +204,54 @@ const DeclareBudgetModal = ({
 
               {/* Form Category Inputs */}
               <form id="bulk-category-budget-form" onSubmit={handleSubmit} className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="New category name"
+                    className="flex-1 h-10 px-3 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                  />
+                  <div className="relative w-28">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newBudget}
+                      onChange={(e) => setNewBudget(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full h-10 pl-7 pr-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/20 focus:border-[#1E3A5F]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddRow}
+                    className="h-10 px-3 rounded-xl bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs font-semibold flex items-center gap-1"
+                  >
+                    <Plus size={14} /> Add
+                  </button>
+                </div>
                 <div className="space-y-3 max-h-[42vh] overflow-y-auto pr-1">
                   {localCategories.map((cat, idx) => (
                     <div key={cat.name + idx} className="flex flex-col space-y-1.5 p-3 rounded-xl bg-gray-50/80 border border-gray-100">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-800 truncate max-w-[220px]">{cat.name}</span>
-                        {cat.spent !== undefined && (
-                          <span className="text-[10px] text-gray-500 font-medium">
-                            Spent: ${Math.round(cat.spent).toLocaleString()}
-                          </span>
-                        )}
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-xs font-bold text-gray-800 truncate">{cat.name}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {cat.spent !== undefined && (
+                            <span className="text-[10px] text-gray-500 font-medium">
+                              Spent: ${Math.round(cat.spent).toLocaleString()}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRow(idx)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:bg-red-100 hover:text-red-600"
+                            title="Delete category"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
@@ -190,10 +286,10 @@ const DeclareBudgetModal = ({
                 <Button
                   type="submit"
                   form="bulk-category-budget-form"
-                  disabled={isExceeded || isPending}
+                  disabled={isExceeded || isPending || isDeleting}
                   className="bg-[#1E3A5F] hover:bg-[#15294A] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 h-10 px-4 disabled:opacity-50"
                 >
-                  {isPending ? (
+                  {isPending || isDeleting ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
                       Saving...

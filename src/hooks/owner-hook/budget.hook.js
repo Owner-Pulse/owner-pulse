@@ -185,6 +185,7 @@ export const useGetCategoryBudgets = (params = {}) => {
         isLoading,
         isFetching,
         isError,
+        isSuccess,
         error,
         refetch,
     } = useQuery({
@@ -202,6 +203,7 @@ export const useGetCategoryBudgets = (params = {}) => {
         isLoading,
         isFetching,
         isError,
+        isSuccess,
         error,
         refetch,
     };
@@ -220,11 +222,13 @@ export const useUpdateCategoryBudgets = () => {
     } = useMutation({
         mutationKey: ["update-category-budgets"],
         mutationFn: (payload) => getBudgetService.updateCategoryBudgets(axiosInstance, payload),
-        onSuccess: (res) => {
-            toast.success(res?.message || "Category budget updated successfully!");
+        onSuccess: (res, variables) => {
             queryClient.invalidateQueries({ queryKey: ["category-budgets"] });
             queryClient.invalidateQueries({ queryKey: ["budget"] });
             queryClient.invalidateQueries({ queryKey: ["budget-limit"] });
+            queryClient.invalidateQueries({ queryKey: ["budget-data"] });
+            if (variables?.silent) return;
+            toast.success(res?.message || "Category budget updated successfully!");
         },
         onError: (err) => {
             const exceeded = err?.response?.data?.exceeded_by_formatted;
@@ -255,11 +259,13 @@ export const useDeleteCategoryBudget = () => {
     } = useMutation({
         mutationKey: ["delete-category-budget"],
         mutationFn: (idOrPayload) => getBudgetService.deleteCategoryBudget(axiosInstance, idOrPayload),
-        onSuccess: (res) => {
-            toast.success(res?.message || "Category budget limit reset to default.");
+        onSuccess: (res, variables) => {
             queryClient.invalidateQueries({ queryKey: ["category-budgets"] });
             queryClient.invalidateQueries({ queryKey: ["budget"] });
             queryClient.invalidateQueries({ queryKey: ["budget-limit"] });
+            queryClient.invalidateQueries({ queryKey: ["budget-data"] });
+            if (variables?.silent) return;
+            toast.success(res?.message || (variables?.remove ? "Budget category deleted." : "Category budget limit reset to default."));
         },
         onError: (err) => {
             toast.error(err?.response?.data?.message || "Failed to reset category budget limit.");

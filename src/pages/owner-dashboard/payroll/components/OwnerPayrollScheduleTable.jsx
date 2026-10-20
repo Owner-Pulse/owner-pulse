@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/datetime";
 const fmtDate = (d) =>
   d ? formatDate(d, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
-const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
+const OwnerPayrollScheduleTable = ({ schedule = [], readOnly = false }) => {
   const { deleteSchedule, isPending } = useDeletePayrollSchedule();
   const [editingPeriod, setEditingPeriod] = useState(null);
 
@@ -35,7 +35,9 @@ const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
           <div>
             <h3 className="text-sm font-bold text-gray-800">Bi-Weekly Submission Schedule</h3>
             <p className="text-xs text-gray-400">
-              View and adjust active payroll schedules for the entire academic/fiscal year.
+              {readOnly
+                ? "The director creates and updates these cycles. This list is for review."
+                : "View and adjust active payroll schedules for the entire academic/fiscal year."}
             </p>
           </div>
         </div>
@@ -50,7 +52,7 @@ const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
                 <th className="py-3 px-6">Submission Due Date</th>
                 <th className="py-3 px-6 text-center">Days Remaining</th>
                 <th className="py-3 px-6">Status</th>
-                <th className="py-3 px-6 text-center">Actions</th>
+                {!readOnly && <th className="py-3 px-6 text-center">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm text-gray-700">
@@ -83,6 +85,7 @@ const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
                         {status}
                       </span>
                     </td>
+                    {!readOnly && (
                     <td className="py-3.5 px-6 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
@@ -102,14 +105,15 @@ const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
                         </button>
                       </div>
                     </td>
+                    )}
                   </tr>
                 );
               })}
 
               {schedule.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-400 text-xs">
-                    No payroll cycles scheduled. Click "Schedule Period" above to add single or bi-weekly cycles.
+                  <td colSpan={readOnly ? 6 : 7} className="py-8 text-center text-gray-400 text-xs">
+                    No payroll cycles yet. The director adds them from the director payroll page.
                   </td>
                 </tr>
               )}
@@ -118,11 +122,13 @@ const OwnerPayrollScheduleTable = ({ schedule = [] }) => {
         </div>
       </motion.div>
 
+      {!readOnly && (
       <EditPayrollScheduleModal
         isOpen={!!editingPeriod}
         onClose={() => setEditingPeriod(null)}
         period={editingPeriod}
       />
+      )}
     </>
   );
 };

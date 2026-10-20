@@ -28,13 +28,23 @@ export const getBudgetService = {
     },
 
     deleteCategoryBudget: async (axiosInstance, idOrPayload) => {
-        if (typeof idOrPayload === "number" || (typeof idOrPayload === "string" && !isNaN(Number(idOrPayload)))) {
-            const response = await axiosInstance.delete(`/settings/category-budgets/${idOrPayload}`);
+        const body = (typeof idOrPayload === "object" && idOrPayload !== null)
+            ? idOrPayload
+            : (typeof idOrPayload === "string" && Number.isNaN(Number(idOrPayload))
+                ? { category_name: idOrPayload }
+                : { id: idOrPayload });
+        const id = body.id;
+        const { silent, ...payload } = body;
+
+        if (id && !payload.remove) {
+            const response = await axiosInstance.delete(`/settings/category-budgets/${id}`);
             return response.data;
         }
-        const response = await axiosInstance.delete(`/settings/category-budgets`, {
-            data: typeof idOrPayload === "string" ? { category_name: idOrPayload } : idOrPayload,
-        });
+        if (id && payload.remove) {
+            const response = await axiosInstance.delete(`/settings/category-budgets/${id}`, { data: payload });
+            return response.data;
+        }
+        const response = await axiosInstance.delete(`/settings/category-budgets`, { data: payload });
         return response.data;
     },
 

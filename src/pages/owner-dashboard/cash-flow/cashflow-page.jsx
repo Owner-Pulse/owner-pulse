@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TrendingUp, PiggyBank, Wallet, Percent, Building2, ArrowUpRight } from "lucide-react";
+import { TrendingUp, DollarSign, Wallet, Percent, Building2, ArrowUpRight } from "lucide-react";
 import { containerVariants } from "./cashflow.utils";
 import CashFlowSkeleton from "./components/CashFlowSkeleton";
 import CashFlowHeader from "./components/CashFlowHeader";
@@ -44,7 +44,7 @@ const CashFlowPage = () => {
       ),
     },
     {
-      icon: PiggyBank,
+      icon: DollarSign,
       label: "Expenses (YTD)",
       value: metrics.expenses_ytd?.amount || "—",
       sub: metrics.expenses_ytd?.subtitle || "",

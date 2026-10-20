@@ -64,7 +64,7 @@ const ReportCard = ({ report, onOpen }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Total label="Cash deposited" value={totals.total_deposited} tone="text-[#2F6042]" />
+            <Total label="Cash deposited" value={totals.total_deposited ?? totals.cash} tone="text-[#2F6042]" />
             <Total label="Card payments" value={totals.credit_cards} tone="text-[#1E3A5F]" />
             <Total label="Bank deposit" value={totals.bank_deposit} tone="text-gray-900" />
             <Total label="In collections" value={totals.collections_balance} tone="text-gray-900" />

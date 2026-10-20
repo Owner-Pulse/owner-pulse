@@ -7,6 +7,13 @@ import toast from "react-hot-toast";
 const invalidate = (queryClient) => {
   queryClient.invalidateQueries({ queryKey: ["document-vault"] });
   queryClient.invalidateQueries({ queryKey: ["document-vault-expiring-summary"] });
+  queryClient.invalidateQueries({ queryKey: ["owner-compliance-overview"] });
+  queryClient.invalidateQueries({ queryKey: ["owner-compliance-items"] });
+  queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
+  queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
+  queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+  queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+  queryClient.invalidateQueries({ queryKey: ["director-overview"] });
 };
 
 export const useDocumentVaultCategories = (role) => {

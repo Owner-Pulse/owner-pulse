@@ -20,6 +20,7 @@ import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryT
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
 import { itemVariants, clamp } from "./variants";
 import { formatDate } from "@/lib/datetime";
+import ComplianceVaultDocuments from "@/pages/owner-dashboard/compliance/components/ComplianceVaultDocuments";
 
 const DirectorComplianceCard = ({
   item,
@@ -32,6 +33,7 @@ const DirectorComplianceCard = ({
   onComplete,
   onLog,
   onToggleChecklist,
+  onAttach,
 }) => {
   const d = item.is_completed
     ? 0
@@ -57,7 +59,7 @@ const DirectorComplianceCard = ({
   const pct = clamp(computedTimePct, 0, 100);
 
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div id={`compliance-item-${item.id}`} variants={itemVariants}>
       <Card
         className={`bg-white border-none shadow-sm hover:shadow-md transition-shadow border-l-4 ${
           item.is_completed
@@ -210,6 +212,8 @@ const DirectorComplianceCard = ({
               </div>
             </div>
           </div>
+
+          <ComplianceVaultDocuments item={item} role="director" onAttach={onAttach} />
 
           {/* ── Document Checklist ── */}
           {item.docChecklist && item.docChecklist.length > 0 && (

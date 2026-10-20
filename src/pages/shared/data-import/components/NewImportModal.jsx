@@ -16,6 +16,7 @@ import { DEFAULT_FILE_TYPES, formatFileSize } from "@/pages/owner-dashboard/over
 import { analyzeCsv, rewriteHeaderRow, removeColumns } from "../analyze-csv";
 import { EXPECTED_COLUMNS, MANDATORY_COLUMNS, autoMapColumns } from "../expected-columns";
 import ColumnMappingModal from "./ColumnMappingModal";
+import { FileUploadButton } from "@/components/ui/FileUploadButton";
 
 const PREVIEW_LIMIT = 100;
 const SUCCESS_CLOSE_DELAY = 2500;
@@ -409,31 +410,20 @@ const NewImportModal = ({ onClose }) => {
       <div>
         <div className="flex flex-wrap items-stretch gap-3">
           {statTiles}
-          <button
-            onClick={() => fileInputRef.current?.click()}
+          <FileUploadButton
+            ref={fileInputRef}
             disabled={busy}
-            className="cursor-pointer px-5 rounded-xl bg-[#1E3A5F] hover:bg-[#15294A] text-white text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 min-h-12"
-          >
-            {selectedFile ? "Change File" : "Choose File"}
-          </button>
+            accept=".csv,text/csv,application/vnd.ms-excel"
+            buttonClassName="min-h-12 px-5 text-sm"
+            resetOnSelect={false}
+            onFileSelect={(file) => handleFileSelect(file)}
+          />
         </div>
         {selectedFile && (
           <p className="text-xs text-gray-500 mt-2">
             Selected file: {selectedFile.name} ({formatFileSize(selectedFile.size)})
           </p>
         )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,text/csv,application/vnd.ms-excel"
-          onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              handleFileSelect(e.target.files[0]);
-            }
-            e.target.value = "";
-          }}
-          className="hidden"
-        />
       </div>
 
       {/* Preview */}

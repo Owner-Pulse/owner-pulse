@@ -30,7 +30,7 @@ const ProfileHeader = ({ user: profile, form, editing, onFormChange }) => {
                   <input
                     type="file"
                     accept="image/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         onFormChange((prev) => ({ ...prev, avatar: e.target.files[0] }));

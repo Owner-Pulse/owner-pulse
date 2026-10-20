@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { PieChart, ChevronLeft, ChevronRight, Loader2, Edit2, RotateCcw, SlidersHorizontal, Sparkles } from "lucide-react";
+import { PieChart, ChevronLeft, ChevronRight, Loader2, Edit2, Trash2, Plus, SlidersHorizontal, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,8 @@ const CategoryBreakdownCard = ({
   title = "Spending by Category",
   subtitle = "Plain spending list by category, sorted high to low",
   onEditCategory,
-  onResetCategory,
+  onDeleteCategory,
+  onAddCategory,
   onManageBulk,
 }) => {
   // Sort categories high to low by spent amount
@@ -50,6 +51,16 @@ const CategoryBreakdownCard = ({
                 <Loader2 size={12} className="animate-spin" />
                 <span>Updating...</span>
               </div>
+            )}
+            {onAddCategory && (
+              <Button
+                size="sm"
+                onClick={onAddCategory}
+                className="h-8 text-xs font-semibold rounded-xl bg-[#1E3A5F] hover:bg-[#15294A] text-white flex items-center gap-1.5"
+              >
+                <Plus size={13} />
+                <span>Add Category</span>
+              </Button>
             )}
             {onManageBulk && (
               <Button
@@ -145,14 +156,14 @@ const CategoryBreakdownCard = ({
                             <Edit2 size={13} />
                           </button>
                         )}
-                        {hasCustomLimit && onResetCategory && (
+                        {onDeleteCategory && (
                           <button
                             type="button"
-                            onClick={() => onResetCategory(cat)}
+                            onClick={() => onDeleteCategory(cat)}
                             className="p-1.5 hover:bg-red-100/70 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
-                            title="Reset to Default"
+                            title="Delete category"
                           >
-                            <RotateCcw size={13} />
+                            <Trash2 size={13} />
                           </button>
                         )}
                       </div>

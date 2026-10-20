@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 // Modular Components
 import OwnerPayrollKpiCards from "./components/OwnerPayrollKpiCards";
 import OwnerPayrollHistorySection from "./components/OwnerPayrollHistorySection";
 import OwnerPayrollScheduleTable from "./components/OwnerPayrollScheduleTable";
 import OwnerAuditDetailModal from "./components/OwnerAuditDetailModal";
-import AddSchedulePeriodModal from "./components/AddSchedulePeriodModal";
 
 // Custom API Hooks
 import {
@@ -21,7 +18,6 @@ import { daysFromToday, toDate } from "@/lib/datetime";
 const OwnerPayrollPage = () => {
   const [activeTab, setActiveTab] = useState("history"); // "history" | "schedule"
   const [selectedPayroll, setSelectedPayroll] = useState(null);
-  const [isAddPeriodOpen, setIsAddPeriodOpen] = useState(false);
 
   // API Data Queries
   const { data: overviewData } = useGetOwnerPayrollOverview();
@@ -64,10 +60,10 @@ const OwnerPayrollPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Payroll Overview & Approvals
+            Payroll Review
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Review bi-weekly submissions from directors, audit deductions, and track schedules.
+            Review the payroll the director runs. Open a submission to audit deductions, PTO, and hours.
           </p>
         </div>
 
@@ -94,13 +90,6 @@ const OwnerPayrollPage = () => {
               Schedules ({displaySchedules.length})
             </button>
           </div>
-
-          <Button
-            onClick={() => setIsAddPeriodOpen(true)}
-            className="bg-[#1E3A5F] hover:bg-[#15294A] text-white shadow-sm font-semibold rounded-xl text-xs md:text-sm flex items-center gap-1.5"
-          >
-            <Plus size={16} /> Schedule Period
-          </Button>
         </div>
       </div>
 
@@ -124,6 +113,7 @@ const OwnerPayrollPage = () => {
           <OwnerPayrollScheduleTable
             key="schedule-tab"
             schedule={displaySchedules}
+            readOnly
           />
         )}
       </AnimatePresence>
@@ -136,11 +126,6 @@ const OwnerPayrollPage = () => {
         />
       )}
 
-      {/* Add Schedule Period Modal */}
-      <AddSchedulePeriodModal
-        isOpen={isAddPeriodOpen}
-        onClose={() => setIsAddPeriodOpen(false)}
-      />
     </div>
   );
 };
