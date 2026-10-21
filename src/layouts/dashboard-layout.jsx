@@ -318,19 +318,20 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen text-white flex">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
-        <div className="px-4 py-4 h-full flex flex-col">
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-80 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
+        <div className="px-4 py-3 h-full flex flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <img src={logo} alt="Logo" className="h-14 w-auto scale-145" />
+          <div className="flex items-center gap-3 px-2 shrink-0 mb-2">
+            <img src={logo} alt="Logo" className="h-11 w-auto" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-gray-900">OwnerPulse</h1>
               <p className="text-[10px] text-gray-400 capitalize">{role} Management</p>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 flex flex-col justify-between gap-0.5 overflow-y-auto no-scrollbar">
+          {/* Each item shares the remaining height so the menu fills the
+              sidebar without scrolling, for every role. */}
+          <nav className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {menuItems.map((item) => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
@@ -341,13 +342,13 @@ const DashboardLayout = () => {
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex-1 min-h-9 max-h-12 flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                  className={`w-full flex-1 min-h-8 flex items-center gap-2.5 px-3 rounded-xl text-sm leading-normal font-medium transition-all duration-150 ${isActive
                     ? 'bg-[#1E3A5F] text-white font-semibold'
                     : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                     }`}
                 >
-                  <item.icon size={18} />
-                  {item.label}
+                  <item.icon size={16} className="shrink-0" />
+                  <span className="whitespace-nowrap">{item.label}</span>
                   {item.id === "tasks" && role && <TasksUnreadBadge role={role} />}
                   {item.id === "pending-decisions" && role === "owner" && <PendingDecisionsBadge />}
                 </NavLink>

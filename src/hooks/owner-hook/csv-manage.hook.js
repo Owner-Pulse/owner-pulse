@@ -130,6 +130,9 @@ export const useUploadCsv = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-scholarships"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-pending-scholarships-infinite"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-approved-scholarships-infinite"] });
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["csv-imports"] });
