@@ -39,7 +39,7 @@ const StatTile = ({ label, value }) => (
 
 const HIDDEN_FILE_TYPE_KEYS = ["billing", "timeclock"];
 
-const NewImportModal = ({ onClose }) => {
+const NewImportModal = ({ onClose, lockedType = null, initialFile = null }) => {
   const fileInputRef = useRef(null);
   const { fileTypes: apiFileTypes, isLoading: isLoadingTypes } = useGetCsvFileTypes();
   const { uploadCsv, progress, isPending, reset: resetMutation } = useUploadCsv();
@@ -54,7 +54,7 @@ const NewImportModal = ({ onClose }) => {
     ...sourceFileTypes.filter((item) => item.key !== "employees"),
   ];
 
-  const [selectedType, setSelectedType] = useState("employees");
+  const [selectedType, setSelectedType] = useState(lockedType || "employees");
   const [selectedFile, setSelectedFile] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -96,11 +96,22 @@ const NewImportModal = ({ onClose }) => {
   onCloseRef.current = onClose;
   useEffect(() => {
     if (!successOpen) return;
-    const timer = setTimeout(() => onCloseRef.current(), SUCCESS_CLOSE_DELAY);
+    const timer = setTimeout(() => onCloseRef.current(undefined, true), SUCCESS_CLOSE_DELAY);
     return () => clearTimeout(timer);
   }, [successOpen]);
 
-  const currentOption = fileTypesList.find((item) => item.key === selectedType) || fileTypesList[0];
+  const initialFileStarted = useRef(false);
+  useEffect(() => {
+    if (initialFileStarted.current || !initialFile) return;
+    initialFileStarted.current = true;
+    handleFileSelect(initialFile);
+    // The file is chosen before this modal opens, so the column check starts immediately.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
+
+  const currentOption = fileTypesList.find((item) => item.key === selectedType)
+    || DEFAULT_FILE_TYPES.find((item) => item.key === selectedType)
+    || fileTypesList[0];
   const existingColumns = EXPECTED_COLUMNS[selectedType] || [];
 
   // Import sheet headers, with matched columns shown under their existing column name
@@ -357,9 +368,11 @@ const NewImportModal = ({ onClose }) => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">New Import</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">{lockedType === "scholarship" ? "Import scholarships" : "New Import"}</h2>
           <p className="text-sm text-gray-500 mt-1 max-w-3xl">
-            Choose the CSV file type, upload the Procare export, compare its columns with the existing ones, and review the preview before import.
+            {lockedType
+              ? "Compare the scholarship CSV columns with the existing ones, review the preview, then import."
+              : "Choose the CSV file type, upload the Procare export, compare its columns with the existing ones, and review the preview before import."}
           </p>
         </div>
         <button
@@ -382,6 +395,11 @@ const NewImportModal = ({ onClose }) => {
             </span>
           )}
         </label>
+        {lockedType ? (
+          <p className="w-full h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 flex items-center text-sm font-medium text-gray-900">
+            {currentOption?.label || "Scholarships & Pending Invoice Payments"}
+          </p>
+        ) : (
         <select
           value={selectedType}
           onChange={(e) => {
@@ -398,6 +416,7 @@ const NewImportModal = ({ onClose }) => {
             </option>
           ))}
         </select>
+        )}
         {currentOption?.description && (
           <p className="mt-2 flex items-start gap-1.5 text-xs text-gray-500">
             <Info size={14} className="text-[#1E3A5F] shrink-0 mt-px" />

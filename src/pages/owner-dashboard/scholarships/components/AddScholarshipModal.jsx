@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from "react";
-import { X, Loader2, DollarSign, Calendar, GraduationCap } from "lucide-react";
+import React, { useRef, useState, useMemo } from "react";
+import { X, Loader2, DollarSign, Calendar, GraduationCap, UploadCloud } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAddScholarship, useGetScholarshipPrograms } from "@/hooks/owner-hook/scholarship.hook";
+import NewImportModal from "@/pages/shared/data-import/components/NewImportModal";
 import { useGetAllClassrooms } from "@/hooks/classroom/classroom.hook";
 import { useGetStudentsByProcareClassroom } from "@/hooks/director-hook/student-manage.hook";
 import SearchableStudentSelect, { getStudentId, getStudentName } from "@/pages/director-dashboard/students/components/SearchableStudentSelect";
@@ -10,6 +12,9 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
   const { programsData } = useGetScholarshipPrograms();
   const { addScholarship, isPending } = useAddScholarship();
   const { classrooms, isLoading: isClassroomsLoading } = useGetAllClassrooms();
+  const fileInputRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [importFile, setImportFile] = useState(null);
 
   const [selectedClassroomId, setSelectedClassroomId] = useState("");
   const [selectedClassroomName, setSelectedClassroomName] = useState("");
@@ -33,6 +38,16 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
   });
 
   if (!isOpen) return null;
+
+  const chooseCsv = (file) => {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (!name.endsWith(".csv") && file.type !== "text/csv" && file.type !== "application/vnd.ms-excel") {
+      toast.error("Invalid file format. Please select a valid CSV (.csv) file.");
+      return;
+    }
+    setImportFile(file);
+  };
 
   const handleClassroomChange = (e) => {
     const classId = e.target.value;
@@ -92,7 +107,7 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-6">
+      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#1E3A5F]/10 flex items-center justify-center text-[#1E3A5F]">
@@ -110,6 +125,42 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
             <X size={18} />
           </button>
         </div>
+
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            chooseCsv(e.dataTransfer.files?.[0]);
+          }}
+          onClick={() => fileInputRef.current?.click()}
+          className={`cursor-pointer p-5 border-2 border-dashed rounded-2xl flex flex-col items-center text-center transition-all ${isDragging ? "border-[#1E3A5F] bg-[#1E3A5F]/5" : "border-gray-200 bg-gray-50 hover:bg-gray-100"}`}
+        >
+          <div className="p-2.5 bg-white rounded-full border border-gray-100 mb-2 text-[#1E3A5F]">
+            <UploadCloud size={22} />
+          </div>
+          <p className="text-sm font-semibold text-gray-700">Drag scholarship.csv here, or click to upload</p>
+          <p className="text-xs text-gray-400 mt-1">Same column match and import as Data Import. Only .csv files.</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv,application/vnd.ms-excel"
+            className="hidden"
+            onChange={(e) => {
+              chooseCsv(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </div>
+
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Or enter one payment</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* 1. Classroom Selector */}
@@ -241,6 +292,17 @@ const AddScholarshipModal = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+      {importFile && (
+        <NewImportModal
+          lockedType="scholarship"
+          initialFile={importFile}
+          onClose={(error, imported) => {
+            setImportFile(null);
+            if (imported) onClose();
+            else if (typeof error === "string") toast.error(error);
+          }}
+        />
+      )}
     </div>
   );
 };
