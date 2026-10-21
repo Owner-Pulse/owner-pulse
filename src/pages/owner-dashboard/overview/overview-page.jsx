@@ -235,11 +235,11 @@ const OverviewPage = () => {
       {/* Cash Flow Metrics */}
       <CashFlowMetricsCard cashFlowMetrics={cashFlowMetrics} />
 
-      {/* Collections */}
-      <CollectionsCard role="owner" data={ownerOverviewData?.collections} />
-
-      {/* Weekly report & deposits */}
-      <WeeklyDepositsCard data={ownerOverviewData?.weekly_report} />
+      {/* Collections and weekly deposits, equal cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+        <CollectionsCard role="owner" data={ownerOverviewData?.collections} />
+        <WeeklyDepositsCard data={ownerOverviewData?.weekly_report} />
+      </div>
 
       {/* KPI Row 1 — Donut Charts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

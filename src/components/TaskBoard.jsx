@@ -260,9 +260,9 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
             {/* LEFT COLUMN: Director owned + owner-assigned maintenance (Navy Blue Theme) */}
-            <div className={`rounded-2xl overflow-hidden min-w-0 ${noData ? `${STATUS.none.soft} border ${STATUS.none.border}` : ACCENTS.operations.bar}`}>
+            <div className={`h-full flex flex-col rounded-2xl overflow-hidden min-w-0 ${noData ? `${STATUS.none.soft} border ${STATUS.none.border}` : ACCENTS.operations.bar}`}>
               <div className={`flex items-center justify-between gap-2 px-3.5 py-2.5 ${noData ? `${STATUS.none.soft} ${STATUS.none.border} border-b` : ACCENTS.operations.bar}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${noData ? STATUS.none.dot : "bg-white"}`} />
@@ -275,7 +275,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                 </span>
               </div>
 
-              <div className="p-3.5 space-y-2">
+              <div className="flex-1 p-3.5 space-y-2">
                 {directorOwned.map((t) => (
                   <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
                 ))}
@@ -298,7 +298,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
             </div>
 
             {/* RIGHT COLUMN: Owner owned + maintenance (Finance accent) */}
-            <div className={`rounded-2xl border overflow-hidden min-w-0 ${noData ? `${STATUS.none.soft} ${STATUS.none.border}` : `${ACCENTS.finance.soft} ${ACCENTS.finance.border}`}`}>
+            <div className={`h-full flex flex-col rounded-2xl border overflow-hidden min-w-0 ${noData ? `${STATUS.none.soft} ${STATUS.none.border}` : `${ACCENTS.finance.soft} ${ACCENTS.finance.border}`}`}>
               <div className={`flex items-center justify-between gap-2 px-3.5 py-2.5 ${noData ? `${STATUS.none.soft} ${STATUS.none.border} border-b` : ACCENTS.finance.bar}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${noData ? STATUS.none.dot : "bg-white"}`} />
@@ -311,7 +311,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                 </span>
               </div>
 
-              <div className="p-3.5 space-y-2">
+              <div className="flex-1 p-3.5 space-y-2">
                 {ownerOwned.map((t) => (
                   <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
                 ))}
