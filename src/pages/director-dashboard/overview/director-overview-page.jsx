@@ -162,11 +162,11 @@ const DirectorOverviewPage = () => {
         />
       </div>
 
-      {/* Collections */}
-      <CollectionsCard role="director" data={directorOverviewData?.collections} />
-
-      {/* Weekly deposits */}
-      {directorOverviewData?.weekly_report && <WeeklyDepositsCard role="director" data={directorOverviewData.weekly_report} />}
+      {/* Collections and weekly deposits, equal cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+        <CollectionsCard role="director" data={directorOverviewData?.collections} />
+        {directorOverviewData?.weekly_report && <WeeklyDepositsCard role="director" data={directorOverviewData.weekly_report} />}
+      </div>
 
       {/* Section 3 + 4: Enrollment + Coverage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

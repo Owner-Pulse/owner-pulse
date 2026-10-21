@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, BellRing, History, DollarSign, Plus, Pencil } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,6 +56,53 @@ const TrendTooltip = ({ active, payload }) => {
     <div className="bg-white border border-gray-100 shadow-md rounded-lg px-2.5 py-1.5 text-[11px]">
       <p className="text-gray-400">Week of {fmtWeek(point.week_start)}</p>
       <p className="font-bold text-gray-900 tabular-nums">{point.balance === null ? "Not entered" : fmtMoney(point.balance, { cents: false })}</p>
+    </div>
+  );
+};
+
+const CollectionsPie = ({ balance, tuition }) => {
+  const owed = Number(balance) || 0;
+  const tuitionNum = Number(tuition);
+  const hasTuition = Number.isFinite(tuitionNum) && tuitionNum > 0;
+  const rest = hasTuition ? Math.max(0, tuitionNum - owed) : 0;
+  const slices = rest > 0
+    ? [
+        { name: "In collections", value: owed },
+        { name: "Rest of monthly tuition", value: rest },
+      ]
+    : [{ name: "In collections", value: Math.max(owed, 1) }];
+  const pct = hasTuition ? Math.round((owed / tuitionNum) * 100) : null;
+
+  return (
+    <div className="min-w-0 w-full flex flex-col items-center self-start">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-center">Total in collections</p>
+      <div className="relative mt-2 h-40 w-40">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={slices}
+              dataKey="value"
+              nameKey="name"
+              innerRadius="62%"
+              outerRadius="100%"
+              startAngle={90}
+              endAngle={-270}
+              stroke="none"
+              isAnimationActive={false}
+            >
+              {slices.map((slice) => (
+                <Cell key={slice.name} fill={slice.name === "In collections" ? ACCENTS.collections.hex : "#E6EEF2"} stroke="none" />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <p className={`text-lg font-bold tabular-nums ${ACCENTS.collections.text}`}>{fmtMoney(owed)}</p>
+        </div>
+      </div>
+      <p className="text-[11px] text-gray-500 text-center mt-2">
+        {pct == null ? "Outstanding balance" : `${pct}% of monthly tuition`}
+      </p>
     </div>
   );
 };
@@ -129,6 +176,7 @@ const CollectionsCard = ({ role, data }) => {
   const collections = data === undefined ? fetched : data;
   const [entryOpen, setEntryOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   const points = useMemo(() => trendPoints(collections?.trend), [collections?.trend]);
   const trendDir = trendDirection(points);
@@ -147,8 +195,8 @@ const CollectionsCard = ({ role, data }) => {
   const families = current?.families_count;
 
   return (
-    <motion.div variants={itemVariants} id="collections-card" className="scroll-mt-20">
-      <Card className="relative bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
+    <motion.div variants={itemVariants} id="collections-card" className="scroll-mt-20 h-full">
+      <Card className="relative h-full bg-white border-none shadow-sm hover:shadow-md transition-shadow overflow-hidden py-0 gap-0">
         <CardAccent group={isEmpty ? "none" : "collections"} />
         {/* Header */}
         <div className="flex items-center justify-between gap-2 px-4 sm:px-5 pt-4">
@@ -210,40 +258,73 @@ const CollectionsCard = ({ role, data }) => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 px-4 sm:px-5 pt-3 pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-5 pt-3 pb-4 sm:items-start">
               {/* Balance + change */}
               <div className="min-w-0 space-y-2">
                 <div>
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Balance in collections</p>
-                  <p className="text-3xl md:text-4xl font-bold text-gray-900 tabular-nums leading-tight">{fmtMoney(current.balance)}</p>
+                  <p className="text-3xl font-bold text-gray-900 tabular-nums leading-tight">{fmtMoney(current.balance)}</p>
                   {families != null && (
                     <p className="text-xs text-gray-500">{families} {families === 1 ? "family" : "families"}</p>
+                  )}
+                  {current.notes && (
+                    <p className="text-[11px] text-gray-600 mt-1 line-clamp-2">{current.notes}</p>
                   )}
                 </div>
                 <ChangeLine data={collections} />
                 <p className="text-[11px] text-gray-400">Down is good: we are collecting.</p>
               </div>
 
-              {/* 12-week trend */}
-              <div className="min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">12-week trend</p>
-                  {trendDir && (
-                    <span className="text-[10px] font-semibold" style={{ color: lineColor }}>
-                      {TREND_LABEL[trendDir]}
-                    </span>
+              {role === "owner" ? (
+                <CollectionsPie balance={current.balance} tuition={collections?.monthly_tuition} />
+              ) : (
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">12-week trend</p>
+                    {trendDir && (
+                      <span className="text-[10px] font-semibold" style={{ color: lineColor }}>
+                        {TREND_LABEL[trendDir]}
+                      </span>
+                    )}
+                  </div>
+                  {hasTrend ? (
+                    <TrendChart points={points} color={lineColor} />
+                  ) : (
+                    <p className="h-28 flex items-center justify-center text-xs text-gray-400 italic">No trend yet</p>
                   )}
                 </div>
-                {hasTrend ? (
-                  <TrendChart points={points} color={lineColor} />
-                ) : (
-                  <p className="h-28 flex items-center justify-center text-xs text-gray-400 italic">No trend yet</p>
-                )}
-              </div>
+              )}
             </div>
 
+            {(collections?.recent || []).length > 0 && (
+              <div className="px-4 sm:px-5 pb-4">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Recent</p>
+                <div className="rounded-xl border border-gray-100 divide-y divide-gray-100">
+                  {collections.recent.map((entry) => (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => setEditing(entry)}
+                      className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-[#1E3A5F]/[0.04] transition-colors cursor-pointer"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-xs font-semibold text-gray-800 truncate">Week of {fmtWeek(entry.week_start, { year: true })}</span>
+                        {entry.families_count != null && (
+                          <span className="block text-[10px] text-gray-400">{entry.families_count} {entry.families_count === 1 ? "family" : "families"}</span>
+                        )}
+                        {entry.notes && (
+                          <span className="block text-[10px] text-gray-500 truncate">{entry.notes}</span>
+                        )}
+                      </span>
+                      <span className="text-sm font-bold text-gray-900 tabular-nums shrink-0">{fmtMoney(entry.balance)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
-            <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 border-t border-gray-100 text-[11px] text-gray-500 flex flex-wrap gap-x-2 gap-y-0.5">
+            <div className="mt-auto px-4 sm:px-5 py-2.5 bg-gray-50/80 border-t border-gray-100 text-[11px] text-gray-500 flex flex-wrap gap-x-2 gap-y-0.5">
               <span className="font-semibold text-gray-600">Week of {fmtWeek(current.week_start, { year: true })}</span>
               {current.entered_by?.name && <span>· Entered by {current.entered_by.name}</span>}
               {needsThisWeek && role !== "director" && <span className={`${STATUS.watch.text} font-medium`}>· This week not entered yet</span>}
@@ -253,6 +334,7 @@ const CollectionsCard = ({ role, data }) => {
       </Card>
 
       <CollectionsEntryModal isOpen={entryOpen} role={role} onClose={() => setEntryOpen(false)} />
+      <CollectionsEntryModal isOpen={!!editing} entry={editing} role={role} onClose={() => setEditing(null)} />
       <CollectionsHistoryDrawer isOpen={historyOpen} role={role} onClose={() => setHistoryOpen(false)} />
     </motion.div>
   );

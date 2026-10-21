@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { UserCheck, ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
+import { UserCheck, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
@@ -92,10 +92,18 @@ const OwnerDependenceCard = ({ data }) => {
             </div>
           </div>
 
-          <div className={`p-2.5 rounded-xl border flex items-start gap-2 ${ACCENTS.operations.soft} ${ACCENTS.operations.border}`}>
-            <Info size={13} className={`${ACCENTS.operations.text} shrink-0 mt-0.5`} />
-            <p className="text-[11px] text-gray-600 leading-normal font-medium">
-              Shows how much the Director relies on the Owner. A lower number means the business runs well without the Owner.
+          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">How this percentage is calculated</p>
+            <p className="mt-1 text-[13px] font-semibold text-gray-900 leading-snug">
+              Index % = (escalated count ÷ total logged items) × 100
+            </p>
+            {hasData && (
+              <p className="mt-1 text-[11px] text-gray-500 tabular-nums">
+                {escalatedCount} ÷ {totalLoggedItems} × 100 = {ratePct}% over the last 365 days
+              </p>
+            )}
+            <p className="mt-1.5 text-[11px] text-gray-500 leading-normal">
+              Escalated count is what was routed to the Owner. Total logged items is everything the Director recorded. A lower percentage means the business runs with less Owner involvement.
             </p>
           </div>
 
