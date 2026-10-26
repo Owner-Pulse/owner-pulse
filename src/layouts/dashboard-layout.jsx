@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { initEcho, listenToNotifications, requestNotificationPermission, setupNotificationTapListener } from '@/lib/reverb-connection';
 import { getToken, removeToken } from '@/lib/token';
 import { formatDate } from "@/lib/datetime";
+import PulseScoreImpactCard from "@/components/PulseScoreImpactCard";
 
 const ownerTabs = [
   { id: "overview", label: "Overview", icon: Home },
@@ -582,6 +583,7 @@ const DashboardLayout = () => {
         <main className="flex-1 overflow-y-auto bg-gray-50 text-gray-900 relative p-5">
           <ErrorBoundary fallbackTitle="Dashboard Error" fallbackMessage="A section of the dashboard encountered an error. The rest of the page should still work.">
             <Outlet />
+            {role === "owner" && <PulseScoreImpactCard />}
           </ErrorBoundary>
         </main>
       </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, AlertTriangle, TrendingDown, Baby, Edit2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -21,8 +21,10 @@ const fmtMoneyShort = (n) => {
 
 const fmtMoney = (n) => "$" + Math.round(n ?? 0).toLocaleString();
 
-const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
+const ClassroomDetailCard = ({ classroom, onEdit, onDelete, hideFinancials = false }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const classroomBase = location.pathname.startsWith("/director") ? "/director/classrooms" : "/owner/classrooms";
   const profit = classroom.net_monthly_profit ?? 0;
   const isProfit = profit >= 0;
 
@@ -35,8 +37,11 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
   const capacity = enrollment.capacity ?? classroom.capacity ?? 0;
   const hasCapacity = capacity > 0;
   const fillRate = enrollment.fill_rate_percentage ?? classroom.fill_rate_percentage ?? 0;
-  const isFull = hasCapacity && (enrollment.current >= capacity || classroom.is_full);
-  const isLowFill = hasCapacity && (enrollment.is_low_enrollment ?? fillRate < 70);
+  const overfillCount = enrollment.overfill_count ?? Math.max(0, (enrollment.current ?? 0) - capacity);
+  const overfillRate = enrollment.overfill_rate_percentage ?? (hasCapacity ? Math.round((overfillCount / capacity) * 100) : 0);
+  const isOverfilled = overfillCount > 0;
+  const isFull = hasCapacity && !isOverfilled && (enrollment.current >= capacity || classroom.is_full);
+  const isLowFill = hasCapacity && !isOverfilled && (enrollment.is_low_enrollment ?? fillRate < 70);
 
   const isPreschool = (classroom.category_group ?? classroom.program ?? "").toLowerCase() === "preschool";
 
@@ -73,17 +78,17 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
   return (
     <motion.div variants={itemVariants}>
       <Card 
-        onClick={() => navigate(`/owner/classrooms/${classroom.id}`)}
+        onClick={() => navigate(`${classroomBase}/${classroom.id}`)}
         className="bg-white border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       >
         <CardContent className="p-5">
           {/* Row 1: Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isProfit ? "bg-[#3E7A54]/10" : "bg-[#AE4A3E]/10"}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${hideFinancials ? "bg-[#1E3A5F]/10" : isProfit ? "bg-[#3E7A54]/10" : "bg-[#AE4A3E]/10"}`}>
                 {isPreschool
-                  ? <Baby size={18} className={isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
-                  : <GraduationCap size={18} className={isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
+                  ? <Baby size={18} className={hideFinancials ? "text-[#1E3A5F]" : isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
+                  : <GraduationCap size={18} className={hideFinancials ? "text-[#1E3A5F]" : isProfit ? "text-[#2F6042]" : "text-[#8A362C]"} />
                 }
               </div>
               <div className="min-w-0">
@@ -101,15 +106,19 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-lg font-extrabold ${isProfit ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
-                {profitDisplay}
-              </span>
-              {(classroom.profit_change ?? 0) !== 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
-                  {classroom.profit_change > 0 ? "▲" : "▼"} {fmtMoneyShort(Math.abs(classroom.profit_change))}
-                </span>
+              {!hideFinancials && (
+                <>
+                  <span className={`text-lg font-extrabold ${isProfit ? "text-[#2F6042]" : "text-[#8A362C]"}`}>
+                    {profitDisplay}
+                  </span>
+                  {(classroom.profit_change ?? 0) !== 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${classroom.profit_change > 0 ? "bg-[#3E7A54]/10 text-[#2F6042]" : "bg-[#AE4A3E]/10 text-[#8A362C]"}`}>
+                      {classroom.profit_change > 0 ? "▲" : "▼"} {fmtMoneyShort(Math.abs(classroom.profit_change))}
+                    </span>
+                  )}
+                </>
               )}
-              <div className="flex items-center gap-1.5 border-l border-slate-100 pl-2 ml-1 shrink-0">
+              <div className={`flex items-center gap-1.5 shrink-0 ${hideFinancials ? "" : "border-l border-slate-100 pl-2 ml-1"}`}>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -154,38 +163,37 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               </div>
               <div className="mt-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${!hasCapacity ? "bg-[#1E3A5F]" : isFull ? "bg-[#B78A2F]" : isLowFill ? "bg-[#AE4A3E]" : "bg-[#3E7A54]"}`}
+                  className={`h-full rounded-full ${!hasCapacity ? "bg-[#1E3A5F]" : isOverfilled ? "bg-[#AE4A3E]" : isFull ? "bg-[#B78A2F]" : isLowFill ? "bg-[#AE4A3E]" : "bg-[#3E7A54]"}`}
                   style={{ width: hasCapacity ? `${Math.min(fillRate, 100)}%` : "100%" }}
                 />
               </div>
             </div>
 
-            {/* Revenue */}
-            <div className="p-2.5 rounded-lg bg-gray-50">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Revenue</span>
-              <span className="text-base font-extrabold text-gray-900">{revTotalDisplay}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{revPerSeatDisplay}</p>
-            </div>
+            {!hideFinancials && (
+              <>
+                <div className="p-2.5 rounded-lg bg-gray-50">
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Revenue</span>
+                  <span className="text-base font-extrabold text-gray-900">{revTotalDisplay}</span>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{revPerSeatDisplay}</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-gray-50">
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Cost</span>
+                  <span className="text-base font-extrabold text-gray-900">{costTotalDisplay}</span>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{costPerSeatDisplay}</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-gray-50">
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Margin</span>
+                  <span className={`text-base font-extrabold ${marginColor}`}>
+                    {margin.formatted_percentage || `${margin.percentage ?? 0}%`}
+                  </span>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{marginStatus}</p>
+                </div>
+              </>
+            )}
 
-            {/* Cost */}
+            {/* NWEA Score (RIT Score)/CLASS */}
             <div className="p-2.5 rounded-lg bg-gray-50">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Cost</span>
-              <span className="text-base font-extrabold text-gray-900">{costTotalDisplay}</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{costPerSeatDisplay}</p>
-            </div>
-
-            {/* Margin */}
-            <div className="p-2.5 rounded-lg bg-gray-50">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Margin</span>
-              <span className={`text-base font-extrabold ${marginColor}`}>
-                {margin.formatted_percentage || `${margin.percentage ?? 0}%`}
-              </span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{marginStatus}</p>
-            </div>
-
-            {/* NWEA MAP */}
-            <div className="p-2.5 rounded-lg bg-gray-50">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">NWEA MAP</span>
+              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">NWEA (RIT)/CLASS</span>
               <span className={`text-base font-extrabold ${nweaVsBenchmark}`}>
                 {nweaDisplay}
               </span>
@@ -205,22 +213,21 @@ const ClassroomDetailCard = ({ classroom, onEdit, onDelete }) => {
               </div>
             )}
 
-            {/* Fill Rate (Preschool with capacity > 0) */}
-            {isPreschool && (
+            {hasCapacity && (
               <div className="p-2.5 rounded-lg bg-gray-50">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Fill Rate</span>
-                <span className={`text-base font-extrabold ${!hasCapacity ? "text-gray-700" : isFull ? "text-[#8F6A1F]" : isLowFill ? "text-[#8A362C]" : "text-[#2F6042]"}`}>
+                <span className={`text-base font-extrabold ${!hasCapacity ? "text-gray-700" : isOverfilled ? "text-[#8A362C]" : isFull ? "text-[#8F6A1F]" : isLowFill ? "text-[#8A362C]" : "text-[#2F6042]"}`}>
                   {hasCapacity ? `${fillRate}%` : "100%"}
                 </span>
                 <p className="text-[10px] text-gray-400 mt-0.5">
-                  {!hasCapacity ? "Active" : isFull ? "At capacity" : `${enrollment.empty_seats ?? 0} open`}
+                  {!hasCapacity ? "Active" : isOverfilled ? `Overfill ${overfillRate}%` : isFull ? "At capacity" : `${enrollment.empty_seats ?? 0} open`}
                 </p>
               </div>
             )}
           </div>
 
           {/* Row 3: Warnings */}
-          {!isProfit && (
+          {!hideFinancials && !isProfit && (
             <div className="mt-3 p-2.5 rounded-lg bg-[#AE4A3E]/10 border border-[#AE4A3E]/25 flex items-center gap-2">
               <AlertTriangle size={14} className="text-[#8A362C] shrink-0" />
               <p className="text-xs text-[#8A362C]">

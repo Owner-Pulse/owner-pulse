@@ -6,7 +6,7 @@ const KpiCard = ({ icon: Icon, label, value, sub, iconBg }) => (
     <CardContent className="p-4">
       <div className="flex justify-between items-start gap-1">
         <div className="space-y-1 min-w-0 flex-1">
-          <p className="text-xs font-semibold text-gray-500 truncate">{label}</p>
+          <p className="text-xs font-semibold text-gray-500 leading-snug whitespace-normal">{label}</p>
           <p className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight truncate">{value}</p>
         </div>
         <div className={`p-2 rounded-xl shrink-0 ${iconBg || "bg-[#1E3A5F]/10 text-[#1E3A5F]"}`}>

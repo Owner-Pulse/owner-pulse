@@ -68,24 +68,24 @@ const OwnerDependenceCard = ({ data }) => {
             {statusLabel}
           </span>
         </div>
-        <CardContent className={`p-4 space-y-3 border-l-4 ${tone.border}`}>
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs text-gray-500 font-medium">
-              Routed to Owner: <strong className="text-gray-900">{escalatedCount}</strong>
+        <CardContent className="p-4 space-y-3">
+          <div className="rounded-2xl bg-[#15294A] text-white px-4 py-4 flex items-center justify-between gap-4">
+            <p className="text-sm font-medium text-white/90 leading-snug">
+              Routed to Owner: <strong className="text-white">{escalatedCount}</strong>
               {escalatedDetail && ` (${escalatedDetail})`} · Total logs:{" "}
-              <strong className="text-gray-900">{totalLoggedItems}</strong>
+              <strong className="text-white">{totalLoggedItems}</strong>
             </p>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className={`text-4xl md:text-5xl font-black leading-none tabular-nums ${tone.text}`}>
+              <span className="text-4xl md:text-5xl font-black leading-none tabular-nums text-white">
                 {hasData ? `${ratePct}%` : "—"}
               </span>
               {trendDir === "down" && (
-                <span className={`p-1 rounded-full ${STATUS.good.soft} ${STATUS.good.text}`} title="Owner dependence is decreasing">
+                <span className="p-1 rounded-full bg-white/15 text-white" title="Owner dependence is decreasing">
                   <ArrowDownRight size={16} />
                 </span>
               )}
               {trendDir === "up" && (
-                <span className={`p-1 rounded-full ${STATUS.problem.soft} ${STATUS.problem.text}`} title="Owner dependence is increasing">
+                <span className="p-1 rounded-full bg-white/15 text-white" title="Owner dependence is increasing">
                   <ArrowUpRight size={16} />
                 </span>
               )}

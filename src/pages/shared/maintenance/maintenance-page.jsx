@@ -32,7 +32,7 @@ const OWNER_TABS = [
 ];
 
 const DIRECTOR_TABS = [
-  { id: "assigned_to_me", label: "Assigned to me" },
+  { id: "assigned_to_me", label: "Assigned by Owner" },
   { id: "sent_to_owner", label: "Sent to Owner" },
 ];
 
