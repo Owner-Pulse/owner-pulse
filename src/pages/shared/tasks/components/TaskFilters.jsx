@@ -9,6 +9,7 @@ const itemVariants = {
 const FILTERS = ["all", "high", "medium", "low"];
 
 const TaskFilters = ({
+  tabs,
   activeTab,
   onTabChange,
   filterPriority,
@@ -17,19 +18,19 @@ const TaskFilters = ({
   totalCount,
   extraTabs = [],
 }) => {
-  // Extra tabs show their own list, so the task priority filter and count do not apply
-  const onExtraTab = extraTabs.some((tab) => tab.id === activeTab);
+  const tabItems = tabs || [
+    { id: "assigned", label: "Assigned to me" },
+    { id: "sent", label: sentLabel },
+    { id: "all", label: "All" },
+    ...extraTabs,
+  ];
+  const onExtraTab = tabItems.some((tab) => tab.id === activeTab && tab.extra);
 
   return (
     <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 md:gap-3">
       {/* Tab filter: Assigned to me / Sent by me / All */}
       <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 max-w-full overflow-x-auto no-scrollbar">
-        {[
-          { id: "assigned", label: "Assigned to me" },
-          { id: "sent", label: sentLabel },
-          { id: "all", label: "All" },
-          ...extraTabs,
-        ].map((tab) => (
+        {tabItems.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}

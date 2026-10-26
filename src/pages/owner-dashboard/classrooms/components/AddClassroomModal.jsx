@@ -133,7 +133,7 @@ const AddClassroomModal = ({ isOpen, form, onFormChange, onSave, onClose, isEdit
 
                 {/* NWEA Score */}
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">NWEA Score (RIT Score)</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">NWEA Score (RIT Score)/CLASS</label>
                   <input
                     type="number"
                     min="0"

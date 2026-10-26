@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  ClipboardList,
-  Flag,
   AlertTriangle,
   ListTodo,
   Plus,
@@ -53,15 +51,13 @@ const sameId = (a, b) => a != null && b != null && Number(a) === Number(b);
 const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   const [tasks, setTasks] = useState([]);
   const [taskStatuses, setTaskStatuses] = useState({});
-  const [activeTab, setActiveTab] = useState("assigned");
+  const [activeTab, setActiveTab] = useState("all");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [filterPriority, setFilterPriority] = useState("all");
 
   const isDirector = currentRole === "director";
   const pendingEscalations = usePendingEscalationCount("director", isDirector);
   const showEscalations = isDirector && activeTab === "escalations";
-  const sentTarget = isDirector ? "Owner" : "Director";
-  const sentLabel = `Sent to ${sentTarget}`;
 
   useEffect(() => {
     const rawList = Array.isArray(taskList)
@@ -111,47 +107,49 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
   };
 
   const isAssignedToMe = useCallback(
-    (t) => sameId(t.assignedToId, user?.id) || (isDirector && t.assignedToId === null),
+    (t) => sameId(t.assignedToId, user?.id) || (isDirector && t.assignedToId === null && !sameId(t.creatorId, user?.id)),
     [user?.id, isDirector]
   );
 
-  const myTasks = useMemo(() => tasks.filter(isAssignedToMe), [tasks, isAssignedToMe]);
+  const createdByMe = useCallback((t) => sameId(t.creatorId, user?.id), [user?.id]);
 
-  const sentTasks = useMemo(
-    () => tasks.filter((t) => sameId(t.creatorId, user?.id) && !isAssignedToMe(t)),
-    [tasks, user?.id, isAssignedToMe]
-  );
-
-  const visibleTasks = activeTab === "assigned" ? myTasks : activeTab === "sent" ? sentTasks : tasks;
-
-  const filtered = useMemo(() => {
-    return visibleTasks.filter((t) => filterPriority === "all" || t.priority === filterPriority);
-  }, [visibleTasks, filterPriority]);
-
-  const sorted = useMemo(() => {
-    const order = { high: 0, medium: 1, low: 2 };
-    return [...filtered].sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
-  }, [filtered]);
+  const groups = useMemo(() => {
+    const toSelf = tasks.filter((t) => createdByMe(t) && sameId(t.assignedToId, user?.id));
+    const sentToOther = tasks.filter((t) => createdByMe(t) && !sameId(t.assignedToId, user?.id));
+    const fromOther = tasks.filter((t) => !createdByMe(t) && isAssignedToMe(t));
+    if (isDirector) {
+      return [
+        { id: "from_owner", label: "Assigned by Owner", tasks: fromOther },
+        { id: "to_self", label: "Assigned to myself", tasks: toSelf },
+        { id: "to_owner", label: "Sent to Owner", tasks: sentToOther },
+      ];
+    }
+    return [
+      { id: "to_director", label: "Assigned to Director", tasks: sentToOther },
+      { id: "from_director", label: "Assigned by Director", tasks: fromOther },
+      { id: "to_self", label: "Assigned to myself", tasks: toSelf },
+    ];
+  }, [tasks, isDirector, createdByMe, isAssignedToMe, user?.id]);
 
   const stats = useMemo(() => {
     const isOpen = (t) => !isDone(taskStatuses[t.id] || t.status);
-    const open = tasks.filter(isOpen).length;
-    const high = tasks.filter((t) => t.priority === "high" && isOpen(t)).length;
-    const myOpen = myTasks.filter(isOpen).length;
-    const sentOpen = sentTasks.filter(isOpen).length;
+    const counts = Object.fromEntries(groups.map((group) => [group.id, group.tasks.filter(isOpen).length]));
     const overdue = tasks.filter((t) => daysUntil(t.due) < 0 && isOpen(t)).length;
-    const myOverdue = myTasks.filter((t) => daysUntil(t.due) < 0 && isOpen(t)).length;
-    return { open, high, myOpen, sentOpen, overdue, myOverdue, total: tasks.length };
-  }, [tasks, taskStatuses, myTasks, sentTasks]);
+    return { counts, overdue };
+  }, [tasks, taskStatuses, groups]);
 
-  const emptyMessage =
-    filterPriority !== "all"
-      ? "No tasks match the selected filters."
-      : activeTab === "assigned"
-        ? "No tasks assigned to you yet."
-        : activeTab === "sent"
-          ? `No tasks sent to the ${sentTarget} yet.`
-          : "No tasks yet.";
+  const filterTabs = [
+    ...groups.map((group) => ({ id: group.id, label: group.label })),
+    { id: "all", label: "All" },
+    ...(isDirector ? [{ id: "escalations", label: "My escalations", count: pendingEscalations, extra: true }] : []),
+  ];
+
+  const visibleGroups = activeTab === "all" ? groups : groups.filter((group) => group.id === activeTab);
+  const priorityOf = (task) => filterPriority === "all" || task.priority === filterPriority;
+  const byPriority = (list) => {
+    const order = { high: 0, medium: 1, low: 2 };
+    return list.filter(priorityOf).sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
+  };
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -160,7 +158,7 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 leading-tight">Tasks</h1>
           <p className="text-xs md:text-sm text-gray-500 mt-1">
-            {stats.myOpen} assigned to you · {stats.sentOpen} sent · {stats.open} open
+            {groups.map((group) => `${stats.counts[group.id] || 0} ${group.label.toLowerCase()}`).join(" · ")}
             {stats.overdue > 0 && <span className="text-[#8A362C] font-medium"> · {stats.overdue} overdue</span>}
           </p>
         </div>
@@ -171,21 +169,27 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard icon={ListTodo} label="My Tasks" value={stats.myOpen} sub="Open, assigned to you" iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-        <KpiCard icon={Send} label="Sent by me" value={stats.sentOpen} sub={`Open, sent to ${sentTarget}`} iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]" />
-        <KpiCard icon={Flag} label="High Priority" value={stats.high} sub={stats.high === 1 ? "1 urgent item" : `${stats.high} urgent`} iconBg="bg-[#B78A2F]/10 text-[#8F6A1F]" />
-        <KpiCard icon={AlertTriangle} label="Overdue" value={stats.overdue} sub={stats.myOverdue > 0 ? `${stats.myOverdue} on you` : "All on track"} iconBg={stats.overdue > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"} />
+        {groups.map((group) => (
+          <KpiCard
+            key={group.id}
+            icon={group.id.includes("self") ? ListTodo : Send}
+            label={group.label}
+            value={stats.counts[group.id] || 0}
+            sub="Open tasks you can track"
+            iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
+          />
+        ))}
+        <KpiCard icon={AlertTriangle} label="Overdue" value={stats.overdue} sub={stats.overdue > 0 ? "Needs a look" : "All on track"} iconBg={stats.overdue > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#3E7A54]/10 text-[#2F6042]"} />
       </div>
 
       {/* Filters */}
       <TaskFilters
+        tabs={filterTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         filterPriority={filterPriority}
         onFilterChange={setFilterPriority}
-        sentLabel={sentLabel}
-        totalCount={sorted.length}
-        extraTabs={isDirector ? [{ id: "escalations", label: "My escalations", count: pendingEscalations }] : []}
+        totalCount={visibleGroups.reduce((sum, group) => sum + byPriority(group.tasks).length, 0)}
       />
 
       {/* Director: everything sent to the Owner, with status and the Owner's note */}
@@ -218,36 +222,35 @@ const TasksPageInner = ({ currentRole, user, taskList, isTaskListLoading }) => {
               </div>
             ))}
           </>
-        ) : sorted.length > 0 ? sorted.map((task) => {
-          const status = taskStatuses[task.id] || task.status;
-          return (
-            <TaskCard
-              key={task.id}
-              task={task}
-              isForMe={isAssignedToMe(task)}
-              canManage={sameId(task.creatorId, user?.id)}
-              status={status}
-              currentRole={currentRole}
-              daysUntil={daysUntil}
-              onUpdateStatus={(newStatus) => updateStatus(task.id, newStatus)}
-            />
-          );
-        }) : (
-          <div className="py-12 text-center">
-            <ClipboardList size={32} className="mx-auto text-gray-300 mb-2" />
-            <p className="text-sm text-gray-500">{emptyMessage}</p>
-            {activeTab === "assigned" && sentTasks.length > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                You have {sentTasks.length} {sentTasks.length === 1 ? "task" : "tasks"} sent to the {sentTarget}.{" "}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("sent")}
-                  className="font-semibold text-[#1E3A5F] hover:underline cursor-pointer"
-                >
-                  View them
-                </button>
-              </p>
-            )}
+        ) : (
+          <div className="space-y-5">
+            {visibleGroups.map((group) => {
+              const rows = byPriority(group.tasks);
+              return (
+                <div key={group.id} className="space-y-2">
+                  <h2 className="text-sm font-bold text-gray-900">{group.label}</h2>
+                  {rows.length > 0 ? rows.map((task) => {
+                    const status = taskStatuses[task.id] || task.status;
+                    return (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        isForMe={isAssignedToMe(task)}
+                        canManage={sameId(task.creatorId, user?.id)}
+                        status={status}
+                        currentRole={currentRole}
+                        daysUntil={daysUntil}
+                        onUpdateStatus={(newStatus) => updateStatus(task.id, newStatus)}
+                      />
+                    );
+                  }) : (
+                    <p className="text-sm text-gray-500 py-3">
+                      {filterPriority !== "all" ? "No tasks match this priority." : `Nothing in ${group.label.toLowerCase()}.`}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

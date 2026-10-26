@@ -58,7 +58,7 @@ const SinglePieChart = ({ title, spent, total, color = "#1E3A5F" }) => {
   );
 };
 
-const BudgetPieChartsCard = ({ schoolSpent, schoolBudgetTotal, categories = [] }) => {
+const BudgetPieChartsCard = ({ schoolSpent, schoolBudgetTotal, categories = [], directorSpent = 0, directorBudgetTotal = 0 }) => {
   // Find Payroll category
   const payrollCategory = categories.find((c) => {
     const name = (c.name || c.category || "").toLowerCase();
@@ -79,11 +79,11 @@ const BudgetPieChartsCard = ({ schoolSpent, schoolBudgetTotal, categories = [] }
           Annual Budget vs. Actual (Pie Chart Breakdown)
         </CardTitle>
         <CardDescription className="text-xs">
-          Overall budget and payroll budget consumption at a glance.
+          School budget, payroll, and the director discretionary budget.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <SinglePieChart
             title="Overall Budget (Spent vs. Remaining)"
             spent={schoolSpent}
@@ -95,6 +95,12 @@ const BudgetPieChartsCard = ({ schoolSpent, schoolBudgetTotal, categories = [] }
             spent={payrollSpent}
             total={payrollBudget}
             color="#B78A2F"
+          />
+          <SinglePieChart
+            title="Director Budget (Spent vs. Remaining)"
+            spent={directorSpent}
+            total={directorBudgetTotal}
+            color="#3E7A54"
           />
         </div>
       </CardContent>

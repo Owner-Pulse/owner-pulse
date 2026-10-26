@@ -289,7 +289,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${noData ? STATUS.none.dot : "bg-white"}`} />
                   <span className={`text-xs font-extrabold uppercase break-words ${noData ? STATUS.none.text : "text-white"}`}>
-                    Director Owned &amp; Followed Items
+                    Assigned to Director
                   </span>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${noData ? STATUS.none.badge : "text-white bg-white/20"}`}>
@@ -305,7 +305,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                   <MaintenanceItem key={`maintenance-${m.id}`} item={m} showAssignee onOpen={(item) => setOpenItem({ ...item, kind: "maintenance" })} />
                 ))}
                 {directorOwned.length === 0 && directorMaintenance.length === 0 && (
-                  <p className={`text-xs italic py-3 text-center ${noData ? STATUS.none.text : "text-white/85"}`}>{noData ? "No task data" : "No open items currently owned by Director."}</p>
+                  <p className={`text-xs italic py-3 text-center ${noData ? STATUS.none.text : "text-white/85"}`}>{noData ? "No task data" : "Nothing is assigned to the Director right now."}</p>
                 )}
                 {directorHidden > 0 && (
                   <button
@@ -325,7 +325,7 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${noData ? STATUS.none.dot : "bg-white"}`} />
                   <span className={`text-xs font-extrabold uppercase break-words ${noData ? STATUS.none.text : "text-white"}`}>
-                    Owner Assigned &amp; Comments
+                    Assigned to Owner
                   </span>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${noData ? STATUS.none.badge : "text-white bg-white/20"}`}>
@@ -342,8 +342,8 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
                 ))}
                 {ownerOwned.length === 0 && ownerMaintenance.length === 0 && (
                   <div className={`p-3 rounded-xl border text-center ${noData ? `${STATUS.none.soft} ${STATUS.none.border}` : `bg-white ${ACCENTS.finance.border}`}`}>
-                    <p className="text-xs font-medium text-gray-700">No items currently awaiting Owner comments.</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Escalated items will display here with Owner feedback.</p>
+                    <p className="text-xs font-medium text-gray-700">Nothing is assigned to the Owner right now.</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Tasks and maintenance sent to the Owner show here.</p>
                   </div>
                 )}
                 {ownerHidden > 0 && (

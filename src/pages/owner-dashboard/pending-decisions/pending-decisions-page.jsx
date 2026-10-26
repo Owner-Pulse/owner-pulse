@@ -24,7 +24,7 @@ const ITEM_TYPES = {
 
 const FILTERS = [
   { key: "pending", label: "Pending" },
-  { key: "resolved", label: "Resolved" },
+  { key: "resolved", label: "History" },
   { key: "all", label: "All" },
 ];
 
@@ -152,10 +152,11 @@ const PendingDecisionsPage = () => {
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">Pending Decisions</h1>
         <p className="text-sm text-gray-500 mt-1">
           {counts.pending > 0
-            ? `${counts.pending} ${counts.pending === 1 ? "item is" : "items are"} waiting for your decision`
+            ? `${counts.pending} ${counts.pending === 1 ? "item is" : "items are"} waiting for your decision. `
             : total > 0
-              ? "Nothing is waiting for your decision"
-              : "Directors have not sent anything yet"}
+              ? "Nothing is waiting for your decision. "
+              : "Directors have not sent anything yet. "}
+          Every decision is kept for the life of the app. History is the full record, not a date window.
         </p>
       </motion.div>
 
@@ -211,7 +212,7 @@ const PendingDecisionsPage = () => {
               {filterStatus === "pending"
                 ? "No items are waiting for your decision"
                 : filterStatus === "resolved"
-                  ? "Decisions you make will be listed here"
+                  ? "Every decision you make stays here for the life of the app"
                   : "Items sent by Directors will be listed here"}
             </p>
           </div>

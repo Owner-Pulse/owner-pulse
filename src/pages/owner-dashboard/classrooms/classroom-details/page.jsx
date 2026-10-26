@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
@@ -26,7 +26,10 @@ const COLORS = ["#1E3A5F", "#10B981", "#F59E0B"];
 const OwnerClassroomDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("financials");
+  const location = useLocation();
+  const hideFinancials = location.pathname.startsWith("/director");
+  const classroomBase = hideFinancials ? "/director/classrooms" : "/owner/classrooms";
+  const [activeTab, setActiveTab] = useState(hideFinancials ? "roster" : "financials");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all" | "enrolled" | "withdrawn"
 
@@ -179,17 +182,17 @@ const OwnerClassroomDetailPage = () => {
       <div className="flex items-center gap-3">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/owner/classrooms")}
+          onClick={() => navigate(classroomBase)}
           className="hover:bg-slate-100 p-2 rounded-xl shrink-0"
         >
           <ArrowLeft size={18} className="text-gray-600" />
         </Button>
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider">Classroom Economics</span>
+            <span className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider">{hideFinancials ? "Classroom" : "Classroom Economics"}</span>
             {nweaScore !== undefined && nweaScore !== null && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#1E3A5F]/10 text-[#1E3A5F]">
-                NWEA MAP: {nweaScore}
+                NWEA Score (RIT Score)/CLASS: {nweaScore}
               </span>
             )}
           </div>
@@ -197,7 +200,7 @@ const OwnerClassroomDetailPage = () => {
         </div>
       </div>
 
-      {/* Overview Cards */}
+      {!hideFinancials && (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-white border-none shadow-sm">
           <CardContent className="p-4">
@@ -241,9 +244,11 @@ const OwnerClassroomDetailPage = () => {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-1.5 border-b border-slate-200">
+        {!hideFinancials && (
         <button
           onClick={() => setActiveTab("financials")}
           className={`px-4 py-2.5 text-xs font-bold transition-all relative ${
@@ -252,6 +257,7 @@ const OwnerClassroomDetailPage = () => {
         >
           Financial Performance
         </button>
+        )}
         <button
           onClick={() => setActiveTab("roster")}
           className={`px-4 py-2.5 text-xs font-bold transition-all relative ${
@@ -264,7 +270,7 @@ const OwnerClassroomDetailPage = () => {
 
       {/* Tab Contents */}
       <div className="space-y-6">
-        {activeTab === "financials" && (
+        {!hideFinancials && activeTab === "financials" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Funding breakdown pie chart */}
             <Card className="bg-white border-none shadow-sm lg:col-span-2">

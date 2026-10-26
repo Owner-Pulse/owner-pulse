@@ -90,6 +90,7 @@ const BudgetPage = () => {
   );
 
   const { isLoading, isFetching, isError, data, refetch } = useGetBudget(queryParams);
+  const { data: directorBudgetResponse } = useGetBudget({ type: "director", page: 1, per_page: 100 });
   const { summary: categorySummary, categories: apiCategoryBudgets, isSuccess: categoryBudgetsLoaded, refetch: refetchCategoryBudgets } = useGetCategoryBudgets({ type: "school" });
   const { deleteCategoryBudget, isPending: isDeletingCategory } = useDeleteCategoryBudget();
 
@@ -148,6 +149,7 @@ const BudgetPage = () => {
   };
 
   const budgetData = data?.budget_vs_actual;
+  const directorBudgetData = isDirectorView ? budgetData : directorBudgetResponse?.budget_vs_actual;
 
   useEffect(() => {
     if (isDirector) setView("director");
@@ -496,6 +498,14 @@ const BudgetPage = () => {
                   schoolSpent={budgetData?.spent_ytd_numeric ?? schoolSpent}
                   schoolBudgetTotal={budgetData?.annual_budget_numeric ?? schoolBudgetTotal}
                   categories={schoolCategories}
+                  directorSpent={directorBudgetData?.spent_ytd_numeric ?? 0}
+                  directorBudgetTotal={directorBudgetData?.director_budget_numeric ?? 0}
+                />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <DirectorSpendingPie
+                  slices={directorBudgetData?.spending_by_reason?.slices || directorBudgetData?.spending_by_reason?.items || []}
                 />
               </motion.div>
 

@@ -255,11 +255,16 @@ const OverviewPage = () => {
         />
         <DonutKpiCard
           label="Revenue"
-          value={revenueDataKpi.formatted_full || revenueDataKpi.formatted || fmtMoney(revenueDataKpi.amount)}
-          pct={revenueDataKpi.pct ?? (revenueDataKpi.amount > 0 ? 85 : 0)}
+          value={
+            cashFlowMetrics?.revenue_ytd?.amount
+            || revenueDataKpi.formatted_full
+            || revenueDataKpi.formatted
+            || fmtMoney(revenueDataKpi.amount)
+          }
+          pct={Number(cashFlowMetrics?.revenue_ytd?.amount_numeric ?? revenueDataKpi.amount) > 0 ? 100 : 0}
           accent="finance"
-          noData={!kpiCards?.revenue}
-          sub={`${revenueDataKpi.mom_growth || "0%"} MoM`}
+          noData={cashFlowMetrics?.revenue_ytd?.amount == null && !kpiCards?.revenue}
+          sub={cashFlowMetrics?.revenue_ytd?.amount != null ? "Year to date, same as Cash Flow" : `${revenueDataKpi.mom_growth || "0%"} MoM`}
           icon={kpiIcon.DollarSign}
         />
         <DonutKpiCard

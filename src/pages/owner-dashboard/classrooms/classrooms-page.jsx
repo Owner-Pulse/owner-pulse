@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router";
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import ClassroomsHeader from "./components/ClassroomsHeader";
@@ -40,6 +41,8 @@ const EMPTY_CLASSROOM_FORM = {
 };
 
 const ClassroomsPage = () => {
+  const location = useLocation();
+  const hideFinancials = location.pathname.startsWith("/director");
   const [activeFilter, setActiveFilter] = useState("All Classrooms");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,12 +190,13 @@ const ClassroomsPage = () => {
         isLoading={isLoading} 
         metrics={metrics} 
         summaryHeading={pnl?.summary_heading} 
+        hideFinancials={hideFinancials}
         onAddClick={() => setIsAddModalOpen(true)} 
       />
 
-      <ClassroomKpis isLoading={isLoading} metrics={metrics} enrollmentSummary={enrollmentSummary} />
+      <ClassroomKpis isLoading={isLoading} metrics={metrics} enrollmentSummary={enrollmentSummary} hideFinancials={hideFinancials} />
 
-      {/* P&L + Profit Chart */}
+      {!hideFinancials && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {isLoading ? (
           <PnLChartSkeleton />
@@ -212,6 +216,7 @@ const ClassroomsPage = () => {
           </>
         )}
       </div>
+      )}
 
       {/* Tier Filter & Targets Setting Button */}
       {!isLoading && (
@@ -238,6 +243,7 @@ const ClassroomsPage = () => {
             <ClassroomDetailCard
               key={classroom.id}
               classroom={classroom}
+              hideFinancials={hideFinancials}
               onEdit={handleEditClassroom}
               onDelete={triggerDeleteClassroom}
             />
