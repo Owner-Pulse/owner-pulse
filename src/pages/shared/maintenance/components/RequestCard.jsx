@@ -1,11 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown, Play } from "lucide-react";
+import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown, Play, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import EscalationSummary from "@/components/EscalationSummary";
-import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
+import { daysBetween, formatDate, formatDateTime, todayYmd } from "@/lib/datetime";
+import { useState } from "react";
+import { useGetMaintenanceComments, usePostMaintenanceComment } from "@/hooks/task-comment.hook";
 
 const fmtDate = (dateStr) => formatDate(dateStr, { month: "short", day: "numeric" });
 const daysSince = (dateStr) => {
@@ -27,11 +29,60 @@ const DIRECTION_TAGS = {
   assigned_to_me: { label: "Assigned to me", className: "bg-[#1E3A5F] text-white border-[#1E3A5F]" },
 };
 
+const MaintenanceComments = ({ requestId }) => {
+  const { comments, isLoading } = useGetMaintenanceComments(requestId, true);
+  const { postComment, isPending } = usePostMaintenanceComment();
+  const [text, setText] = useState("");
+
+  const send = async (e) => {
+    e.preventDefault();
+    if (!text.trim() || isPending) return;
+    const next = text.trim();
+    setText("");
+    try {
+      await postComment({ itemId: requestId, commentText: next });
+    } catch {
+      setText(next);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-2">
+      {isLoading ? (
+        <p className="text-xs text-gray-400">Loading comments...</p>
+      ) : comments.length === 0 ? (
+        <p className="text-xs text-gray-400">No comments yet.</p>
+      ) : (
+        comments.map((item) => (
+          <div key={item.id} className="text-xs text-gray-700">
+            <span className="font-semibold text-gray-900">{item.user?.name || "Unknown"}</span>
+            <span className="text-gray-400"> · {formatDateTime(item.created_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+            <p className="mt-0.5 whitespace-pre-wrap">{item.comment}</p>
+          </div>
+        ))
+      )}
+      <form onSubmit={send} className="flex gap-2">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Write a comment..."
+          className="flex-1 h-8 px-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+        />
+        <button type="submit" disabled={isPending || !text.trim()} className="h-8 px-3 text-xs font-semibold rounded-lg bg-[#1E3A5F] text-white disabled:opacity-50">
+          Send
+        </button>
+      </form>
+    </div>
+  );
+};
+
 const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, onStart, onComplete, isActionPending }) => {
   const directionTag = DIRECTION_TAGS[req.direction];
   const isAssignedToMe = req.direction === "assigned_to_me";
   const days = daysSince(req.logged);
   const isDone = status === "done" || status === "completed";
+  const commentCount = req.commentsCount || 0;
+  const [showComments, setShowComments] = useState(false);
   const borderColor = isDone ? "border-l-[#3E7A54]"
     : req.priority === "critical" ? "border-l-[#AE4A3E]"
       : req.priority === "high" ? "border-l-[#B78A2F]"
@@ -57,6 +108,11 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
               <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-gray-500">
                 <span className="flex items-center gap-1 break-words min-w-0"><MapPin size={10} className="shrink-0" /> {req.location}</span>
                 <span className="flex items-center gap-1"><Calendar size={10} /> {fmtDate(req.logged)} ({days}d ago)</span>
+                {commentCount > 0 && (
+                  <span className="inline-flex items-center gap-0.5">
+                    <MessageSquare size={10} /> {commentCount}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
                 <User size={10} /> {req.byLabel || "Submitted by"} {req.submittedBy}
@@ -173,6 +229,18 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
               <CheckCircle2 size={10} /> Resolved by owner
             </div>
           )}
+
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setShowComments((open) => !open)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E3A5F] hover:underline"
+            >
+              <MessageSquare size={12} />
+              {showComments ? "Hide comments" : "Comments"}
+            </button>
+          </div>
+          {showComments && <MaintenanceComments requestId={req.id} />}
         </CardContent>
       </Card>
     </motion.div>

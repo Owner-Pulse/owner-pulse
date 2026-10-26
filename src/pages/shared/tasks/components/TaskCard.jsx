@@ -332,6 +332,15 @@ const TaskCardInner = ({
                     </span>
                     <span className="text-xs text-gray-300">·</span>
                     <span className="text-xs text-gray-400">By {task.assignedBy}</span>
+                    {(task.raw?.comments_count ?? task.raw?.comments?.length ?? 0) > 0 && (
+                      <>
+                        <span className="text-xs text-gray-300">·</span>
+                        <span className="inline-flex items-center gap-0.5 text-xs text-gray-500">
+                          <MessageSquare size={11} />
+                          {task.raw?.comments_count ?? task.raw?.comments?.length}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
