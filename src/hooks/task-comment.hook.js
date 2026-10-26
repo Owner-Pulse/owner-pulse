@@ -1,26 +1,35 @@
 import { axiosPrivate } from "@/lib/axios.private";
 import { taskCommentService } from "@/services/task-comment.service";
+import { maintenanceCommentService } from "@/services/maintenance-comment.service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { getFieldErrors } from "@/lib/api-errors";
 
-/**
- * Fetch task comments from GET /task/comments/:id
- */
-export const useGetTaskComments = (taskId, enabled = true) => {
+const commentList = (data) => {
+  const rawData = data?.data;
+  return Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
+};
+
+const commentError = (err, fallback) => {
+  const fields = getFieldErrors(err);
+  return fields.comment || err?.response?.data?.message || fallback;
+};
+
+export const useItemComments = (kind, itemId, enabled = true) => {
   const axiosInstance = axiosPrivate();
+  const isMaintenance = kind === "maintenance";
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: ["task-comments", taskId],
-    queryFn: () => taskCommentService.getComments(axiosInstance, taskId),
-    enabled: enabled && !!taskId,
+    queryKey: [isMaintenance ? "maintenance-comments" : "task-comments", itemId],
+    queryFn: () => isMaintenance
+      ? maintenanceCommentService.getComments(axiosInstance, itemId)
+      : taskCommentService.getComments(axiosInstance, itemId),
+    enabled: enabled && !!itemId,
     staleTime: 30 * 1000,
   });
 
-  const rawData = data?.data;
-  const commentsList = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
-
   return {
-    comments: commentsList,
+    comments: commentList(data),
     isLoading,
     isFetching,
     error,
@@ -28,32 +37,42 @@ export const useGetTaskComments = (taskId, enabled = true) => {
   };
 };
 
-/**
- * Post task comment to POST /task/comments/:id
- */
-export const usePostTaskComment = () => {
+export const useGetTaskComments = (taskId, enabled = true) => useItemComments("task", taskId, enabled);
+
+export const useGetMaintenanceComments = (requestId, enabled = true) => useItemComments("maintenance", requestId, enabled);
+
+export const usePostItemComment = (kind = "task") => {
   const axiosInstance = axiosPrivate();
   const queryClient = useQueryClient();
+  const isMaintenance = kind === "maintenance";
 
   const { mutateAsync: postComment, isPending, isError, error } = useMutation({
-    mutationKey: ["post-task-comment"],
-    mutationFn: ({ taskId, commentText }) =>
-      taskCommentService.postComment(axiosInstance, taskId, commentText),
+    mutationKey: [isMaintenance ? "post-maintenance-comment" : "post-task-comment"],
+    mutationFn: ({ taskId, itemId, commentText }) => {
+      const id = itemId ?? taskId;
+      return isMaintenance
+        ? maintenanceCommentService.postComment(axiosInstance, id, commentText)
+        : taskCommentService.postComment(axiosInstance, id, commentText);
+    },
     onSuccess: (data, variables) => {
+      const id = variables.itemId ?? variables.taskId;
       toast.success(data?.message || "Comment posted successfully");
-      queryClient.invalidateQueries(["task-comments", variables.taskId]);
-      queryClient.invalidateQueries(["task-list"]);
-      queryClient.invalidateQueries(["director-task-list"]);
+      queryClient.invalidateQueries({ queryKey: [isMaintenance ? "maintenance-comments" : "task-comments", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-list"] });
+      queryClient.invalidateQueries({ queryKey: ["director-task-list"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-maintenance-list"] });
+      queryClient.invalidateQueries({ queryKey: ["director-maintenance-list"] });
+      queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["director-overview"] });
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to post comment");
+      toast.error(commentError(err, "Failed to post comment"));
     },
   });
 
-  return {
-    postComment,
-    isPending,
-    isError,
-    error,
-  };
+  return { postComment, isPending, isError, error };
 };
+
+export const usePostTaskComment = () => usePostItemComment("task");
+
+export const usePostMaintenanceComment = () => usePostItemComment("maintenance");

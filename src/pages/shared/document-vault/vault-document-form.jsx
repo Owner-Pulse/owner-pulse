@@ -159,7 +159,7 @@ const VaultDocumentForm = ({
               <span className="text-gray-500"> · {formatBytes(form.file.size)}</span>
             </p>
           ) : (
-            <p className="mt-2 text-sm text-gray-500">{requireFile ? "Drop a file or take a photo" : "Drop a replacement file, or leave the current one"}</p>
+            <p className="mt-2 text-sm text-gray-500">{requireFile ? "Drop a file or take a photo" : "Drop a file or take a photo. A file is optional."}</p>
           )}
           <p className="mt-1 text-xs text-gray-400">Drop another file or take a photo</p>
         </button>

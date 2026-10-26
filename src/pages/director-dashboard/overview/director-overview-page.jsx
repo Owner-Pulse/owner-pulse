@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Users, Wrench, ClipboardList, DollarSign,
@@ -16,11 +16,12 @@ import CoverageCard from "./components/CoverageCard";
 import ComplianceCard from "./components/ComplianceCard";
 import MaintenanceCard from "./components/MaintenanceCard";
 import ExpensesCard from "./components/ExpensesCard";
-import TaskBoard from "@/components/TaskBoard";
+import TaskBoard, { TaskCommentsDialog } from "@/components/TaskBoard";
 import OwnerDependenceCard from "./components/OwnerDependenceCard";
 import CollectionsCard from "@/components/collections/CollectionsCard";
 import WeeklyDepositsCard from "@/pages/shared/weekly-reports/components/WeeklyDepositsCard";
 import { formatDate } from "@/lib/datetime";
+import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { PULSE_STATUS_COLORS, statusFromPct, statusFromPulseLabel } from "@/lib/theme-tokens";
 
 const containerVariants = {
@@ -34,6 +35,8 @@ const itemVariants = {
 
 const DirectorOverviewPage = () => {
   const navigate = useNavigate();
+  const { user } = useGetUser();
+  const [openMaintenance, setOpenMaintenance] = useState(null);
   const go = (path) => navigate(path);
 
   // Fetch Director Overview Data
@@ -177,7 +180,7 @@ const DirectorOverviewPage = () => {
       {/* Sections 5, 6: Compliance + Maintenance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ComplianceCard items={upcomingCompliance} onNavigate={go} />
-        <MaintenanceCard items={openMaintList} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} noData={!directorOverviewData?.open_maintenance} onNavigate={go} />
+        <MaintenanceCard items={openMaintList} openCount={maintKpi.open_tickets} criticalCount={maintKpi.critical_count} noData={!directorOverviewData?.open_maintenance} onNavigate={go} onOpen={setOpenMaintenance} />
       </div>
 
       {/* Expenses & Petty Cash */}
@@ -188,6 +191,19 @@ const DirectorOverviewPage = () => {
 
       {/* Owner Dependence Index */}
       <OwnerDependenceCard data={pendingTasksData?.owner_dependence_index ?? pendingTasksData?.over_escalation_rate} />
+
+      {openMaintenance && (
+        <TaskCommentsDialog
+          task={openMaintenance}
+          kind="maintenance"
+          role="director"
+          userId={user?.id}
+          onClose={() => {
+            setOpenMaintenance(null);
+            refetch();
+          }}
+        />
+      )}
     </motion.div>
   );
 };

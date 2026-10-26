@@ -28,7 +28,7 @@ const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess
       <div className="w-full max-w-2xl">
         <VaultDocumentForm
           categories={categories}
-          requireFile
+          requireFile={false}
           isPending={isPending}
           fieldErrors={fieldErrors}
           onCancel={onClose}

@@ -140,6 +140,7 @@ const MaintenancePage = () => {
       assignedTo: r.assign_to,
       assignedLabel: r.assign_to,
       escalation: r.escalation || null,
+      commentsCount: Number(r.comments_count) || 0,
     }));
   }, [maintenanceData]);
 

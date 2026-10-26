@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Wrench } from "lucide-react";
+import { MessageSquare, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import CardAccent from "@/components/ui/card-accent";
@@ -25,7 +25,7 @@ const badgeColor = (priority) => {
   return STATUS.none.badge;
 };
 
-const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false, onNavigate }) => {
+const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false, onNavigate, onOpen }) => {
   const activeItems = items.filter((m) => m.status !== "done" && m.status !== "completed");
 
   return (
@@ -59,9 +59,11 @@ const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false,
                 const cost = m.cost;
 
                 return (
-                  <div
-                    key={m.id || Math.random()}
-                    className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors"
+                  <button
+                    type="button"
+                    key={m.id || title}
+                    onClick={() => onOpen?.(m)}
+                    className="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 hover:bg-gray-100/80 transition-colors w-full text-left"
                   >
                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor(priority)}`} />
                     <div className="flex-1 min-w-0">
@@ -78,10 +80,24 @@ const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false,
                         <span className={`px-1.5 py-0.5 rounded-full font-bold text-[9px] ${badgeColor(priority)}`}>
                           {priority}
                         </span>
+                        {m.status && (
+                          <>
+                            <span>·</span>
+                            <span className="capitalize">{String(m.status).replace(/_/g, " ")}</span>
+                          </>
+                        )}
                         {assignedTo && (
                           <>
                             <span>·</span>
                             <span>{assignedTo}</span>
+                          </>
+                        )}
+                        {(m.comments_count || 0) > 0 && (
+                          <>
+                            <span>·</span>
+                            <span className="inline-flex items-center gap-0.5">
+                              <MessageSquare size={10} /> {m.comments_count}
+                            </span>
                           </>
                         )}
                         {cost && (
@@ -91,8 +107,13 @@ const MaintenanceCard = ({ items = [], openCount, criticalCount, noData = false,
                           </>
                         )}
                       </div>
+                      {m.latest_comment?.text && (
+                        <p className="text-[10px] text-gray-500 mt-1 truncate">
+                          {m.latest_comment.author_name || "Comment"}: {m.latest_comment.text}
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  </button>
                 );
               })
             ) : (

@@ -7,7 +7,7 @@ import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 import PriorityTag from "@/pages/shared/tasks/components/PriorityTag";
 import TaskCommentsModal from "@/pages/shared/tasks/components/TaskCommentsModal";
-import { useGetTaskComments, usePostTaskComment } from "@/hooks/task-comment.hook";
+import { useItemComments, usePostItemComment } from "@/hooks/task-comment.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import EscalationSummary from "@/components/EscalationSummary";
 import { formatDate, toDate } from "@/lib/datetime";
@@ -126,8 +126,23 @@ const TaskItem = ({ task, fromLabel, onOpen }) => {
 };
 
 // ─── Maintenance card ────────────────────────────────────────────
-const MaintenanceItem = ({ item, showAssignee = false }) => (
-  <div className="p-2.5 rounded-xl bg-white border border-gray-200/70 shadow-2xs">
+const MaintenanceItem = ({ item, showAssignee = false, onOpen }) => {
+  const hasComments = (item.comments_count || 0) > 0;
+  const open = () => onOpen?.(item);
+
+  return (
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={open}
+    onKeyDown={(e) => {
+      if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        open();
+      }
+    }}
+    className="p-2.5 rounded-xl bg-white border border-gray-200/70 shadow-2xs cursor-pointer transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+  >
     <div className="flex items-start justify-between gap-2">
       <p className="text-xs font-semibold text-gray-900 break-words min-w-0">{item.title}</p>
       <span
@@ -146,15 +161,22 @@ const MaintenanceItem = ({ item, showAssignee = false }) => (
       {showAssignee && (
         <span className="font-semibold text-gray-600 break-words min-w-0">To: {item.assigned_to?.name || "All Directors"}</span>
       )}
+      {hasComments && (
+        <span className="inline-flex items-center gap-0.5 ml-auto shrink-0">
+          <MessageSquare size={10} /> {item.comments_count}
+        </span>
+      )}
     </div>
     {item.escalation && <EscalationSummary escalation={item.escalation} clamp className="mt-2" />}
+    {item.latest_comment && <CommentPreview comment={item.latest_comment} />}
   </div>
-);
+  );
+};
 
 // ─── Comments modal wired to the comment endpoints ───────────────
-const TaskCommentsDialog = ({ task, role, userId, onClose }) => {
-  const { comments, isLoading } = useGetTaskComments(task.id, true);
-  const { postComment, isPending } = usePostTaskComment();
+export const TaskCommentsDialog = ({ task, kind = "task", role, userId, onClose }) => {
+  const { comments, isLoading } = useItemComments(kind, task.id, true);
+  const { postComment, isPending } = usePostItemComment(kind);
 
   const thread = comments.map((c) => {
     const mine = userId != null && c.user_id === userId;
@@ -182,7 +204,7 @@ const TaskCommentsDialog = ({ task, role, userId, onClose }) => {
       comments={thread}
       isLoading={isLoading}
       isPosting={isPending}
-      onAddComment={(taskId, commentText) => postComment({ taskId, commentText }).catch(() => {})}
+      onAddComment={(taskId, commentText) => postComment({ taskId, itemId: taskId, commentText }).catch(() => {})}
       onClose={onClose}
     />
   );
@@ -200,7 +222,7 @@ const TaskCommentsDialog = ({ task, role, userId, onClose }) => {
 const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () => {}, onRefresh = () => {} }) => {
   const queryClient = useQueryClient();
   const { user } = useGetUser();
-  const [openTask, setOpenTask] = useState(null);
+  const [openItem, setOpenItem] = useState(null);
 
   const directorOwned = data?.director_owned || [];
   const ownerOwned = data?.owner_owned || [];
@@ -229,10 +251,10 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
   };
 
   const closeComments = () => {
-    const taskId = openTask?.id;
-    setOpenTask(null);
-    // Drop the cached thread so the next open hits the server and marks comments read again
-    queryClient.removeQueries({ queryKey: ["task-comments", taskId] });
+    const itemId = openItem?.id;
+    const kind = openItem?.kind || "task";
+    setOpenItem(null);
+    queryClient.removeQueries({ queryKey: [kind === "maintenance" ? "maintenance-comments" : "task-comments", itemId] });
     onRefresh();
   };
 
@@ -277,10 +299,10 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
 
               <div className="flex-1 p-3.5 space-y-2">
                 {directorOwned.map((t) => (
-                  <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
+                  <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={(task) => setOpenItem({ ...task, kind: "task" })} />
                 ))}
                 {directorMaintenance.map((m) => (
-                  <MaintenanceItem key={`maintenance-${m.id}`} item={m} showAssignee />
+                  <MaintenanceItem key={`maintenance-${m.id}`} item={m} showAssignee onOpen={(item) => setOpenItem({ ...item, kind: "maintenance" })} />
                 ))}
                 {directorOwned.length === 0 && directorMaintenance.length === 0 && (
                   <p className={`text-xs italic py-3 text-center ${noData ? STATUS.none.text : "text-white/85"}`}>{noData ? "No task data" : "No open items currently owned by Director."}</p>
@@ -313,10 +335,10 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
 
               <div className="flex-1 p-3.5 space-y-2">
                 {ownerOwned.map((t) => (
-                  <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={setOpenTask} />
+                  <TaskItem key={`task-${t.id}`} task={t} fromLabel={fromLabel(t)} onOpen={(task) => setOpenItem({ ...task, kind: "task" })} />
                 ))}
                 {ownerMaintenance.map((m) => (
-                  <MaintenanceItem key={`maintenance-${m.id}`} item={m} />
+                  <MaintenanceItem key={`maintenance-${m.id}`} item={m} onOpen={(item) => setOpenItem({ ...item, kind: "maintenance" })} />
                 ))}
                 {ownerOwned.length === 0 && ownerMaintenance.length === 0 && (
                   <div className={`p-3 rounded-xl border text-center ${noData ? `${STATUS.none.soft} ${STATUS.none.border}` : `bg-white ${ACCENTS.finance.border}`}`}>
@@ -339,8 +361,8 @@ const TaskBoard = ({ data, role = "director", noData = false, onNavigate = () =>
         </CardContent>
       </Card>
 
-      {openTask && (
-        <TaskCommentsDialog task={openTask} role={role} userId={user?.id} onClose={closeComments} />
+      {openItem && (
+        <TaskCommentsDialog task={openItem} kind={openItem.kind || "task"} role={role} userId={user?.id} onClose={closeComments} />
       )}
     </motion.div>
   );
