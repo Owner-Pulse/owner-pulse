@@ -4,6 +4,7 @@ import { DollarSign, Wallet, TrendingUp, Plus, Settings, PieChart } from "lucide
 import KpiCard from "./components/KpiCard";
 import BudgetProgressBar from "./components/BudgetProgressBar";
 import BudgetPieChartsCard from "./components/BudgetPieChartsCard";
+import DirectorSpendingPie from "./components/DirectorSpendingPie";
 import CategoryBreakdownCard from "./components/CategoryBreakdownCard";
 import CategoryBudgetHeadroomCard from "./components/CategoryBudgetHeadroomCard";
 import EditCategoryBudgetModal from "./components/EditCategoryBudgetModal";
@@ -511,7 +512,7 @@ const BudgetPage = () => {
                   }}
                   isFetching={isFetching}
                   title={budgetData?.budget_categories?.title || "Budget Categories"}
-                  subtitle="Add, edit, or delete categories and their budgets"
+                  subtitle="The budget is the limit saved for that category. Spent is QuickBooks purchases on the operating account, grouped by the expense account name. A category with no saved limit is measured against the full school budget."
                   onEditCategory={(cat) => setSelectedCategoryToEdit(cat)}
                   onDeleteCategory={(cat) => setCategoryToDelete(cat)}
                   onAddCategory={() => setIsAddCategoryOpen(true)}
@@ -564,6 +565,12 @@ const BudgetPage = () => {
                   total={budgetData?.director_budget_numeric ?? directorBudgetTotal}
                   overallConsumption={budgetData?.budget_used || budgetData?.overall_budget_consumption}
                   color="bg-[#B78A2F]"
+                />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <DirectorSpendingPie
+                  slices={budgetData?.spending_by_reason?.slices || budgetData?.spending_by_reason?.items || []}
                 />
               </motion.div>
 

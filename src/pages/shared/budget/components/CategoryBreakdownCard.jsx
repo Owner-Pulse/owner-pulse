@@ -137,6 +137,11 @@ const CategoryBreakdownCard = ({
                       {budgetedNumeric > 0 && (
                         <p className="text-[10px] text-gray-500 mt-0.5">Allocated: {budgetedFormatted}</p>
                       )}
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        Budget: {cat.budget_source || (hasCustomLimit ? "Saved category limit" : "Full school budget, because no category limit is saved")}
+                        {" · "}
+                        Spent: {cat.spent_source || "QuickBooks purchases on the operating account"}
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
