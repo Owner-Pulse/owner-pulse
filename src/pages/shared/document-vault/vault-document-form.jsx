@@ -57,6 +57,7 @@ const VaultDocumentForm = ({
   onCancel,
   onSubmit,
   heading = "Upload document",
+  showAccess = false,
 }) => {
   const fileRef = useRef(null);
   const cameraRef = useRef(null);
@@ -70,6 +71,7 @@ const VaultDocumentForm = ({
     expiry_date: initial.expiry_date || "",
     reviewMonths: initial.reviewMonths || "12",
     keptNotes: initial.keptNotes || "",
+    access: initial.access || "public",
     file: null,
   }));
 
@@ -121,6 +123,7 @@ const VaultDocumentForm = ({
       expiry_date: expiry,
       notes,
       file: form.file,
+      is_confidential: showAccess && form.access === "confidential",
     });
   };
 
@@ -204,6 +207,19 @@ const VaultDocumentForm = ({
             <FieldError message={Array.isArray(fieldErrors.category_id) ? fieldErrors.category_id[0] : fieldErrors.category_id} />
           </div>
         </div>
+
+        {showAccess && (
+          <div className="mt-4">
+            <label className={labelClass}>Document access</label>
+            <select value={form.access} onChange={(e) => set("access", e.target.value)} className={fieldClass}>
+              <option value="public">Public document</option>
+              <option value="confidential">Confidential document</option>
+            </select>
+            <p className="mt-1 text-[11px] text-gray-400">
+              A confidential document stays on the Owner portal. The Director cannot see it.
+            </p>
+          </div>
+        )}
 
         <p className={`${labelClass} mt-5`}>What should OwnerPulse do with it?</p>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row">

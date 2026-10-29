@@ -81,6 +81,8 @@ export const useAddOwnerComplianceItem = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Compliance item created successfully");
         },
         onError: (err) => {
@@ -105,6 +107,8 @@ export const useUpdateOwnerComplianceItem = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Compliance item updated successfully");
         },
         onError: (err) => {
@@ -129,6 +133,8 @@ export const useDeleteOwnerComplianceItem = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Compliance item deleted successfully");
         },
         onError: (err) => {
@@ -153,6 +159,8 @@ export const useCompleteOwnerComplianceItem = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Compliance item marked as completed successfully");
         },
         onError: (err) => {
@@ -177,6 +185,8 @@ export const useAddOwnerComplianceLogNote = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-items"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Operational log note added successfully");
         },
         onError: (err) => {
@@ -202,6 +212,8 @@ export const useToggleOwnerComplianceChecklist = () => {
             queryClient.invalidateQueries({ queryKey: ["owner-compliance-pulse-impact"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-overview"] });
             queryClient.invalidateQueries({ queryKey: ["director-compliance-items"] });
+            queryClient.invalidateQueries({ queryKey: ["owner-overview"] });
+            queryClient.invalidateQueries({ queryKey: ["director-overview"] });
             toast.success(data?.message ?? "Checklist item status updated successfully");
         },
         onError: (err) => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -70,11 +70,17 @@ const UserAvatar = ({ avatar, name, role }) => {
 /**
  * Facebook-style inline comment thread section
  */
-const InlineTaskComments = ({ taskId, currentRole }) => {
+const InlineTaskComments = ({ taskId, currentRole, showAll, onCount }) => {
   const { user } = useGetUser();
   const { comments, isLoading } = useGetTaskComments(taskId, true);
   const { postComment, isPending } = usePostTaskComment();
   const [newCommentText, setNewCommentText] = useState("");
+
+  useEffect(() => {
+    if (!isLoading) onCount?.(comments.length);
+  }, [comments.length, isLoading, onCount]);
+
+  const visible = showAll ? comments : comments.slice(-2);
 
   const handlePostComment = async (e) => {
     e.preventDefault();
@@ -110,8 +116,8 @@ const InlineTaskComments = ({ taskId, currentRole }) => {
           No comments yet. Write a comment below.
         </p>
       ) : (
-        <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-          {comments.map((item) => {
+        <div className={`space-y-2.5 pr-1 ${showAll ? "max-h-72 overflow-y-auto" : ""}`}>
+          {visible.map((item) => {
             const authorName = item.user?.name || "Unknown";
             const authorRole = item.user?.role || "user";
             const commentText = item.comment;
@@ -213,7 +219,11 @@ const TaskCardInner = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(task.raw?.comments_count ?? task.raw?.comments?.length ?? 0);
+  const reportCommentCount = useCallback((count) => {
+    setCommentCount((prev) => (prev === count ? prev : count));
+  }, []);
 
   const days = daysUntil(task.due);
   const isDone = status === "done" || status === "completed";
@@ -373,21 +383,22 @@ const TaskCardInner = ({
                   </Button>
                 )}
 
-                {/* View Comments toggle button */}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={`h-7 text-xs border-none px-2.5 font-medium flex items-center gap-1 transition-all ${showComments
-                      ? "bg-[#1E3A5F] text-white hover:bg-[#15294A]"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  onClick={() => setShowComments((prev) => !prev)}
-                  title={showComments ? "Hide comments" : "View comments"}
-                >
-                  <MessageSquare size={11} />
-                  <span>{showComments ? "Hide Comments" : "View Comments"}</span>
-                  {showComments ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                </Button>
+                {commentCount > 2 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`h-7 text-xs border-none px-2.5 font-medium flex items-center gap-1 transition-all ${showAllComments
+                        ? "bg-[#1E3A5F] text-white hover:bg-[#15294A]"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    onClick={() => setShowAllComments((prev) => !prev)}
+                    title={showAllComments ? "Show latest comments" : "View all comments"}
+                  >
+                    <MessageSquare size={11} />
+                    <span>{showAllComments ? "Show latest" : "View all comments"}</span>
+                    {showAllComments ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </Button>
+                )}
 
                 {/* Delete Task button */}
                 {canDelete && (
@@ -407,13 +418,12 @@ const TaskCardInner = ({
 
             {task.raw?.escalation && <EscalationSummary escalation={task.raw.escalation} className="mt-3" />}
 
-            {/* Inline Facebook-style Comments Section */}
-            {showComments && (
-              <InlineTaskComments
-                taskId={task.id}
-                currentRole={currentRole}
-              />
-            )}
+            <InlineTaskComments
+              taskId={task.id}
+              currentRole={currentRole}
+              showAll={showAllComments}
+              onCount={reportCommentCount}
+            />
           </CardContent>
         </Card>
       </motion.div>

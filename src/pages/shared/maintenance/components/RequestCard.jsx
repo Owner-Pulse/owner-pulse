@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, User, CheckCircle2, Clock, Trash2, Pencil, ChevronDown, Play, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +6,6 @@ import PriorityTag from "./PriorityTag";
 import StatusTag from "./StatusTag";
 import EscalationSummary from "@/components/EscalationSummary";
 import { daysBetween, formatDate, formatDateTime, todayYmd } from "@/lib/datetime";
-import { useState } from "react";
 import { useGetMaintenanceComments, usePostMaintenanceComment } from "@/hooks/task-comment.hook";
 
 const fmtDate = (dateStr) => formatDate(dateStr, { month: "short", day: "numeric" });
@@ -29,10 +28,16 @@ const DIRECTION_TAGS = {
   assigned_to_me: { label: "Assigned to me", className: "bg-[#1E3A5F] text-white border-[#1E3A5F]" },
 };
 
-const MaintenanceComments = ({ requestId }) => {
+const MaintenanceComments = ({ requestId, showAll, onCount }) => {
   const { comments, isLoading } = useGetMaintenanceComments(requestId, true);
   const { postComment, isPending } = usePostMaintenanceComment();
   const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (!isLoading) onCount?.(comments.length);
+  }, [comments.length, isLoading, onCount]);
+
+  const visible = showAll ? comments : comments.slice(-2);
 
   const send = async (e) => {
     e.preventDefault();
@@ -53,7 +58,7 @@ const MaintenanceComments = ({ requestId }) => {
       ) : comments.length === 0 ? (
         <p className="text-xs text-gray-400">No comments yet.</p>
       ) : (
-        comments.map((item) => (
+        visible.map((item) => (
           <div key={item.id} className="text-xs text-gray-700">
             <span className="font-semibold text-gray-900">{item.user?.name || "Unknown"}</span>
             <span className="text-gray-400"> · {formatDateTime(item.created_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
@@ -81,8 +86,11 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
   const isAssignedToMe = req.direction === "assigned_to_me";
   const days = daysSince(req.logged);
   const isDone = status === "done" || status === "completed";
-  const commentCount = req.commentsCount || 0;
-  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(req.commentsCount || 0);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const reportCommentCount = useCallback((count) => {
+    setCommentCount((prev) => (prev === count ? prev : count));
+  }, []);
   const borderColor = isDone ? "border-l-[#3E7A54]"
     : req.priority === "critical" ? "border-l-[#AE4A3E]"
       : req.priority === "high" ? "border-l-[#B78A2F]"
@@ -230,17 +238,19 @@ const RequestCard = ({ req, status, onUpdateStatus, onDelete, onEdit, isOwner, o
             </div>
           )}
 
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => setShowComments((open) => !open)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E3A5F] hover:underline"
-            >
-              <MessageSquare size={12} />
-              {showComments ? "Hide comments" : "Comments"}
-            </button>
-          </div>
-          {showComments && <MaintenanceComments requestId={req.id} />}
+          {commentCount > 2 && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setShowAllComments((open) => !open)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E3A5F] hover:underline"
+              >
+                <MessageSquare size={12} />
+                {showAllComments ? "Show latest" : "View all comments"}
+              </button>
+            </div>
+          )}
+          <MaintenanceComments requestId={req.id} showAll={showAllComments} onCount={reportCommentCount} />
         </CardContent>
       </Card>
     </motion.div>

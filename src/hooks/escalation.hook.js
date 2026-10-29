@@ -6,7 +6,7 @@ import { hasValidationErrors } from "@/lib/escalation";
 
 const PER_PAGE = 20;
 
-// escalation list for either role — status: pending | resolved | all
+// escalation list for either role — status: pending | approved | rejected | acknowledged | resolved | all
 export const useGetEscalations = (role, status = "pending") => {
     const axiosInstance = axiosPrivate();
 
