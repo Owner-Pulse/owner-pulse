@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -28,6 +28,22 @@ const FILTERS = [
   { key: "all", label: "All" },
 ];
 
+const STATUSES = [
+  { key: "pending", label: "Pending", icon: Clock, iconClass: "bg-[#B78A2F]/10 text-[#8F6A1F]", valueClass: "text-[#8F6A1F]" },
+  { key: "approved", label: "Approved", icon: CheckCircle2, iconClass: "bg-[#3E7A54]/10 text-[#2F6042]", valueClass: "text-[#2F6042]" },
+  { key: "rejected", label: "Rejected", icon: XCircle, iconClass: "bg-[#AE4A3E]/10 text-[#8A362C]", valueClass: "text-[#8A362C]" },
+  { key: "acknowledged", label: "Acknowledged", icon: CheckCheck, iconClass: "bg-gray-100 text-gray-500", valueClass: "text-gray-700" },
+];
+
+const EMPTY = {
+  pending: ["All caught up", "No items are waiting for your decision"],
+  approved: ["Nothing approved yet", "Approved decisions will be listed here"],
+  rejected: ["Nothing rejected yet", "Rejected decisions will be listed here"],
+  acknowledged: ["Nothing acknowledged yet", "Acknowledged decisions will be listed here"],
+  resolved: ["Nothing here yet", "Every decision you make stays here for the life of the app"],
+  all: ["Nothing here yet", "Items sent by Directors will be listed here"],
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.04 } },
@@ -39,17 +55,24 @@ const itemVariants = {
 
 const fmtDate = (d) => formatDateTime(d, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-const StatCard = ({ icon: Icon, value, label, iconClass, valueClass }) => (
+const StatCard = ({ icon: Icon, value, label, iconClass, valueClass, selected, onClick }) => (
   <motion.div variants={itemVariants}>
-    <Card className="bg-white border-none shadow-sm">
-      <CardContent className="p-4 text-center">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${iconClass}`}>
-          <Icon size={16} />
-        </div>
-        <p className={`text-2xl font-extrabold ${valueClass}`}>{value}</p>
-        <p className="text-xs text-gray-500 font-medium">{label}</p>
-      </CardContent>
-    </Card>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className="w-full text-left cursor-pointer rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E3A5F]"
+    >
+      <Card className={`bg-white border-none shadow-sm transition-shadow ${selected ? "ring-2 ring-[#1E3A5F]" : "hover:shadow-md"}`}>
+        <CardContent className="p-4 text-center">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${iconClass}`}>
+            <Icon size={16} />
+          </div>
+          <p className={`text-2xl font-extrabold ${valueClass}`}>{value}</p>
+          <p className="text-xs text-gray-500 font-medium">{label}</p>
+        </CardContent>
+      </Card>
+    </button>
   </motion.div>
 );
 
@@ -142,8 +165,16 @@ const PendingDecisionsPage = () => {
   const { escalations, counts, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetEscalations("owner", filterStatus);
   const { resolveEscalation, pendingId } = useResolveEscalation();
+  const countsRef = useRef(counts);
+  if (!isLoading) countsRef.current = counts;
+  const shownCounts = isLoading ? countsRef.current : counts;
 
-  const total = counts.pending + counts.approved + counts.rejected + counts.acknowledged;
+  const total = shownCounts.pending + shownCounts.approved + shownCounts.rejected + shownCounts.acknowledged;
+  const isHistory = ["resolved", "approved", "rejected", "acknowledged"].includes(filterStatus);
+
+  useEffect(() => {
+    if (isHistory && hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [isHistory, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <motion.div className="space-y-6 pb-8" variants={containerVariants} initial="hidden" animate="show">
@@ -151,8 +182,8 @@ const PendingDecisionsPage = () => {
       <motion.div variants={itemVariants}>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">Pending Decisions</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {counts.pending > 0
-            ? `${counts.pending} ${counts.pending === 1 ? "item is" : "items are"} waiting for your decision. `
+          {shownCounts.pending > 0
+            ? `${shownCounts.pending} ${shownCounts.pending === 1 ? "item is" : "items are"} waiting for your decision. `
             : total > 0
               ? "Nothing is waiting for your decision. "
               : "Directors have not sent anything yet. "}
@@ -160,12 +191,19 @@ const PendingDecisionsPage = () => {
         </p>
       </motion.div>
 
-      {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Clock} value={counts.pending} label="Pending" iconClass="bg-[#B78A2F]/10 text-[#8F6A1F]" valueClass="text-[#8F6A1F]" />
-        <StatCard icon={CheckCircle2} value={counts.approved} label="Approved" iconClass="bg-[#3E7A54]/10 text-[#2F6042]" valueClass="text-[#2F6042]" />
-        <StatCard icon={XCircle} value={counts.rejected} label="Rejected" iconClass="bg-[#AE4A3E]/10 text-[#8A362C]" valueClass="text-[#8A362C]" />
-        <StatCard icon={CheckCheck} value={counts.acknowledged} label="Acknowledged" iconClass="bg-gray-100 text-gray-500" valueClass="text-gray-700" />
+        {STATUSES.map((status) => (
+          <StatCard
+            key={status.key}
+            icon={status.icon}
+            value={shownCounts[status.key]}
+            label={status.label}
+            iconClass={status.iconClass}
+            valueClass={status.valueClass}
+            selected={filterStatus === status.key}
+            onClick={() => setFilterStatus(status.key)}
+          />
+        ))}
       </div>
 
       {/* Filter Chips */}
@@ -205,16 +243,8 @@ const PendingDecisionsPage = () => {
             <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CheckCheck size={28} className="text-gray-300" />
             </div>
-            <p className="text-sm font-medium text-gray-500">
-              {filterStatus === "pending" ? "All caught up" : "Nothing here yet"}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {filterStatus === "pending"
-                ? "No items are waiting for your decision"
-                : filterStatus === "resolved"
-                  ? "Every decision you make stays here for the life of the app"
-                  : "Items sent by Directors will be listed here"}
-            </p>
+            <p className="text-sm font-medium text-gray-500">{(EMPTY[filterStatus] || EMPTY.all)[0]}</p>
+            <p className="text-xs text-gray-400 mt-1">{(EMPTY[filterStatus] || EMPTY.all)[1]}</p>
           </div>
         ) : (
           escalations.map((escalation) => (
@@ -229,9 +259,13 @@ const PendingDecisionsPage = () => {
 
         {hasNextPage && (
           <div className="flex justify-center pt-1">
-            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="bg-white text-xs">
-              {isFetchingNextPage ? "Loading…" : "Load more"}
-            </Button>
+            {isHistory ? (
+              <p className="text-xs text-gray-400">{isFetchingNextPage ? "Loading the rest of the history…" : ""}</p>
+            ) : (
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="bg-white text-xs">
+                {isFetchingNextPage ? "Loading…" : "Load more"}
+              </Button>
+            )}
           </div>
         )}
       </div>

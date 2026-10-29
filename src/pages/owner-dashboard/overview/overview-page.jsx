@@ -305,7 +305,7 @@ const OverviewPage = () => {
           accent="operations"
           status={complianceStatus}
           noData={complianceStatus === "none"}
-          sub={`${complianceNeedAttention} need attention`}
+          sub={`${complianceKpi.completed || 0} completed · ${complianceNeedAttention} need attention`}
           icon={kpiIcon.ShieldCheck}
           onClick={() => navigate("/owner/compliance")}
         />

@@ -20,6 +20,7 @@ const initialFromDocument = (document) => {
       expiry_date: "",
       reviewMonths: monthsFromNotes(notes),
       keptNotes: notes,
+      access: document?.is_confidential ? "confidential" : "public",
     };
   }
   if (document?.expiry_date) {
@@ -31,6 +32,7 @@ const initialFromDocument = (document) => {
       expiry_date: document.expiry_date,
       reviewMonths: "12",
       keptNotes: notes,
+      access: document?.is_confidential ? "confidential" : "public",
     };
   }
   return {
@@ -41,6 +43,7 @@ const initialFromDocument = (document) => {
     expiry_date: "",
     reviewMonths: "12",
     keptNotes: notes,
+    access: document?.is_confidential ? "confidential" : "public",
   };
 };
 
@@ -56,6 +59,7 @@ const DocumentVaultEditModal = ({ isOpen, onClose, role, categories, document })
     fd.append("expiry_date", values.expiry_date || "");
     fd.append("notes", values.notes || "");
     if (values.file) fd.append("file", values.file);
+    if (role === "owner") fd.append("is_confidential", values.is_confidential ? "1" : "0");
     try {
       await update({ id: document.id, formData: fd });
       onClose();
@@ -74,6 +78,7 @@ const DocumentVaultEditModal = ({ isOpen, onClose, role, categories, document })
           isPending={isPending}
           fieldErrors={fieldErrors}
           onCancel={onClose}
+          showAccess={role === "owner"}
           onSubmit={submit}
           initial={initialFromDocument(document)}
         />

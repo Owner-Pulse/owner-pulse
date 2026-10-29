@@ -33,6 +33,7 @@ const ownerTabs = [
   { id: "maintenance", label: "Maintenance", icon: Wrench },
   { id: "budget", label: "Budget", icon: DollarSign },
   { id: "payroll", label: "Payroll", icon: DollarSign },
+  { id: "adp-import", label: "ADP Import", icon: UploadCloud },
   { id: "scholarships", label: "Scholarships", icon: GraduationCap },
   { id: "discounts", label: "Discounts", icon: Percent },
   { id: "staff", label: "Staff", icon: Users },
@@ -317,22 +318,23 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen text-white flex">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-80 h-screen bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
-        <div className="px-4 py-3 h-full flex flex-col">
+    <div className="h-screen overflow-hidden text-white flex">
+      {/* Sidebar fills the screen. Items share that height so every link is visible without a menu scrollbar. */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative z-50 w-80 h-full shrink-0 bg-white border-r border-gray-200 shadow-sm transition-transform duration-300`}>
+        <div className="px-3 py-2 h-full flex flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-2 shrink-0 mb-2">
-            <img src={logo} alt="Logo" className="h-11 w-auto" />
+          <div className="flex items-center gap-3 px-2 shrink-0 mb-1">
+            <img src={logo} alt="Logo" className="h-9 w-auto" />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-gray-900">OwnerPulse</h1>
               <p className="text-[10px] text-gray-400 capitalize">{role} Management</p>
             </div>
           </div>
 
-          {/* Each item shares the remaining height so the menu fills the
-              sidebar without scrolling, for every role. */}
-          <nav className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <nav
+            className="flex-1 min-h-0 flex flex-col overflow-hidden"
+            style={{ "--menu-rows": Math.max(ownerTabs.length, directorTabs.length) }}
+          >
             {menuItems.map((item) => {
               const basePath = `/${role}`;
               const destination = `${basePath}/${item.id}`;
@@ -343,7 +345,7 @@ const DashboardLayout = () => {
                   key={item.id}
                   to={destination}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex-1 min-h-8 flex items-center gap-2.5 px-3 rounded-xl text-sm leading-normal font-medium transition-all duration-150 ${isActive
+                  className={`w-full shrink-0 h-[calc((100vh-4rem)/var(--menu-rows))] flex items-center gap-2 px-3 rounded-lg text-sm leading-none font-medium transition-all duration-150 ${isActive
                     ? 'bg-[#1E3A5F] text-white font-semibold'
                     : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                     }`}

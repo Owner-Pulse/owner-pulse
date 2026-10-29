@@ -14,6 +14,7 @@ const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess
     if (values.expiry_date) fd.append("expiry_date", values.expiry_date);
     if (values.notes) fd.append("notes", values.notes);
     if (values.file) fd.append("file", values.file);
+    if (role === "owner") fd.append("is_confidential", values.is_confidential ? "1" : "0");
     if (complianceItem?.id) fd.append("compliance_item_id", String(complianceItem.id));
     try {
       const res = await upload(fd);
@@ -32,6 +33,7 @@ const DocumentVaultUploadModal = ({ isOpen, onClose, role, categories, onSuccess
           isPending={isPending}
           fieldErrors={fieldErrors}
           onCancel={onClose}
+          showAccess={role === "owner"}
           onSubmit={submit}
           initial={{
             category_id: initialCategoryId ? String(initialCategoryId) : "",

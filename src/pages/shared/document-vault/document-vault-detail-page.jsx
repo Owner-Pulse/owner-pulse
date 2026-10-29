@@ -14,6 +14,7 @@ import {
 import { useGetUser } from "@/hooks/auth/user-details.hook";
 import { formatDate } from "@/lib/datetime";
 import { ExpiryBadge } from "./components/ExpiryBadge";
+import ConfidentialStamp from "./components/ConfidentialStamp";
 import { VaultFilePanel } from "./components/VaultFilePanel";
 import { useVaultRole } from "./document-vault-list-page";
 import { FieldError } from "@/pages/shared/weekly-reports/components/FormBits";
@@ -41,6 +42,7 @@ const DocumentVaultDetailPage = () => {
         title: document.title || "",
         expiry_date: document.expiry_date || "",
         notes: document.notes || "",
+        access: document.is_confidential ? "confidential" : "public",
         file: null,
       });
     }
@@ -76,6 +78,7 @@ const DocumentVaultDetailPage = () => {
     fd.append("title", form.title);
     fd.append("expiry_date", form.expiry_date || "");
     fd.append("notes", form.notes || "");
+    if (role === "owner") fd.append("is_confidential", form.access === "confidential" ? "1" : "0");
     if (form.file) fd.append("file", form.file);
     try {
       await update({ id, formData: fd });
@@ -100,6 +103,7 @@ const DocumentVaultDetailPage = () => {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900">{document.title}</h1>
+            {document.is_confidential && <ConfidentialStamp />}
             <ExpiryBadge status={document.expiry_status} />
           </div>
           <p className="text-sm text-gray-500 mt-1">
@@ -159,6 +163,20 @@ const DocumentVaultDetailPage = () => {
                 />
                 <FieldError message={fieldErrors.expiry_date} />
               </div>
+              {role === "owner" && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Document access</label>
+                  <select
+                    value={form.access}
+                    onChange={(e) => setForm((f) => ({ ...f, access: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  >
+                    <option value="public">Public document</option>
+                    <option value="confidential">Confidential document</option>
+                  </select>
+                  <p className="mt-1 text-[11px] text-gray-400">Confidential stays on the Owner portal only.</p>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-semibold text-gray-600">Notes</label>
                 <textarea
@@ -185,6 +203,10 @@ const DocumentVaultDetailPage = () => {
             </form>
           ) : (
             <>
+              <div>
+                <p className="text-[10px] font-semibold uppercase text-gray-400">Document access</p>
+                <p className="text-sm text-gray-700 mt-1">{document.is_confidential ? "Confidential — Owner only" : "Public"}</p>
+              </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase text-gray-400">Notes</p>
                 <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{document.notes || "—"}</p>

@@ -9,6 +9,7 @@ import { useDeleteDocumentVault, useDocumentVaultCategories, useDocumentVaultLis
 import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
 import DocumentVaultUploadModal from "./document-vault-upload-modal";
 import DocumentVaultEditModal from "./document-vault-edit-modal";
+import ConfidentialStamp from "./components/ConfidentialStamp";
 import { isReviewNote } from "./vault-document-form";
 
 export const useVaultRole = () => (useLocation().pathname.startsWith("/owner") ? "owner" : "director");
@@ -143,7 +144,10 @@ const VaultCard = ({ doc, onOpen, onEdit, onDelete, canManage }) => {
       <button type="button" onClick={onOpen} className="flex-1 text-left px-4 pt-3 pb-2">
         <div className="flex items-start justify-between gap-2">
           <span className={`text-[11px] font-bold tracking-wide ${tone.label}`}>{status.label}</span>
-          <Copy size={14} className="text-gray-300 shrink-0" />
+          <span className="flex items-center gap-2 shrink-0">
+            {doc.is_confidential && <ConfidentialStamp />}
+            <Copy size={14} className="text-gray-300" />
+          </span>
         </div>
         <h3 className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">{doc.title}</h3>
         {doc.category?.name && (
@@ -200,6 +204,7 @@ const DocumentVaultListPage = () => {
   const [deleting, setDeleting] = useState(null);
   const [shelvesOpen, setShelvesOpen] = useState(false);
   const [shelfId, setShelfId] = useState("");
+  const [accessFilter, setAccessFilter] = useState("all");
 
   const { categories, isLoading: catsLoading } = useDocumentVaultCategories(role);
   const { documents, pagination, isLoading, isError, refetch } = useDocumentVaultList(role, { per_page: 100 });
@@ -223,11 +228,14 @@ const DocumentVaultListPage = () => {
       }
       return 0;
     };
-    const visible = shelfId
-      ? documents.filter((doc) => String(doc.category?.id || "") === String(shelfId))
-      : documents;
+    const visible = documents.filter((doc) => {
+      if (shelfId && String(doc.category?.id || "") !== String(shelfId)) return false;
+      if (role === "owner" && accessFilter === "confidential" && !doc.is_confidential) return false;
+      if (role === "owner" && accessFilter === "public" && doc.is_confidential) return false;
+      return true;
+    });
     return [...visible].sort(compare);
-  }, [documents, shelfId]);
+  }, [documents, shelfId, accessFilter, role]);
 
   const counts = useMemo(() => {
     const tally = { current: 0, expiring: 0, expired: 0, no_file: 0, on_file: 0, total: documents.length };
@@ -329,6 +337,26 @@ const DocumentVaultListPage = () => {
           </li>
         </ul>
       </div>
+
+      {role === "owner" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400">Show</span>
+          {[
+            { id: "all", label: "All" },
+            { id: "confidential", label: "Confidential only" },
+            { id: "public", label: "Public only" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setAccessFilter(option.id)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${accessFilter === option.id ? "border-red-700 bg-red-700 text-white" : "border-gray-200 bg-white text-gray-700"}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

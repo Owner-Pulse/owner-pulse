@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { FileText, Upload } from "lucide-react";
+import ConfidentialStamp from "@/pages/shared/document-vault/components/ConfidentialStamp";
 
 const PROOF = {
   expired: { label: "Expired", className: "bg-red-50 text-red-700" },
@@ -50,6 +51,7 @@ const ComplianceVaultDocuments = ({ item, role = "owner", onAttach }) => {
                   <span className="flex min-w-0 items-center gap-2">
                     <FileText size={14} className="shrink-0 text-[#1E3A5F]" />
                     <span className="truncate text-xs font-medium text-gray-800">{doc.title}</span>
+                    {doc.is_confidential && <ConfidentialStamp />}
                   </span>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.className}`}>
                     {status.label}
