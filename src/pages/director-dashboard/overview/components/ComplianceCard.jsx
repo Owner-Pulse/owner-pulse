@@ -4,6 +4,7 @@ import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -30,11 +31,9 @@ const ComplianceCard = ({ items = [], onNavigate }) => {
             const tone = isExpired ? STATUS.problem : urgent ? STATUS.watch : STATUS.good;
             const title = c.title || c.item;
 
-            const daysText = c.days_left < 0
-              ? `${Math.abs(c.days_left)}d overdue`
-              : c.days_left === 0
-              ? "Due today"
-              : `${c.days_left}d left`;
+            const daysText = c.expiration_date
+              ? `${formatExpiryDate(c.expiration_date)} · Duration ${formatExpiryDuration(c.expiration_date, c.created_at)}`
+              : "No expiry date";
 
             return (
               <div key={c.id || i} className={`p-3 rounded-xl border transition-all ${tone.soft} ${tone.border}`}>

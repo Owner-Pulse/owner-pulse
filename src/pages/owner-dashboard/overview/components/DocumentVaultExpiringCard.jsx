@@ -4,7 +4,7 @@ import { FileStack } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocumentVaultExpiringSummary } from "@/hooks/document-vault.hook";
-import { formatDate } from "@/lib/datetime";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 
 const DocumentVaultExpiringCard = () => {
   const navigate = useNavigate();
@@ -54,7 +54,16 @@ const DocumentVaultExpiringCard = () => {
                 className="flex w-full items-center justify-between gap-2 text-left text-xs hover:text-[#1E3A5F]"
               >
                 <span className="truncate font-medium text-gray-800">{doc.title}</span>
-                <span className="shrink-0 text-gray-500">{doc.expiry_date ? formatDate(doc.expiry_date) : "—"}</span>
+                <span className="shrink-0 text-right text-gray-500">
+                  {doc.expiry_date ? (
+                    <>
+                      <span className="block">{formatExpiryDate(doc.expiry_date)}</span>
+                      <span className="block">Duration {formatExpiryDuration(doc.expiry_date, doc.created_at)}</span>
+                    </>
+                  ) : (
+                    "No expiry date"
+                  )}
+                </span>
               </button>
             </li>
           ))}

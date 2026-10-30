@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 import StatusPill from "@/pages/owner-dashboard/compliance/components/StatusPill";
 import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryTag";
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
@@ -165,7 +166,7 @@ const DirectorComplianceCard = ({
           <div className="mt-4 pt-1 border-t border-gray-100/70">
             <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
               <span className="text-gray-500 font-semibold flex items-center gap-1">
-                <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires}
+                <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
               </span>
               <div className="flex items-center gap-2">
                 <span
@@ -184,7 +185,7 @@ const DirectorComplianceCard = ({
                     isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"
                   }`}
                 >
-                  {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
+                  {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
                 </span>
               </div>
             </div>

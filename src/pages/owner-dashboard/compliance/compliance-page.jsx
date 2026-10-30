@@ -29,6 +29,7 @@ import StatusPill from "./components/StatusPill";
 import InsuranceShoppingCard from "./components/InsuranceShoppingCard";
 
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 import {
   useGetOwnerComplianceOverview,
   useGetOwnerComplianceItems,
@@ -131,6 +132,7 @@ const CompliancePage = () => {
         item: c.name || c.item || "",
         authority: c.authority_agency || c.authority || "",
         expires: exp,
+        opened: c.created_at || null,
         category: c.category || "regulatory",
         ownerRole: c.responsible_role || c.ownerRole || "owner",
         notes: c.renewal_notes || c.notes || "",
@@ -361,7 +363,7 @@ const CompliancePage = () => {
             pct={stats.total > 0 ? Math.round((stats.expiring / stats.total) * 100) : 0}
             color="#7C3AED"
             items={items.filter((i) => i.status === "expiring" || (i.days_left !== undefined && i.days_left > 0 && i.days_left <= 60 && !i.is_completed))}
-            sub={stats.expiring > 0 ? `Next: ${stats.nextDeadline} days` : "No pending items"}
+            sub={stats.nextDeadlineItem?.expiration_date ? `Next: ${formatExpiryDate(stats.nextDeadlineItem.expiration_date)} · Duration ${formatExpiryDuration(stats.nextDeadlineItem.expiration_date, stats.nextDeadlineItem.created_at)}` : "No pending items"}
             iconBg="bg-[#7C3AED]/10 text-[#6D28D9]"
             onMoreClick={() => setStatusFilter("expiring")}
           />
@@ -383,11 +385,11 @@ const CompliancePage = () => {
           <KpiCard
             icon={Calendar}
             label="Next Deadline"
-            value={stats.nextDeadline > 0 ? `${stats.nextDeadline}d` : "—"}
+            value={stats.nextDeadlineItem?.expiration_date ? formatExpiryDate(stats.nextDeadlineItem.expiration_date) : "—"}
             pct={stats.nextDeadline > 0 ? Math.max(10, Math.min(100, Math.round((stats.nextDeadline / 60) * 100))) : 0}
             color="#1E3A5F"
             items={items.filter((i) => i.days_left !== undefined && i.days_left > 0 && !i.is_completed).sort((a, b) => a.days_left - b.days_left)}
-            sub={stats.nextDeadline > 0 ? "until nearest expiration" : "No upcoming deadlines"}
+            sub={stats.nextDeadlineItem?.expiration_date ? `Duration ${formatExpiryDuration(stats.nextDeadlineItem.expiration_date, stats.nextDeadlineItem.created_at)}` : "No upcoming deadlines"}
             iconBg={stats.nextDeadline <= 14 && stats.nextDeadline > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"}
           />
         </motion.div>
@@ -584,7 +586,7 @@ const CompliancePage = () => {
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
                           <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
                             <span className="text-gray-500 font-semibold flex items-center gap-1">
-                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires}
+                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-black tracking-tight px-2 py-0.5 rounded-full ${
@@ -597,7 +599,7 @@ const CompliancePage = () => {
                                 {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                               </span>
                               <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
-                                {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
+                                {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
                               </span>
                             </div>
                           </div>
@@ -824,7 +826,7 @@ const CompliancePage = () => {
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
                           <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
                             <span className="text-gray-500 font-semibold flex items-center gap-1">
-                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires}
+                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-black tracking-tight px-2 py-0.5 rounded-full ${
@@ -837,7 +839,7 @@ const CompliancePage = () => {
                                 {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                               </span>
                               <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
-                                {item.status_badge || (isExpired ? `${d}d overdue` : `${d} days left`)}
+                                {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
                               </span>
                             </div>
                           </div>

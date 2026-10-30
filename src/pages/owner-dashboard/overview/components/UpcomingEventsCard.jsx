@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar, ShieldCheck, GraduationCap, FileText, Clock, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatDate } from "@/lib/datetime";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
@@ -20,8 +20,6 @@ const TYPE_CONFIG = {
 };
 
 const DEFAULT_CONFIG = { icon: Calendar, accent: null };
-
-const fmtDateShort = (d) => formatDate(d, { month: "short", day: "numeric" });
 
 const UpcomingEventsCard = ({ events = [], noData = false }) => (
   <motion.div variants={itemVariants}>
@@ -42,8 +40,10 @@ const UpcomingEventsCard = ({ events = [], noData = false }) => (
           const rowClass = isUrgent ? `${STATUS.watch.soft} ${STATUS.watch.border}` : config.accent ? `${config.accent.soft} ${config.accent.border}` : "bg-gray-50 border-gray-200";
           const iconClass = isUrgent ? `${STATUS.watch.soft} ${STATUS.watch.text}` : config.accent ? config.accent.icon : "bg-gray-100 text-gray-600";
           const descParts = [];
-          if (evt.days_left != null) descParts.push(`${evt.days_left} day${evt.days_left === 1 ? "" : "s"} left`);
-          if (evt.date) descParts.push(fmtDateShort(evt.date));
+          if (evt.date) {
+            descParts.push(formatExpiryDate(evt.date));
+            descParts.push(`Duration ${formatExpiryDuration(evt.date, evt.started)}`);
+          }
           return (
             <div key={evt.id} className={`flex items-start gap-3 p-2.5 rounded-lg border ${rowClass}`}>
               <div className={`w-8 h-8 rounded-lg ${iconClass} flex items-center justify-center shrink-0`}>

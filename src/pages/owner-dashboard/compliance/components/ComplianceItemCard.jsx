@@ -6,10 +6,9 @@ import StatusPill from "./StatusPill";
 import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
-import { formatDate } from "@/lib/datetime";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 
-const fmtDate = (dateStr) =>
-  formatDate(dateStr, { month: "short", day: "numeric", year: "numeric" });
+const fmtDate = (dateStr) => formatExpiryDate(dateStr);
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -57,7 +56,7 @@ const ComplianceItemCard = ({ item, preWarningDays = 60 }) => {
                 ? "bg-[#B78A2F]/10 text-[#8F6A1F]"
                 : "bg-[#1E3A5F]/10 text-[#1E3A5F]"
             }`}>
-              {isExpired ? `${d}d overdue` : `${d} days remaining`}
+              {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened || item.created_at)}` : "No expiry date"}
             </span>
           </div>
 

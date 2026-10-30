@@ -12,7 +12,7 @@ import {
   useUpdateDocumentVault,
 } from "@/hooks/document-vault.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
-import { formatDate } from "@/lib/datetime";
+import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
 import { ExpiryBadge } from "./components/ExpiryBadge";
 import ConfidentialStamp from "./components/ConfidentialStamp";
 import { VaultFilePanel } from "./components/VaultFilePanel";
@@ -108,7 +108,9 @@ const DocumentVaultDetailPage = () => {
           </div>
           <p className="text-sm text-gray-500 mt-1">
             {document.category?.name}
-            {document.expiry_date ? ` · Expires ${formatDate(document.expiry_date)}` : " · No expiry date"}
+            {document.expiry_date
+              ? ` · Expires ${formatExpiryDate(document.expiry_date)} · Duration ${formatExpiryDuration(document.expiry_date, document.created_at)}`
+              : " · No expiry date"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -191,7 +193,6 @@ const DocumentVaultDetailPage = () => {
                 <label className="text-xs font-semibold text-gray-600">Replace file (optional)</label>
                 <input
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx"
                   onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] || null }))}
                   className="mt-1 w-full text-sm"
                 />
