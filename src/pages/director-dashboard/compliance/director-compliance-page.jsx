@@ -111,6 +111,7 @@ const DirectorCompliancePage = () => {
         item: c.name || c.item || "",
         authority: c.authority_agency || c.authority || "",
         expires: exp,
+        opened: c.created_at || null,
         category: c.category || "regulatory",
         ownerRole: c.responsible_role || c.ownerRole || "director",
         notes: c.renewal_notes || c.notes || "",

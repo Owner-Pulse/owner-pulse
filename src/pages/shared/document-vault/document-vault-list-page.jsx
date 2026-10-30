@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import { useDeleteDocumentVault, useDocumentVaultCategories, useDocumentVaultList } from "@/hooks/document-vault.hook";
-import { daysBetween, formatDate, todayYmd } from "@/lib/datetime";
+import { daysBetween, formatExpiryDate, formatExpiryDuration, todayYmd } from "@/lib/datetime";
 import DocumentVaultUploadModal from "./document-vault-upload-modal";
 import DocumentVaultEditModal from "./document-vault-edit-modal";
 import ConfidentialStamp from "./components/ConfidentialStamp";
@@ -79,17 +79,6 @@ const classify = (doc) => {
   return { key: "current", label: "CURRENT", tone: "green", days };
 };
 
-const dateLine = (doc, status) => {
-  if (!doc.expiry_date) {
-    if (doc.notes && !isReviewNote(doc.notes)) return doc.notes;
-    return doc.created_at ? `Stored · uploaded ${formatDate(doc.created_at)}` : "Stored · no expiry date";
-  }
-  const when = formatDate(doc.expiry_date);
-  if (status.key === "expired") return `Expired ${when}`;
-  if (status.key === "due") return `Due ${when}`;
-  return `Expires ${when}`;
-};
-
 const detailLine = (doc, status) => {
   if (status.key === "on_file") {
     if (isReviewNote(doc.notes)) return doc.notes;
@@ -136,9 +125,6 @@ const VaultCard = ({ doc, onOpen, onEdit, onDelete, canManage }) => {
   const status = classify(doc);
   const tone = TONES[status.tone];
   const kind = fileKind(doc);
-  const days = status.days;
-  const overdue = status.key === "expired";
-
   return (
     <article className={`flex flex-col rounded-xl border border-gray-200 border-t-4 ${tone.bar} bg-white shadow-sm min-h-[210px]`}>
       <button type="button" onClick={onOpen} className="flex-1 text-left px-4 pt-3 pb-2">
@@ -153,11 +139,15 @@ const VaultCard = ({ doc, onOpen, onEdit, onDelete, canManage }) => {
         {doc.category?.name && (
           <p className="mt-0.5 text-[10px] font-semibold tracking-[0.08em] text-gray-400 uppercase">{doc.category.name}</p>
         )}
-        <p className="mt-2 text-xs text-gray-500">{dateLine(doc, status)}</p>
-        {days != null && (
-          <p className={`mt-0.5 text-xl font-bold leading-tight ${tone.days}`}>
-            {Math.abs(days)} <span className="text-sm font-semibold">{overdue ? "days overdue" : "days"}</span>
-          </p>
+        <p className="mt-2 text-xs text-gray-500">Expiry</p>
+        <p className={`mt-0.5 text-xl font-bold leading-tight ${doc.expiry_date ? tone.days : "text-gray-400"}`}>
+          {doc.expiry_date ? formatExpiryDate(doc.expiry_date) : "No expiry date"}
+        </p>
+        {doc.expiry_date && (
+          <>
+            <p className="mt-2 text-xs text-gray-500">Duration</p>
+            <p className="text-sm font-semibold text-gray-800">{formatExpiryDuration(doc.expiry_date, doc.created_at)}</p>
+          </>
         )}
         {status.key === "on_file" && <p className="mt-1 text-sm font-semibold text-violet-700">{detailLine(doc, status)}</p>}
         <div className="mt-3 flex items-center gap-2 min-w-0">
@@ -406,7 +396,7 @@ const DocumentVaultListPage = () => {
           <span className="font-semibold text-gray-700">Edit / Delete on every card you can change.</span> Edit changes the title, shelf, file, and expiry. Delete asks you to confirm, then removes the file.
         </p>
         <p className="md:border-r md:border-gray-200 md:pr-4">
-          <span className="font-semibold text-violet-700">Purple “On file” cards</span> have no expiry date. No countdown and no current/expired status — they have their own count. A note can say “review yearly”.
+          <span className="font-semibold text-violet-700">Purple “On file” cards</span> have no expiry date. Every card shows the expiry as month/day/year, or “No expiry date”. Duration is that same month/day/year span, from the day the file was added through the expiry.
         </p>
         <p>
           <span className="font-semibold text-gray-700">Shelves are the categories.</span> Use Manage shelves to show one shelf. The cards stay in expiry order.

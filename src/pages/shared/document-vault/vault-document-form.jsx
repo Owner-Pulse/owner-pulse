@@ -169,7 +169,6 @@ const VaultDocumentForm = ({
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,image/*"
           className="hidden"
           onChange={(e) => takeFile(e.target.files?.[0])}
         />

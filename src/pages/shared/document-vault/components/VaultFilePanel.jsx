@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import mammoth from "mammoth";
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { Download, ExternalLink, FileText, X } from "lucide-react";
 import { useDocumentVaultFile } from "../../../../hooks/document-vault.hook";
+import { loadRichPreview, previewKind } from "./filePreview";
 
 const useObjectUrl = (blob) => {
   const [url, setUrl] = useState(null);
@@ -17,75 +18,97 @@ const useObjectUrl = (blob) => {
   return url;
 };
 
-const isDocx = (mimeType, name) => {
-  const mime = (mimeType || "").toLowerCase();
-  const file = (name || "").toLowerCase();
-  return mime.includes("wordprocessingml") || file.endsWith(".docx");
-};
-
-const isLegacyDoc = (mimeType, name) => {
-  const mime = (mimeType || "").toLowerCase();
-  const file = (name || "").toLowerCase();
-  return !file.endsWith(".docx") && (mime === "application/msword" || file.endsWith(".doc"));
-};
-
-const sanitizeDocxHtml = (html) => {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("script, iframe, object, embed, link, meta").forEach((node) => node.remove());
-  doc.querySelectorAll("*").forEach((node) => {
-    [...node.attributes].forEach((attr) => {
-      const name = attr.name.toLowerCase();
-      const value = attr.value.trim().toLowerCase();
-      if (name.startsWith("on") || name === "srcdoc") node.removeAttribute(attr.name);
-      if ((name === "href" || name === "src") && value.startsWith("javascript:")) {
-        node.removeAttribute(attr.name);
-      }
-    });
-  });
-  return doc.body.innerHTML;
-};
+const RICH = new Set(["docx", "sheet", "text", "slides", "doc", "ppt"]);
 
 export const VaultFilePanel = ({ role, documentId, mimeType, name, className = "" }) => {
-  const { data: blob, isLoading, isError } = useDocumentVaultFile(role, documentId);
-  const url = useObjectUrl(blob);
-  const [docxHtml, setDocxHtml] = useState("");
-  const [docxError, setDocxError] = useState("");
+  const { blob, isLoading, isError } = useDocumentVaultFile(role, documentId);
+  const [rich, setRich] = useState(null);
+  const [richError, setRichError] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
-  const docx = isDocx(mimeType, name);
-  const legacyDoc = isLegacyDoc(mimeType, name);
+  const kind = previewKind(mimeType, name);
+  const isPdf = kind === "pdf";
+  const isImage = kind === "image";
+  const isVideo = kind === "video";
+  const isAudio = kind === "audio";
+
+  const previewBlob = useMemo(() => {
+    if (!blob) return null;
+    if (isPdf && blob.type !== "application/pdf") return new Blob([blob], { type: "application/pdf" });
+    if (isImage && mimeType && blob.type !== mimeType) return new Blob([blob], { type: mimeType });
+    if (isVideo && mimeType && blob.type !== mimeType) return new Blob([blob], { type: mimeType });
+    if (isAudio && mimeType && blob.type !== mimeType) return new Blob([blob], { type: mimeType });
+    return blob;
+  }, [blob, isPdf, isImage, isVideo, isAudio, mimeType]);
+  const url = useObjectUrl(previewBlob);
 
   useEffect(() => {
-    if (!blob || !docx) {
-      setDocxHtml("");
-      setDocxError("");
+    if (!blob || !RICH.has(kind)) {
+      setRich(null);
+      setRichError("");
       return undefined;
     }
 
     let cancelled = false;
-    setDocxHtml("");
-    setDocxError("");
-
-    blob
-      .arrayBuffer()
-      .then((arrayBuffer) => mammoth.convertToHtml({ arrayBuffer }))
-      .then((result) => {
-        if (cancelled) return;
-        const html = (result.value || "").trim();
-        setDocxHtml(
-          sanitizeDocxHtml(html || "<p>This Word document has no visible text.</p>")
-        );
+    setRich(null);
+    setRichError("");
+    loadRichPreview(blob, kind)
+      .then((next) => {
+        if (!cancelled) setRich(next);
       })
       .catch(() => {
-        if (!cancelled) setDocxError("Could not preview this Word document.");
+        if (!cancelled) setRichError("Could not preview this file.");
       });
 
     return () => {
       cancelled = true;
     };
-  }, [blob, docx]);
+  }, [blob, kind]);
 
-  const isPdf = (mimeType || "").includes("pdf");
-  const isImage = (mimeType || "").startsWith("image/");
+  const canExpand = Boolean(url && (isPdf || isImage || isVideo || isAudio || kind === "file" || rich?.html || rich?.text));
+
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
+
+  const richClass = "max-h-[70vh] overflow-auto rounded-lg border border-gray-200 bg-white px-6 py-5 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:mb-3 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-gray-200 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-gray-200 [&_th]:px-2 [&_th]:py-1 [&_img]:my-3 [&_img]:max-w-full";
+
+  const preview = (
+    <>
+      {url && isPdf && (
+        <iframe title={name || "PDF preview"} src={`${url}#navpanes=0&view=FitH`} className="pointer-events-none w-full h-[70vh] rounded-lg border border-gray-200 bg-white" />
+      )}
+      {url && isImage && (
+        <img src={url} alt={name || "Document"} className="pointer-events-none max-h-[70vh] max-w-full rounded-lg border border-gray-200 bg-white object-contain" />
+      )}
+      {url && isVideo && (
+        <video src={url} className="pointer-events-none max-h-[70vh] max-w-full rounded-lg bg-black" />
+      )}
+      {url && isAudio && (
+        <audio src={url} className="pointer-events-none w-full" />
+      )}
+      {url && kind === "file" && (
+        <iframe title={name || "File preview"} src={url} sandbox="" className="pointer-events-none h-[70vh] w-full rounded-lg border border-gray-200 bg-white" />
+      )}
+      {rich?.html && (
+        <div className="w-full self-stretch">
+          <div className={richClass} dangerouslySetInnerHTML={{ __html: rich.html }} />
+          {rich.note && <p className="mt-2 text-center text-[11px] text-gray-400">{rich.note}</p>}
+        </div>
+      )}
+      {rich?.text && (
+        <div className="w-full self-stretch">
+          <div className={richClass}>{rich.text}</div>
+          {rich.note && <p className="mt-2 text-center text-[11px] text-gray-400">{rich.note}</p>}
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className={`rounded-xl border border-gray-200 bg-white overflow-hidden ${className}`}>
@@ -108,53 +131,69 @@ export const VaultFilePanel = ({ role, documentId, mimeType, name, className = "
       <div className="p-4 min-h-[280px] bg-gray-50 flex items-center justify-center">
         {isLoading && <p className="text-sm text-gray-500">Loading preview…</p>}
         {isError && <p className="text-sm text-red-600">Could not load this file.</p>}
-        {url && isPdf && (
-          <iframe title={name || "PDF preview"} src={url} className="w-full h-[70vh] rounded-lg border border-gray-200 bg-white" />
+        {canExpand ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="w-full cursor-zoom-in text-left"
+            aria-label="Open full screen preview"
+          >
+            {preview}
+          </button>
+        ) : (
+          preview
         )}
-        {url && isImage && (
-          <img src={url} alt={name || "Document"} className="max-h-[70vh] max-w-full rounded-lg border border-gray-200 bg-white object-contain" />
+        {url && RICH.has(kind) && !rich && !richError && (
+          <p className="text-sm text-gray-500">Preparing preview…</p>
         )}
-        {url && docx && !docxHtml && !docxError && (
-          <p className="text-sm text-gray-500">Preparing Word preview…</p>
-        )}
-        {url && docx && docxError && (
+        {url && richError && (
           <div className="text-center">
-            <p className="text-sm text-gray-600">{docxError}</p>
-            <a href={url} download={name || "document"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
-              <Download className="w-4 h-4" /> Download file
-            </a>
-          </div>
-        )}
-        {url && docx && docxHtml && (
-          <div className="w-full self-stretch">
-            <div
-              className="max-h-[70vh] overflow-auto rounded-lg border border-gray-200 bg-white px-6 py-5 text-sm leading-relaxed text-gray-800 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_table]:mb-3 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-gray-200 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-gray-200 [&_th]:px-2 [&_th]:py-1 [&_img]:my-3 [&_img]:max-w-full"
-              dangerouslySetInnerHTML={{ __html: docxHtml }}
-            />
-            <p className="mt-2 text-center text-[11px] text-gray-400">
-              Text preview of the Word file. Download it for the original layout.
-            </p>
-          </div>
-        )}
-        {url && legacyDoc && (
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              On-page preview is available for .docx files. Download this older .doc file to open it in Word.
-            </p>
-            <a href={url} download={name || "document"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
-              <Download className="w-4 h-4" /> Download file
-            </a>
-          </div>
-        )}
-        {url && !isPdf && !isImage && !docx && !legacyDoc && (
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Preview not available for this file type.</p>
+            <p className="text-sm text-gray-600">{richError}</p>
             <a href={url} download={name || "document"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:underline">
               <Download className="w-4 h-4" /> Download file
             </a>
           </div>
         )}
       </div>
+
+      {expanded && url && createPortal(
+        <div className="fixed inset-0 z-[80] flex flex-col bg-black/90" role="dialog" aria-modal="true" aria-label="Full screen preview">
+          <div className="flex items-center justify-end px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow"
+              aria-label="Close full screen preview"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 px-4 pb-4">
+            {isPdf && (
+              <iframe title={name || "PDF preview"} src={`${url}#navpanes=0&view=FitH`} className="h-full w-full rounded-lg bg-white" />
+            )}
+            {isImage && (
+              <img src={url} alt={name || "Document"} className="mx-auto max-h-full max-w-full object-contain" />
+            )}
+            {isVideo && (
+              <video src={url} controls className="mx-auto max-h-full max-w-full" />
+            )}
+            {isAudio && (
+              <audio src={url} controls className="mx-auto w-full max-w-xl" />
+            )}
+            {rich?.html && (
+              <div className="mx-auto h-full max-w-3xl overflow-auto rounded-lg bg-white px-8 py-6 text-sm leading-relaxed text-gray-800 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-gray-200 [&_td]:px-2 [&_td]:py-1" dangerouslySetInnerHTML={{ __html: rich.html }} />
+            )}
+            {rich?.text && (
+              <div className="mx-auto h-full max-w-3xl overflow-auto whitespace-pre-wrap rounded-lg bg-white px-8 py-6 text-sm leading-relaxed text-gray-800">{rich.text}</div>
+            )}
+            {kind === "file" && (
+              <iframe title={name || "File preview"} src={url} sandbox="" className="h-full w-full rounded-lg bg-white" />
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
