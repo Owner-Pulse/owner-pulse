@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { FileText, Upload } from "lucide-react";
 import ConfidentialStamp from "@/pages/shared/document-vault/components/ConfidentialStamp";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 
 const PROOF = {
   expired: { label: "Expired", className: "bg-red-50 text-red-700" },
@@ -57,8 +57,8 @@ const ComplianceVaultDocuments = ({ item, role = "owner", onAttach }) => {
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-right text-[10px] font-semibold ${status.className}`}>
                     {doc.expiry_date ? (
                       <>
-                        <span className="block">{formatExpiryDate(doc.expiry_date)}</span>
-                        <span className="block font-medium">Duration {formatExpiryDuration(doc.expiry_date, doc.created_at)}</span>
+                        <span className="block">{formatExpiryLong(doc.expiry_date)}</span>
+                        <span className="block font-bold">{formatDayCountdown(doc.expiry_date)}</span>
                       </>
                     ) : (
                       "No expiry date"

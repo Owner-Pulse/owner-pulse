@@ -20,6 +20,7 @@ import CompleteComplianceModal from "@/pages/owner-dashboard/compliance/componen
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import DocumentVaultUploadModal from "@/pages/shared/document-vault/document-vault-upload-modal";
 import { useDocumentVaultCategories } from "@/hooks/document-vault.hook";
+import { complianceLogsFrom, historyByItemId, mergeComplianceRecord, recordList } from "@/pages/owner-dashboard/compliance/compliance-logs";
 
 // Local components
 import { containerVariants } from "./components/variants";
@@ -34,7 +35,7 @@ import { OwnerColumn, DirectorColumn } from "./components/DirectorComplianceColu
 const DirectorCompliancePage = () => {
   // ── API Hooks ──────────────────────────────────────────────────────────────
   const { overviewData, isLoading: isOverviewLoading } = useGetDirectorComplianceOverview();
-  const { complianceItems, isLoading: isItemsLoading } = useGetDirectorComplianceItems();
+  const { complianceItems, isLoading: isItemsLoading } = useGetDirectorComplianceItems({ per_page: 200, role: "all" });
 
   const { addComplianceItem, isPending: isAdding } = useAddDirectorComplianceItem();
   const { updateComplianceItem, isPending: isUpdating } = useUpdateDirectorComplianceItem();
@@ -66,32 +67,22 @@ const DirectorCompliancePage = () => {
     const directorRaw =
       complianceItems && complianceItems.length > 0
         ? [...complianceItems]
-        : [...(overviewData?.urgency_timeline || [])];
+        : recordList(overviewData?.urgency_timeline);
 
-    // Owner items come from overviewData.owner_items (separate field in overview API)
-    const ownerRaw = overviewData?.owner_items || [];
-
-    // Also include next_deadlines / upcoming_deadlines (in case some director items
-    // don't appear in the items API yet, e.g. only exist in the overview snapshot)
-    const nextDeadlines = overviewData?.next_deadlines || overviewData?.upcoming_deadlines || [];
-
-    const completedItems = overviewData?.completed_items || [];
+    const ownerRaw = recordList(overviewData?.owner_items);
+    const nextDeadlines = recordList(overviewData?.next_deadlines || overviewData?.upcoming_deadlines);
+    const completedItems = recordList(overviewData?.completed_items);
+    const commentsByItem = historyByItemId(overviewData);
 
     const map = new Map();
 
-    // Seed from all sources – order matters: last write wins for duplicates
     [...directorRaw, ...ownerRaw, ...nextDeadlines].forEach((item) => {
-      if (item && item.id) map.set(item.id, item);
+      if (item && item.id) map.set(item.id, mergeComplianceRecord(map.get(item.id), item));
     });
 
-    // Merge completed items (mark is_completed = true, but don't overwrite fresh data)
     completedItems.forEach((cItem) => {
       if (cItem && cItem.id) {
-        if (map.has(cItem.id)) {
-          map.set(cItem.id, { ...map.get(cItem.id), ...cItem, is_completed: true });
-        } else {
-          map.set(cItem.id, { ...cItem, is_completed: true });
-        }
+        map.set(cItem.id, mergeComplianceRecord(map.get(cItem.id), { ...cItem, is_completed: true }));
       }
     });
 
@@ -131,16 +122,7 @@ const DirectorCompliancePage = () => {
           text: ch.title || ch.text || "",
           checked: ch.is_completed ?? ch.checked ?? isCompleted,
         })),
-        logs: (
-          c.activity_logs ||
-          (c.latest_activity_log ? [c.latest_activity_log] : c.logs) ||
-          []
-        ).map((l) => ({
-          id: l.id,
-          date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
-          author: l.user_name || l.author || "User",
-          text: l.note || l.text || "",
-        })),
+        logs: complianceLogsFrom(c, commentsByItem.get(c.id)),
         documents: c.documents || [],
         document_proof: c.document_proof || "none",
         raw: c,
@@ -153,6 +135,12 @@ const DirectorCompliancePage = () => {
     if (!id) return;
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [items]);
+
+  useEffect(() => {
+    if (!logModalItem) return;
+    const fresh = items.find((row) => row.id === logModalItem.id);
+    if (fresh && fresh !== logModalItem) setLogModalItem(fresh);
+  }, [items, logModalItem]);
 
   // ── Derived Stats ──────────────────────────────────────────────────────────
   const stats = useMemo(() => {

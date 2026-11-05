@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -32,7 +32,7 @@ const ComplianceCard = ({ items = [], onNavigate }) => {
             const title = c.title || c.item;
 
             const daysText = c.expiration_date
-              ? `${formatExpiryDate(c.expiration_date)} · Duration ${formatExpiryDuration(c.expiration_date, c.created_at)}`
+              ? `${formatExpiryLong(c.expiration_date)} · ${formatDayCountdown(c.expiration_date)}`
               : "No expiry date";
 
             return (

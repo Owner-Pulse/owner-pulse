@@ -36,7 +36,7 @@ export const useGetOwnerComplianceItems = (params) => {
     });
 
     return {
-        complianceItems: data?.data || [],
+        complianceItems: Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.data) ? data.data.data : []),
         pagination: data?.pagination,
         isLoading,
         isFetching,
