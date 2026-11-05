@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { UserCheck, Clock, AlertCircle, Calendar } from "lucide-react";
 import { itemVariants } from "./variants";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 
 const StatCard = ({ label, value, valueClass = "text-gray-900", subLabel, icon, iconBg }) => (
   <motion.div variants={itemVariants}>
@@ -44,9 +44,9 @@ const DirectorKpiCards = ({ stats }) => (
     />
     <StatCard
       label="Next Deadline"
-      value={stats.nextDeadlineItem?.expiration_date ? formatExpiryDate(stats.nextDeadlineItem.expiration_date) : "—"}
+      value={stats.nextDeadlineItem?.expiration_date ? formatExpiryLong(stats.nextDeadlineItem.expiration_date) : "—"}
       valueClass="text-[#1E3A5F]"
-      subLabel={stats.nextDeadlineItem?.expiration_date ? `Duration ${formatExpiryDuration(stats.nextDeadlineItem.expiration_date, stats.nextDeadlineItem.created_at)}` : "All up to date"}
+      subLabel={stats.nextDeadlineItem?.expiration_date ? formatDayCountdown(stats.nextDeadlineItem.expiration_date) : "All up to date"}
       icon={<Calendar size={16} />}
       iconBg="bg-[#1E3A5F]/10 text-[#1E3A5F]"
     />

@@ -29,7 +29,9 @@ import StatusPill from "./components/StatusPill";
 import InsuranceShoppingCard from "./components/InsuranceShoppingCard";
 
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
+import { complianceLogsFrom, historyByItemId, mergeComplianceRecord, recordList } from "./compliance-logs";
+import ComplianceComments from "./components/ComplianceComments";
 import {
   useGetOwnerComplianceOverview,
   useGetOwnerComplianceItems,
@@ -68,7 +70,7 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const CompliancePage = () => {
   // API Hooks
   const { overviewData, isLoading: isOverviewLoading } = useGetOwnerComplianceOverview();
-  const { complianceItems, isLoading: isItemsLoading } = useGetOwnerComplianceItems();
+  const { complianceItems, isLoading: isItemsLoading } = useGetOwnerComplianceItems({ per_page: 200 });
   const { pulseImpactData } = useGetOwnerPulseImpact();
 
   const { addComplianceItem, isPending: isAdding } = useAddOwnerComplianceItem();
@@ -98,24 +100,23 @@ const CompliancePage = () => {
   const items = useMemo(() => {
     const rawItems = (complianceItems && complianceItems.length > 0)
       ? [...complianceItems]
-      : [...(overviewData?.urgency_timeline || [])];
+      : recordList(overviewData?.urgency_timeline);
 
-    const completedItems = overviewData?.completed_items || [];
+    const completedItems = recordList(overviewData?.completed_items);
 
     const map = new Map();
+    const commentsByItem = historyByItemId(overviewData);
+
     rawItems.forEach((item) => {
       if (item && item.id) {
-        map.set(item.id, item);
+        map.set(item.id, mergeComplianceRecord(map.get(item.id), item));
       }
     });
 
     completedItems.forEach((cItem) => {
       if (cItem && cItem.id) {
-        if (map.has(cItem.id)) {
-          map.set(cItem.id, { ...map.get(cItem.id), ...cItem, is_completed: true });
-        } else {
-          map.set(cItem.id, { ...cItem, is_completed: true });
-        }
+        const merged = mergeComplianceRecord(map.get(cItem.id), { ...cItem, is_completed: true });
+        map.set(cItem.id, merged);
       }
     });
 
@@ -152,12 +153,7 @@ const CompliancePage = () => {
           text: ch.title || ch.text || "",
           checked: ch.is_completed ?? ch.checked ?? isCompleted,
         })),
-        logs: (c.activity_logs || (c.latest_activity_log ? [c.latest_activity_log] : c.logs) || []).map((l) => ({
-          id: l.id,
-          date: l.created_at ? l.created_at.slice(0, 10) : l.date || "",
-          author: l.user_name || l.author || "User",
-          text: l.note || l.text || "",
-        })),
+        logs: complianceLogsFrom(c, commentsByItem.get(c.id)),
         documents: c.documents || [],
         document_proof: c.document_proof || "none",
         raw: c,
@@ -170,6 +166,12 @@ const CompliancePage = () => {
     if (!id) return;
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [items]);
+
+  useEffect(() => {
+    if (!logModalItem) return;
+    const fresh = items.find((row) => row.id === logModalItem.id);
+    if (fresh && fresh !== logModalItem) setLogModalItem(fresh);
+  }, [items, logModalItem]);
 
   // Compute stats from Overview API
   const stats = useMemo(() => {
@@ -363,7 +365,7 @@ const CompliancePage = () => {
             pct={stats.total > 0 ? Math.round((stats.expiring / stats.total) * 100) : 0}
             color="#7C3AED"
             items={items.filter((i) => i.status === "expiring" || (i.days_left !== undefined && i.days_left > 0 && i.days_left <= 60 && !i.is_completed))}
-            sub={stats.nextDeadlineItem?.expiration_date ? `Next: ${formatExpiryDate(stats.nextDeadlineItem.expiration_date)} · Duration ${formatExpiryDuration(stats.nextDeadlineItem.expiration_date, stats.nextDeadlineItem.created_at)}` : "No pending items"}
+            sub={stats.nextDeadlineItem?.expiration_date ? `Next: ${formatExpiryLong(stats.nextDeadlineItem.expiration_date)} · ${formatDayCountdown(stats.nextDeadlineItem.expiration_date)}` : "No pending items"}
             iconBg="bg-[#7C3AED]/10 text-[#6D28D9]"
             onMoreClick={() => setStatusFilter("expiring")}
           />
@@ -385,11 +387,11 @@ const CompliancePage = () => {
           <KpiCard
             icon={Calendar}
             label="Next Deadline"
-            value={stats.nextDeadlineItem?.expiration_date ? formatExpiryDate(stats.nextDeadlineItem.expiration_date) : "—"}
+            value={stats.nextDeadlineItem?.expiration_date ? formatExpiryLong(stats.nextDeadlineItem.expiration_date) : "—"}
             pct={stats.nextDeadline > 0 ? Math.max(10, Math.min(100, Math.round((stats.nextDeadline / 60) * 100))) : 0}
             color="#1E3A5F"
             items={items.filter((i) => i.days_left !== undefined && i.days_left > 0 && !i.is_completed).sort((a, b) => a.days_left - b.days_left)}
-            sub={stats.nextDeadlineItem?.expiration_date ? `Duration ${formatExpiryDuration(stats.nextDeadlineItem.expiration_date, stats.nextDeadlineItem.created_at)}` : "No upcoming deadlines"}
+            sub={stats.nextDeadlineItem?.expiration_date ? formatDayCountdown(stats.nextDeadlineItem.expiration_date) : "No upcoming deadlines"}
             iconBg={stats.nextDeadline <= 14 && stats.nextDeadline > 0 ? "bg-[#AE4A3E]/10 text-[#8A362C]" : "bg-[#1E3A5F]/10 text-[#1E3A5F]"}
           />
         </motion.div>
@@ -586,7 +588,7 @@ const CompliancePage = () => {
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
                           <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
                             <span className="text-gray-500 font-semibold flex items-center gap-1">
-                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
+                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires ? formatExpiryLong(item.expires) : "No expiry date"}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-black tracking-tight px-2 py-0.5 rounded-full ${
@@ -598,8 +600,9 @@ const CompliancePage = () => {
                               }`}>
                                 {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                               </span>
-                              <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
-                                {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
+                              <span className={`inline-flex items-center gap-1.5 text-lg font-black leading-none ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-[#1E3A5F]"}`}>
+                                {item.expires && <Clock size={18} strokeWidth={2} className="shrink-0 text-[#5E7388]" />}
+                                {item.expires ? formatDayCountdown(item.expires) : "No expiry date"}
                               </span>
                             </div>
                           </div>
@@ -668,15 +671,7 @@ const CompliancePage = () => {
                           </div>
                         )}
 
-                        {/* Logs History */}
-                        {item.logs && item.logs.length > 0 && (
-                          <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
-                            <span className="font-semibold text-gray-700 flex items-center gap-1">
-                              <UserCheck size={12} className="text-[#1E3A5F]" /> Latest Log: {item.logs[0].text}
-                            </span>
-                            <span className="text-[10px] text-gray-400">{item.logs[0].date} ({item.logs[0].author})</span>
-                          </div>
-                        )}
+                        <ComplianceComments logs={item.logs} />
                       </div>
                     </motion.div>
                   );
@@ -826,7 +821,7 @@ const CompliancePage = () => {
                         <div className="mt-4 pt-1 border-t border-gray-100/70">
                           <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
                             <span className="text-gray-500 font-semibold flex items-center gap-1">
-                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
+                              <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires ? formatExpiryLong(item.expires) : "No expiry date"}
                             </span>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-black tracking-tight px-2 py-0.5 rounded-full ${
@@ -838,8 +833,9 @@ const CompliancePage = () => {
                               }`}>
                                 {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                               </span>
-                              <span className={`font-bold ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"}`}>
-                                {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
+                              <span className={`inline-flex items-center gap-1.5 text-lg font-black leading-none ${isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-[#1E3A5F]"}`}>
+                                {item.expires && <Clock size={18} strokeWidth={2} className="shrink-0 text-[#5E7388]" />}
+                                {item.expires ? formatDayCountdown(item.expires) : "No expiry date"}
                               </span>
                             </div>
                           </div>
@@ -908,15 +904,7 @@ const CompliancePage = () => {
                           </div>
                         )}
 
-                        {/* Logs History */}
-                        {item.logs && item.logs.length > 0 && (
-                          <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
-                            <span className="font-semibold text-gray-700 flex items-center gap-1">
-                              <UserCheck size={12} className="text-[#1E3A5F]" /> Latest Log: {item.logs[0].text}
-                            </span>
-                            <span className="text-[10px] text-gray-400">{item.logs[0].date} ({item.logs[0].author})</span>
-                          </div>
-                        )}
+                        <ComplianceComments logs={item.logs} />
                       </div>
                     </motion.div>
                   );

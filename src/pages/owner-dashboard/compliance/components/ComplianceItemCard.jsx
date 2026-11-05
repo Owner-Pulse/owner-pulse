@@ -6,9 +6,9 @@ import StatusPill from "./StatusPill";
 import CategoryTag from "./CategoryTag";
 import RoleBadge from "./RoleBadge";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 
-const fmtDate = (dateStr) => formatExpiryDate(dateStr);
+const fmtDate = (dateStr) => formatExpiryLong(dateStr);
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -48,15 +48,16 @@ const ComplianceItemCard = ({ item, preWarningDays = 60 }) => {
 
           {/* Clean Expiration & Days Left Badge (Replaced circle-on-a-line per D-08) */}
           <div className="mt-3 p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between text-xs">
-            <span className="text-gray-500 font-medium">Expires {fmtDate(item.expires)}</span>
-            <span className={`px-2 py-0.5 rounded-full font-bold text-xs ${
+            <span className="text-gray-500 font-medium">Expires {item.expires ? formatExpiryLong(item.expires) : "No expiry date"}</span>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold text-xs ${
               isExpired
                 ? "bg-[#AE4A3E]/10 text-[#8A362C]"
                 : isUrgent
                 ? "bg-[#B78A2F]/10 text-[#8F6A1F]"
                 : "bg-[#1E3A5F]/10 text-[#1E3A5F]"
             }`}>
-              {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened || item.created_at)}` : "No expiry date"}
+              {item.expires && <Clock size={12} strokeWidth={2} className="text-[#5E7388]" />}
+              {item.expires ? formatDayCountdown(item.expires) : "No expiry date"}
             </span>
           </div>
 

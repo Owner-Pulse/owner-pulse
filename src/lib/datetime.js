@@ -120,20 +120,18 @@ const format = (value, options) => {
 // "Sep 28, 2026" by default
 export const formatDate = (value, options = { month: "short", day: "numeric", year: "numeric" }) => format(value, options);
 
-// "10/30/2026" — month/day/year used for vault and compliance expiry
+// "10/30/2026"
 export const formatExpiryDate = (value) => formatDate(value, { month: "2-digit", day: "2-digit", year: "numeric" });
 
-// Duration beside an expiry, written as month/day/year.
-// The span runs from when the record was added through the expiry date.
-// Without a start date, it runs from today through the expiry date.
-export const formatExpiryDuration = (expiry, start) => {
-  const end = formatExpiryDate(expiry);
-  if (!end) return "";
-  const from = formatExpiryDate(start || todayYmd());
-  if (!from || from === end) return end;
-  const span = daysBetween(start || todayYmd(), expiry);
-  if (span != null && span < 0) return `${end} – ${from}`;
-  return `${from} – ${end}`;
+// "November 18, 2027"
+export const formatExpiryLong = (value) => formatDate(value, { month: "long", day: "numeric", year: "numeric" });
+
+// Day count only: "80 days", "1 day", "0 days"
+export const formatDayCountdown = (value) => {
+  const days = daysFromToday(value);
+  if (days == null) return "";
+  const n = Math.abs(days);
+  return n === 1 ? "1 day" : `${n} days`;
 };
 
 // "9:00 PM" by default

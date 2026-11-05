@@ -7,15 +7,16 @@ import {
   Building2,
   ClipboardList,
   MessageSquare,
+  Clock,
   Edit,
   Trash2,
-  UserCheck,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { daysUntil, daysSince } from "@/hooks/compliance/useCompliance";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
+import ComplianceComments from "@/pages/owner-dashboard/compliance/components/ComplianceComments";
 import StatusPill from "@/pages/owner-dashboard/compliance/components/StatusPill";
 import CategoryTag from "@/pages/owner-dashboard/compliance/components/CategoryTag";
 import RoleBadge from "@/pages/owner-dashboard/compliance/components/RoleBadge";
@@ -166,7 +167,7 @@ const DirectorComplianceCard = ({
           <div className="mt-4 pt-1 border-t border-gray-100/70">
             <div className="flex items-center justify-between text-xs mb-2 gap-2 flex-wrap">
               <span className="text-gray-500 font-semibold flex items-center gap-1">
-                <Calendar size={12} className="text-[#1E3A5F]" /> Expires {formatExpiryDate(item.expires) || "No expiry date"}
+                <Calendar size={12} className="text-[#1E3A5F]" /> Expires {item.expires ? formatExpiryLong(item.expires) : "No expiry date"}
               </span>
               <div className="flex items-center gap-2">
                 <span
@@ -181,11 +182,12 @@ const DirectorComplianceCard = ({
                   {isExpired ? "100% Expired" : `${pct}% Time Remaining`}
                 </span>
                 <span
-                  className={`font-bold ${
-                    isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-gray-600"
+                  className={`inline-flex items-center gap-1.5 text-lg font-black leading-none ${
+                    isExpired ? "text-[#8A362C]" : isUrgent ? "text-[#8F6A1F]" : "text-[#1E3A5F]"
                   }`}
                 >
-                  {item.expires ? `Duration ${formatExpiryDuration(item.expires, item.opened)}` : "No expiry date"}
+                  {item.expires && <Clock size={18} strokeWidth={2} className="shrink-0 text-[#5E7388]" />}
+                  {item.expires ? formatDayCountdown(item.expires) : "No expiry date"}
                 </span>
               </div>
             </div>
@@ -260,17 +262,7 @@ const DirectorComplianceCard = ({
             </div>
           )}
 
-          {/* ── Latest Log ── */}
-          {item.logs && item.logs.length > 0 && (
-            <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
-              <span className="font-semibold text-gray-700 flex items-center gap-1">
-                <UserCheck size={12} className="text-[#1E3A5F]" /> Latest Log: {item.logs[0].text}
-              </span>
-              <span className="text-[10px] text-gray-400">
-                {item.logs[0].date} ({item.logs[0].author})
-              </span>
-            </div>
-          )}
+          <ComplianceComments logs={item.logs} />
         </CardContent>
       </Card>
     </motion.div>

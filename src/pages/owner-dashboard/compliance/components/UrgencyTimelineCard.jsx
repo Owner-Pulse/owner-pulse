@@ -3,7 +3,7 @@ import { AlertTriangle, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import RoleBadge from "./RoleBadge";
 import { daysUntil } from "@/hooks/compliance/useCompliance";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 
 const UrgencyTimelineCard = ({ items = [] }) => {
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -148,7 +148,7 @@ const UrgencyTimelineCard = ({ items = [] }) => {
                       <p className="font-bold">{itemName}</p>
                       <p className="text-gray-300">{authority}</p>
                       <p className={`font-semibold ${isExpired ? "text-red-400" : daysLeft <= 30 ? "text-amber-300" : "text-emerald-300"}`}>
-                        {expirationDate ? `${formatExpiryDate(expirationDate)} · Duration ${formatExpiryDuration(expirationDate, item.opened || item.created_at)}` : "No expiry date"}
+                        {expirationDate ? `${formatExpiryLong(expirationDate)} · ${formatDayCountdown(expirationDate)}` : "No expiry date"}
                       </p>
                     </div>
                     <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1" />
@@ -203,13 +203,13 @@ const UrgencyTimelineCard = ({ items = [] }) => {
                     </div>
 
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorInfo.lightBg} ${colorInfo.text} ${colorInfo.border}`}>
-                      {expirationDate ? `Duration ${formatExpiryDuration(expirationDate, item.opened || item.created_at)}` : "No expiry date"}
+                      {expirationDate ? formatDayCountdown(expirationDate) : "No expiry date"}
                     </span>
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-500">
                     <span className="flex items-center gap-1">
-                      <Calendar size={11} className="text-gray-400" /> Expires: {formatExpiryDate(expirationDate) || "No expiry date"}
+                      <Calendar size={11} className="text-gray-400" /> Expires: {expirationDate ? formatExpiryLong(expirationDate) : "No expiry date"}
                     </span>
                     <RoleBadge role={role} />
                   </div>

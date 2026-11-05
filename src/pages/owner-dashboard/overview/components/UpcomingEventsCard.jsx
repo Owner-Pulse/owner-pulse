@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar, ShieldCheck, GraduationCap, FileText, Clock, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 import CardAccent from "@/components/ui/card-accent";
 import { ACCENTS, STATUS } from "@/lib/theme-tokens";
 
@@ -41,8 +41,8 @@ const UpcomingEventsCard = ({ events = [], noData = false }) => (
           const iconClass = isUrgent ? `${STATUS.watch.soft} ${STATUS.watch.text}` : config.accent ? config.accent.icon : "bg-gray-100 text-gray-600";
           const descParts = [];
           if (evt.date) {
-            descParts.push(formatExpiryDate(evt.date));
-            descParts.push(`Duration ${formatExpiryDuration(evt.date, evt.started)}`);
+            descParts.push(formatExpiryLong(evt.date));
+            descParts.push(formatDayCountdown(evt.date));
           }
           return (
             <div key={evt.id} className={`flex items-start gap-3 p-2.5 rounded-lg border ${rowClass}`}>

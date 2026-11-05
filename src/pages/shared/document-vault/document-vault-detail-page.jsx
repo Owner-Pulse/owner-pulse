@@ -12,7 +12,7 @@ import {
   useUpdateDocumentVault,
 } from "@/hooks/document-vault.hook";
 import { useGetUser } from "@/hooks/auth/user-details.hook";
-import { formatExpiryDate, formatExpiryDuration } from "@/lib/datetime";
+import { formatDayCountdown, formatExpiryLong } from "@/lib/datetime";
 import { ExpiryBadge } from "./components/ExpiryBadge";
 import ConfidentialStamp from "./components/ConfidentialStamp";
 import { VaultFilePanel } from "./components/VaultFilePanel";
@@ -109,7 +109,7 @@ const DocumentVaultDetailPage = () => {
           <p className="text-sm text-gray-500 mt-1">
             {document.category?.name}
             {document.expiry_date
-              ? ` · Expires ${formatExpiryDate(document.expiry_date)} · Duration ${formatExpiryDuration(document.expiry_date, document.created_at)}`
+              ? ` · Expires ${formatExpiryLong(document.expiry_date)} · ${formatDayCountdown(document.expiry_date)}`
               : " · No expiry date"}
           </p>
         </div>
