@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,35 +7,76 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import logo from '../../../assets/Logo.png';
 import { useNavigate } from 'react-router';
-
 import toast from 'react-hot-toast';
+import { axiosPublic } from '@/lib/axios.public';
+import { AuthService } from '@/services/auth/auth.service';
+
+const errorMessage = (error) => {
+  const data = error?.response?.data;
+  const firstFieldError = data?.errors && Object.values(data.errors).flat()[0];
+  return firstFieldError || data?.message || "Could not send the reset code.";
+};
+
+const alreadyToasted = (error) => {
+  const status = error?.response?.status;
+  return !error?.response || [404, 500, 502, 503, 504].includes(status);
+};
 
 const ForgetPasswordPage = () => {
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState('email');
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Password reset link sent!");
+    try {
+      const result = await AuthService.forgotPassword(email.trim(), axiosPublic());
+      toast.success(result?.message || "Reset code sent. Check your email.");
+      setStep('otp');
+    } catch (error) {
+      if (!alreadyToasted(error)) toast.error(errorMessage(error));
+    } finally {
       setIsLoading(false);
-      setEmailSent(true);
-      navigate('/reset-password');
-    }, 1500);
+    }
   };
 
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const result = await AuthService.verifyResetOtp(
+        { email: email.trim(), otp: otp.trim() },
+        axiosPublic()
+      );
+      if (!result?.token) {
+        toast.error("The reset code was accepted, but no reset token came back.");
+        return;
+      }
+      navigate('/reset-password', { state: { email: email.trim(), token: result.token } });
+    } catch (error) {
+      if (!alreadyToasted(error)) toast.error(errorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleBack = () => {
-    window.history.back();
+  const handleResend = async () => {
+    setIsLoading(true);
+    try {
+      const result = await AuthService.resendResetOtp(email.trim(), axiosPublic());
+      toast.success(result?.message || "A new code was sent.");
+    } catch (error) {
+      if (!alreadyToasted(error)) toast.error(errorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 bg-[#1E3A5F]"
       style={{ background: 'rgb(10, 15, 30)' }}
     >
@@ -47,22 +88,14 @@ const ForgetPasswordPage = () => {
       >
         <Card className="bg-white/95 backdrop-blur-xl border border-white/10 shadow-2xl">
           <CardHeader className="space-y-6 text-center">
-            {/* Logo */}
             <div className="flex justify-center">
-              <img 
-                src={logo} 
-                alt="OwnerPulse Logo" 
-                className="h-16 w-auto"
-              />
+              <img src={logo} alt="OwnerPulse Logo" className="h-16 w-auto" />
             </div>
-
-            {!emailSent ? (
+            {step === 'email' ? (
               <>
-                <CardTitle className="text-3xl font-bold text-gray-900">
-                  Forgot Password?
-                </CardTitle>
+                <CardTitle className="text-3xl font-bold text-gray-900">Forgot Password?</CardTitle>
                 <CardDescription className="text-gray-600 text-base">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Enter your email address and we will send a 4-digit code to reset your password.
                 </CardDescription>
               </>
             ) : (
@@ -70,11 +103,9 @@ const ForgetPasswordPage = () => {
                 <div className="flex justify-center">
                   <CheckCircle className="w-16 h-16 text-green-500" />
                 </div>
-                <CardTitle className="text-3xl font-bold text-gray-900">
-                  Check Your Email
-                </CardTitle>
+                <CardTitle className="text-3xl font-bold text-gray-900">Check Your Email</CardTitle>
                 <CardDescription className="text-gray-600">
-                  We've sent a password reset link to <br />
+                  Enter the 4-digit code sent to <br />
                   <span className="font-medium text-gray-800">{email}</span>
                 </CardDescription>
               </>
@@ -82,8 +113,8 @@ const ForgetPasswordPage = () => {
           </CardHeader>
 
           <CardContent className="px-8 pb-8">
-            {!emailSent ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 'email' ? (
+              <form onSubmit={handleEmailSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-gray-700">Email Address</Label>
                   <Input
@@ -96,19 +127,17 @@ const ForgetPasswordPage = () => {
                     className="h-12"
                   />
                 </div>
-
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full h-14 text-base font-semibold bg-[#1E3A5F] hover:bg-[#15294A]"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Sending Reset Link..." : "Send Reset Link"}
+                  {isLoading ? "Sending code..." : "Send reset code"}
                 </Button>
-
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleBack}
+                  onClick={() => navigate('/')}
                   className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
                 >
                   <ArrowLeft size={18} />
@@ -116,35 +145,45 @@ const ForgetPasswordPage = () => {
                 </Button>
               </form>
             ) : (
-              <div className="space-y-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Didn't receive the email? Check your spam folder or try again.
-                </p>
-                <Button 
-                  onClick={() => {
-                    setEmailSent(false);
-                    setEmail('');
-                  }}
-                  variant="outline"
-                  className="w-full"
+              <form onSubmit={handleOtpSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="text-gray-700">Reset code</Label>
+                  <Input
+                    id="otp"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="4-digit code"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    required
+                    minLength={4}
+                    className="h-12 tracking-[0.4em] text-center"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-14 text-base font-semibold bg-[#1E3A5F] hover:bg-[#15294A]"
+                  disabled={isLoading || otp.length !== 4}
                 >
-                  Try Another Email
+                  {isLoading ? "Checking code..." : "Continue"}
+                </Button>
+                <Button type="button" variant="outline" className="w-full" onClick={handleResend} disabled={isLoading}>
+                  Resend code
                 </Button>
                 <Button
-                  onClick={handleBack}
+                  type="button"
                   variant="ghost"
-                  className="w-full"
+                  onClick={() => navigate('/')}
+                  className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
                 >
+                  <ArrowLeft size={18} />
                   Back to Login
                 </Button>
-              </div>
+              </form>
             )}
           </CardContent>
         </Card>
-
-        <p className="text-center text-xs text-white/60 mt-8">
-          © 2026 OwnerPulse • HCLC
-        </p>
+        <p className="text-center text-xs text-white/60 mt-8">© 2026 OwnerPulse • HCLC</p>
       </motion.div>
     </div>
   );
